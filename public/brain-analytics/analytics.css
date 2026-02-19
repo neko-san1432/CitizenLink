@@ -34,6 +34,28 @@
   --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
+html.dark {
+  --gray-50: #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #cbd5e1;
+  --gray-700: #e2e8f0;
+  --gray-800: #f1f5f9;
+  --gray-900: #f8fafc;
+
+  --card-bg: #1e293b;
+  --body-bg: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+
+  --primary: #60a5fa;
+  --primary-dark: #3b82f6;
+  --primary-light: #93c5fd;
+}
+
 * {
   box-sizing: border-box
 }
@@ -46,8 +68,8 @@ body {
 body {
   margin: 0;
   font-family: var(--font-family);
-  background: var(--gray-100);
-  color: var(--gray-800);
+  background: var(--body-bg);
+  color: var(--text-primary);
 }
 
 /* Legacy header styles - kept for backwards compatibility */
@@ -99,7 +121,7 @@ body {
 .dashboard-header-section {
   padding: 20px 24px;
   border-bottom: 1px solid var(--gray-200);
-  background: #fff;
+  background: var(--card-bg);
 }
 
 .dashboard-header-section .header-content {
@@ -114,7 +136,7 @@ body {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: var(--gray-800);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -147,7 +169,7 @@ body {
 }
 
 .dashboard-header-section .btn-secondary {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--gray-300);
   color: var(--gray-700);
 }
@@ -170,7 +192,7 @@ body {
   display: flex;
   gap: 4px;
   padding: 12px 24px;
-  background: var(--gray-100);
+  background: var(--body-bg);
   border-bottom: 1px solid var(--gray-200);
   flex-wrap: wrap;
 }
@@ -192,7 +214,7 @@ body {
 }
 
 .analytics-tabs .nav-tab.active {
-  background: #fff;
+  background: var(--card-bg);
   color: var(--primary);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -291,7 +313,7 @@ body {
 }
 
 .metric-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: var(--shadow);
   padding: 14px;
@@ -432,7 +454,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #fff;
+  background: var(--card-bg);
   border: 1px solid var(--gray-300);
   border-radius: 12px;
   padding: 10px 12px;
@@ -444,7 +466,9 @@ body {
   border: none;
   outline: none;
   width: 100%;
-  font-size: 13px
+  font-size: 13px;
+  background: transparent;
+  color: var(--text-primary);
 }
 
 .filters {
@@ -462,7 +486,7 @@ body {
 }
 
 .table-container {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: var(--shadow);
   overflow: auto
@@ -484,7 +508,7 @@ body {
 .data-table th {
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--card-bg);
   text-align: left;
   font-size: 12px;
   text-transform: uppercase;
@@ -492,7 +516,7 @@ body {
 }
 
 .data-table tr:hover td {
-  background: rgba(68, 114, 196, .06)
+  background: var(--gray-100);
 }
 
 .pagination {
@@ -506,7 +530,7 @@ body {
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid var(--gray-300);
-  background: #fff;
+  background: var(--card-bg);
   cursor: pointer
 }
 

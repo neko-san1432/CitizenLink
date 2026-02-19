@@ -10,6 +10,7 @@ class ComplaintRepository {
   async create(complaintData, token = null) {
     const client = this.supabase;
 
+
     /*
     if (token) {
       const { createClient } = require("@supabase/supabase-js");
@@ -108,6 +109,7 @@ class ComplaintRepository {
       const offset = (page - 1) * limit;
 
       const client = this.supabase;
+
 
       /*
       if (token) {

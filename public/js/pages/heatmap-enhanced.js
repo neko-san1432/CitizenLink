@@ -201,11 +201,11 @@ class EnhancedHeatmapController {
       // Clear layers if visualization exists
       try {
         this.heatmapViz?.clearAllLayers();
-      } catch (_) {}
+      } catch (_) { }
       // Destroy existing map instance safely
       if (this.map) {
-        try { this.map.off(); } catch (_) {}
-        try { this.map.remove(); } catch (_) {}
+        try { this.map.off(); } catch (_) { }
+        try { this.map.remove(); } catch (_) { }
         this.map = null;
       }
       // Recreate map
@@ -711,7 +711,7 @@ class EnhancedHeatmapController {
     // Simple density calculation based on area and point count
     const bounds = this.map.getBounds();
     const area = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) *
-                 bounds.getNorthEast().distanceTo(bounds.getNorthWest());
+      bounds.getNorthEast().distanceTo(bounds.getNorthWest());
     return Math.round((data.length / area) * 1000) / 1000;
   }
   /**

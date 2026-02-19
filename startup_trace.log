@@ -1,0 +1,46 @@
+[dotenv@17.2.3] injecting env (14) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[2026-02-16T00:51:13.863Z] 🚀 Starting DRIMS Server...
+[2026-02-16T00:51:13.863Z] 🔧 Loading configuration...
+[2026-02-16T00:51:13.864Z] ✅ Configuration loaded
+[2026-02-16T00:51:13.864Z] 🔍 Validating configuration...
+[2026-02-16T00:51:13.864Z] ✅ Configuration validated successfully
+[2026-02-16T00:51:13.864Z] 📊 Config details: { env: 'development', port: '3000', supabaseConfigured: true }
+[2026-02-16T00:51:13.864Z] 🏗️  Initializing DRIMS application...
+[2026-02-16T00:51:14.064Z] Platform node has already been set. Overwriting the platform with node.
+[2026-02-16T00:51:14.105Z] [AI] ⚠️ Failed to load tfjs-node, falling back to vanilla tfjs (slower): /home/nekosan/Documents/projects/CitizenLink/node_modules/@tensorflow/tfjs-node/lib/napi-v8/tfjs_binding.node: invalid ELF header
+[2026-02-16T00:51:14.606Z] 🔄 Starting server on port 3000
+[2026-02-16T00:51:14.608Z] (node:19962) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+    at node:punycode:7:10
+    at BuiltinModule.compileForInternalLoader (node:internal/bootstrap/realm:398:7)
+    at BuiltinModule.compileForPublicLoader (node:internal/bootstrap/realm:337:10)
+    at loadBuiltinModule (node:internal/modules/helpers:125:7)
+    at loadBuiltinWithHooks (node:internal/modules/cjs/loader:1195:15)
+    at Module._load (node:internal/modules/cjs/loader:1285:48)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1548:12)
+    at require (node:internal/modules/helpers:152:16)
+[2026-02-16T00:51:14.608Z] (node:19962) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+    at urlParse (node:url:136:13)
+    at Object.urlResolve [as resolve] (node:url:725:10)
+    at module.exports.evaluate (/home/nekosan/Documents/projects/CitizenLink/node_modules/@mapbox/node-pre-gyp/lib/util/versioning.js:332:26)
+    at exports.find (/home/nekosan/Documents/projects/CitizenLink/node_modules/@mapbox/node-pre-gyp/lib/pre-binding.js:32:27)
+    at Object.<anonymous> (/home/nekosan/Documents/projects/CitizenLink/node_modules/@tensorflow/tfjs-node/dist/index.js:56:26)
+    at Module._compile (node:internal/modules/cjs/loader:1804:14)
+    at Object..js (node:internal/modules/cjs/loader:1936:10)
+    at Module.load (node:internal/modules/cjs/loader:1525:32)
+    at Module._load (node:internal/modules/cjs/loader:1327:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+[2026-02-16T00:51:14.608Z] Server running on port 3000
+[2026-02-16T00:51:14.700Z] [SCHEDULER] Starting 11:59 PM Daily Job...
+[2026-02-16T00:51:14.704Z] [NLP] 🔄 Initializing Advanced Decision Engine...
+[2026-02-16T00:51:16.137Z] [AI] 🚀 Loading Universal Sentence Encoder...
+[2026-02-16T00:51:16.137Z] [AI] 📦 Found local model cache (custom handler), loading from disk...
+[2026-02-16T00:51:16.175Z] [NLP] ✅ Initialized with 666 keywords, 23 metaphors, 10 anchor categories.
+[2026-02-16T00:51:16.177Z] 
+============================
+Hi, looks like you are running TensorFlow.js in Node.js. To speed things up dramatically, install our node backend, visit https://github.com/tensorflow/tfjs-node for more details. 
+============================
+[2026-02-16T00:51:16.464Z] [AI] ✅ Model loaded in 327ms
+[2026-02-16T00:51:16.465Z] [AI] 📦 Cache fingerprint MATCH. Loading anchors from disk...
+[2026-02-16T00:51:16.466Z] [AI] ⚡ Loaded cached anchors in 1ms

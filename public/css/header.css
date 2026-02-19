@@ -129,6 +129,15 @@
   color: #ffffff;
 }
 
+.dark .header-container {
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom-color: var(--gray-200);
+}
+
+.dark .header-container.scrolled {
+  background: rgba(15, 23, 42, 0.98);
+}
+
 /* Removed @media (prefers-color-scheme: dark) - app uses its own theme toggle */
 
 .header-right {
@@ -360,6 +369,11 @@
   transition: all var(--transition-normal, 200ms) cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.dark .header-dropdown {
+  background: var(--bg-surface);
+  border-color: var(--gray-200);
 }
 
 .header-dropdown.show {

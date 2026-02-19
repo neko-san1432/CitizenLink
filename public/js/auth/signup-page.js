@@ -269,9 +269,9 @@ function setupSignupMethodSelector() {
     if (persist) {
       try {
         if (method === "email") {
-          localStorage.setItem(METHOD_STORAGE_KEY, "email");
+          sessionStorage.setItem(METHOD_STORAGE_KEY, "email");
         } else {
-          localStorage.removeItem(METHOD_STORAGE_KEY);
+          sessionStorage.removeItem(METHOD_STORAGE_KEY);
         }
       } catch { }
     }
@@ -284,7 +284,7 @@ function setupSignupMethodSelector() {
     }
     selectMethod("none", { persist });
     clearOAuthContext();
-    try { localStorage.removeItem("cl_signup_step_index"); } catch { } // Reset step index storage
+    try { sessionStorage.removeItem("cl_signup_step_index"); } catch { } // Reset step index storage
     document.dispatchEvent(new Event("signup-reset")); // Reset UI step to 0
   };
   resetSignupStateHandler = resetSignupState;
@@ -299,7 +299,7 @@ function setupSignupMethodSelector() {
   // Restore last method if it was email to keep the form open
   let cachedMethod = null;
   try {
-    cachedMethod = localStorage.getItem(METHOD_STORAGE_KEY);
+    cachedMethod = sessionStorage.getItem(METHOD_STORAGE_KEY);
   } catch { }
   if (cachedMethod === "email") {
     selectMethod("email");

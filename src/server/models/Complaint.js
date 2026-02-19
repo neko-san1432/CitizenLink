@@ -10,7 +10,8 @@ class Complaint {
     this.department_r = data.department_r || [];
     this.preferred_departments = data.preferred_departments || [];
     this.category = data.category;
-    this.subcategory = data.subcategory;
+    this.category = data.category;
+    // this.subcategory = data.subcategory; // Removed
     this.workflow_status = data.workflow_status || "submitted";
     this.priority = data.priority || "low";
     this.urgency_level = data.urgency_level || "low";
@@ -131,7 +132,8 @@ class Complaint {
       //   ? this.preferred_departments
       //   : [], // Removed - Used for logic but not stored in complaints table
       category: this.category,
-      subcategory: this.subcategory,
+      category: this.category,
+      // subcategory: this.subcategory, // Removed
       workflow_status: this.workflow_status || "submitted",
       priority: this.priority || "low",
       urgency_level: this.urgency_level || "low",
@@ -157,7 +159,8 @@ class Complaint {
       department_r: this.department_r,
       preferred_departments: this.preferred_departments,
       category: this.category,
-      subcategory: this.subcategory,
+      category: this.category,
+      // subcategory: this.subcategory, // Removed
       workflow_status: this.workflow_status,
       priority: this.priority,
       urgency_level: this.urgency_level,

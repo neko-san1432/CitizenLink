@@ -23,7 +23,7 @@ class LguAdminAssignments {
     this.filters = {
       status: "all",
       priority: "all",
-      sub_type: "all",
+      // sub_type removed
       date_start: "",
       date_end: "",
     };
@@ -31,7 +31,7 @@ class LguAdminAssignments {
     this.itemsPerPage = 10;
     this.totalItems = 0;
     this.stats = { unassigned: 0, urgent: 0, high: 0 };
-    this.uniqueSubcategories = new Set();
+    // uniqueSubcategories removed
     this.initialize();
   }
   async initialize() {
@@ -56,8 +56,9 @@ class LguAdminAssignments {
         queryParams.append("status", this.filters.status);
       if (this.filters.priority !== "all")
         queryParams.append("priority", this.filters.priority);
-      if (this.filters.sub_type !== "all")
-        queryParams.append("sub_type", this.filters.sub_type);
+      if (this.filters.priority !== "all")
+        queryParams.append("priority", this.filters.priority);
+      // sub_type filter removed
       if (this.filters.date_start)
         queryParams.append("date_start", this.filters.date_start);
       if (this.filters.date_end)
@@ -81,12 +82,7 @@ class LguAdminAssignments {
         this.stats = response.stats || { unassigned: 0, urgent: 0, high: 0 };
 
         // Populate dynamic subcategories from metadata if available, or accumulate from data
-        if (response.unique_subcategories) {
-          this.updateSubcategoryFilter(response.unique_subcategories);
-        } else {
-          // Fallback: extract from current page (less ideal but functional)
-          this.extractSubcategories(newAssignments);
-        }
+        // Subcategory filter logic removed
 
         // Append or Replace
         if (this.currentPage === 1) {
@@ -112,46 +108,7 @@ class LguAdminAssignments {
     }
   }
 
-  extractSubcategories(assignments) {
-    let hasNew = false;
-    assignments.forEach((a) => {
-      // Assuming 'subcategory' or 'complaint_type' field exists
-      const subtype = a.subcategory || a.complaint_type;
-      if (subtype && !this.uniqueSubcategories.has(subtype)) {
-        this.uniqueSubcategories.add(subtype);
-        hasNew = true;
-      }
-    });
-
-    if (hasNew) {
-      this.updateSubcategoryFilter(Array.from(this.uniqueSubcategories));
-    }
-  }
-
-  updateSubcategoryFilter(subtypes) {
-    const select = document.getElementById("subtype-filter");
-    if (!select) return;
-
-    // Keep "All" option
-    const currentVal = select.value;
-
-    // Clear current options except "All"
-    while (select.options.length > 1) {
-      select.remove(1);
-    }
-
-    subtypes.sort().forEach((subtype) => {
-      const option = document.createElement("option");
-      option.value = subtype;
-      option.textContent = subtype;
-      select.appendChild(option);
-    });
-
-    // Restore selection if valid
-    if (subtypes.includes(currentVal)) {
-      select.value = currentVal;
-    }
-  }
+  // extractSubcategories and updateSubcategoryFilter removed
 
   async loadOfficers() {
     try {
@@ -259,12 +216,7 @@ class LguAdminAssignments {
         this.applyFilters();
       });
     }
-    if (subTypeFilter) {
-      subTypeFilter.addEventListener("change", (e) => {
-        this.filters.sub_type = e.target.value;
-        this.applyFilters();
-      });
-    }
+    // subTypeFilter listener removed
     if (dateStart) {
       dateStart.addEventListener("change", (e) => {
         this.filters.date_start = e.target.value;

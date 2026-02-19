@@ -21,7 +21,7 @@ const FORM_STORAGE_KEY = "cl_signup_form_data";
 // Try to recover signup code from storage if missing
 if (!signupCode) {
   try {
-    const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+    const savedData = sessionStorage.getItem(FORM_STORAGE_KEY);
     if (savedData) {
       const parsed = JSON.parse(savedData);
       if (parsed.signupCode) {
@@ -154,7 +154,7 @@ function setupFormPersistence() {
     }
 
     try {
-      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+      sessionStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (e) {
       console.warn("Failed to save form data:", e);
     }
@@ -162,7 +162,7 @@ function setupFormPersistence() {
 
   function loadFormData() {
     try {
-      const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+      const savedData = sessionStorage.getItem(FORM_STORAGE_KEY);
       console.log("Loading form data from storage:", savedData ? "Found data" : "No data");
 
       if (!savedData) return;
@@ -184,7 +184,7 @@ function setupFormPersistence() {
 
   function clearFormData() {
     try {
-      localStorage.removeItem(FORM_STORAGE_KEY);
+      sessionStorage.removeItem(FORM_STORAGE_KEY);
     } catch (e) {
       console.warn("Failed to clear form data:", e);
     }

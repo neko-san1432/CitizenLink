@@ -5,9 +5,9 @@
 @import url('/css/animations.css');
 
 /* Component Enhancements */
-@import url('/css/components/buttons-enhanced.css');
-@import url('/css/components/cards-enhanced.css');
-@import url('/css/components/forms-enhanced.css');
+@import url('/css/components/buttons.css');
+@import url('/css/components/cards.css');
+@import url('/css/components/forms.css');
 @import url('/css/components/tables-lists.css');
 
 /* Original Stylesheets */
@@ -15,7 +15,7 @@
 @import url('/css/theme.css');
 @import url('/css/app.css');
 @import url('/css/toast.css');
-@import url('/css/header-redesign.css');
+@import url('/css/header.css');
 @import url('/css/pages/dashboard-redesign.css');
 @import url('/css/components/modal.css');
 @import url('/css/components/sidebar.css');
@@ -223,7 +223,7 @@ a:hover {
 }
 
 .btn-secondary {
-  background: white;
+  background: var(--bg-surface);
   border-color: var(--gray-300);
 }
 
@@ -276,6 +276,8 @@ a:hover {
 .select,
 .textarea {
   width: 100%;
+  background-color: var(--bg-surface);
+  color: var(--gray-900);
   border: 1px solid var(--gray-300);
 }
 
@@ -298,6 +300,7 @@ a:hover {
 }
 
 .card {
+  background-color: var(--bg-surface);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -488,7 +491,70 @@ a:hover {
 
 .btn:focus-visible,
 .input:focus-visible,
-.select:focus-visible,
-.textarea:focus-visible {
-  outline: 2px solid var(--primary-500);
+
+/* =========================================
+   COMPACT MODE OVERRIDES (Consolidated)
+   ========================================= */
+:root {
+  --header-height: 70px;
+  /* Reduced from 90px */
+}
+
+/* Force body to fit viewport */
+body,
+html {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Main App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Quick Actions - Compact Grid */
+.quick-actions-grid {
+  gap: 0.5rem !important;
+}
+
+.quick-action-btn {
+  padding: 0.75rem !important;
+}
+
+/* Header Compact */
+header,
+.header-container {
+  height: var(--header-height) !important;
+  min-height: var(--header-height) !important;
+}
+
+/* Hero Section Compact */
+.hero-section {
+  min-height: auto !important;
+  padding-top: var(--header-height) !important;
+  height: 100vh;
+  /* Fit to screen */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* General spacing reduction */
+.mb-6 {
+  margin-bottom: 0.75rem !important;
+}
+
+.mb-4 {
+  margin-bottom: 0.5rem !important;
+}
+
+.p-6 {
+  padding: 0.75rem !important;
+}
+
+.p-4 {
+  padding: 0.75rem !important;
 }

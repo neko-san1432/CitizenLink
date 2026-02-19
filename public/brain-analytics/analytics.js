@@ -165,6 +165,8 @@ async function loadTaxonomy() {
   }
 }
 
+// function normalizeCategoryPair removed
+/*
 function normalizeCategoryPair(category, subcategory) {
   if (taxonomy && typeof DRIMSTaxonomy !== "undefined") {
     return DRIMSTaxonomy.normalizeCategoryPair(category, subcategory, taxonomy);
@@ -174,6 +176,7 @@ function normalizeCategoryPair(category, subcategory) {
     subcategory: safeText(subcategory).trim() || null,
   };
 }
+*/
 
 async function loadBarangayBoundaries() {
   try {
@@ -281,11 +284,11 @@ function isEmergency(category, subcategory) {
  */
 function processComplaint(input) {
   const description = safeText(input.description || input.descriptive_su || input.title || input.location_text);
-  const normalized = normalizeCategoryPair(input.category, input.subcategory);
+  // const normalized = normalizeCategoryPair(input.category, input.subcategory); // Removed
   const point = {
     ...input,
-    category: normalized.category || "Others",
-    subcategory: normalized.subcategory || normalized.category || "Others",
+    category: input.category || "Others",
+    // subcategory: normalized.subcategory || normalized.category || "Others", // Removed
     description,
   };
 
@@ -303,7 +306,7 @@ function processComplaint(input) {
     (intelligence.confidence && intelligence.confidence < 0.5 && point.category !== 'Others');
 
   // Emergency detection from taxonomy + NLP
-  const emergency = isEmergency(point.category, point.subcategory) ||
+  const emergency =
     triage.tier === 1 ||
     Boolean(intelligence.isCritical);
 
@@ -313,8 +316,8 @@ function processComplaint(input) {
     ...input,
     description,
     original_text: description,  // For train-system.js
-    category: point.ai_reclassified ? point.category : (point.category || normalized.category),
-    subcategory: point.ai_reclassified ? point.subcategory : normalized.subcategory,
+    category: point.ai_reclassified ? point.category : (point.category || "Others"),
+    // subcategory: point.ai_reclassified ? point.subcategory : normalized.subcategory, // Removed
     timestamp,
     barangay: extractBarangay(input),
     triage_score: triage.score,
@@ -391,7 +394,7 @@ function calcStats(data) {
       for (const k of c.keywords) stats.uniqueKeywords.add(k.term);
     }
 
-    const cat = c.subcategory || c.category || "Others";
+    const cat = c.category || "Others";
     stats.byCategory.set(cat, (stats.byCategory.get(cat) || 0) + 1);
 
     const brgy = c.barangay || "Unknown";
@@ -551,7 +554,7 @@ function renderOverview(stats) {
           <div class="alert-ticker-item">
             <div style="min-width:28px;color:var(--danger);"><i class="fas fa-exclamation-circle"></i></div>
             <div style="flex:1;">
-              <div style="font-weight:800;">${safeText(c.subcategory || c.category)}</div>
+              <div style="font-weight:800;">${safeText(c.category)}</div>
               <div style="color:var(--gray-600);font-size:12px;">${safeText(c.description).slice(0, 110)}</div>
             </div>
           </div>`
@@ -562,14 +565,18 @@ function renderOverview(stats) {
 
   const legendEl = document.getElementById("categoryLegend");
   if (legendEl) {
-    const top = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const top = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
     legendEl.innerHTML = top
-      .map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0;"><span>${k}</span><strong>${v}</strong></div>`)
+      .map(([k, v]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;width:100%;">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;" title="${k}">${k}</span>
+          <strong style="white-space:nowrap;">${v}</strong>
+        </div>`)
       .join("");
   }
 
   const healthDict = document.getElementById("healthDictSize");
-  if (healthDict) healthDict.textContent = `${stats.uniqueKeywordsCount.toLocaleString()} tokens`;
+  if (healthDict) healthDict.textContent = `${stats.uniqueKeywordsCount.toLocaleString()} entries`;
 
   const topBarangaysEl = document.getElementById("topBarangaysList");
   if (topBarangaysEl) {
@@ -787,13 +794,15 @@ function renderCategories(stats) {
     });
   }
 
-  // Subcategory breakdown chart (top 12 subcategories)
+  // Subcategory breakdown chart removed
+  /*
   const subDist = new Map();
   for (const c of processedComplaints) {
     const sub = c.subcategory || 'Unclassified';
     subDist.set(sub, (subDist.get(sub) || 0) + 1);
   }
   const topSubs = [...subDist.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  */
   renderBarChart(
     "subcategoryChart",
     topSubs.map(([k]) => k),

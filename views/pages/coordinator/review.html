@@ -66,8 +66,8 @@
         <div class="complaint-title-section">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <span id="complaint-category-badge"
-              style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;">CAT</span>
-            <span id="complaint-id-header" class="complaint-id">#ID</span>
+              style="background: #2563eb; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;">CAT</span>
+            <span id="complaint-id-header" class="complaint-id" style="color: #4b5563;">#ID</span>
           </div>
 
           <h1 id="complaint-title" class="complaint-title">Title</h1>
@@ -78,10 +78,10 @@
               <!-- Status Changer (Preserved) -->
               <div class="flex flex-col gap-2 w-full">
                 <div class="flex items-center gap-2">
-                  <label for="status-select" style="font-size: 0.8rem; font-weight: 600; color: #6b7280;">Update
+                  <label for="status-select" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Update
                     Status:</label>
                   <select id="status-select"
-                    style="padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 0.8rem; flex: 1;">
+                    style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; flex: 1; color: #1f2937; background-color: #fff;">
                     <option value="submitted">Submitted</option>
                     <option value="verified">Verified</option>
                     <option value="action_taken">Action Taken</option>
@@ -92,7 +92,7 @@
                     style="padding: 4px 12px; font-size: 0.8rem;">Update Status</button>
                 </div>
                 <textarea id="status-notes" placeholder="Add a comment or note about this update (optional)"
-                  style="width: 100%; padding: 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 0.8rem; min-height: 60px; resize: vertical;"></textarea>
+                  style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; min-height: 60px; resize: vertical; color: #1f2937;"></textarea>
               </div>
             </div>
 
@@ -131,7 +131,7 @@
           <h3>📋 Complaint Details</h3>
 
           <div class="detail-row" style="margin-bottom: 12px;">
-            <div class="detail-label" style="font-weight: 600; font-size: 0.9rem; color: #6b7280;">Type & Subtype</div>
+            <div class="detail-label">Type & Subtype</div>
             <div class="detail-value">
               <span id="complaint-type"></span>
               <span id="complaint-subtype"></span>
@@ -139,12 +139,12 @@
           </div>
 
           <div class="detail-row" style="margin-bottom: 12px;">
-            <div class="detail-label" style="font-weight: 600; font-size: 0.9rem; color: #6b7280;">Description</div>
+            <div class="detail-label">Description</div>
             <div class="detail-value" id="complaint-description"></div>
           </div>
 
           <div class="detail-row">
-            <div class="detail-label" style="font-weight: 600; font-size: 0.9rem; color: #6b7280;">Location</div>
+            <div class="detail-label">Location</div>
             <div class="detail-value" id="complaint-location"></div>
             <div class="map-action-buttons" style="display: flex; gap: 10px; margin: 8px 0;">
               <button id="toggle-boundary-btn" class="btn btn-sm btn-secondary" type="button"
@@ -156,7 +156,7 @@
           </div>
 
           <div class="detail-row" id="evidence-section" style="margin-top: 16px;">
-            <div class="detail-label" style="font-weight: 600; font-size: 0.9rem; color: #6b7280;">Evidence</div>
+            <div class="detail-label">Evidence</div>
             <div id="evidence-empty" style="color: #666; font-size: 0.95rem">No evidence uploaded.</div>
             <div class="evidence-grid" id="evidence-grid"></div>
           </div>

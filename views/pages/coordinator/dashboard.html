@@ -16,10 +16,12 @@
   <link rel="stylesheet" href="/css/components/clock.css" />
   <link rel="stylesheet" href="/css/components/sidebar.css" />
   <link rel="stylesheet" href="/css/app.css" />
-  <link rel="stylesheet" href="/css/header-redesign.css" />
+  <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+  <link rel="stylesheet" href="/css/pages/dashboard-redesign.css" />
   <link rel="stylesheet" href="/css/pages/coordinator-dashboard.css" />
   <link rel="stylesheet" href="/css/viewport-fix.css" />
+
   <link rel="stylesheet" href="/brain-analytics/analytics.css">
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 </head>
@@ -40,170 +42,17 @@
       </div>
 
       <!-- Main Content Grid -->
-      <div class="dashboard-content p-6">
-        <!-- Analytics Overview Section -->
-        <div id="analytics-overview-container">
-          <div class="metric-cards">
-            <div class="metric-card">
-              <div class="metric-icon"><i class="fas fa-clipboard-list"></i></div>
-              <div class="metric-value" id="totalComplaints">-</div>
-              <div class="metric-label">Total Complaints</div>
-            </div>
-            <div class="metric-card danger">
-              <div class="metric-icon"><i class="fas fa-exclamation-circle"></i></div>
-              <div class="metric-value" id="tier1Count">-</div>
-              <div class="metric-label">High Priority</div>
-            </div>
-            <div class="metric-card warning">
-              <div class="metric-icon"><i class="fas fa-exclamation-triangle"></i></div>
-              <div class="metric-value" id="tier2Count">-</div>
-              <div class="metric-label">Medium Priority</div>
-            </div>
-            <div class="metric-card success">
-              <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
-              <div class="metric-value" id="tier3Count">-</div>
-              <div class="metric-label">Low Priority</div>
-            </div>
-            <div class="metric-card danger">
-              <div class="metric-icon"><i class="fas fa-fire"></i></div>
-              <div class="metric-value" id="criticalCount">-</div>
-              <div class="metric-label">Emergency Cases</div>
-            </div>
-            <div class="metric-card info">
-              <div class="metric-icon"><i class="fas fa-key"></i></div>
-              <div class="metric-value" id="keywordsDetected">-</div>
-              <div class="metric-label">Keywords Found</div>
-            </div>
-            <div class="metric-card accent">
-              <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
-              <div class="metric-value" id="avgTriageScore">-</div>
-              <div class="metric-label">Avg. Priority Score</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-icon"><i class="fas fa-hashtag"></i></div>
-              <div class="metric-value" id="uniqueKeywords">-</div>
-              <div class="metric-label">Unique Keywords</div>
-            </div>
-          </div>
+      <div class="dashboard-content gap-6 p-6">
 
-          <div class="command-center-grid"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
-            <div class="command-widget"
-              style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--danger);">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <i class="fas fa-bell" style="color: var(--danger); font-size: 1.2em;"></i>
-                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Recent High-Priority
-                  Alerts</h4>
-                <span class="pulse-dot"
-                  style="width: 8px; height: 8px; background: var(--danger); border-radius: 50%; animation: pulse 2s infinite;"></span>
-              </div>
-              <div id="recentAlertsTicker" style="max-height: 180px; overflow-y: auto;">
-                <div style="padding: 10px; color: var(--gray-500); text-align: center;">
-                  <i class="fas fa-spinner fa-spin"></i> Loading alerts...
-                </div>
-              </div>
-            </div>
-            <div class="command-widget"
-              style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--primary);">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <i class="fas fa-chart-pie" style="color: var(--primary); font-size: 1.2em;"></i>
-                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">Category Breakdown</h4>
-              </div>
-              <div style="display: flex; align-items: center; gap: 20px;">
-                <canvas id="overviewCategoryPie" style="max-width: 120px; max-height: 120px;"></canvas>
-                <div id="categoryLegend" style="flex: 1; font-size: 0.85em;">
-                  <div style="padding: 10px; color: var(--gray-500); text-align: center;">Loading...
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="command-widget"
-              style="background: var(--card-bg, white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; border-left: 4px solid var(--success);">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <i class="fas fa-heartbeat" style="color: var(--success); font-size: 1.2em;"></i>
-                <h4 style="margin: 0; font-size: 1em; color: var(--gray-800);">System Health</h4>
-              </div>
-              <div id="systemHealthStatus" style="display: flex; flex-direction: column; gap: 10px;">
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                  <span><i class="fas fa-brain" style="margin-right: 8px; color: var(--primary);"></i>
-                    NLP Engine</span>
-                  <span class="status-badge"
-                    style="background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8em;">●
-                    Online</span>
-                </div>
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                  <span><i class="fas fa-hourglass-half" style="margin-right: 8px; color: var(--warning);"></i> Pending
-                    Reviews</span>
-                  <span id="healthPendingCount" style="font-weight: bold; color: var(--warning);">0</span>
-                </div>
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                  <span><i class="fas fa-database" style="margin-right: 8px; color: var(--info);"></i>
-                    Database</span>
-                  <span class="status-badge"
-                    style="background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8em;">●
-                    OK</span>
-                </div>
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gray-100); border-radius: 6px;">
-                  <span><i class="fas fa-book" style="margin-right: 8px; color: var(--accent);"></i>
-                    Dictionary</span>
-                  <span id="healthDictSize" style="font-weight: bold; color: var(--accent);">-
-                    entries</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="chart-row">
-            <div class="chart-container half">
-              <h3><i class="fas fa-chart-pie"></i> Priority Distribution</h3>
-              <canvas id="tierDistChart"></canvas>
-            </div>
-            <div class="chart-container half">
-              <h3><i class="fas fa-chart-bar"></i> Complaints by Category</h3>
-              <canvas id="categoryChart"></canvas>
-            </div>
-          </div>
-
-          <div class="chart-row">
-            <div class="chart-container half">
-              <h3><i class="fas fa-map-marked-alt"></i> Complaints by Barangay</h3>
-              <canvas id="barangayChart"></canvas>
-            </div>
-            <div class="chart-container half">
-              <h3><i class="fas fa-brain"></i> NLP Intelligence Impact</h3>
-              <canvas id="nlpImpactChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Lists Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <!-- Recent Activity -->
-          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
-              <a href="/review-queue" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
-            </div>
-            <div id="recent-activity-list" class="space-y-3">
-              <!-- Loading State -->
-              <div class="animate-pulse space-y-3">
-                <div class="h-16 bg-gray-100 rounded-lg"></div>
-                <div class="h-16 bg-gray-100 rounded-lg"></div>
-                <div class="h-16 bg-gray-100 rounded-lg"></div>
-              </div>
-            </div>
-          </div>
-
+        <!-- Top Row: Quick Actions & Recent Activity (Moved to top to match Citizen) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <!-- Quick Actions -->
           <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
-                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group">
+                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
+                onclick="window.location.href='/review-queue'">
                 <div
                   class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
@@ -215,7 +64,6 @@
                 <h4 class="font-medium text-gray-900">Verify Reports</h4>
                 <p class="text-sm text-gray-500 mt-1">Review incoming data</p>
               </button>
-
 
               <a href="/heatmap"
                 class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group block">
@@ -232,6 +80,221 @@
               </a>
             </div>
           </div>
+
+          <!-- Recent Activity -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
+              <a href="/review-queue" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
+            </div>
+            <div id="recent-activity-list" class="space-y-3">
+              <!-- Loading State -->
+              <div class="animate-pulse space-y-3">
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Overview Section -->
+        <div id="analytics-overview-container">
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Total Complaints -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Total Complaints</p>
+                <h3 class="text-2xl font-bold text-gray-800" id="totalComplaints">-</h3>
+              </div>
+              <div class="p-3 bg-gray-100 text-gray-600 rounded-lg">
+                <i class="fas fa-clipboard-list text-xl"></i>
+              </div>
+            </div>
+
+            <!-- Emergency Cases -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Emergency Cases</p>
+                <h3 class="text-2xl font-bold text-red-600" id="criticalCount">-</h3>
+              </div>
+              <div class="p-3 bg-red-50 text-red-600 rounded-lg">
+                <i class="fas fa-fire text-xl"></i>
+              </div>
+            </div>
+
+            <!-- High Priority -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">High Priority</p>
+                <h3 class="text-2xl font-bold text-orange-600" id="tier1Count">-</h3>
+              </div>
+              <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                <i class="fas fa-exclamation-circle text-xl"></i>
+              </div>
+            </div>
+
+            <!-- Medium Priority -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Medium Priority</p>
+                <h3 class="text-2xl font-bold text-yellow-600" id="tier2Count">-</h3>
+              </div>
+              <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
+                <i class="fas fa-exclamation-triangle text-xl"></i>
+              </div>
+            </div>
+
+            <!-- Row 2 -->
+            <!-- Low Priority -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Low Priority</p>
+                <h3 class="text-2xl font-bold text-green-600" id="tier3Count">-</h3>
+              </div>
+              <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                <i class="fas fa-check-circle text-xl"></i>
+              </div>
+            </div>
+
+            <!-- Avg Score -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Avg. Priority Score</p>
+                <h3 class="text-2xl font-bold text-purple-600" id="avgTriageScore">-</h3>
+              </div>
+              <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                <i class="fas fa-chart-line text-xl"></i>
+              </div>
+            </div>
+
+            <!-- Keywords Found -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Keywords Found</p>
+                <h3 class="text-2xl font-bold text-blue-600" id="keywordsDetected">-</h3>
+              </div>
+              <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                <i class="fas fa-key text-xl"></i>
+              </div>
+            </div>
+
+            <!-- Unique Keywords -->
+            <div
+              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 font-medium">Unique Keywords</p>
+                <h3 class="text-2xl font-bold text-indigo-600" id="uniqueKeywords">-</h3>
+              </div>
+              <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                <i class="fas fa-hashtag text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widgets Row (Command Center) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Recent High Priority Alerts -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div class="flex items-center gap-2 mb-4">
+                <i class="fas fa-bell text-red-500"></i>
+                <h4 class="font-semibold text-gray-800">Recent High-Priority Alerts</h4>
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-auto"></span>
+              </div>
+              <div id="recentAlertsTicker" class="overflow-y-auto max-h-[180px]">
+                <div class="text-center text-gray-500 py-4">
+                  <i class="fas fa-spinner fa-spin"></i> Loading alerts...
+                </div>
+              </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div class="flex items-center gap-2 mb-4">
+                <i class="fas fa-chart-pie text-blue-500"></i>
+                <h4 class="font-semibold text-gray-800">Category Breakdown</h4>
+              </div>
+              <div class="flex items-center gap-4">
+                <canvas id="overviewCategoryPie" class="max-w-[120px] max-h-[120px]"></canvas>
+                <div id="categoryLegend" class="flex-1 text-sm min-w-0 overflow-hidden">
+                  <div class="text-center text-gray-500 py-4">Loading...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div class="flex items-center gap-2 mb-4">
+                <i class="fas fa-heartbeat text-green-500"></i>
+                <h4 class="font-semibold text-gray-800">System Health</h4>
+              </div>
+              <div id="systemHealthStatus" class="flex flex-col gap-2">
+                <!-- Health Items (Dynamic) -->
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                  <span class="text-sm text-gray-700"><i class="fas fa-brain mr-2 text-blue-500"></i> NLP Engine</span>
+                  <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">● Online</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                  <span class="text-sm text-gray-700"><i class="fas fa-hourglass-half mr-2 text-yellow-500"></i> Pending
+                    Reviews</span>
+                  <span id="healthPendingCount" class="font-bold text-yellow-600 text-sm">0</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                  <span class="text-sm text-gray-700"><i class="fas fa-database mr-2 text-indigo-500"></i>
+                    Database</span>
+                  <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">● OK</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                  <span class="text-sm text-gray-700"><i class="fas fa-book mr-2 text-purple-500"></i> Dictionary</span>
+                  <span id="healthDictSize" class="font-bold text-purple-600 text-sm">- entries</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-pie mr-2 text-gray-500"></i> Priority
+                Distribution</h3>
+              <div class="h-[300px] relative">
+                <canvas id="tierDistChart"></canvas>
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-bar mr-2 text-gray-500"></i>
+                Complaints by Category</h3>
+              <div class="h-[300px] relative">
+                <canvas id="categoryChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-map-marked-alt mr-2 text-gray-500"></i>
+                Complaints by Barangay</h3>
+              <div class="h-[300px] relative">
+                <canvas id="barangayChart"></canvas>
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-brain mr-2 text-gray-500"></i> NLP
+                Intelligence Impact</h3>
+              <div class="h-[300px] relative">
+                <canvas id="nlpImpactChart"></canvas>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

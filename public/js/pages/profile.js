@@ -1,8 +1,6 @@
 import { getUserRole, refreshMetaFromSession } from "../auth/authChecker.js";
 import showMessage from "../components/toast.js";
 
-let cachedProfile = null;
-
 async function checkAuthentication() {
     try {
         let role = await getUserRole({ refresh: false });
@@ -28,257 +26,157 @@ async function fetchProfile() {
     return json?.data || {};
 }
 
-async function fetchMyComplaints(role) {
+async function fetchActivity(role) {
     try {
+        // For now using the same endpoints, but we could add a dedicated activity log endpoint
         const roleLower = role?.toLowerCase() || "citizen";
-        if (roleLower === "lgu" || roleLower === "lgu-officer") {
-            const res = await fetch("/api/lgu/assigned-tasks?limit=20");
-            if (!res.ok) return [];
-            const json = await res.json();
-            return Array.isArray(json?.data) ? json.data : [];
-        } else if (roleLower === "lgu-admin") {
-            const res = await fetch("/api/lgu-admin/department-assignments?limit=20");
-            if (!res.ok) return [];
-            const json = await res.json();
-            return Array.isArray(json?.data) ? json.data : [];
+        let url = "/api/complaints/my?limit=50"; // Fetch more for the scrollable list
+
+        if (roleLower.includes("lgu")) {
+            url = "/api/lgu/assigned-tasks?limit=50";
+            if (roleLower === "lgu-admin") url = "/api/lgu-admin/department-assignments?limit=50";
         }
-        const res = await fetch("/api/complaints/my?limit=20");
+
+        const res = await fetch(url);
         if (!res.ok) return [];
         const json = await res.json();
         return Array.isArray(json?.data) ? json.data : [];
     } catch (error) {
-        console.warn("Could not fetch data:", error.message);
+        console.warn("Could not fetch activity:", error);
         return [];
     }
 }
 
-function formatRoleDisplay(role) {
-    if (!role) return "—";
-    const roleLower = role.toLowerCase();
-    const roleMap = {
-        citizen: "Citizen",
-        "super-admin": "Super Admin",
-        "complaint-coordinator": "Complaint Coordinator",
-        "lgu-admin": "LGU Admin",
-        lgu: "LGU Officer",
-        "lgu-hr": "LGU HR",
-        "lgu-officer": "LGU Officer",
-    };
-    return (
-        roleMap[roleLower] ||
-        role.charAt(0).toUpperCase() + role.slice(1).replace(/-/g, " ")
-    );
-}
-
 function renderProfile(profile) {
+    // Name Calculation
     const firstName = profile?.firstName || profile?.first_name || "";
     const lastName = profile?.lastName || profile?.last_name || "";
     const middleName = profile?.middleName || profile?.middle_name || "";
-
     let name = profile?.name || profile?.full_name || "";
     if (!name && (firstName || lastName)) {
         const parts = [firstName, middleName, lastName].filter(Boolean);
         name = parts.join(" ") || "User";
     }
-    if (!name) name = "User";
 
-    const email = profile?.email || "—";
-    const mobile = profile?.mobileNumber || profile?.mobile_number || profile?.mobile || "—";
-    const role = profile?.role || profile?.normalizedRole || "citizen";
-    const department = profile?.department || profile?.dpt || null;
-    const employeeId = profile?.employeeId || profile?.employee_id || null;
+    // Basic Info
+    document.getElementById("profile-name-display").textContent = name || "User";
+    document.getElementById("profile-role-display").textContent = formatRole(profile?.role || "citizen");
+    document.getElementById("profile-initial").textContent = (name || "U").charAt(0).toUpperCase();
 
-    const nameDisplayEl = document.getElementById("profile-name-display");
-    if (nameDisplayEl) nameDisplayEl.textContent = name;
+    // Contact Info
+    document.getElementById("profile-email-display").textContent = profile?.email || "—";
+    document.getElementById("profile-mobile-display").textContent = profile?.mobileNumber || profile?.mobile_number || "—";
 
-    const emailDisplayEl = document.getElementById("profile-email-display");
-    if (emailDisplayEl) emailDisplayEl.textContent = email;
+    // Address
+    const addr = profile?.address || {};
+    const addrStr = [addr.line1, addr.barangay, addr.postalCode].filter(Boolean).join(", ");
+    document.getElementById("profile-address-display").textContent = addrStr || "—";
 
-    const initialEl = document.getElementById("profile-initial");
-    if (initialEl && name !== "—") initialEl.textContent = name.charAt(0).toUpperCase();
-
-    const mobileDisplayEl = document.getElementById("profile-mobile-display");
-    if (mobileDisplayEl) mobileDisplayEl.textContent = mobile || "—";
-
-    const roleEl = document.getElementById("profile-role");
-    if (roleEl) roleEl.textContent = formatRoleDisplay(role);
-
-    const officeItemEl = document.getElementById("profile-office-item");
-    const officeEl = document.getElementById("profile-office");
-    const roleLower = role.toLowerCase().trim();
-
-    const shouldShowOffice = (roleLower === "lgu-admin" || roleLower === "lgu" || roleLower === "lgu-officer");
-
-    if (officeItemEl && officeEl) {
-        if (shouldShowOffice && department) {
-            officeItemEl.style.display = "flex";
-            officeEl.textContent = department || "—";
-        } else {
-            officeItemEl.style.display = "none";
-        }
+    // Member Since
+    const created = profile?.created_at || profile?.timestamps?.created;
+    if (created) {
+        const date = new Date(created);
+        const month = date.toLocaleString('default', { month: 'short' });
+        document.getElementById("member-since").textContent = `${month} ${date.getFullYear()}`;
+        document.getElementById("member-since").nextElementSibling.textContent = "Joined";
     }
-
-    const positionIdItemEl = document.getElementById("profile-position-id-item");
-    const positionIdEl = document.getElementById("profile-position-id");
-    if (positionIdItemEl && positionIdEl) {
-        if (employeeId) {
-            positionIdItemEl.style.display = "flex";
-            positionIdEl.textContent = employeeId;
-        } else {
-            positionIdItemEl.style.display = "none";
-        }
-    }
-
-    const memberSinceEl = document.getElementById("member-since");
-    const createdDate = profile?.created_at || profile?.timestamps?.created;
-    if (memberSinceEl && createdDate) {
-        const date = new Date(createdDate);
-        if (!isNaN(date.getTime())) {
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            memberSinceEl.textContent = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-        }
-    }
-
-    const address = profile?.address || {};
-    const addressLine1 = address?.line1 || address?.address_line_1 || null;
-    const addressLine2 = address?.line2 || address?.address_line_2 || null;
-    const postalCode = address?.postalCode || address?.postal_code || null;
-    const barangay = address?.barangay || null;
-
-    const addressLine1Display = document.getElementById("address-line-1-display");
-    const addressLine2Display = document.getElementById("address-line-2-display");
-    const postalDisplay = document.getElementById("address-postal-display");
-    const barangayDisplay = document.getElementById("address-barangay-display");
-
-    if (addressLine1Display) addressLine1Display.textContent = addressLine1 || "—";
-    if (addressLine2Display) {
-        if (addressLine2) {
-            addressLine2Display.textContent = addressLine2;
-            addressLine2Display.style.display = "block";
-        } else {
-            addressLine2Display.style.display = "none";
-        }
-    }
-    if (postalDisplay) postalDisplay.textContent = postalCode || "—";
-    if (barangayDisplay) barangayDisplay.textContent = barangay || "—";
 }
 
-let allItems = [];
-let currentPage = 1;
-const ITEMS_PER_PAGE = 10;
-
-function renderComplaints(list, role) {
-    allItems = list;
-    renderPage(1, role);
-    renderComplaintChart(list);
+function formatRole(role) {
+    if (!role) return "Citizen";
+    return role.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-function renderComplaintChart(items) {
-    const container = document.getElementById("complaint-stats-container");
-    const canvas = document.getElementById("complaintStatsChart");
-    if (!items || items.length === 0 || !container || !canvas) {
-        if (container) container.style.display = "none";
-        return;
-    }
-    container.style.display = "block";
+function renderStats(activities) {
+    let total = activities.length;
+    let active = 0;
+    let resolved = 0;
 
-    let open = 0, inProgress = 0, resolved = 0;
-    items.forEach((item) => {
-        const status = (item.workflow_status || item.status || "").toLowerCase();
-        if (["submitted", "pending", "new", "open"].includes(status)) open++;
-        else if (["in_progress", "assigned", "on_hold", "investigating"].includes(status)) inProgress++;
-        else if (["resolved", "closed", "completed", "rejected", "done"].includes(status)) resolved++;
+    activities.forEach(a => {
+        const status = (a.status || a.workflow_status || "").toLowerCase();
+        if (["resolved", "closed", "completed", "rejected"].includes(status)) {
+            resolved++;
+        } else {
+            active++;
+        }
     });
 
-    const existingChart = Chart.getChart(canvas);
-    if (existingChart) existingChart.destroy();
-
-    new Chart(canvas, {
-        type: "doughnut",
-        data: {
-            labels: ["Open", "In Progress", "Resolved"],
-            datasets: [{
-                data: [open, inProgress, resolved],
-                backgroundColor: ["#60a5fa", "#f59e0b", "#10b981"],
-                borderWidth: 0,
-                hoverOffset: 4,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: "right",
-                    labels: { boxWidth: 12, font: { family: "'Source Sans 3', sans-serif" } },
-                },
-                title: {
-                    display: true,
-                    text: "Status Overview",
-                    font: { size: 14, weight: "600" },
-                    align: "start",
-                    padding: { bottom: 10 },
-                },
-            },
-            cutout: "70%",
-        },
-    });
+    document.getElementById("stat-total").textContent = total;
+    document.getElementById("stat-active").textContent = active;
+    document.getElementById("stat-resolved").textContent = resolved;
 }
 
-function renderPage(page, role) {
-    currentPage = page;
-    const container = document.getElementById("my-complaints");
-    const empty = document.getElementById("complaints-empty");
-    if (!container || !empty) return;
+function renderActivityList(activities) {
+    const container = document.getElementById("activity-list");
+    if (!container) return;
 
-    const isStaff = ["lgu", "lgu-officer", "lgu-admin"].includes(role?.toLowerCase());
     container.innerHTML = "";
 
-    if (!allItems.length) {
-        empty.classList.remove("hidden");
+    if (activities.length === 0) {
+        container.innerHTML = `
+      <div class="flex flex-col items-center justify-center h-48 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="empty-state-icon mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p>No activity yet</p>
+      </div>
+    `;
         return;
     }
 
-    empty.classList.add("hidden");
-    const totalItems = allItems.length;
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
-    const currentItems = allItems.slice(startIndex, endIndex);
-
-    const table = document.createElement("table");
-    table.className = "complaints-table";
-    table.innerHTML = `
-    <thead><tr><th>Complaint</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
-    <tbody>${currentItems.map(item => {
-        const title = item.title || item.complaints?.title || "Assignment";
+    activities.forEach(item => {
+        const title = item.title || item.complaints?.title || "Untitled Activity";
+        const date = new Date(item.submitted_at || item.created_at || Date.now()).toLocaleDateString();
+        const status = (item.status || item.workflow_status || "Pending").replace(/_/g, " ");
         const id = item.complaint_id || item.id;
-        const date = item.submitted_at || item.assigned_at || item.created_at;
-        const status = (item.status || item.workflow_status || "unknown").toLowerCase().replace(/\s+/g, "_");
-        const dateStr = date ? new Date(date).toLocaleDateString() : "";
-        return `
-        <tr>
-          <td><div class="font-medium">${title}</div><div class="text-xs text-gray-500">ID: ${id.substring(0, 8)}...</div></td>
-          <td><span class="status-badge status-${status}">${status.replace(/_/g, " ")}</span></td>
-          <td class="text-gray-500">${dateStr}</td>
-          <td><a class="btn-secondary btn-sm" href="/complaint-details/${id}?from=profile">View</a></td>
-        </tr>`;
-    }).join('')}</tbody>
-  `;
-    container.appendChild(table);
+
+        // Determine icon and color based on status
+        let iconBg = "bg-blue-100 text-blue-600";
+        let iconPath = "d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'"; // File text
+
+        if (status.toLowerCase().includes("resolved")) {
+            iconBg = "bg-green-100 text-green-600";
+            iconPath = "d='M5 13l4 4L19 7'"; // Check
+        } else if (status.toLowerCase().includes("progress")) {
+            iconBg = "bg-orange-100 text-orange-600";
+            iconPath = "d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'"; // Clock
+        }
+
+        const card = document.createElement("div");
+        card.className = "activity-item cursor-pointer";
+        card.onclick = () => window.location.href = `/complaint-details/${id}`;
+
+        card.innerHTML = `
+      <div class="activity-icon ${iconBg}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" ${iconPath} />
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h4 class="text-sm font-bold text-gray-800 truncate">${title}</h4>
+        <p class="text-xs text-gray-500">ID: ${id.substring(0, 8)} • ${date}</p>
+      </div>
+      <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600 capitalize">
+        ${status}
+      </span>
+    `;
+
+        container.appendChild(card);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
     if (!(await checkAuthentication())) return;
     try {
         const profile = await fetchProfile();
-        cachedProfile = profile;
         renderProfile(profile);
 
-        const role = profile?.role || profile?.normalizedRole || "citizen";
-        const data = await fetchMyComplaints(role);
-        renderComplaints(data, role);
+        const role = profile?.role || "citizen";
+        const activities = await fetchActivity(role);
+        renderStats(activities);
+        renderActivityList(activities);
     } catch (error) {
-        console.error("[PROFILE] Initialization error:", error);
-        showMessage("error", "Failed to load profile data");
+        console.error("Profile load error:", error);
+        showMessage("error", "Failed to load profile");
     }
 });

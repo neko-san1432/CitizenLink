@@ -73,10 +73,16 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  padding: 1.25rem 2rem;
+  padding: 0 2rem;
+  height: 70px;
+  /* Match dashboard header */
   z-index: 100;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  /* Ensure flex for alignment */
+  align-items: center;
+  /* Center vertically */
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-out;
   will-change: transform, opacity;
   opacity: 0;
@@ -103,6 +109,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  /* Fix for flex container collapse */
 }
 
 .logo {
@@ -111,7 +119,8 @@ body {
   gap: 0.75rem;
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  /* Reduced from 1.5rem */
   letter-spacing: -0.02em;
 }
 

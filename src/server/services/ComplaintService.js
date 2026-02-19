@@ -48,7 +48,7 @@ class ComplaintService {
         if (!complaintData.category && nlpResult.category && nlpResult.category !== 'Others') {
           console.log(`[COMPLAINT] Auto-categorized: ${nlpResult.category} (${nlpResult.method})`);
           complaintData.category = nlpResult.category;
-          complaintData.subcategory = nlpResult.subcategory;
+          // subcategory assignment removed
         }
 
         // Auto-score urgency
@@ -107,7 +107,7 @@ class ComplaintService {
         original_category: nlpResult.category,
         matched_term: nlpResult.matched_term
       } : null,
-      // Note: category and subcategory fields are passed through as-is (UUIDs from categories/subcategories tables)
+      // Note: category field is passed through as-is (UUID from categories table)
     };
 
     // [FIX] Ensure location_text is not null if coordinates exist
@@ -296,7 +296,7 @@ class ComplaintService {
     try {
       if (!complaintData.latitude || !complaintData.longitude) return [];
 
-      const { latitude, longitude, category, subcategory } = complaintData;
+      const { latitude, longitude, category } = complaintData;
 
       // Time window: look back 48 hours (+ buffer) instead of 30 days
       // We fetch a bit more to be safe, but the strict check is in the utility
@@ -318,7 +318,7 @@ class ComplaintService {
       let query = client
         .from("complaints")
         .select(
-          "id, descriptive_su, latitude, longitude, submitted_at, workflow_status, category, subcategory, upvote_count"
+          "id, descriptive_su, latitude, longitude, submitted_at, workflow_status, category, upvote_count"
         )
         .gte("submitted_at", lookbackDate.toISOString())
         .neq("workflow_status", "closed")
@@ -521,7 +521,7 @@ class ComplaintService {
       const { data: target, error } = await this.complaintRepo.supabase
         .from("complaints")
         .select(
-          "id, latitude, longitude, category, subcategory, submitted_at, descriptive_su"
+          "id, latitude, longitude, category, submitted_at, descriptive_su"
         )
         .eq("id", complaintId)
         .single();
@@ -534,7 +534,7 @@ class ComplaintService {
         latitude: target.latitude,
         longitude: target.longitude,
         category: target.category,
-        subcategory: target.subcategory,
+        // subcategory removed
       });
 
       // Filter out self and closed complaints

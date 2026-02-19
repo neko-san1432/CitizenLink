@@ -18,8 +18,9 @@
     <link rel="stylesheet" href="/css/components/sidebar.css" />
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/components/clock.css" />
-    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/header.css" />
     <link rel="stylesheet" href="/css/viewport-fix.css" />
+
     <link rel="stylesheet" href="/brain-analytics/analytics.css">
 </head>
 
@@ -29,290 +30,368 @@
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
-            <!-- Tab Navigation -->
-
-            <div id="loadingOverlay" class="loading-overlay">
-                <div class="loading-content">
-                    <div class="spinner"></div>
-                    <p>Loading Complaints...</p>
-                    <p class="loading-detail">Processing data, please wait...</p>
-                </div>
-            </div>
-
-            <main class="main-content">
+            <!-- Main Content Container with New Layout -->
+            <div class="dashboard-content p-6">
+                <!-- Tab Navigation (Styled as Pills) -->
 
 
-                <section id="temporal" class="tab-content">
-                    <h2 class="section-title"><i class="fas fa-clock"></i> Time Trend Analysis</h2>
-                    <p class="section-description">Analyze complaint patterns over time to identify peak periods and
-                        seasonal trends.</p>
+                <!-- Time Trends Section -->
+                <section id="temporal" class="tab-content" style="display: block;">
+                    <div class="dashboard-header-section mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Time Trend Analysis</h2>
+                        <p class="text-gray-600">Analyze complaint patterns over time to identify peak periods and
+                            seasonal trends.</p>
+                    </div>
 
-                    <!-- Time Summary Cards -->
-                    <div class="metric-cards" style="margin-bottom: 20px;">
-                        <div class="metric-card info">
-                            <div class="metric-icon"><i class="fas fa-calendar-day"></i></div>
-                            <div class="metric-value" id="todayCount">-</div>
-                            <div class="metric-label">Today's Complaints</div>
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Today's Complaints</p>
+                                <h3 class="text-2xl font-bold text-blue-600" id="todayCount">-</h3>
+                            </div>
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                                <i class="fas fa-calendar-day text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card warning">
-                            <div class="metric-icon"><i class="fas fa-calendar-week"></i></div>
-                            <div class="metric-value" id="weekCount">-</div>
-                            <div class="metric-label">This Week</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">This Week</p>
+                                <h3 class="text-2xl font-bold text-orange-600" id="weekCount">-</h3>
+                            </div>
+                            <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                                <i class="fas fa-calendar-week text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card success">
-                            <div class="metric-icon"><i class="fas fa-calendar"></i></div>
-                            <div class="metric-value" id="monthCount">-</div>
-                            <div class="metric-label">This Month</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">This Month</p>
+                                <h3 class="text-2xl font-bold text-green-600" id="monthCount">-</h3>
+                            </div>
+                            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                                <i class="fas fa-calendar text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card accent">
-                            <div class="metric-icon"><i class="fas fa-fire-alt"></i></div>
-                            <div class="metric-value" id="peakHour">-</div>
-                            <div class="metric-label">Peak Hour</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Peak Hour</p>
+                                <h3 class="text-2xl font-bold text-purple-600" id="peakHour">-</h3>
+                            </div>
+                            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                                <i class="fas fa-fire-alt text-xl"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="chart-row">
-                        <div class="chart-container full">
-                            <h3><i class="fas fa-chart-line"></i> Complaints Over Time (Last 30 Days)</h3>
+                    <!-- Charts Grid -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-4"><i
+                                class="fas fa-chart-line mr-2 text-gray-500"></i> Complaints Over Time (Last 30 Days)
+                        </h3>
+                        <div class="h-[300px] relative">
                             <canvas id="timeTrendChart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-row">
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-calendar-alt"></i> Monthly Distribution</h3>
-                            <canvas id="monthlyChart"></canvas>
-                        </div>
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-clock"></i> Complaints by Hour of Day</h3>
-                            <canvas id="hourlyChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-row">
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-calendar-week"></i> Day of Week Pattern</h3>
-                            <canvas id="dayOfWeekChart"></canvas>
-                        </div>
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-chart-area"></i> Priority Trend Over Time</h3>
-                            <canvas id="priorityTrendChart"></canvas>
-                        </div>
-                    </div>
-                </section>
 
-                <section id="categories" class="tab-content">
-                    <h2 class="section-title"><i class="fas fa-tags"></i> Category Intelligence</h2>
-                    <p class="section-description">Deep dive into complaint categories, priority levels, and keyword
-                        analysis powered by NLP.</p>
-
-                    <!-- Category Summary Cards -->
-                    <div class="metric-cards" style="margin-bottom: 20px;">
-                        <div class="metric-card">
-                            <div class="metric-icon"><i class="fas fa-folder-open"></i></div>
-                            <div class="metric-value" id="uniqueCategoryCount">-</div>
-                            <div class="metric-label">Active Categories</div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i
+                                    class="fas fa-calendar-alt mr-2 text-gray-500"></i> Monthly Distribution</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
                         </div>
-                        <div class="metric-card danger">
-                            <div class="metric-icon"><i class="fas fa-arrow-up"></i></div>
-                            <div class="metric-value" id="topCategoryName">-</div>
-                            <div class="metric-label">Top Category</div>
-                        </div>
-                        <div class="metric-card info">
-                            <div class="metric-icon"><i class="fas fa-robot"></i></div>
-                            <div class="metric-value" id="nlpAccuracy">-</div>
-                            <div class="metric-label">NLP Confidence</div>
-                        </div>
-                        <div class="metric-card warning">
-                            <div class="metric-icon"><i class="fas fa-sync-alt"></i></div>
-                            <div class="metric-value" id="reclassifiedCount">-</div>
-                            <div class="metric-label">AI Reclassified</div>
-                        </div>
-                    </div>
-
-                    <div class="chart-row">
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-chart-pie"></i> Category Distribution</h3>
-                            <canvas id="categoryDistChart"></canvas>
-                        </div>
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-layer-group"></i> Priority by Category</h3>
-                            <canvas id="categoryPriorityChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-row">
-                        <div class="chart-container full">
-                            <h3><i class="fas fa-key"></i> Top Keywords Detected by NLP</h3>
-                            <div id="keywordCloud" class="keyword-cloud"
-                                style="padding: 20px; min-height: 120px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-clock mr-2 text-gray-500"></i>
+                                Complaints by Hour of Day</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="hourlyChart"></canvas>
                             </div>
                         </div>
                     </div>
-                    <div class="chart-row">
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-chart-bar"></i> Subcategory Breakdown</h3>
-                            <canvas id="subcategoryChart"></canvas>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i
+                                    class="fas fa-calendar-week mr-2 text-gray-500"></i> Day of Week Pattern</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="dayOfWeekChart"></canvas>
+                            </div>
                         </div>
-                        <div class="chart-container half">
-                            <h3><i class="fas fa-brain"></i> NLP Detection Methods</h3>
-                            <canvas id="nlpMethodChart"></canvas>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i
+                                    class="fas fa-chart-area mr-2 text-gray-500"></i> Priority Trend Over Time</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="priorityTrendChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="edge-cases" class="tab-content">
-                    <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Smart Detection Analysis</h2>
-                    <p class="section-description">Review edge cases where NLP detected figurative language, conditional
-                        statements, or category mismatches that need human review.</p>
+                <!-- Categories Section -->
+                <section id="categories" class="tab-content" style="display: none;">
+                    <div class="dashboard-header-section mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Category Intelligence</h2>
+                        <p class="text-gray-600">Deep dive into complaint categories, priority levels, and keyword
+                            analysis powered by NLP.</p>
+                    </div>
 
-                    <!-- Smart Detection Summary -->
-                    <div class="metric-cards" style="margin-bottom: 20px;">
-                        <div class="metric-card info">
-                            <div class="metric-icon"><i class="fas fa-theater-masks"></i></div>
-                            <div class="metric-value" id="totalMetaphors">0</div>
-                            <div class="metric-label">Figurative Detected</div>
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Active Categories</p>
+                                <h3 class="text-2xl font-bold text-blue-600" id="uniqueCategoryCount">-</h3>
+                            </div>
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                                <i class="fas fa-folder-open text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card warning">
-                            <div class="metric-icon"><i class="fas fa-question-circle"></i></div>
-                            <div class="metric-value" id="totalSpeculation">0</div>
-                            <div class="metric-label">Conditional Reports</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Top Category</p>
+                                <h3 class="text-2xl font-bold text-red-600 truncate max-w-[150px]" id="topCategoryName">
+                                    -</h3>
+                            </div>
+                            <div class="p-3 bg-red-50 text-red-600 rounded-lg">
+                                <i class="fas fa-arrow-up text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card danger">
-                            <div class="metric-icon"><i class="fas fa-not-equal"></i></div>
-                            <div class="metric-value" id="totalMismatch">0</div>
-                            <div class="metric-label">Mismatches Found</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">NLP Confidence</p>
+                                <h3 class="text-2xl font-bold text-indigo-600" id="nlpAccuracy">-</h3>
+                            </div>
+                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <i class="fas fa-robot text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card success">
-                            <div class="metric-icon"><i class="fas fa-percentage"></i></div>
-                            <div class="metric-value" id="edgeCaseRate">0%</div>
-                            <div class="metric-label">Edge Case Rate</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">AI Reclassified</p>
+                                <h3 class="text-2xl font-bold text-yellow-600" id="reclassifiedCount">-</h3>
+                            </div>
+                            <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
+                                <i class="fas fa-sync-alt text-xl"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="edge-case-grid"
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-                        <div class="edge-case-card"
-                            style="background: var(--card-bg, #fff); border-left: 4px solid #7B1FA2;">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i
-                                        class="fas fa-theater-masks" style="color: #7B1FA2;"></i> Figurative Language
-                                </h3>
-                                <span class="badge"
-                                    style="background: #E1BEE7; color: #7B1FA2; font-size: 16px; padding: 4px 12px;"
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i
+                                    class="fas fa-chart-pie mr-2 text-gray-500"></i> Category Distribution</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="categoryDistChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i
+                                    class="fas fa-layer-group mr-2 text-gray-500"></i> Priority by Category</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="categoryPriorityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-key mr-2 text-gray-500"></i> Top
+                            Keywords Detected by NLP</h3>
+                        <div id="keywordCloud" class="flex flex-wrap gap-2 justify-center p-4 min-h-[120px]"></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i
+                                    class="fas fa-chart-bar mr-2 text-gray-500"></i> Subcategory Breakdown</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="subcategoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-brain mr-2 text-gray-500"></i>
+                                NLP Detection Methods</h3>
+                            <div class="h-[300px] relative">
+                                <canvas id="nlpMethodChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Smart Detection Section -->
+                <section id="edge-cases" class="tab-content" style="display: none;">
+                    <div class="dashboard-header-section mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Smart Detection Analysis</h2>
+                        <p class="text-gray-600">Review edge cases where NLP detected figurative language, conditional
+                            statements, or category mismatches.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Figurative Detected</p>
+                                <h3 class="text-2xl font-bold text-purple-600" id="totalMetaphors">0</h3>
+                            </div>
+                            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                                <i class="fas fa-theater-masks text-xl"></i>
+                            </div>
+                        </div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Conditional Reports</p>
+                                <h3 class="text-2xl font-bold text-orange-600" id="totalSpeculation">0</h3>
+                            </div>
+                            <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                                <i class="fas fa-question-circle text-xl"></i>
+                            </div>
+                        </div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Mismatches Found</p>
+                                <h3 class="text-2xl font-bold text-red-600" id="totalMismatch">0</h3>
+                            </div>
+                            <div class="p-3 bg-red-50 text-red-600 rounded-lg">
+                                <i class="fas fa-not-equal text-xl"></i>
+                            </div>
+                        </div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Edge Case Rate</p>
+                                <h3 class="text-2xl font-bold text-green-600" id="edgeCaseRate">0%</h3>
+                            </div>
+                            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                                <i class="fas fa-percentage text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Figurative Language -->
+                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-purple-600 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-purple-50">
+                                <h3 class="font-semibold text-purple-800"><i class="fas fa-theater-masks mr-2"></i>
+                                    Figurative Language</h3>
+                                <span class="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-bold"
                                     id="metaphorCount">0</span>
                             </div>
-                            <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">Metaphors, similes,
-                                and figurative expressions detected</p>
-                            <div class="edge-case-list" id="metaphorList" style="max-height: 280px; overflow-y: auto;">
-                            </div>
+                            <div id="metaphorList" class="p-0 overflow-y-auto max-h-[280px]"></div>
                         </div>
-                        <div class="edge-case-card"
-                            style="background: var(--card-bg, #fff); border-left: 4px solid #E65100;">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i
-                                        class="fas fa-question-circle" style="color: #E65100;"></i> Conditional Reports
-                                </h3>
-                                <span class="badge"
-                                    style="background: #FFE0B2; color: #E65100; font-size: 16px; padding: 4px 12px;"
+                        <!-- Conditional Reports -->
+                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-orange-600 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-orange-50">
+                                <h3 class="font-semibold text-orange-800"><i class="fas fa-question-circle mr-2"></i>
+                                    Conditional Reports</h3>
+                                <span class="bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs font-bold"
                                     id="speculationCount">0</span>
                             </div>
-                            <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">Speculative or
-                                future-tense statements requiring verification</p>
-                            <div class="edge-case-list" id="speculationList"
-                                style="max-height: 280px; overflow-y: auto;"></div>
+                            <div id="speculationList" class="p-0 overflow-y-auto max-h-[280px]"></div>
                         </div>
-                        <div class="edge-case-card"
-                            style="background: var(--card-bg, #fff); border-left: 4px solid #C62828;">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i
-                                        class="fas fa-not-equal" style="color: #C62828;"></i> Category Mismatches</h3>
-                                <span class="badge"
-                                    style="background: #FFCDD2; color: #C62828; font-size: 16px; padding: 4px 12px;"
+                        <!-- Category Mismatches -->
+                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-600 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-red-50">
+                                <h3 class="font-semibold text-red-800"><i class="fas fa-not-equal mr-2"></i> Category
+                                    Mismatches</h3>
+                                <span class="bg-red-200 text-red-800 px-2 py-1 rounded text-xs font-bold"
                                     id="mismatchCount">0</span>
                             </div>
-                            <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">AI detected different
-                                category than user selected</p>
-                            <div class="edge-case-list" id="mismatchList" style="max-height: 280px; overflow-y: auto;">
-                            </div>
+                            <div id="mismatchList" class="p-0 overflow-y-auto max-h-[280px]"></div>
                         </div>
-                        <div class="edge-case-card"
-                            style="background: var(--card-bg, #fff); border-left: 4px solid var(--danger);">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i
-                                        class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Critical
-                                    Alerts</h3>
-                                <span class="badge"
-                                    style="background: var(--danger-light); color: var(--danger); font-size: 16px; padding: 4px 12px;"
+                        <!-- Critical Alerts -->
+                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-red-100">
+                                <h3 class="font-semibold text-red-900"><i class="fas fa-exclamation-circle mr-2"></i>
+                                    Critical Alerts</h3>
+                                <span class="bg-red-200 text-red-900 px-2 py-1 rounded text-xs font-bold"
                                     id="alertCount">0</span>
                             </div>
-                            <p style="margin: 0 0 12px; font-size: 12px; color: var(--gray-600);">High-priority
-                                emergencies requiring immediate attention</p>
-                            <div class="edge-case-list" id="alertList" style="max-height: 280px; overflow-y: auto;">
-                            </div>
+                            <div id="alertList" class="p-0 overflow-y-auto max-h-[280px]"></div>
                         </div>
                     </div>
                 </section>
 
-                <section id="data-table" class="tab-content">
-                    <div class="section-header"
-                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <!-- Data Table Section -->
+                <section id="data-table" class="tab-content" style="display: none;">
+                    <div class="flex justify-between items-center mb-6">
                         <div>
-                            <h2 class="section-title" style="margin-bottom: 4px;"><i class="fas fa-table"></i> Complete
-                                Dataset</h2>
-                            <p class="section-description" style="margin: 0;">Search, filter, and examine all complaints
-                                in the system.</p>
+                            <h2 class="text-2xl font-bold text-gray-800">Complete Dataset</h2>
+                            <p class="text-gray-600">Search, filter, and examine all complaints in the system.</p>
                         </div>
-                        <button id="exportCSV" class="btn btn-primary" title="Export to Excel"
-                            style="padding: 10px 16px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                        <button id="exportCSV"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-colors shadow-sm font-medium">
                             <i class="fas fa-file-excel"></i> Export Excel
                         </button>
                     </div>
-                    <div class="table-controls">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search complaints...">
+
+                    <div
+                        class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-center">
+                        <div class="relative flex-1 min-w-[200px]">
+                            <i
+                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search complaints..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-                        <div class="filters">
-                            <select id="tierFilter">
-                                <option value="all">All Priorities</option>
-                                <option value="1">High Priority (Tier 1)</option>
-                                <option value="2">Medium Priority (Tier 2)</option>
-                                <option value="3">Low Priority (Tier 3)</option>
-                            </select>
-                            <select id="categoryFilter">
-                                <option value="all">All Categories</option>
-                            </select>
-                            <select id="filterType">
-                                <option value="all">All Types</option>
-                                <option value="critical">Emergency Only</option>
-                                <option value="metaphor">Figurative Language</option>
-                                <option value="speculation">Conditional Reports</option>
-                                <option value="mismatch">Category Mismatch</option>
-                            </select>
+                        <select id="tierFilter"
+                            class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All Priorities</option>
+                            <option value="1">High Priority (Tier 1)</option>
+                            <option value="2">Medium Priority (Tier 2)</option>
+                            <option value="3">Low Priority (Tier 3)</option>
+                        </select>
+                        <select id="categoryFilter"
+                            class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All Categories</option>
+                        </select>
+                        <select id="filterType"
+                            class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All Types</option>
+                            <option value="critical">Emergency Only</option>
+                            <option value="metaphor">Figurative Language</option>
+                            <option value="speculation">Conditional Reports</option>
+                            <option value="mismatch">Category Mismatch</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+                                    <tr>
+                                        <th class="p-4" data-sort="id">ID <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                        </th>
+                                        <th class="p-4" data-sort="category">Category <i
+                                                class="fas fa-sort ml-1 text-gray-400"></i></th>
+                                        <th class="p-4" data-sort="barangay">Barangay <i
+                                                class="fas fa-sort ml-1 text-gray-400"></i></th>
+                                        <th class="p-4" data-sort="triage_score">Priority <i
+                                                class="fas fa-sort ml-1 text-gray-400"></i></th>
+                                        <th class="p-4">Description</th>
+                                        <th class="p-4">Flags</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody" class="text-gray-600 text-sm"></tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th data-sort="id">ID <i class="fas fa-sort"></i></th>
-                                    <th data-sort="category">Category <i class="fas fa-sort"></i></th>
-                                    <th data-sort="barangay">Barangay <i class="fas fa-sort"></i></th>
-                                    <th data-sort="triage_score">Priority <i class="fas fa-sort"></i></th>
-                                    <th>Description</th>
-                                    <th>Flags</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="pagination">
-                        <button id="prevPage"><i class="fas fa-chevron-left"></i> Prev</button>
-                        <span id="pageInfo">Page 1</span>
-                        <button id="nextPage">Next <i class="fas fa-chevron-right"></i></button>
-                        <select id="itemsPerPage">
+                    <div class="flex justify-between items-center mt-4 p-2">
+                        <div class="flex items-center gap-2">
+                            <button id="prevPage"
+                                class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"><i
+                                    class="fas fa-chevron-left"></i> Prev</button>
+                            <span id="pageInfo" class="text-sm text-gray-600 font-medium">Page 1</span>
+                            <button id="nextPage"
+                                class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Next
+                                <i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <select id="itemsPerPage" class="px-2 py-1 border border-gray-300 rounded-lg text-sm bg-white">
                             <option value="10">10</option>
                             <option value="20" selected>20</option>
                             <option value="50">50</option>
@@ -321,114 +400,153 @@
                     </div>
                 </section>
 
-                <section id="system-training" class="tab-content">
-                    <h2 class="section-title"><i class="fas fa-brain"></i> Train the System</h2>
-                    <p class="section-description">Help improve the system by reviewing complaints it wasn't sure about.
-                        Your corrections teach it to be more accurate.</p>
+                <!-- Train System Section -->
+                <section id="system-training" class="tab-content" style="display: none;">
+                    <div class="dashboard-header-section mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Train the System</h2>
+                        <p class="text-gray-600">Help improve the system by reviewing complaints it wasn't sure about.
+                            Your corrections teach it to be more accurate.</p>
+                    </div>
 
-                    <!-- Training Stats Summary -->
-                    <div class="metric-cards" style="margin-bottom: 20px;">
-                        <div class="metric-card warning">
-                            <div class="metric-icon"><i class="fas fa-hourglass-half"></i></div>
-                            <div class="metric-value" id="pendingTrainCount">0</div>
-                            <div class="metric-label">Pending Review</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Pending Review</p>
+                                <h3 class="text-2xl font-bold text-yellow-600" id="pendingTrainCount">0</h3>
+                            </div>
+                            <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
+                                <i class="fas fa-hourglass-half text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card success">
-                            <div class="metric-icon"><i class="fas fa-check-double"></i></div>
-                            <div class="metric-value" id="trainedTodayCount">0</div>
-                            <div class="metric-label">Trained Today</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Trained Today</p>
+                                <h3 class="text-2xl font-bold text-green-600" id="trainedTodayCount">0</h3>
+                            </div>
+                            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                                <i class="fas fa-check-double text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card info">
-                            <div class="metric-icon"><i class="fas fa-percentage"></i></div>
-                            <div class="metric-value" id="avgConfidenceScore">-</div>
-                            <div class="metric-label">Avg Confidence</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Avg Confidence</p>
+                                <h3 class="text-2xl font-bold text-blue-600" id="avgConfidenceScore">-</h3>
+                            </div>
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                                <i class="fas fa-percentage text-xl"></i>
+                            </div>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="metric-value" id="modelAccuracy">-</div>
-                            <div class="metric-label">Model Accuracy</div>
+                        <div
+                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Model Accuracy</p>
+                                <h3 class="text-2xl font-bold text-indigo-600" id="modelAccuracy">-</h3>
+                            </div>
+                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <i class="fas fa-chart-line text-xl"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="train-system-layout">
-                        <!-- Left Panel: List of Items to Train -->
-                        <div class="train-card">
-                            <div class="train-card-header">
-                                <h3><i class="fas fa-list-ul"></i> Pending Review Queue</h3>
-                                <div style="display:flex; gap:8px;">
-                                    <button id="refreshPendingBtn" class="btn btn-sm btn-secondary"
-                                        title="Refresh list">
-                                        <i class="fas fa-sync-alt"></i>
-                                    </button>
-                                    <button id="fetchLowConfidenceBtn" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-download"></i> Fetch Items
-                                    </button>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Panel -->
+                        <div
+                            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:col-span-1 flex flex-col h-[600px]">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 class="font-semibold text-gray-800"><i class="fas fa-list-ul mr-2"></i> Pending
+                                    Reviews</h3>
+                                <div class="flex gap-2">
+                                    <button id="refreshPendingBtn"
+                                        class="p-1 px-2 hover:bg-gray-200 rounded text-gray-600 transition"
+                                        title="Refresh"><i class="fas fa-sync-alt"></i></button>
+                                    <button id="fetchLowConfidenceBtn"
+                                        class="p-1 px-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded transition text-xs font-semibold"><i
+                                            class="fas fa-download mr-1"></i> Fetch</button>
                                 </div>
                             </div>
-                            <div class="train-list" id="trainingList">
-                                <div style="padding: 40px; text-align: center; color: var(--gray-500);">
-                                    <i class="fas fa-inbox"
-                                        style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
-                                    <p>Click "Fetch Items" to load low-confidence complaints.</p>
+                            <div id="trainingList" class="flex-1 overflow-y-auto p-2 bg-gray-50">
+                                <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                                    <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                                    <p class="text-sm">Click "Fetch" to load items</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Panel: Training Form -->
-                        <div class="train-card">
-                            <div class="train-card-header">
-                                <h3><i class="fas fa-edit"></i> Training Console</h3>
-                                <span id="trainingStatusBadge" class="badge badge-noise">No Item Selected</span>
+                        <!-- Right Panel -->
+                        <div
+                            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:col-span-2 flex flex-col h-[600px]">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 class="font-semibold text-gray-800"><i class="fas fa-edit mr-2"></i> Training
+                                    Console</h3>
+                                <span id="trainingStatusBadge"
+                                    class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-bold">No Item
+                                    Selected</span>
                             </div>
-                            <div class="train-form" id="trainingForm">
-                                <div class="ai-prediction-box">
-                                    <div class="prediction-row">
-                                        <span><strong>Predicted Category:</strong> <span id="lblSystemGuess"
-                                                style="color: var(--primary); font-weight: 600;">-</span></span>
-                                    </div>
+                            <div id="trainingForm" class="p-6 flex-1 flex flex-col gap-4">
+                                <!-- Content will be populated by JS -->
+                                <div
+                                    class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
+                                    <span class="text-blue-800 font-semibold text-sm">Predicted Category:</span>
+                                    <span id="lblSystemGuess" class="font-bold text-blue-700">-</span>
                                 </div>
 
-                                <div class="form-group">
-                                    <label>Original Complaint Text</label>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Original Complaint
+                                        Text</label>
                                     <div id="lblOriginalText"
-                                        style="padding: 12px; background: var(--gray-100); border-radius: 8px; font-size: 14px; color: var(--gray-800); min-height: 60px; border: 1px solid var(--gray-300);">
+                                        class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-800 text-sm min-h-[80px]">
                                         Select an item from the left to view details.</div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="inputTrainKeyword">Identify Key Term (Entity/Issue)</label>
-                                    <input type="text" id="inputTrainKeyword"
-                                        placeholder="e.g., 'lubak', 'baha', 'walay tubig'" disabled>
-                                    <small style="color: var(--gray-500); font-size: 11px;">Extract the specific word
-                                        that defines the category.</small>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Identify Key
+                                        Term</label>
+                                    <input type="text" id="inputTrainKeyword" disabled
+                                        class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="e.g., 'lubak', 'baha', 'walay tubig'">
+                                    <small class="text-xs text-gray-500">Extract the specific word that defines the
+                                        category.</small>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="selectTrainCategory">Correct Category</label>
-                                    <select id="selectTrainCategory" disabled>
-                                        <option value="">-- Select Category --</option>
-                                    </select>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Correct
+                                            Category</label>
+                                        <select id="selectTrainCategory" disabled
+                                            class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">-- Select Category --</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Subcategory
+                                            (Optional)</label>
+                                        <select id="selectTrainSubcategory" disabled
+                                            class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">-- Select Subcategory --</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="selectTrainSubcategory">Subcategory (Optional)</label>
-                                    <select id="selectTrainSubcategory" disabled>
-                                        <option value="">-- Select Subcategory --</option>
-                                    </select>
-                                </div>
-
-                                <div style="display: flex; gap: 10px; margin-top: auto;">
-                                    <button id="btnSkipTrain" class="btn btn-secondary" style="flex: 1;"
+                                <div class="mt-auto flex gap-4 pt-4 border-t border-gray-100">
+                                    <button id="btnSkipTrain"
+                                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition flex-1"
                                         disabled>Skip</button>
-                                    <button id="btnSaveTrain" class="btn btn-primary" style="flex: 2;" disabled>
-                                        <i class="fas fa-check"></i> Save & Update
+                                    <button id="btnSaveTrain"
+                                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex-[2]"
+                                        disabled>
+                                        <i class="fas fa-check mr-2"></i> Save & Update
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
-            </main>
+
+
+            </div>
 
             <div id="complaintModal" class="modal">
                 <div class="modal-content">

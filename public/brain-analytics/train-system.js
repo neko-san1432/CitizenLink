@@ -3,7 +3,7 @@ import showMessage from "/js/components/toast.js";
 
 let CATEGORY_TAXONOMY = {};
 let HITL_CATEGORIES = [];
-let SUBCATEGORY_TO_PARENT = {};
+// let SUBCATEGORY_TO_PARENT = {}; // Removed
 
 let pendingReviews = [];
 let trainedToday = 0;
@@ -84,7 +84,7 @@ function setupEventListeners() {
   // Category selection event - add robust handling
   const catSelect = $("selectTrainCategory");
   if (catSelect) {
-    catSelect.addEventListener("change", updateSubcategories);
+    // catSelect.addEventListener("change", updateSubcategories); // Removed
     console.log("[TRAIN] Category select event listener attached");
   } else {
     console.warn("[TRAIN] selectTrainCategory element not found");
@@ -129,7 +129,7 @@ async function ensureHITLTaxonomyLoaded() {
     console.warn("[TRAIN] No taxonomy available, using default");
     CATEGORY_TAXONOMY = { Others: { subcategories: [] } };
     HITL_CATEGORIES = ["Others"];
-    SUBCATEGORY_TO_PARENT = {};
+    // SUBCATEGORY_TO_PARENT = {}; // Removed
     return;
   }
 
@@ -142,12 +142,15 @@ async function ensureHITLTaxonomyLoaded() {
   HITL_CATEGORIES = Object.keys(CATEGORY_TAXONOMY);
   console.log("[TRAIN] Taxonomy loaded successfully:", HITL_CATEGORIES.length, "categories:", HITL_CATEGORIES);
 
-  SUBCATEGORY_TO_PARENT = {};
+  // SUBCATEGORY_TO_PARENT = {}; // Removed
+  // Loop removed
+  /*
   for (const [parent, data] of Object.entries(CATEGORY_TAXONOMY)) {
     for (const sub of data.subcategories || []) {
       SUBCATEGORY_TO_PARENT[sub] = parent;
     }
   }
+  */
 }
 
 // =============================================================================
@@ -186,7 +189,7 @@ async function loadLowConfidenceItems() {
         complaint_id: item.complaint_id,
         text: safeText(item.text),
         ai_suggestion: safeText(item.detected_category || "Others"),
-        subcategory: safeText(item.detected_subcategory),
+        // subcategory: safeText(item.detected_subcategory), // Removed
         confidence: item.confidence || 0,
         created_at: item.created_at,
         status: item.status || 'pending',
@@ -243,7 +246,7 @@ async function loadLowConfidenceItems() {
       id: item.id,
       text: safeText(item.original_text || item.description),
       ai_suggestion: safeText(item.category || "Others"),
-      subcategory: safeText(item.subcategory),
+      // subcategory: safeText(item.subcategory), // Removed
       confidence: intel.confidence || 0.5,
       created_at: item.timestamp,
       status: 'pending',
@@ -315,7 +318,7 @@ function renderTrainingList() {
                 ${c.text}
             </div>
             <div style="font-size:11px; color:var(--gray-400); margin-top:3px;">
-                Predicted: <strong style="color:var(--primary);">${c.ai_suggestion}</strong>${c.subcategory ? ` › ${c.subcategory}` : ''}
+                Predicted: <strong style="color:var(--primary);">${c.ai_suggestion}</strong>
             </div>
         </div>
     `}).join('');
@@ -380,7 +383,7 @@ window.selectTrainingItem = function (id) {
     catSelect.value = ""; // Reset to default
   }
 
-  updateSubcategories();
+  // updateSubcategories(); // Removed
 
   // Enable Buttons
   document.getElementById('btnSaveTrain').disabled = false;
@@ -426,7 +429,7 @@ async function saveTrainingResult() {
 
   const term = document.getElementById('inputTrainKeyword').value.trim();
   const category = document.getElementById('selectTrainCategory').value;
-  const subcategory = document.getElementById('selectTrainSubcategory').value;
+  // const subcategory = document.getElementById('selectTrainSubcategory').value; // Removed
 
   if (!term || !category) {
     showMessage("error", "Please enter a keyword and select a category.");
@@ -441,7 +444,7 @@ async function saveTrainingResult() {
       const res = await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/resolve`, {
         keyword: term,
         category: category,
-        subcategory: subcategory
+        // subcategory: subcategory // Removed
       });
 
       if (!res?.success) throw new Error(res?.error || "Failed to resolve");
@@ -452,7 +455,7 @@ async function saveTrainingResult() {
       const res = await apiClient.post("/api/nlp/keywords", {
         term: term,
         category: category,
-        subcategory: subcategory,
+        // subcategory: subcategory, // Removed
         language: 'all',
         confidence: 1.0
       });
@@ -545,7 +548,7 @@ function resetForm() {
 
   const subSelect = document.getElementById('selectTrainSubcategory');
   if (subSelect) {
-    subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+    // subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
     subSelect.disabled = true;
   }
 

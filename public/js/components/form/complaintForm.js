@@ -11,56 +11,8 @@ import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from "../../auth/r
 import { getUserRole } from "../../auth/authChecker.js";
 
 // Complaint type and subtype mapping
-const COMPLAINT_SUBTYPES = {
-  "infrastructure": [
-    "Roads & Bridges",
-    "Street Lighting",
-    "Water Supply",
-    "Drainage System",
-    "Public Buildings",
-    "Other"
-  ],
-  "public-safety": [
-    "Crime & Security",
-    "Emergency Services",
-    "Fire Safety",
-    "Traffic Safety",
-    "Other"
-  ],
-  "environmental": [
-    "Waste Management",
-    "Air Quality",
-    "Water Pollution",
-    "Noise Pollution",
-    "Green Spaces",
-    "Other"
-  ],
-  "health": [
-    "Sanitation",
-    "Public Health",
-    "Medical Services",
-    "Food Safety",
-    "Other"
-  ],
-  "traffic": [
-    "Road Conditions",
-    "Traffic Flow",
-    "Parking Issues",
-    "Public Transportation",
-    "Other"
-  ],
-  "noise": [
-    "Construction Noise",
-    "Vehicle Noise",
-    "Commercial Noise",
-    "Residential Noise",
-    "Other"
-  ],
-  "other": [
-    "General Complaint",
-    "Other"
-  ]
-};
+// Complaint subtypes removed
+
 /**
  * Initialize complaint form
  */
@@ -100,7 +52,7 @@ export async function initializeComplaintForm() {
   const elements = {
     form,
     typeSelect: form.querySelector("#complaintType"),
-    subtypeSelect: form.querySelector("#complaintSubtype"),
+    // subtypeSelect removed
     fileDropZone: form.querySelector("#fileDropZone"),
     fileInput: form.querySelector("#evidenceFiles"),
     filePreview: form.querySelector("#filePreview")
@@ -132,7 +84,7 @@ export async function initializeComplaintForm() {
     }
   });
   // Setup form functionality
-  setupSubtypeSelection(elements.typeSelect, elements.subtypeSelect);
+  // setupSubtypeSelection removed
   setupFileHandling(elements.fileDropZone, elements.fileInput, fileHandler);
   setupFormValidation(elements.form);
   setupFormSubmission(elements.form, fileHandler);
@@ -150,29 +102,11 @@ export async function initializeComplaintForm() {
 /**
  * Setup complaint type and subtype selection
  */
-function setupSubtypeSelection(typeSelect, subtypeSelect) {
-  if (!typeSelect || !subtypeSelect) return;
-  typeSelect.addEventListener("change", (e) => {
-    populateSubtypes(e.target.value, subtypeSelect);
-  });
-}
+
 /**
  * Populate complaint subtypes based on selected type
  */
-function populateSubtypes(selectedType, subtypeSelect) {
-  if (!subtypeSelect) return;
-  // Clear existing options
-  subtypeSelect.innerHTML = '<option value="">Select complaint subtype</option>';
-  if (!selectedType || !COMPLAINT_SUBTYPES[selectedType]) return;
-  // Add new options
-  COMPLAINT_SUBTYPES[selectedType].forEach(subtype => {
-    const option = document.createElement("option");
-    option.value = subtype.toLowerCase().replace(/\s+/g, "-");
-    option.textContent = subtype;
-    subtypeSelect.appendChild(option);
-  });
-  // console.log removed for security
-}
+
 /**
  * Setup file handling functionality
  */
@@ -295,4 +229,4 @@ window.retryLoadDepartments = loadDepartments;
 document.addEventListener("DOMContentLoaded", initializeComplaintForm);
 // Export for manual initialization
 
-export { COMPLAINT_SUBTYPES };
+export { };

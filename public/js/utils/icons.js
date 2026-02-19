@@ -307,6 +307,9 @@ export function getIcon(iconName, options = {}) {
       <path d="M8 11h6"></path>
       <path d="M8 15h4"></path>
     </svg>`,
+    chevronDown: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" class="${className}">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>`,
   };
 
   return icons[iconName] || icons.file;
@@ -344,7 +347,12 @@ export function getMenuIcon(iconName, options = {}) {
     brain: "brain",
     clock: "clock",
     alert: "alert",
-    "server-logs": "file",
+    "server-logs": "scroll",
+    users: "users",
+    map: "map",
+    shield: "shield",
+    briefcase: "briefcase",
+    user: "user",
   };
 
   const mappedName = iconMap[iconName] || "file";

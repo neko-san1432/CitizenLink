@@ -87,34 +87,27 @@ function computeMetadata({ keywords, taxonomy, rules }) {
 function buildHierarchyFromKeywords({ keywords, taxonomy }) {
   const hierarchy = {};
 
-  const add = (parent, sub, row) => {
+  const add = (parent, row) => {
     const p = safeText(parent).trim() || "Others";
-    const s = safeText(sub).trim() || "General";
-    if (!hierarchy[p]) hierarchy[p] = { totalCount: 0, subcategories: {} };
-    if (!hierarchy[p].subcategories[s]) hierarchy[p].subcategories[s] = [];
-    hierarchy[p].subcategories[s].push(row);
-    hierarchy[p].totalCount += 1;
+    if (!hierarchy[p]) hierarchy[p] = [];
+    hierarchy[p].push(row);
   };
 
   for (const k of keywords) {
-    add(k.category, k.subcategory, {
+    add(k.category, {
       id: k.id,
       term: safeText(k.term),
       translation: k.translation ? safeText(k.translation) : "",
       confidence: k.confidence,
       language: k.language || "all",
       category: k.category,
-      subcategory: k.subcategory,
+      // subcategory removed
     });
   }
 
   if (taxonomy?.categories) {
     for (const [parentName, data] of Object.entries(taxonomy.categories)) {
-      if (!hierarchy[parentName]) hierarchy[parentName] = { totalCount: 0, subcategories: {} };
-      const subs = Array.isArray(data?.subcategories) ? data.subcategories : [];
-      for (const subName of subs) {
-        if (!hierarchy[parentName].subcategories[subName]) hierarchy[parentName].subcategories[subName] = [];
-      }
+      if (!hierarchy[parentName]) hierarchy[parentName] = [];
     }
   }
 
@@ -213,62 +206,42 @@ function updateDictionaryStats() {
   $("dictLastUpdated").textContent = meta.last_updated || "-";
 }
 
-function renderSubcategories(parentName, subcategories) {
-  if (!subcategories) return '<p style="padding: 15px; color: var(--gray-500);">No subcategories</p>';
-  let html = "";
+function renderCategoryContent(parentName, keywords) {
+  if (!keywords || keywords.length === 0) return '<p style="padding: 15px; color: var(--gray-500);">No keywords</p>';
 
-  for (const [subName, keywords] of Object.entries(subcategories)) {
-    let filtered = keywords;
-    if (dictionarySearchFilter) {
-      filtered = keywords.filter((kw) => safeText(kw.term).toLowerCase().includes(dictionarySearchFilter));
-    }
-    if (dictionarySearchFilter && filtered.length === 0) continue;
-
-    html += `
-      <div class="dictionary-accordion sub-accordion" data-subcategory="${escapeHtml(subName)}" data-parent="${escapeHtml(parentName)}" style="margin-left: 20px; border-left: 3px solid var(--primary-light);">
-        <div class="accordion-header sub-header" onclick="toggleDictAccordion(this)" style="background: var(--gray-100);">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-chevron-right accordion-icon" style="color: var(--primary);"></i>
-            <i class="fas fa-tag" style="color: var(--primary);"></i>
-            <span>${escapeHtml(subName)}</span>
-            <span class="badge badge-keyword" style="font-size: 0.75em;">${filtered.length}</span>
-          </div>
-        </div>
-        <div class="accordion-content" style="display: none; padding: 15px; background: white;" 
-             ondragover="allowDrop(event)" 
-             ondragleave="onDragLeave(event)"
-             ondrop="dropKeyword(event, '${escapeHtml(parentName)}', '${escapeHtml(subName)}')">
-          <div class="keyword-chips">
-            ${filtered.length > 0
-        ? filtered
-          .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
-          .map(
-            (kw) => `
-                        <span class="keyword-chip" draggable="true" ondragstart="dragKeyword(event, '${escapeHtml(kw.id)}')" ondragend="dragEndKeyword(event)"
-                              title="${escapeHtml(kw.translation || "")} | ${Math.round((kw.confidence || 0.8) * 100)}% | ${escapeHtml(kw.language || "Unknown")}">
-                          ${escapeHtml(kw.term)}
-                          <button class="chip-delete" data-keyword-id="${escapeHtml(kw.id)}" onclick="onDeleteKeywordClick(event, this)" title="Delete keyword">
-                            <i class="fas fa-times"></i>
-                          </button>
-                        </span>
-                      `
-          )
-          .join("")
-        : '<span style="color: var(--gray-500); font-style: italic;">No keywords yet (Drag items here)</span>'
-      }
-          </div>
-          <div class="add-keyword-form" style="display:flex; gap:8px; align-items:center;">
-            <input type="text" class="new-keyword-input" placeholder="Add keyword to ${escapeHtml(subName)}...">
-            <button class="btn btn-sm" style="background: var(--success); color: white;" onclick="addKeywordToSubcategory(this, '${escapeHtml(parentName)}', '${escapeHtml(subName)}')">
-              <i class="fas fa-plus"></i> Add
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+  let filtered = keywords;
+  if (dictionarySearchFilter) {
+    filtered = keywords.filter((kw) => safeText(kw.term).toLowerCase().includes(dictionarySearchFilter));
   }
 
-  return html || '<p style="padding: 15px; color: var(--gray-500);">No subcategories</p>';
+  if (filtered.length === 0) return '<p style="padding: 15px; color: var(--gray-500);">No matching keywords</p>';
+
+  return `
+      <div class="keyword-chips" style="padding: 15px;" 
+           ondragover="allowDrop(event)" 
+           ondrop="dropKeyword(event, '${escapeHtml(parentName)}')">
+        ${filtered
+      .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
+      .map(
+        (kw) => `
+                    <span class="keyword-chip" draggable="true" ondragstart="dragKeyword(event, '${escapeHtml(kw.id)}')" ondragend="dragEndKeyword(event)"
+                          title="${escapeHtml(kw.translation || "")} | ${Math.round((kw.confidence || 0.8) * 100)}% | ${escapeHtml(kw.language || "Unknown")}">
+                      ${escapeHtml(kw.term)}
+                      <button class="chip-delete" data-keyword-id="${escapeHtml(kw.id)}" onclick="onDeleteKeywordClick(event, this)" title="Delete keyword">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </span>
+                  `
+      )
+      .join("")}
+      </div>
+      <div class="add-keyword-form" style="display:flex; gap:8px; align-items:center; padding: 0 15px 15px;">
+        <input type="text" class="new-keyword-input" placeholder="Add keyword to ${escapeHtml(parentName)}...">
+        <button class="btn btn-sm" style="background: var(--success); color: white;" onclick="addKeywordToCategory(this, '${escapeHtml(parentName)}')">
+          <i class="fas fa-plus"></i> Add
+        </button>
+      </div>
+  `;
 }
 
 function renderModifiersSection(modifiers) {
@@ -370,11 +343,11 @@ function renderDictionaryManager() {
               <i class="fas fa-chevron-right accordion-icon"></i>
               <i class="fas fa-folder"></i>
               <strong>${escapeHtml(parentName)}</strong>
-              <span class="badge" style="background: rgba(255,255,255,0.3); font-size: 0.8em;">${parentData.totalCount || 0} keywords</span>
+              <span class="badge" style="background: rgba(255,255,255,0.3); font-size: 0.8em;">${parentData.length || 0} keywords</span>
             </div>
           </div>
           <div class="accordion-content" style="display: none; padding: 0;">
-            ${renderSubcategories(parentName, parentData.subcategories)}
+            ${renderCategoryContent(parentName, parentData)}
           </div>
         </div>
       `;
@@ -427,7 +400,7 @@ window.onDeleteKeywordClick = async (event, btnEl) => {
   }
 };
 
-window.addKeywordToSubcategory = async (buttonEl, parentCategory, subcategory) => {
+window.addKeywordToCategory = async (buttonEl, parentCategory) => {
   try {
     const form = buttonEl.closest(".add-keyword-form");
     const input = form?.querySelector(".new-keyword-input");
@@ -442,7 +415,7 @@ window.addKeywordToSubcategory = async (buttonEl, parentCategory, subcategory) =
     const res = await apiClient.post("/api/nlp/keywords", {
       term: keyword,
       category: parentCategory,
-      subcategory: subcategory === "General" ? null : subcategory,
+      // subcategory removed
       language: "all",
       confidence: 0.8,
     });
@@ -532,7 +505,7 @@ window.dragEndKeyword = (event) => {
   event.target.style.opacity = "1";
 };
 
-window.dropKeyword = async (event, newParent, newSub) => {
+window.dropKeyword = async (event, newParent) => {
   event.preventDefault();
   const id = event.dataTransfer.getData("text/plain");
   const container = event.target.closest('.accordion-content');
@@ -540,82 +513,20 @@ window.dropKeyword = async (event, newParent, newSub) => {
 
   if (!id) return;
 
-  // Find the original element
-  const draggedEl = document.querySelector(`.keyword-chip button[data-keyword-id="${id}"]`)?.closest('.keyword-chip');
-  if (!draggedEl) return;
-
-  // Optimistic UI Update
-  const oldContainer = draggedEl.closest('.keyword-chips');
-  const newContainer = container.querySelector('.keyword-chips');
-
-  // Don't do anything if dropped in same place
-  if (oldContainer === newContainer) return;
-
-  // Move element
-  newContainer.appendChild(draggedEl);
-
-  // Remove "No keywords yet" message if exists
-  const noKeysMsg = newContainer.querySelector('span[style*="italic"]');
-  if (noKeysMsg) noKeysMsg.remove();
-
-  // Update State & Backend
   try {
-    // 1. Update Local State (dictionaryData)
-    // We need to find the keyword in hierarchy and move it
-    let keywordObj = null;
-    let oldParent = null;
-    let oldSub = null;
-
-    // Search in hierarchy
-    outerLoop:
-    for (const parent of Object.keys(dictionaryData.hierarchy)) {
-      const cats = dictionaryData.hierarchy[parent].subcategories;
-      for (const sub of Object.keys(cats)) {
-        const idx = cats[sub].findIndex(k => k.id === id);
-        if (idx !== -1) {
-          keywordObj = cats[sub][idx];
-          oldParent = parent;
-          oldSub = sub;
-          // Remove from old
-          cats[sub].splice(idx, 1);
-          break outerLoop;
-        }
-      }
-    }
-
-    if (keywordObj) {
-      // Update object
-      keywordObj.category = newParent;
-      keywordObj.subcategory = newSub;
-
-      // Add to new
-      if (!dictionaryData.hierarchy[newParent]) {
-        dictionaryData.hierarchy[newParent] = { totalCount: 0, subcategories: {} };
-      }
-      if (!dictionaryData.hierarchy[newParent].subcategories[newSub]) {
-        dictionaryData.hierarchy[newParent].subcategories[newSub] = [];
-      }
-      dictionaryData.hierarchy[newParent].subcategories[newSub].push(keywordObj);
-
-      // Update counts visually
-      updateCountsUI(oldParent, oldSub, newParent, newSub);
-    }
-
-    // 2. Call API
     const res = await apiClient.put(`/api/nlp/keywords/${id}`, {
       category: newParent,
-      subcategory: newSub === "General" ? null : newSub
+      // subcategory removed
     });
 
     if (!res.success) throw new Error(res.error || "Failed to move keyword");
 
-    showMessage("success", `Moved to ${newSub}`);
+    showMessage("success", `Moved to ${newParent}`);
+    await loadDictionary();
 
   } catch (err) {
     console.error(err);
     showMessage("error", "Failed to move: " + err.message);
-    // Revert UI (reload)
-    await loadDictionary();
   }
 };
 

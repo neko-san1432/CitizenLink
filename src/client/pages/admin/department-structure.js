@@ -117,7 +117,7 @@ function setupEventListeners() {
 /**
  * Toggle category expansion
  */
-window.toggleCategory = function(categoryId) {
+window.toggleCategory = function (categoryId) {
   const container = document.getElementById(`subcategories-${categoryId}`);
   if (container) {
     container.classList.toggle("expanded");
@@ -126,7 +126,7 @@ window.toggleCategory = function(categoryId) {
 /**
  * Toggle subcategory expansion
  */
-window.toggleSubcategory = function(subcategoryId) {
+window.toggleSubcategory = function (subcategoryId) {
   const container = document.getElementById(`departments-${subcategoryId}`);
   if (container) {
     container.classList.toggle("expanded");
@@ -135,7 +135,7 @@ window.toggleSubcategory = function(subcategoryId) {
 /**
  * Open modal for adding/editing
  */
-window.openModal = function(type, editId = null) {
+window.openModal = function (type, editId = null) {
   const modal = document.getElementById(`${type}-modal`);
   if (!modal) return;
   // Reset form
@@ -163,7 +163,7 @@ window.openModal = function(type, editId = null) {
 /**
  * Close modal
  */
-window.closeModal = function(type) {
+window.closeModal = function (type) {
   const modal = document.getElementById(`${type}-modal`);
   if (modal) {
     modal.classList.remove("show");
@@ -275,19 +275,19 @@ async function handleDepartmentSubmit(e) {
 /**
  * Edit functions (placeholder - would need to implement edit functionality)
  */
-window.editCategory = function(_id) {
+window.editCategory = function (_id) {
   showMessage("info", "Edit functionality coming soon");
 };
-window.editSubcategory = function(_id) {
+window.editSubcategory = function (_id) {
   showMessage("info", "Edit functionality coming soon");
 };
-window.editDepartment = function(_id) {
+window.editDepartment = function (_id) {
   showMessage("info", "Edit functionality coming soon");
 };
 /**
  * Delete functions
  */
-window.deleteCategory = async function(id) {
+window.deleteCategory = async function (id) {
   if (!confirm("Are you sure you want to delete this category? This will also delete all subcategories and departments under it.")) {
     return;
   }
@@ -301,7 +301,7 @@ window.deleteCategory = async function(id) {
     showMessage("error", "Failed to delete category");
   }
 };
-window.deleteSubcategory = async function(id) {
+window.deleteSubcategory = async function (id) {
   if (!confirm("Are you sure you want to delete this subcategory? This will also delete all departments under it.")) {
     return;
   }
@@ -315,7 +315,7 @@ window.deleteSubcategory = async function(id) {
     showMessage("error", "Failed to delete subcategory");
   }
 };
-window.deleteDepartment = async function(id) {
+window.deleteDepartment = async function (id) {
   if (!confirm("Are you sure you want to delete this department?")) {
     return;
   }

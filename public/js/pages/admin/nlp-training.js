@@ -50,7 +50,7 @@ async function loadStats() {
             // Accuracy is mocked in backend for now, but we can display it if returned
             // Or leave it as static if not in response
         }
-        
+
         // Load auto-queue count
         await loadAutoQueueCount();
     } catch (err) {
@@ -73,7 +73,7 @@ async function loadAutoQueueCount() {
     }
 }
 
-window.showAutoQueueSection = async function() {
+window.showAutoQueueSection = async function () {
     const section = document.getElementById("auto-queue-section");
     if (section) {
         section.classList.remove("hidden");
@@ -81,7 +81,7 @@ window.showAutoQueueSection = async function() {
     }
 };
 
-window.hideAutoQueueSection = function() {
+window.hideAutoQueueSection = function () {
     const section = document.getElementById("auto-queue-section");
     if (section) section.classList.add("hidden");
 };
@@ -89,15 +89,15 @@ window.hideAutoQueueSection = function() {
 async function loadAutoQueueItems() {
     const list = document.getElementById("auto-queue-list");
     if (!list) return;
-    
+
     list.innerHTML = '<div class="text-center py-8 text-gray-400">Loading...</div>';
-    
+
     try {
         const res = await apiClient.get("/api/nlp/pending-reviews");
         if (!res.success) throw new Error(res.error);
-        
+
         const items = res.data || [];
-        
+
         if (items.length === 0) {
             list.innerHTML = `
                 <div class="text-center py-12">
@@ -112,10 +112,10 @@ async function loadAutoQueueItems() {
             `;
             return;
         }
-        
+
         list.innerHTML = '';
         items.forEach(item => renderAutoQueueItem(item, list));
-        
+
     } catch (err) {
         list.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${err.message}</div>`;
     }
@@ -125,10 +125,10 @@ function renderAutoQueueItem(item, container) {
     const card = document.createElement("div");
     card.className = "card-premium p-4 flex flex-col md:flex-row gap-4 items-start";
     card.id = `aq-item-${item.id}`;
-    
+
     const confidenceColor = item.confidence < 0.3 ? 'red' : item.confidence < 0.6 ? 'yellow' : 'orange';
     const confidencePct = ((item.confidence || 0) * 100).toFixed(0);
-    
+
     card.innerHTML = `
         <div class="flex-1">
             <div class="flex items-center gap-2 mb-2">
@@ -141,7 +141,7 @@ function renderAutoQueueItem(item, container) {
             <p class="text-gray-800 dark:text-gray-200 font-medium mb-2">"${item.text}"</p>
             <div class="text-sm text-gray-500">
                 <span>Detected: <span class="font-medium text-gray-700 dark:text-gray-300">${item.detected_category || 'Unknown'}</span></span>
-                ${item.detected_subcategory ? ` → ${item.detected_subcategory}` : ''}
+                <!-- subcategory display removed -->
             </div>
         </div>
         <div class="flex flex-col gap-2 min-w-[200px]">
@@ -150,6 +150,7 @@ function renderAutoQueueItem(item, container) {
                     class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 dark:bg-gray-700 dark:text-white"
                     id="aq-keyword-${item.id}" value="${extractKeyword(item.text)}">
             </div>
+            <!-- subcategory dropdown removed -->
             <div class="flex gap-2">
                 <select id="aq-category-${item.id}" 
                     class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600 p-2 dark:bg-gray-700 dark:text-white">
@@ -169,7 +170,7 @@ function renderAutoQueueItem(item, container) {
             </div>
         </div>
     `;
-    
+
     container.appendChild(card);
 }
 
@@ -182,21 +183,21 @@ function extractKeyword(text) {
     return words.slice(0, 3).join(' ');
 }
 
-window.resolveAutoQueueItem = async function(id) {
+window.resolveAutoQueueItem = async function (id) {
     const keyword = document.getElementById(`aq-keyword-${id}`)?.value?.trim();
     const category = document.getElementById(`aq-category-${id}`)?.value;
-    
+
     if (!keyword || !category) {
         showMessage("error", "Please enter a keyword and select a category");
         return;
     }
-    
+
     try {
         const res = await apiClient.post(`/api/nlp/pending-reviews/${id}/resolve`, {
             keyword,
             category
         });
-        
+
         if (res.success) {
             showMessage("success", `Trained: "${keyword}" → ${category}`);
             document.getElementById(`aq-item-${id}`)?.remove();
@@ -210,10 +211,10 @@ window.resolveAutoQueueItem = async function(id) {
     }
 };
 
-window.dismissAutoQueueItem = async function(id) {
+window.dismissAutoQueueItem = async function (id) {
     try {
         const res = await apiClient.post(`/api/nlp/pending-reviews/${id}/dismiss`);
-        
+
         if (res.success) {
             showMessage("success", "Dismissed");
             document.getElementById(`aq-item-${id}`)?.remove();
@@ -229,7 +230,7 @@ window.dismissAutoQueueItem = async function(id) {
 // --- FORM HANDLING ---
 async function initForm() {
     const categorySelect = document.getElementById("propCategory");
-    const subcategorySelect = document.getElementById("propSubcategory");
+    // subcategorySelect removed
     const typeSelect = document.getElementById("propType");
 
     // Load Categories
@@ -249,23 +250,12 @@ async function initForm() {
     }
 
     // Handle Subcategory Loading
+    // Handle Subcategory Loading - Removed
+    /*
     categorySelect.addEventListener("change", async (e) => {
-        const catName = e.target.value;
-        const catId = e.target.selectedOptions[0]?.dataset.id;
-        subcategorySelect.innerHTML = '<option value="">Select Subcategory...</option>';
-
-        if (catId) {
-            const res = await apiClient.get(`/api/department-structure/categories/${catId}/subcategories`);
-            if (res.success) {
-                res.data.forEach(sub => {
-                    const opt = document.createElement("option");
-                    opt.value = sub.name;
-                    opt.textContent = sub.name;
-                    subcategorySelect.appendChild(opt);
-                });
-            }
-        }
+        // ... removed code
     });
+    */
 
     // Handle Form Submit
     const form = document.getElementById("proposalForm");
@@ -275,7 +265,7 @@ async function initForm() {
             const type = typeSelect.value;
             const term = document.getElementById("propTerm").value;
             const category = categorySelect.value;
-            const subcategory = subcategorySelect.value;
+            // const subcategory = subcategorySelect.value; // Removed
 
             if (!term || (type !== 'metaphor' && !category)) {
                 showMessage("error", "Please fill in all required fields");
@@ -285,7 +275,7 @@ async function initForm() {
             // Build Payload based on Type
             let dataPayload = {};
             if (type === 'keyword') {
-                dataPayload = { term, category, subcategory, confidence: 1.0 };
+                dataPayload = { term, category, confidence: 1.0 };
             } else if (type === 'metaphor') {
                 dataPayload = { pattern: term }; // Using term input as pattern
             } else if (type === 'anchor') {
@@ -357,7 +347,7 @@ function renderProposalCard(proposal, container) {
                         <span class="text-gray-400">Maps to:</span>
                         <div class="flex items-center gap-1 font-medium text-gray-800 bg-gray-100 px-2 py-0.5 rounded text-xs">
                             ${d.category} 
-                            ${d.subcategory ? `<svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg> ${d.subcategory}` : ''}
+                            <!-- subcategory display removed -->
                         </div>
                     </div>
                 </div>
@@ -624,11 +614,10 @@ async function loadHierarchicalView(container) {
     const hierarchy = {};
     keywords.forEach(kw => {
         const cat = kw.category || 'Uncategorized';
-        const subcat = kw.subcategory || '(General)';
+        // const subcat = kw.subcategory || '(General)'; // Removed
 
-        if (!hierarchy[cat]) hierarchy[cat] = {};
-        if (!hierarchy[cat][subcat]) hierarchy[cat][subcat] = [];
-        hierarchy[cat][subcat].push(kw);
+        if (!hierarchy[cat]) hierarchy[cat] = []; // Changed to array
+        hierarchy[cat].push(kw);
     });
 
     container.innerHTML = '';
@@ -690,9 +679,8 @@ async function loadHierarchicalView(container) {
     ];
 
     Object.keys(hierarchy).sort().forEach((catName, catIndex) => {
-        const catData = hierarchy[catName];
-        const subcatCount = Object.keys(catData).length;
-        const keywordCount = Object.values(catData).flat().length;
+        const catData = hierarchy[catName]; // Now an array of keywords
+        const keywordCount = catData.length;
         const colors = colorPalettes[catIndex % colorPalettes.length];
 
         // Category Accordion Item
@@ -715,7 +703,6 @@ async function loadHierarchicalView(container) {
                             </svg>
                         </div>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs ${colors.badge} px-2 py-0.5 rounded-full font-medium">${subcatCount} subcategories</span>
                             <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium dark:bg-gray-700 dark:text-gray-300">${keywordCount} keywords</span>
                         </div>
                     </div>
@@ -734,54 +721,33 @@ async function loadHierarchicalView(container) {
         accordion.appendChild(catItem);
 
         // Render subcategories inside
-        const subcatsContainer = catItem.querySelector(`#subcats-${catIndex}`);
-        Object.keys(catData).sort().forEach((subcatName, subcatIndex) => {
-            const kwList = catData[subcatName];
-            const subcatId = `subcat-${catIndex}-${subcatIndex}`;
+        // Flattened view of keywords for category
+        const kwList = catData; // Direct array now
 
-            const subcatItem = document.createElement('div');
-            subcatItem.className = 'group/sub rounded-lg overflow-hidden bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200';
-            subcatItem.innerHTML = `
-                <button onclick="toggleAccordion('${subcatId}')" 
-                    class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-md shadow-purple-500/20">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">${subcatName}</span>
-                            <span class="ml-2 text-xs bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 px-2 py-0.5 rounded-full font-medium dark:from-purple-900/50 dark:to-indigo-900/50 dark:text-purple-300">${kwList.length} words</span>
-                        </div>
-                        <svg id="icon-${subcatId}" class="w-4 h-4 text-gray-400 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                    <button onclick="event.stopPropagation(); showAddKeywordModal('${catName}', '${subcatName === '(General)' ? '' : subcatName}')" 
-                        class="opacity-0 group-hover/sub:opacity-100 text-purple-600 hover:text-purple-800 text-xs font-semibold flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-105">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Add
-                    </button>
-                </button>
-                <div id="${subcatId}" class="hidden animate-slideDown">
-                    <div class="px-4 py-3 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900/30 dark:to-gray-800 border-t border-gray-100 dark:border-gray-700">
-                        <div class="flex flex-wrap gap-2">
-                            ${kwList.map((kw, kwIndex) => `
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full text-sm text-gray-700 dark:text-gray-300 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:border-red-500/50 transition-all duration-200 group/kw shadow-sm hover:shadow-md cursor-default" style="animation: fadeInUp 0.3s ease-out ${kwIndex * 0.05}s both">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gradient-to-r ${colors.bg}"></span>
-                                    "${kw.term}"
-                                    <button onclick="deleteKeyword('${kw.id}')" class="ml-1 text-gray-300 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 opacity-0 group-hover/kw:opacity-100 transition-all duration-200 hover:scale-125" title="Delete keyword">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-            subcatsContainer.appendChild(subcatItem);
+        /* Subcategory logic removed - simplified to flat list */
+        /*
+        Object.keys(catData).sort().forEach((subcatName, subcatIndex) => {
+            // ...
         });
+        */
+
+        // Render keywords directly
+        const subcatsContainer = catItem.querySelector(`#subcats-${catIndex}`);
+        subcatsContainer.innerHTML = `
+            <div class="px-4 py-3 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900/30 dark:to-gray-800 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex flex-wrap gap-2">
+                    ${kwList.map((kw, kwIndex) => `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full text-sm text-gray-700 dark:text-gray-300 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:border-red-500/50 transition-all duration-200 group/kw shadow-sm hover:shadow-md cursor-default" style="animation: fadeInUp 0.3s ease-out ${kwIndex * 0.05}s both">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gradient-to-r ${colors.bg}"></span>
+                            "${kw.term}"
+                            <button onclick="deleteKeyword('${kw.id}')" class="ml-1 text-gray-300 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 opacity-0 group-hover/kw:opacity-100 transition-all duration-200 hover:scale-125" title="Delete keyword">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+        `;
     });
 
     container.appendChild(accordion);

@@ -91,7 +91,7 @@ class NlpManagementService {
     async updateKeyword(id, updates) {
         const allowedUpdates = ['term', 'category', 'subcategory', 'language', 'confidence', 'translation'];
         const payload = {};
-        
+
         for (const key of allowedUpdates) {
             if (updates[key] !== undefined) {
                 if (key === 'confidence') payload[key] = normalizeConfidence(updates[key], 0.8);
@@ -466,7 +466,7 @@ class NlpManagementService {
      */
     async getCompleteDictionary() {
         const keywords = await this.getKeywords();
-        
+
         const dictionary = {
             _metadata: {
                 version: '1.0.0',

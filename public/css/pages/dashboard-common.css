@@ -17,7 +17,8 @@
   padding: 0 3%;
   margin: 0;
   padding-bottom: 2rem;
-  padding-top: 2rem !important; /* Increase top padding inside container */
+  padding-top: 2rem !important;
+  /* Increase top padding inside container */
 }
 
 /* Reduce top padding for role dashboards that appeared too spaced */
@@ -73,7 +74,8 @@ html.dark .hover\:bg-gray-50:hover {
 }
 
 html.dark .bg-gray-50 {
-  background-color: var(--gray-50) !important; /* Body bg is gray-50 */
+  background-color: var(--gray-50) !important;
+  /* Body bg is gray-50 */
   border-color: var(--gray-200) !important;
 }
 
@@ -95,6 +97,7 @@ html.dark .complaint-item {
   .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .md\:col-span-2 {
     grid-column: span 2 / span 2;
   }
@@ -104,13 +107,60 @@ html.dark .complaint-item {
   .lg\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
   .lg\:grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
   .lg\:col-span-2 {
     grid-column: span 2 / span 2;
   }
+
   .lg\:col-span-3 {
     grid-column: span 3 / span 3;
   }
+}
+
+/* =========================================
+   COMPACT MODE OVERRIDES (Consolidated)
+   ========================================= */
+/* Dashboard specific adjustments */
+.citizen-dashboard,
+.coordinator-dashboard,
+.lgu-admin-dashboard,
+.superadmin-dashboard {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem !important;
+  /* Reduce padding */
+  height: calc(100vh - var(--header-height));
+}
+
+/* Compact specific sections */
+.dashboard-content {
+  gap: 0.75rem !important;
+  /* Reduce gap-6 (1.5rem) to 0.75rem */
+  padding: 0.5rem !important;
+}
+
+/* Reduce size of stats cards */
+.stat-card {
+  padding: 0.75rem !important;
+}
+
+.stat-card h3 {
+  font-size: 1.25rem !important;
+  /* Reduce 2xl */
+}
+
+/* Constrain Chart Heights */
+canvas#trendChart,
+canvas#distributionChart {
+  max-height: 200px !important;
+}
+
+/* Recent Activity List - Scroll internally */
+#recent-activity-list {
+  max-height: 200px;
+  overflow-y: auto;
 }

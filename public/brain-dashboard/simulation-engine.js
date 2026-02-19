@@ -1309,7 +1309,7 @@ function validateCategoryMismatch(complaint) {
         };
     }
 
-    const selectedCategory = complaint.subcategory || complaint.category || 'Unknown';
+    const selectedCategory = complaint.category || 'Unknown';
     const description = complaint.description.toLowerCase();
 
     // Step 1: Extract ALL detected categories from description

@@ -14,9 +14,9 @@
     <link rel="stylesheet" href="../css/components/sidebar.css" />
     <link rel="stylesheet" href="../css/app.css" />
     <link rel="stylesheet" href="../css/components/clock.css" />
-    <link rel="stylesheet" href="../css/header-redesign.css" />
+    <link rel="stylesheet" href="../css/header.css" />
     <link rel="stylesheet" href="../css/viewport-fix.css" />
-    <link rel="stylesheet" href="../css/pages/profile-revamp.css" />
+    <link rel="stylesheet" href="/css/pages/profile.css" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 
@@ -26,137 +26,74 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
         <div id="app" class="collapsible">
-            <div class="profile-page">
-                <!-- Hero Section -->
-                <div class="profile-header-section glass-panel">
-                    <div class="profile-cover-image"></div>
-                    <div class="profile-header-content">
-                        <div class="profile-identity-group">
-                            <div class="profile-avatar-large">
-                                <div id="profile-initial">User</div>
-                                <div class="profile-status-pill">Online</div>
+            <div class="profile-page-container">
+                <!-- Left Sidebar: Static User Info -->
+                <aside class="glass-panel profile-sidebar">
+                    <div class="profile-avatar-section">
+                        <div id="profile-initial" class="avatar-large">U</div>
+                        <h1 id="profile-name-display" class="profile-name">Loading...</h1>
+                        <span id="profile-role-display" class="profile-role-badge">Role</span>
+
+                        <div class="profile-stats-grid">
+                            <div class="stat-item">
+                                <span id="stat-total" class="stat-value">-</span>
+                                <span class="stat-label">Total Reports</span>
                             </div>
-                            <div class="profile-main-info">
-                                <div class="profile-name-row">
-                                    <h1 class="profile-real-name" id="profile-name-display">
-                                        Loading...
-                                    </h1>
-                                </div>
-
-                                <div class="profile-role-row">
-                                    <span class="role-badge" id="profile-role">—</span>
-                                    <span class="email-text" id="profile-email-display">—</span>
-                                </div>
+                            <div class="stat-item">
+                                <span id="stat-active" class="stat-value">-</span>
+                                <span class="stat-label">Active</span>
                             </div>
-                        </div>
-
-                        <div class="profile-header-actions">
-                            <a href="/settings" class="btn-secondary" id="edit-profile-btn">
-                                ⚙️ Account Settings
-                            </a>
-                            <a href="/fileComplaint" class="btn-primary" id="action-button" style="display: none">
-                                + New Complaint
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Grid -->
-                <div class="profile-grid-layout">
-                    <!-- Left Column: Details -->
-                    <div class="profile-left-col">
-                        <!-- Personal Info Card -->
-                        <div class="glass-panel info-card">
-                            <div class="card-header">
-                                <h3>Personal Details</h3>
+                            <div class="stat-item">
+                                <span id="stat-resolved" class="stat-value">-</span>
+                                <span class="stat-label">Resolved</span>
                             </div>
-                            <div class="info-list">
-                                <!-- Member Since -->
-                                <div class="info-row">
-                                    <span class="info-label">Member Since</span>
-                                    <span class="info-val" id="member-since">—</span>
-                                </div>
-
-                                <!-- Mobile -->
-                                <div class="info-row">
-                                    <span class="info-label">Mobile</span>
-                                    <span class="info-val" id="profile-mobile-display">—</span>
-                                </div>
-
-                                <!-- Role/Office Specifics -->
-                                <div class="info-row" id="profile-office-item" style="display: none">
-                                    <span class="info-label">Office</span>
-                                    <span class="info-val" id="profile-office">—</span>
-                                </div>
-                                <div class="info-row" id="profile-position-id-item" style="display: none">
-                                    <span class="info-label">Position ID</span>
-                                    <span class="info-val" id="profile-position-id">—</span>
-                                </div>
-
-                                <!-- Address Section -->
-                                <div class="info-divider"></div>
-                                <div class="info-header-row">
-                                    <span class="info-label">Address</span>
-                                </div>
-                                <div id="address-display" class="address-box">
-                                    <span id="address-line-1-display" class="addr-line">—</span>
-                                    <span id="address-line-2-display" class="addr-line" style="display: none">—</span>
-                                    <span class="addr-line">Digos City, Davao del Sur
-                                        <span id="address-postal-display"></span></span>
-                                    <span id="address-barangay-display" class="addr-line badge-barangay">—</span>
-                                </div>
+                            <div class="stat-item">
+                                <span id="member-since" class="stat-value">-</span>
+                                <span class="stat-label">Member Since</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Column: Complaints/History -->
-                    <div class="profile-right-col">
-                        <div class="glass-panel history-panel">
-                            <div class="panel-header">
-                                <h2 id="content-title">Records & Activity</h2>
-                                <div class="tab-filters">
-                                    <span class="tab active">Complaints</span>
-                                </div>
+                    <div class="info-section">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Details</h3>
+                        <div class="flex flex-col gap-3 text-sm">
+                            <div>
+                                <span class="block text-gray-500 text-xs">Email</span>
+                                <span id="profile-email-display" class="font-medium text-gray-800">loading...</span>
                             </div>
-
-                            <div class="complaints-scroll" id="complaints-scroll">
-                                <!-- Complaint Status Chart -->
-                                <div class="chart-section" style="
-                      padding: 1rem 2rem;
-                      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-                      display: none;
-                    " id="complaint-stats-container">
-                                    <div style="
-                        height: 200px;
-                        position: relative;
-                        width: 100%;
-                        display: flex;
-                        justify-content: center;
-                      ">
-                                        <canvas id="complaintStatsChart"></canvas>
-                                    </div>
-                                </div>
-
-                                <div id="my-complaints"></div>
-
-                                <!-- Empty State -->
-                                <div id="complaints-empty" class="complaints-empty hidden">
-                                    <div class="empty-icon">📂</div>
-                                    <h3 id="empty-title">No Records Found</h3>
-                                    <p id="empty-message">
-                                        You haven't filed any complaints yet.
-                                    </p>
-                                </div>
+                            <div>
+                                <span class="block text-gray-500 text-xs">Address</span>
+                                <span id="profile-address-display" class="font-medium text-gray-800">loading...</span>
+                            </div>
+                            <div>
+                                <span class="block text-gray-500 text-xs">Mobile</span>
+                                <span id="profile-mobile-display" class="font-medium text-gray-800">loading...</span>
                             </div>
                         </div>
                     </div>
-                </div>
+                </aside>
+
+                <!-- Right Content: Scrollable History -->
+                <main class="glass-panel profile-main-content">
+                    <header class="profile-main-header">
+                        <h2 class="text-lg font-bold text-gray-800">Activity History</h2>
+                        <!-- Optional filtering controls could go here -->
+                    </header>
+
+                    <div id="activity-list" class="activity-list-container">
+                        <!-- Loading State -->
+                        <div class="animate-pulse space-y-4">
+                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="/js/lib/supabase-boot.js"></script>
     <script type="module" src="../js/components/header.js"></script>
     <script type="module" src="../js/components/sidebar.js"></script>

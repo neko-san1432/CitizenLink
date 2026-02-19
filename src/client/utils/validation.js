@@ -179,8 +179,7 @@ export const validateFileUpload = (files, options = {}) => {
     }
     if (!allowedTypes.includes(file.type)) {
       errors.push(
-        `File ${
-          file.name
+        `File ${file.name
         } has unsupported type. Allowed types: ${allowedTypes.join(", ")}`
       );
     }
@@ -265,7 +264,7 @@ export const setupRealtimeValidation = (form) => {
     if (!message) return;
     try {
       input.reportValidity();
-    } catch {}
+    } catch { }
   };
   const rules = {
     "#complaintTitle": { required: true, minLength: 3 },

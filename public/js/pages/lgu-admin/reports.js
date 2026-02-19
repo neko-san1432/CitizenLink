@@ -147,11 +147,9 @@ function renderSummaries(data) {
         </div>
         <div class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <p class="text-sm text-gray-500 font-medium">Filtered Range</p>
-            <h3 class="text-sm font-bold text-gray-600 mt-2">${
-              document.getElementById("filter-date-from")?.value || "—"
-            } <br>to ${
-    document.getElementById("filter-date-to")?.value || "—"
-  }</h3>
+            <h3 class="text-sm font-bold text-gray-600 mt-2">${document.getElementById("filter-date-from")?.value || "—"
+    } <br>to ${document.getElementById("filter-date-to")?.value || "—"
+    }</h3>
         </div>
     `;
 }
@@ -167,7 +165,7 @@ function renderCharts(data) {
     const catSource =
       data.by_category && Object.keys(data.by_category).length > 0
         ? data.by_category
-        : data.by_subtype || {};
+        : {};
 
     const catLabels = Object.keys(catSource);
     const catData = Object.values(catSource);

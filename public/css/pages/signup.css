@@ -50,12 +50,14 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: 1.25rem 2rem;
+  padding: 0 2rem;
+  height: 70px;
   z-index: 100;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--glass-border);
   opacity: 1;
   display: flex;
+  align-items: center;
 }
 
 .nav-container {
@@ -73,7 +75,8 @@
   gap: 0.75rem;
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  /* Reduced from 1.5rem to match dashboard */
   letter-spacing: -0.02em;
 }
 
@@ -192,7 +195,6 @@ body {
 }
 
 .auth-card {
-  width: 100%;
   max-width: 600px;
   /* Reduced width for unified form */
   background: rgba(15, 23, 42, 0.6);
@@ -208,7 +210,8 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   margin-top: 20px;
-  /* Reduced from 40px */
+  max-height: calc(100vh - 100px);
+  /* Ensure card fits within viewport to enable internal scrolling */
 }
 
 .auth-card::before {
@@ -217,7 +220,8 @@ body {
 
 .auth-header {
   padding: 1rem 1rem 0;
-  /* Minimized header padding */
+  margin-top: 60px;
+  /* Add margin to clear fixed header if needed, or adjust padding */
   text-align: center;
   background: transparent;
   border-bottom: 1px solid var(--glass-border);
@@ -3086,12 +3090,14 @@ body {
 .signup-method-card h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-light);
+  color: #f8fafc !important;
+  /* Explicit light text with important */
   margin: 0 0 0.25rem 0;
 }
 
 .signup-method-card p {
-  color: var(--text-dim);
+  color: #cbd5e1 !important;
+  /* Lighter gray for better contrast with important */
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.4;
@@ -3105,13 +3111,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-light);
+  color: #f8fafc !important;
+  /* Force light icon */
   border: 1px solid var(--glass-border);
 }
 
 .signup-method-card .method-chevron {
   font-size: 1.25rem;
-  color: var(--text-dim);
+  color: #cbd5e1 !important;
+  /* Force light chevron */
 }
 
 .signup-method-card:hover {
@@ -3156,7 +3164,8 @@ body {
 .progress-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--gray-600);
+  color: var(--text-dim);
+  /* Fixed contrast */
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -3165,7 +3174,8 @@ body {
 .signup-method-back {
   border: none;
   background: transparent;
-  color: var(--primary-700);
+  color: var(--text-light);
+  /* Fixed contrast */
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -3227,25 +3237,8 @@ body {
   }
 }
 
-.signup-step::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(120deg,
-      rgba(59, 130, 246, 0.08),
-      rgba(16, 185, 129, 0.08));
-  opacity: 0;
-  transition: opacity 200ms ease;
-  z-index: -1;
-}
-
 .signup-step[hidden] {
   display: none;
-}
-
-.signup-step:not([hidden]):hover::after {
-  opacity: 1;
 }
 
 .step-card-header {
@@ -3649,4 +3642,466 @@ body {
   width: 20px;
   height: 20px;
   stroke-width: 2;
+}
+
+/* COMPACT OVERRIDES FOR SIGNUP METHOD CARDS - ULTRA COMPACT */
+.signup-method-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* Tighter gap */
+  padding: 0.625rem;
+  /* Tighter padding */
+  background: rgba(255, 255, 255, 0.06) !important;
+  /* Increased contrast */
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  /* Increased contrast */
+  border-radius: var(--radius-md);
+  /* Smaller radius */
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  width: 100%;
+}
+
+.signup-method-card:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  /* Increased hover contrast */
+  transform: translateY(-2px);
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.signup-method-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Force single column for ultra squeeze */
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .signup-method-grid {
+    grid-template-columns: 1fr;
+    /* Keep single column even on desktop to save width */
+  }
+}
+
+.method-icon-wrap {
+  width: 28px;
+  /* Ultra small */
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  /* Increased contrast */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-light) !important;
+}
+
+/* Resize internal SVGs */
+.method-icon-wrap svg {
+  width: 16px;
+  height: 16px;
+}
+
+.method-body h3 {
+  font-size: 0.85rem;
+  /* Smaller font */
+  font-weight: 600;
+  margin: 0 0 0.1rem 0;
+  color: var(--text-light) !important;
+}
+
+.method-body p {
+  font-size: 0.65rem;
+  /* Tiny text */
+  color: var(--text-dim) !important;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.method-chevron {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+.method-header {
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.method-header h2 {
+  font-size: 1.15rem;
+  margin: 0.25rem 0;
+  color: var(--text-light);
+}
+
+.method-eyebrow {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: var(--primary-color);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Ensure container fits */
+.signup-method-section {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Force Auth Card to be ultra compact on desktop */
+@media (min-width: 1024px) {
+  .auth-card {
+    max-width: 420px !important;
+    /* ULTRA NARROW */
+  }
+
+  .auth-content {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
+  .auth-header {
+    padding: 1rem 1rem 0.25rem;
+  }
+
+  .auth-title {
+    font-size: 1.25rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.5rem;
+  }
+
+  .input {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.05) !important;
+    /* Added input contrast */
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-light) !important;
+  }
+
+  .input:focus {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: var(--primary-500) !important;
+  }
+
+  .input-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    min-height: 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  /* High contrast for labels in compact mode */
+  .form-label {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    opacity: 1 !important;
+  }
+
+  /* Widen container when email flow is active */
+  body:has(#signup-email-flow:not([hidden])) .auth-card,
+  html:has(#signup-email-flow:not([hidden])) .auth-card {
+    max-width: 720px !important;
+    transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* =========================================
+   MERGED COMPACT MODE OVERRIDES
+   ========================================= */
+
+/* Login/Signup Page Specifics from compact-overrides.css */
+.auth-container,
+.login-container,
+.signup-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.auth-card {
+  max-height: 95vh;
+  height: auto;
+  overflow-y: auto;
+  /* Allow internal scrolling if strictly needed, but try to fit */
+  transform-origin: center;
+  /* Optional: Scale down if screen is too short, can be handled by media queries if needed */
+}
+
+/* Compact Auth Form Spacing */
+.auth-header {
+  margin-bottom: 0.25rem !important;
+}
+
+.auth-title {
+  font-size: 1.5rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.auth-subtitle {
+  font-size: 0.875rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.form-group {
+  margin-bottom: 0.75rem !important;
+}
+
+.form-label {
+  margin-bottom: 0.25rem !important;
+  font-size: 0.8rem !important;
+  color: var(--text-color);
+}
+
+.input {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.9rem !important;
+  height: auto !important;
+}
+
+.btn-lg {
+  padding: 0.6rem !important;
+  font-size: 0.95rem !important;
+}
+
+.auth-footer {
+  margin-top: 0.5rem !important;
+  padding-top: 0.25rem !important;
+}
+
+/* =========================================
+   COMPRESSION OVERRIDES (Match Login Page)
+   ========================================= */
+@media (min-width: 1024px) {
+  .signup-form {
+    gap: 0.15rem !important;
+    /* Ultra tight gap */
+  }
+
+  .form-group {
+    margin-bottom: 0.25rem !important;
+    /* Reduced from 0.35rem */
+  }
+
+  /* Force label compression */
+  .auth-form .form-label,
+  .form-label {
+    margin-bottom: 0 !important;
+    /* Removed margin */
+    font-size: 0.75rem !important;
+    /* Slightly smaller */
+    line-height: 1.2 !important;
+  }
+
+  /* Force input compression */
+  .auth-form .input,
+  .input {
+    padding: 0.25rem 0.6rem !important;
+    /* Reduced padding */
+    min-height: 32px !important;
+    /* Reduced from 36px */
+    font-size: 0.85rem !important;
+  }
+
+  .auth-main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .auth-content {
+    gap: 0 !important;
+  }
+
+  h3.step-title {
+    margin-bottom: 0.35rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 1rem !important;
+    /* Contrast Fix */
+    color: var(--text-light) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    width: 100% !important;
+    grid-column: 1 / -1 !important;
+  }
+
+  /* GRID LAYOUT FOR STEPS */
+  .signup-step:not([hidden]) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.1rem 0.5rem !important;
+    /* Reduced row gap */
+    align-content: start;
+    width: 100% !important;
+  }
+
+  .signup-step[hidden],
+  button[hidden],
+  .btn[hidden] {
+    display: none !important;
+  }
+
+  .signup-step .form-group {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    grid-column: span 1 !important;
+    /* Default to half width */
+  }
+
+  /* Force "full width" fields to also be half width in this layout to save space */
+  .signup-step .form-full {
+    grid-column: span 1 !important;
+  }
+
+  /* Exceptions that MUST be full width */
+  .signup-step p,
+  .captcha-container,
+  .terms-checkbox,
+  .alert,
+  .id-verify-body,
+  .alert-warning {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
+  /* Handle ID Verify Section */
+  .id-mode .id-dropzone {
+    min-height: 80px !important;
+    /* Reduced from 100px */
+    padding: 0.5rem !important;
+  }
+
+  .id-dropzone .dz-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Fix Contrast Issues */
+  .signup-progress-label {
+    color: var(--text-dim) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.5rem !important;
+  }
+
+  .signup-actions {
+    margin-top: 0.5rem !important;
+  }
+}
+
+
+/* =========================================
+   CONTRAST FIXES - GLOBAL OVERRIDES
+   ========================================= */
+/* Ensure these apply everywhere, regardless of screen size */
+button.signup-method-card h3,
+.signup-method-card h3,
+.signup-method-card .method-body h3 {
+  color: #ffffff !important;
+}
+
+button.signup-method-card p,
+.signup-method-card p,
+.signup-method-card .method-body p {
+  color: #cbd5e1 !important;
+}
+
+button.signup-method-card .method-icon-wrap,
+.signup-method-card .method-icon-wrap {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+button.signup-method-card .method-chevron,
+.signup-method-card .method-chevron {
+  color: #cbd5e1 !important;
+}
+
+/* =========================================
+   FIELD VISUAL MATCHING (LOGIN STYLE)
+   ========================================= */
+/* Match the specific dark glass look of login.css */
+.auth-form .input,
+.input,
+.select,
+.textarea {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  color: #f8fafc !important;
+  transition: all 0.25s ease;
+  color-scheme: dark !important;
+  /* Forces browser controls like select dropdowns to use dark theme */
+}
+
+/* Fix for Select Options (Dropdown) - ensure visible on dark background */
+.auth-form select option,
+.input option,
+.select option {
+  background-color: #0f172a !important;
+  /* Dark background */
+  color: #f8fafc !important;
+  /* Light text */
+}
+
+.auth-form .input:focus,
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  background: rgba(15, 23, 42, 0.7) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+.auth-form .input::placeholder,
+.input::placeholder {
+  color: rgba(248, 250, 252, 0.5) !important;
+}
+
+/* =========================================
+   HEADER COMPRESSION (Auth Card Header)
+   ========================================= */
+/* Reverting Navbar changes as user specified "not the navbar" */
+
+/* Compress the Form Header to match Login page style */
+.auth-header {
+  padding: 1rem 1.5rem 0.5rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.auth-title {
+  font-size: 1.5rem !important;
+  /* Reduced from 1.75-2rem */
+  margin-bottom: 0.25rem !important;
+}
+
+.auth-subtitle {
+  font-size: 0.9rem !important;
+}
+
+/* Adjust top padding to restore original spacing since navbar is back to 70px */
+.auth-page {
+  /* padding-top: 70px !important;  -- Default is fine */
 }

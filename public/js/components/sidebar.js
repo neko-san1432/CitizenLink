@@ -180,7 +180,7 @@ async function setSidebarRole() {
               })}</span>
                     <span>${item.label}</span>
                   </div>
-                  <i class="fas fa-chevron-down menu-chevron"></i>
+                  ${getIcon("chevronDown", { className: "menu-chevron", size: 16 })}
                 </div>
                 <div class="menu-children">
                   ${item.children
@@ -281,12 +281,19 @@ function getMenuItemsForRole(role) {
     citizen: [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
       { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
-      { url: "/digos-map", icon: "heatmap", label: "Digos City Map" },
+      { url: "/digos-map", icon: "map", label: "Digos City Map" },
       { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/profile", icon: "myProfile", label: "My Profile" },
+      {
+        label: "You",
+        icon: "user",
+        children: [
+          { url: "/profile", icon: "user", label: "Profile" },
+          { url: "/settings", icon: "settings", label: "Settings" },
+        ]
+      },
     ],
     lgu: [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/dashboard", icon: "lgu-admin-dashboard", label: "Dashboard" },
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
 
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
@@ -326,13 +333,20 @@ function getMenuItemsForRole(role) {
         icon: "dictionary",
         label: "Dictionary Manager",
       },
-      { url: "/profile", icon: "myProfile", label: "My Profile" },
+      {
+        label: "You",
+        icon: "briefcase",
+        children: [
+          { url: "/profile", icon: "user", label: "Profile" },
+          { url: "/settings", icon: "settings", label: "Settings" },
+        ]
+      },
     ],
     "super-admin": [
-      { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
+      { url: "/dashboard", icon: "super-admin-dashboard", label: "Dashboard" },
       {
         url: "/super-admin/pending-signups",
-        icon: "review-queue",
+        icon: "users",
         label: "Pending Signups",
       },
       {
@@ -356,7 +370,14 @@ function getMenuItemsForRole(role) {
         label: "Dictionary Manager",
       },
       { url: "/departments", icon: "departments", label: "Departments" },
-      { url: "/profile", icon: "myProfile", label: "My Profile" },
+      {
+        label: "You",
+        icon: "shield",
+        children: [
+          { url: "/profile", icon: "user", label: "Profile" },
+          { url: "/settings", icon: "settings", label: "Settings" },
+        ]
+      },
     ],
   };
 

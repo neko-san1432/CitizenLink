@@ -67,16 +67,20 @@ export function createHeader() {
             </svg>
           </button>
           <div id="profile-panel" class="header-dropdown profile-panel">
-            <div class="dropdown-header">
-              <h3 class="dropdown-title">Profile</h3>
-            </div>
             <div class="dropdown-content">
               <a href="/profile" class="dropdown-item">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                My Profile
+                Profile
+              </a>
+              <a href="/settings" class="dropdown-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Profile Settings
               </a>
               <a href="/fileComplaint" class="dropdown-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -104,33 +108,28 @@ export function createHeader() {
   `;
 }
 // Initialize global click handler to close dropdowns
+// Initialize global click handler to close dropdowns
 function initializeGlobalClickHandler() {
-  // console.log removed for security
   document.addEventListener("click", (e) => {
     const notificationPanel = document.getElementById("notification-panel");
     const profilePanel = document.getElementById("profile-panel");
     const notificationBtn = document.getElementById("notification-btn");
     const profileBtn = document.getElementById("profile-btn");
+
     // Close notification panel if clicking outside
     if (notificationPanel && notificationPanel.classList.contains("show")) {
-      if (
-        !notificationPanel.contains(e.target) &&
-        !notificationBtn.contains(e.target)
-      ) {
+      if (!notificationPanel.contains(e.target) && (!notificationBtn || !notificationBtn.contains(e.target))) {
         notificationPanel.classList.remove("show");
-        notificationPanel.style.opacity = "0";
-        notificationPanel.style.transform = "translateY(-10px)";
         setTimeout(() => {
           notificationPanel.style.display = "none";
         }, 300);
       }
     }
+
     // Close profile panel if clicking outside
     if (profilePanel && profilePanel.classList.contains("show")) {
-      if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {
+      if (!profilePanel.contains(e.target) && (!profileBtn || !profileBtn.contains(e.target))) {
         profilePanel.classList.remove("show");
-        profilePanel.style.opacity = "0";
-        profilePanel.style.transform = "translateY(-10px)";
         setTimeout(() => {
           profilePanel.style.display = "none";
         }, 300);
@@ -140,39 +139,56 @@ function initializeGlobalClickHandler() {
 }
 // Initialize notification button - using imported function from notification.js
 // Initialize profile button
+// Initialize profile button
 function initializeProfileButton() {
-  // console.log removed for security
   const profileBtn = document.getElementById("profile-btn");
   if (!profileBtn) {
     console.warn("[HEADER] Profile button not found");
     return;
   }
-  profileBtn.addEventListener("click", (e) => {
+
+  // Clone button to remove any existing listeners (prevents duplicates)
+  const newProfileBtn = profileBtn.cloneNode(true);
+  profileBtn.parentNode.replaceChild(newProfileBtn, profileBtn);
+
+  newProfileBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+
+    // Close notification panel first
     const notificationPanel = document.getElementById("notification-panel");
     if (notificationPanel && notificationPanel.classList.contains("show")) {
       notificationPanel.classList.remove("show");
-      notificationPanel.style.opacity = "0";
-      notificationPanel.style.transform = "translateY(-10px)";
-      setTimeout(() => {
-        notificationPanel.style.display = "none";
-      }, 300);
     }
+
     const profilePanel = document.getElementById("profile-panel");
+    if (!profilePanel) return;
+
     if (profilePanel.classList.contains("show")) {
       profilePanel.classList.remove("show");
-      profilePanel.style.opacity = "0";
-      profilePanel.style.transform = "translateY(-10px)";
       setTimeout(() => {
         profilePanel.style.display = "none";
       }, 300);
     } else {
-      profilePanel.classList.add("show");
+      // Position the panel
+      const rect = newProfileBtn.getBoundingClientRect();
+      const panelWidth = 280; // Default width
+
+      // Calculate position (right-aligned to button)
+      let left = rect.right - panelWidth;
+      // Ensure it doesn't go off-screen
+      if (left < 10) left = 10;
+
+      profilePanel.style.position = "fixed";
+      profilePanel.style.top = `${rect.bottom + 10}px`;
+      profilePanel.style.left = `${left}px`;
+      profilePanel.style.right = "auto";
+
+      // Ensure display is block (in case it was hidden by close handler)
       profilePanel.style.display = "block";
-      setTimeout(() => {
-        profilePanel.style.opacity = "1";
-        profilePanel.style.transform = "translateY(0)";
-      }, 10);
+      // Small delay to allow display to apply before transition
+      requestAnimationFrame(() => {
+        profilePanel.classList.add("show");
+      });
     }
   });
 }
@@ -338,20 +354,21 @@ function initializeHeaderScroll() {
   });
 }
 // Initialize dropdowns
+// Initialize dropdowns
 function initializeDropdowns() {
-  // console.log removed for security
-  // Move dropdowns to body to avoid container issues
+  // Move dropdowns to body to avoid container issues (clipping)
+  // Only move if not already direct child of body
   const notificationPanel = document.getElementById("notification-panel");
   const profilePanel = document.getElementById("profile-panel");
-  if (notificationPanel) {
-    notificationPanel.remove();
+
+  if (notificationPanel && notificationPanel.parentNode !== document.body) {
+    notificationPanel.parentNode.removeChild(notificationPanel);
     document.body.appendChild(notificationPanel);
-    // CSS classes will handle the styling now
   }
-  if (profilePanel) {
-    profilePanel.remove();
+
+  if (profilePanel && profilePanel.parentNode !== document.body) {
+    profilePanel.parentNode.removeChild(profilePanel);
     document.body.appendChild(profilePanel);
-    // CSS classes will handle the styling now
   }
 }
 // Initialize header when DOM is loaded

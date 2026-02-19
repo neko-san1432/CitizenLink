@@ -157,7 +157,7 @@ class AdvancedDecisionEngine {
                 this.logHITL(`Metaphor detected: "${meta.pattern}" -> Ignoring figurative language`);
                 return {
                     category: 'Others',
-                    subcategory: 'Metaphor Filtered',
+                    // subcategory: 'Metaphor Filtered', // Removed
                     urgency: 30,
                     method: 'METAPHOR_FILTER',
                     confidence: 1.0
@@ -186,7 +186,7 @@ class AdvancedDecisionEngine {
         if (bestMatch && bestMatch.confidence >= 0.8) {
             const result = {
                 category: bestMatch.category,
-                subcategory: bestMatch.subcategory,
+                // subcategory: bestMatch.subcategory, // Removed
                 urgency: this.getUrgency(bestMatch.category),
                 method: 'RULE_BASED',
                 confidence: bestMatch.confidence,
@@ -208,7 +208,7 @@ class AdvancedDecisionEngine {
             if (aiResult && aiResult.category && aiResult.confidence > 0.6) {
                 const result = {
                     category: aiResult.category,
-                    subcategory: aiResult.category, // AI maps to broad categories usually
+                    // subcategory: aiResult.category, // Removed
                     urgency: this.getUrgency(aiResult.category),
                     method: 'AI_TENSORFLOW',
                     confidence: aiResult.confidence
@@ -228,7 +228,7 @@ class AdvancedDecisionEngine {
         // 4. Default Fallback - ALWAYS queue these for training
         const fallbackResult = {
             category: 'Others',
-            subcategory: null,
+            // subcategory: null, // Removed
             urgency: 30,
             method: 'FALLBACK',
             confidence: 0.0
@@ -273,7 +273,7 @@ class AdvancedDecisionEngine {
                     complaint_id: complaintId,
                     text: text,
                     detected_category: result.category,
-                    detected_subcategory: result.subcategory,
+                    // detected_subcategory: result.subcategory, // Removed
                     confidence: result.confidence,
                     method: result.method,
                     matched_term: result.matched_term || null,
@@ -375,7 +375,7 @@ class AdvancedDecisionEngine {
                 complaint_id: item.complaint_id,
                 text: item.text,
                 detected_category: item.detected_category || 'Others',
-                detected_subcategory: item.detected_subcategory || null,
+                // detected_subcategory: item.detected_subcategory || null, // Removed
                 confidence: item.confidence || 0.5,
                 method: item.method || 'UNKNOWN',
                 matched_term: item.matched_term || null,
@@ -532,7 +532,7 @@ class AdvancedDecisionEngine {
                 .insert({
                     term: keyword.toLowerCase().trim(),
                     category: category,
-                    subcategory: subcategory || null,
+                    // subcategory: subcategory || null, // Removed
                     confidence: 0.85,
                     language: 'all'
                 });
@@ -548,7 +548,7 @@ class AdvancedDecisionEngine {
                     status: 'resolved',
                     trained_keyword: keyword,
                     trained_category: category,
-                    trained_subcategory: subcategory,
+                    // trained_subcategory: subcategory, // Removed
                     resolved_at: new Date().toISOString(),
                     resolved_by: userId
                 })
@@ -580,7 +580,7 @@ class AdvancedDecisionEngine {
                             status: 'resolved',
                             trained_keyword: `[auto] ${keyword}`,
                             trained_category: category,
-                            trained_subcategory: subcategory,
+                            // trained_subcategory: subcategory, // Removed
                             resolved_at: new Date().toISOString(),
                             resolved_by: userId
                         })
@@ -596,7 +596,7 @@ class AdvancedDecisionEngine {
             // 4. Reload keywords cache
             await this.reloadKeywords();
 
-            this.logHITL(`✅ Resolved: "${keyword}" → ${category}/${subcategory || 'N/A'}${autoResolved > 0 ? ` (+${autoResolved} auto-resolved)` : ''}`);
+            this.logHITL(`✅ Resolved: "${keyword}" → ${category}${autoResolved > 0 ? ` (+${autoResolved} auto-resolved)` : ''}`);
             return { success: true, autoResolved };
         } catch (err) {
             console.error('[NLP-HITL] Resolution failed:', err.message);
