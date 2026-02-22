@@ -406,11 +406,9 @@ async function reverseGeocode(lat, lng) {
 
     try {
         lastGeocodeTime = Date.now();
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+        const url = `/api/reverse-geocode?lat=${lat}&lng=${lng}`;
 
-        const response = await fetch(url, {
-            headers: { 'User-Agent': 'DRIMS-Dashboard/3.8 (Project)' }
-        });
+        const response = await fetch(url);
 
         if (!response.ok) throw new Error('Geocode failed');
 

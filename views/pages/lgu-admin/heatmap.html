@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <title>DRIMS: City Analytics Dashboard</title>
+    <title>DRIMS: City Analytics Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
@@ -55,11 +55,20 @@
             height: calc(100vh - 70px);
         }
 
+        /* Force DRIMS Left Sidebar to be a fly-out overlay instead of taking up layout space */
         #sidebar.collapsible {
-            top: 70px;
-            bottom: 0;
-            height: auto;
-            z-index: 10000 !important; /* Ensure sidebar overlaps header on heatmap */
+            position: fixed !important;
+            left: -260px !important;
+            top: 70px !important;
+            bottom: 0 !important;
+            height: calc(100vh - 70px) !important;
+            z-index: 10000 !important;
+            transition: left 0.3s ease-in-out !important;
+            background-color: var(--bg-surface) !important;
+        }
+
+        #sidebar.collapsible.open {
+            left: 0 !important;
         }
 
         /* ========== MAP AREA (Left side - fills remaining space) ========== */
@@ -88,361 +97,6 @@
             display: none !important;
         }
 
-        /* ========== COMMAND CENTER (Right side - fixed width) ========== */
-        .command-center {
-            width: 340px;
-            min-width: 340px;
-            max-width: 340px;
-            height: 100%;
-            background: radial-gradient(1200px 700px at 20% 0%, rgba(59, 130, 246, 0.10), rgba(15, 23, 42, 0.98) 55%), rgba(15, 23, 42, 0.98);
-            border-left: 1px solid rgba(51, 65, 85, 0.5);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 100;
-            flex-shrink: 0;
-            box-shadow: -12px 0 32px rgba(0, 0, 0, 0.35);
-        }
-
-        .command-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
-            padding: 14px 16px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-
-        .command-header h2 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: 0.5px;
-        }
-
-        .command-header .refresh-btn {
-            width: 32px;
-            height: 32px;
-            padding: 0;
-        }
-
-        .command-header .refresh-btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .command-center .btn.btn-secondary {
-            background: rgba(51, 65, 85, 0.75);
-            border-color: rgba(148, 163, 184, 0.25);
-            color: #f1f5f9;
-            box-shadow: none;
-        }
-
-        .command-center .btn.btn-secondary:hover:not(:disabled) {
-            background: rgba(71, 85, 105, 0.8);
-            border-color: rgba(148, 163, 184, 0.35);
-            transform: translateY(-1px);
-        }
-
-        .command-center .btn.btn-secondary:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .command-center .btn.btn-primary {
-            box-shadow: none;
-        }
-
-        .command-center .cc-label {
-            display: block;
-            margin-bottom: var(--space-2);
-            font-weight: var(--font-weight-600, 600);
-            font-size: 10px;
-            color: rgba(203, 213, 225, 0.9);
-            letter-spacing: 0.02em;
-        }
-
-        .command-center .cc-control.form-control {
-            padding: 8px 10px;
-            font-size: 12px;
-            line-height: 1.2;
-            border-radius: var(--radius-md);
-            box-shadow: none;
-            transform: none;
-            background-color: rgba(15, 23, 42, 0.8);
-            border-color: rgba(148, 163, 184, 0.35);
-            color: #e2e8f0;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-        }
-
-        .command-center .cc-control.form-control:hover:not(:disabled) {
-            background-color: rgba(15, 23, 42, 0.9);
-            border-color: rgba(148, 163, 184, 0.55);
-            box-shadow: none;
-            transform: none;
-        }
-
-        .command-center .cc-control.form-control:focus {
-            outline: none;
-            border-color: rgba(59, 130, 246, 0.9);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            transform: none;
-        }
-
-        .cc-toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            padding: 8px 10px;
-            border-radius: 10px;
-            transition: background 0.2s ease, color 0.2s ease;
-        }
-
-        .cc-toggle-row:hover {
-            background: rgba(51, 65, 85, 0.35);
-        }
-
-        .cc-toggle-text {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            color: rgba(226, 232, 240, 0.92);
-        }
-
-        .cc-divider {
-            height: 1px;
-            background: rgba(51, 65, 85, 0.5);
-            margin: 4px 0;
-        }
-
-        .command-center .cc-chevron {
-            font-size: 10px;
-            color: rgba(148, 163, 184, 0.85);
-        }
-
-        .cc-tabs {
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            display: flex;
-            gap: 6px;
-            padding: 6px;
-            border-radius: 12px;
-            background: rgba(15, 23, 42, 0.55);
-            border: 1px solid rgba(51, 65, 85, 0.35);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .cc-tabs .nav-tab {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 8px 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            color: rgba(226, 232, 240, 0.92);
-            transition: background 0.2s ease, color 0.2s ease;
-        }
-
-        .cc-tabs .nav-tab:hover {
-            background: rgba(51, 65, 85, 0.35);
-        }
-
-        .cc-tabs .nav-tab.active {
-            background: rgba(59, 130, 246, 0.22);
-            color: rgba(226, 232, 240, 1);
-        }
-
-        .tab-content {
-            display: none;
-            margin-top: 10px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .cc-tab-panel {
-            border: 1px solid rgba(51, 65, 85, 0.35);
-            border-radius: 12px;
-            overflow: visible;
-            position: relative;
-            background: rgba(30, 41, 59, 0.22);
-            padding: 12px;
-        }
-
-        .command-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .command-body::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        .command-body::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.2);
-        }
-
-        .command-body::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.25);
-            border-radius: 999px;
-            border: 2px solid rgba(15, 23, 42, 0.35);
-        }
-
-        .command-body::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.38);
-        }
-
-        .command-center .cc-accordion-item {
-            border: 1px solid rgba(51, 65, 85, 0.35);
-            border-radius: 12px;
-            overflow: hidden;
-            background: rgba(30, 41, 59, 0.22);
-        }
-
-        .command-center .cc-accordion-header {
-            background: rgba(30, 41, 59, 0.45);
-        }
-
-        .command-center .cc-accordion-item.open .cc-accordion-header {
-            background: rgba(59, 130, 246, 0.12);
-        }
-
-        .command-center .cc-accordion-content {
-            background: rgba(15, 23, 42, 0.22);
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .stat-card {
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 10px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid rgba(51, 65, 85, 0.3);
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
-        }
-
-        .stat-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        .stat-icon.blue {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3b82f6;
-        }
-
-        .stat-icon.green {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-        }
-
-        .stat-icon.red {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .stat-icon.purple {
-            background: rgba(168, 85, 247, 0.2);
-            color: #a855f7;
-        }
-
-        .stat-data {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #f1f5f9;
-        }
-
-        .stat-label {
-            font-size: 9px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Insights Section */
-        .insights-section {
-            background: rgba(30, 41, 59, 0.4);
-            border-radius: 10px;
-            padding: 12px;
-            flex: 1;
-            min-height: 120px;
-            overflow-y: auto;
-        }
-
-        .insights-section h3 {
-            margin: 0 0 10px;
-            font-size: 12px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .insight-placeholder {
-            text-align: center;
-            padding: 20px;
-            color: #64748b;
-        }
-
-        .insight-placeholder i {
-            font-size: 28px;
-            margin-bottom: 8px;
-            opacity: 0.5;
-        }
-
-        /* Category Breakdown */
-        .category-section {
-            background: rgba(30, 41, 59, 0.4);
-            border-radius: 10px;
-            padding: 12px;
-        }
-
-        .category-section h3 {
-            margin: 0 0 10px;
-            font-size: 12px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
 
         /* ========== FLOATING CONTROLS ========== */
         .floating-controls {
@@ -579,7 +233,8 @@
         .emergency-content {
             max-height: 280px;
             overflow-y: auto;
-            padding: 0; /* Remove outer padding to eliminate gap */
+            padding: 0;
+            /* Remove outer padding to eliminate gap */
         }
 
         .emergency-content .emergency-placeholder {
@@ -663,135 +318,7 @@
             font-size: 13px;
         }
 
-        /* ========== LIGHT MODE ========== */
-        html:not(.dark) .command-center {
-            background: rgba(255, 255, 255, 0.98);
-            border-left-color: rgba(0, 0, 0, 0.1);
-        }
-
-        html:not(.dark) .command-header {
-            background: linear-gradient(135deg, var(--primary, #4472C4), var(--primary-dark, #2E5A9C));
-        }
-
-        html:not(.dark) .stat-card {
-            background: rgba(248, 250, 252, 0.8);
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        html:not(.dark) .stat-value {
-            color: #1e293b;
-        }
-
-        html:not(.dark) .stat-label {
-            color: #334155; /* Darker for better visibility */
-        }
-
-        html:not(.dark) .command-center .cc-label {
-            color: #0f172a;
-        }
-
-        html:not(.dark) .command-center .cc-control.form-control {
-            background-color: rgba(255, 255, 255, 0.96);
-            border-color: rgba(15, 23, 42, 0.2);
-            color: #0f172a;
-        }
-
-        html:not(.dark) .command-center .cc-control.form-control:hover:not(:disabled) {
-            background-color: rgba(255, 255, 255, 1);
-            border-color: rgba(15, 23, 42, 0.28);
-        }
-
-        html:not(.dark) .command-center .multiselect-trigger {
-            background: rgba(255, 255, 255, 0.96);
-            border-color: rgba(15, 23, 42, 0.2);
-            color: #0f172a;
-        }
-
-        html:not(.dark) .command-center .multiselect-trigger:hover:not(.disabled) {
-            background: rgba(255, 255, 255, 1);
-            border-color: rgba(15, 23, 42, 0.28);
-        }
-
-        html:not(.dark) .command-center .multiselect-dropdown {
-            background: rgba(255, 255, 255, 0.98);
-            border-color: rgba(15, 23, 42, 0.14);
-        }
-
-        html:not(.dark) .command-center .multiselect-option {
-            color: #0f172a;
-        }
-
-        html:not(.dark) .command-center .cc-toggle-text {
-            color: #0f172a;
-        }
-
-        html:not(.dark) .command-center .cc-toggle-row:hover {
-            background: rgba(15, 23, 42, 0.06);
-        }
-
-        html:not(.dark) .command-center .cc-divider {
-            background: rgba(15, 23, 42, 0.12);
-        }
-
-        html:not(.dark) .command-center .cc-chevron {
-            color: rgba(71, 85, 105, 0.9);
-        }
-
-        html:not(.dark) .cc-tabs {
-            background: rgba(248, 250, 252, 0.9);
-            border-color: rgba(15, 23, 42, 0.12);
-        }
-
-        html:not(.dark) .cc-tabs .nav-tab {
-            color: rgba(15, 23, 42, 0.9);
-        }
-
-        html:not(.dark) .cc-tabs .nav-tab:hover {
-            background: rgba(15, 23, 42, 0.06);
-        }
-
-        html:not(.dark) .cc-tabs .nav-tab.active {
-            background: rgba(59, 130, 246, 0.12);
-            color: rgba(15, 23, 42, 0.95);
-        }
-
-        html:not(.dark) .cc-tab-panel {
-            background: rgba(248, 250, 252, 0.8);
-            border-color: rgba(15, 23, 42, 0.12);
-        }
-
-        html:not(.dark) .command-center .category-bar-name {
-            color: rgba(15, 23, 42, 0.95);
-        }
-
-        html:not(.dark) .command-center .category-bar-count {
-            color: rgba(51, 65, 85, 0.92);
-            font-weight: 700;
-        }
-
-        html:not(.dark) .insights-section,
-        html:not(.dark) .category-section {
-            background: rgba(248, 250, 252, 0.6);
-        }
-
-        html:not(.dark) .insights-section h3,
-        html:not(.dark) .category-section h3 {
-            color: #334155; /* Darker for better visibility */
-        }
-
-        html:not(.dark) .insight-placeholder {
-            color: #475569; /* Darker for better visibility */
-        }
-
-        html:not(.dark) .insight-placeholder i {
-            color: #64748b;
-        }
-
-        html:not(.dark) .floating-btn {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: rgba(0, 0, 0, 0.1);
-            color: #334155;
-        }
+        /* ========== LOADERS ========== */
 
         html:not(.dark) .floating-btn:hover {
             background: rgba(248, 250, 252, 0.95);
@@ -937,7 +464,7 @@
     </style>
 </head>
 
-<body>
+<body class="lgu-admin-dashboard bg-gray-50 text-gray-900">
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
     <div class="app-container">
         <div class="header-container"></div>
@@ -992,40 +519,70 @@
             </div>
 
             <!-- COMMAND CENTER (Fixed right panel - outside map) -->
-            <aside class="command-center">
-                <div class="command-header">
-                    <h2>
-                        <i class="fas fa-broadcast-tower"></i>
+            <button id="openCommandCenter"
+                class="absolute top-4 right-4 z-[90] bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 p-3 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors hidden font-semibold text-sm text-gray-700 dark:text-gray-200">
+                <i class="fas fa-layer-group text-blue-600 dark:text-blue-400"></i>
+                Command Center
+            </button>
+            <aside id="commandCenterSidebar"
+                class="w-[340px] flex flex-col bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700 shadow-xl z-[100] shrink-0 h-full transition-transform duration-300 translate-x-0 relative">
+                <!-- Collapse Toggle outside on the left -->
+                <button id="toggleCommandCenter"
+                    class="absolute -left-6 top-1/2 -translate-y-1/2 w-6 h-12 bg-white dark:bg-slate-900 border-y border-l border-gray-200 dark:border-slate-700 rounded-l-md shadow-[-2px_0_4px_rgba(0,0,0,0.05)] flex items-center justify-center hidden md:flex hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
+                    <i class="fas fa-chevron-right transition-transform" id="toggleCommandCenterIcon"></i>
+                </button>
+                <div
+                    class="px-4 py-3 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-gray-50/50 dark:bg-slate-800/50">
+                    <h2
+                        class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 m-0 uppercase tracking-wide">
+                        <i class="fas fa-broadcast-tower text-blue-600 dark:text-blue-400"></i>
                         COMMAND CENTER
                     </h2>
-                    <button class="refresh-btn btn btn-secondary btn-sm" id="refreshInsights"
-                        title="Refresh Intelligence">
-                        <i class="fas fa-sync"></i>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button
+                            class="btn-secondary w-8 h-8 p-0 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                            id="refreshInsights" title="Refresh Intelligence">
+                            <i class="fas fa-sync text-gray-500 dark:text-gray-400"></i>
+                        </button>
+                        <button
+                            class="btn-secondary w-8 h-8 p-0 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                            id="closeCommandCenter" title="Close Panel">
+                            <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="command-body">
-                    <div class="cc-tabs" role="tablist" aria-label="Command Center Tabs">
-                        <button type="button" class="nav-tab active" data-tab="cc-filters" role="tab"
-                            aria-selected="true">Filters</button>
-                        <button type="button" class="nav-tab" data-tab="cc-layers" role="tab"
-                            aria-selected="false">Layers</button>
-                        <button type="button" class="nav-tab" data-tab="cc-overview" role="tab"
-                            aria-selected="false">Overview</button>
-                        <button type="button" class="nav-tab" data-tab="cc-intel" role="tab"
-                            aria-selected="false">Intel</button>
+                <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar">
+                    <div class="flex gap-1 p-1 bg-gray-100 dark:bg-slate-800 rounded-xl" role="tablist"
+                        aria-label="Command Center Tabs">
+                        <button type="button"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn active"
+                            data-tab="cc-filters" role="tab" aria-selected="true"
+                            style="background-color: var(--primary-500); color: white;">Filters</button>
+                        <button type="button"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn"
+                            data-tab="cc-layers" role="tab" aria-selected="false">Layers</button>
+                        <button type="button"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn"
+                            data-tab="cc-overview" role="tab" aria-selected="false">Overview</button>
+                        <button type="button"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn"
+                            data-tab="cc-intel" role="tab" aria-selected="false">Intel</button>
                     </div>
 
                     <section id="cc-filters" class="tab-content active" role="tabpanel">
-                        <div class="cc-tab-panel">
-                            <div class="grid grid-cols-1 gap-3">
-                                <div class="grid grid-cols-2 gap-2">
+                        <div
+                            class="border border-gray-200 dark:border-slate-700 rounded-xl p-4 bg-white/50 dark:bg-slate-800/50">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="cc-label" for="filter-start-date">Start Date</label>
-                                        <input type="date" id="filter-start-date" class="form-control cc-control">
+                                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1"
+                                            for="filter-start-date">Start Date</label>
+                                        <input type="date" id="filter-start-date" class="input !py-1.5 text-sm">
                                     </div>
                                     <div>
-                                        <label class="cc-label" for="filter-end-date">End Date</label>
-                                        <input type="date" id="filter-end-date" class="form-control cc-control">
+                                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1"
+                                            for="filter-end-date">End Date</label>
+                                        <input type="date" id="filter-end-date" class="input !py-1.5 text-sm">
                                     </div>
                                 </div>
 
@@ -1047,26 +604,28 @@
                                 </div> -->
 
                                 <div>
-                                    <label class="cc-label">Category</label>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Category</label>
                                     <select id="filter-category" multiple class="hidden">
                                         <option value="all" selected>All Categories</option>
                                     </select>
-                                    <div id="ui-filter-category" class="custom-multiselect"></div>
+                                    <div id="ui-filter-category" class="custom-multiselect relative"></div>
                                 </div>
 
                                 <div>
-                                    <label class="cc-label">Subcategory</label>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Subcategory</label>
                                     <select id="filter-subcategory" multiple class="hidden" disabled>
                                         <option value="all" selected>All Subcategories</option>
                                     </select>
-                                    <div id="ui-filter-subcategory" class="custom-multiselect"></div>
+                                    <div id="ui-filter-subcategory" class="custom-multiselect relative"></div>
                                 </div>
 
-                                <div style="display:flex; gap:10px;">
-                                    <button id="apply-filters-btn" class="btn btn-primary btn-sm btn-block" disabled>
+                                <div class="flex gap-2 pt-2">
+                                    <button id="apply-filters-btn" class="btn-primary flex-1 !text-sm !py-2" disabled>
                                         <i class="fas fa-filter"></i> Apply
                                     </button>
-                                    <button id="reset-filters-btn" class="btn btn-secondary btn-sm btn-block">
+                                    <button id="reset-filters-btn" class="btn-secondary flex-1 !text-sm !py-2">
                                         <i class="fas fa-undo"></i> Reset
                                     </button>
                                 </div>
@@ -1075,39 +634,52 @@
                     </section>
 
                     <section id="cc-layers" class="tab-content" role="tabpanel">
-                        <div class="cc-tab-panel">
-                            <div class="flex flex-col gap-2">
-                                <label class="cc-toggle-row">
-                                    <span class="cc-toggle-text">
-                                        <i class="fas fa-fire text-red-500"></i> Heatmap Layer
+                        <div
+                            class="border border-gray-200 dark:border-slate-700 rounded-xl p-4 bg-white/50 dark:bg-slate-800/50">
+                            <div class="flex flex-col gap-1">
+                                <label
+                                    class="flex justify-between items-center py-2 px-1 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors group">
+                                    <span
+                                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 group-hover:text-gray-900 dark:group-hover:text-white">
+                                        <i class="fas fa-fire text-red-500 w-4 pb-0.5"></i> Heatmap Layer
                                     </span>
                                     <input type="checkbox" id="heatmapSwitch" class="toggle-switch">
                                 </label>
 
-                                <label class="cc-toggle-row">
-                                    <span class="cc-toggle-text">
-                                        <i class="fas fa-project-diagram text-blue-500"></i> AI Clusters
+                                <label
+                                    class="flex justify-between items-center py-2 px-1 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors group">
+                                    <span
+                                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 group-hover:text-gray-900 dark:group-hover:text-white">
+                                        <i class="fas fa-project-diagram text-blue-500 w-4 pb-0.5"></i> AI Clusters
                                     </span>
                                     <input type="checkbox" id="clustersSwitch" class="toggle-switch" checked>
                                 </label>
 
-                                <label class="cc-toggle-row">
-                                    <span class="cc-toggle-text">
-                                        <i class="fas fa-map-marker-alt text-green-500"></i> Individual Markers
+                                <label
+                                    class="flex justify-between items-center py-2 px-1 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors group">
+                                    <span
+                                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 group-hover:text-gray-900 dark:group-hover:text-white">
+                                        <i class="fas fa-map-marker-alt text-green-500 w-4 pb-0.5"></i> Individual
+                                        Markers
                                     </span>
                                     <input type="checkbox" id="markersToggle" class="toggle-switch" checked>
                                 </label>
 
-                                <label class="cc-toggle-row">
-                                    <span class="cc-toggle-text">
-                                        <i class="fas fa-triangle-exclamation text-amber-500"></i> Emergency Panel
+                                <label
+                                    class="flex justify-between items-center py-2 px-1 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors group">
+                                    <span
+                                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 group-hover:text-gray-900 dark:group-hover:text-white">
+                                        <i class="fas fa-triangle-exclamation text-amber-500 w-4 pb-0.5"></i> Emergency
+                                        Panel
                                     </span>
                                     <input type="checkbox" id="emergencyToggle" class="toggle-switch">
                                 </label>
 
-                                <label class="cc-toggle-row">
-                                    <span class="cc-toggle-text">
-                                        <i class="fas fa-location-dot text-red-400"></i> Emergency Markers
+                                <label
+                                    class="flex justify-between items-center py-2 px-1 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors group">
+                                    <span
+                                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 group-hover:text-gray-900 dark:group-hover:text-white">
+                                        <i class="fas fa-location-dot text-red-500 w-4 pb-0.5"></i> Emergency Markers
                                     </span>
                                     <input type="checkbox" id="emergencyMarkersToggle" class="toggle-switch" checked>
                                 </label>
@@ -1117,88 +689,119 @@
                     </section>
 
                     <section id="cc-overview" class="tab-content" role="tabpanel">
-                        <div class="cc-tab-panel">
-                            <div class="stats-grid">
-                                <div class="stat-card" title="Total citizen inputs">
-                                    <div class="stat-icon blue">
+                        <div class="p-4 flex flex-col gap-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2"
+                                    title="Total citizen inputs">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-users"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="totalComplaints">--</span>
-                                        <span class="stat-label">CITIZEN INPUTS</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="totalComplaints">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">CITIZEN
+                                            INPUTS</span>
                                     </div>
                                 </div>
-                                <div class="stat-card" title="Verified incidents">
-                                    <div class="stat-icon green">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2"
+                                    title="Verified incidents">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-clipboard-check"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="totalClusters">--</span>
-                                        <span class="stat-label">VERIFIED</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="totalClusters">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">VERIFIED</span>
                                     </div>
                                 </div>
-                                <div class="stat-card" title="Priority zones">
-                                    <div class="stat-icon red">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2"
+                                    title="Priority zones">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-exclamation-triangle"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="criticalHotspots">--</span>
-                                        <span class="stat-label">PRIORITY</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="criticalHotspots">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">PRIORITY</span>
                                     </div>
                                 </div>
-                                <div class="stat-card" title="Noise reduction">
-                                    <div class="stat-icon purple">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2"
+                                    title="Noise reduction">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-filter"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="efficiencyScore">--</span>
-                                        <span class="stat-label">EFFICIENCY</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="efficiencyScore">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">EFFICIENCY</span>
                                     </div>
                                 </div>
-                                <div class="stat-card" title="Active incidents">
-                                    <div class="stat-icon red">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2"
+                                    title="Active incidents">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-bolt"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="activeIncidentsCount">--</span>
-                                        <span class="stat-label">ACTIVE</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="activeIncidentsCount">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">ACTIVE</span>
                                     </div>
                                 </div>
-                                <div class="stat-card" title="History logs">
-                                    <div class="stat-icon blue">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2"
+                                    title="History logs">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-clock-rotate-left"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="historyLogsCount">--</span>
-                                        <span class="stat-label">HISTORY</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="historyLogsCount">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">HISTORY</span>
                                     </div>
                                 </div>
-                                <div class="stat-card" title="Advisories">
-                                    <div class="stat-icon green">
+                                <div class="bg-white dark:bg-slate-800 rounded-xl p-3 border border-gray-100 dark:border-slate-700 shadow-sm flex flex-col gap-2 col-span-2"
+                                    title="Advisories">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">
                                         <i class="fas fa-triangle-exclamation"></i>
                                     </div>
-                                    <div class="stat-data">
-                                        <span class="stat-value" id="advisoriesCount">--</span>
-                                        <span class="stat-label">ADVISORIES</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none"
+                                            id="advisoriesCount">--</span>
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1 block h-3">ADVISORIES</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="cc-divider" style="margin: 10px 0;"></div>
+                            <div class="h-px w-full bg-gray-200 dark:bg-slate-700 my-2"></div>
 
-                            <div class="category-section">
-                                <div class="category-bars" id="categoryBars"></div>
+                            <div class="flex flex-col gap-3">
+                                <div class="category-bars flex flex-col gap-3" id="categoryBars"></div>
                             </div>
                         </div>
                     </section>
 
                     <section id="cc-intel" class="tab-content" role="tabpanel">
-                        <div class="cc-tab-panel">
-                            <div class="insights-section" id="insightsContent">
-                                <div class="insight-placeholder">
-                                    <i class="fas fa-satellite-dish"></i>
-                                    <p>Awaiting field intelligence...</p>
-                                    <span>Load data to generate insights</span>
+                        <div class="p-4 h-full flex flex-col">
+                            <div class="flex-1 overflow-y-auto pr-1 flex flex-col gap-3" id="insightsContent">
+                                <div
+                                    class="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl text-gray-400 dark:text-slate-500 gap-3 mt-4 h-full">
+                                    <i class="fas fa-satellite-dish text-3xl"></i>
+                                    <p class="font-medium text-sm text-gray-600 dark:text-gray-300">Awaiting field
+                                        intelligence...</p>
+                                    <span class="text-xs">Load data to generate insights</span>
                                 </div>
                             </div>
                         </div>
@@ -1228,12 +831,49 @@
     <script src="/brain-dashboard/shared/taxonomy.js"></script>
     <script src="/brain-dashboard/nlp-processor.js"></script>
     <script src="/brain-dashboard/causality-manager.js"></script>
-    <script src="/brain-dashboard/simulation-engine.js"></script>
-    <script src="/brain-dashboard/dashboard_production.js"></script>
+    <script src="/brain-dashboard/simulation-engine.js?v=3.0.2"></script>
+    <script src="/brain-dashboard/live-sync.js?v=3.0.2"></script>
+    <script src="/brain-dashboard/dashboard_production.js?v=3.0.2"></script>
 
     <!-- Filter Logic Script -->
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // Command Center Sidebar Toggle Logic
+            const ccSidebar = document.getElementById('commandCenterSidebar');
+            const toggleBtn = document.getElementById('toggleCommandCenter');
+            const toggleIcon = document.getElementById('toggleCommandCenterIcon');
+            const openBtn = document.getElementById('openCommandCenter');
+            const closeBtn = document.getElementById('closeCommandCenter');
+
+            let ccIsCollapsed = false;
+
+            const toggleCommandCenter = () => {
+                ccIsCollapsed = !ccIsCollapsed;
+                if (ccIsCollapsed) {
+                    ccSidebar.classList.remove('translate-x-0');
+                    ccSidebar.classList.add('translate-x-full');
+                    ccSidebar.style.marginRight = "-340px"; // Reclaims layout space
+                    if (toggleIcon) toggleIcon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+                    setTimeout(() => {
+                        if (openBtn) openBtn.classList.remove('hidden');
+                        if (window.map) window.map.invalidateSize();
+                    }, 300);
+                } else {
+                    ccSidebar.classList.remove('translate-x-full');
+                    ccSidebar.classList.add('translate-x-0');
+                    ccSidebar.style.marginRight = "0"; // Restores layout space
+                    if (toggleIcon) toggleIcon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+                    if (openBtn) openBtn.classList.add('hidden');
+                    setTimeout(() => {
+                        if (window.map) window.map.invalidateSize();
+                    }, 300);
+                }
+            };
+
+            if (toggleBtn) toggleBtn.addEventListener('click', toggleCommandCenter);
+            if (openBtn) openBtn.addEventListener('click', toggleCommandCenter);
+            if (closeBtn) closeBtn.addEventListener('click', toggleCommandCenter); // Mobile/Header close button
+
             // Check dependencies
             if (typeof DRIMSTaxonomy === 'undefined' || typeof window.applyGlobalFilters === 'undefined') {
                 console.warn('[FILTERS] Dependencies missing (Taxonomy or Dashboard script)');
@@ -1280,18 +920,18 @@
 
                 // Build UI
                 container.innerHTML = `
-                    <div class="multiselect-trigger ${select.disabled ? 'disabled' : ''}" tabindex="0">
-                        <span class="trigger-text">${placeholder}</span>
-                        <i class="fas fa-chevron-down cc-chevron"></i>
+                    <div class="multiselect-trigger relative flex items-center justify-between w-full text-sm py-2 px-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow cursor-pointer ui-trigger ${select.disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}" tabindex="0">
+                        <span class="trigger-text truncate pr-4">${placeholder}</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 dark:text-gray-500"></i>
                     </div>
-                    <div class="multiselect-dropdown custom-scroll">
+                    <div class="multiselect-dropdown absolute z-[110] w-[calc(100%-24px)] mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg custom-scrollbar hidden opacity-0 transition-opacity ui-dropdown">
                         <!-- Options injected here -->
                     </div>
                 `;
 
-                const trigger = container.querySelector('.multiselect-trigger');
+                const trigger = container.querySelector('.ui-trigger');
                 const triggerText = container.querySelector('.trigger-text');
-                const dropdown = container.querySelector('.multiselect-dropdown');
+                const dropdown = container.querySelector('.ui-dropdown');
 
                 // Toggle Dropdown
                 trigger.addEventListener('click', (e) => {
@@ -1299,11 +939,18 @@
                     e.stopPropagation();
 
                     // Close others
-                    document.querySelectorAll('.multiselect-dropdown.open').forEach(d => {
-                        if (d !== dropdown) d.classList.remove('open');
+                    document.querySelectorAll('.ui-dropdown:not(.hidden)').forEach(d => {
+                        if (d !== dropdown) {
+                            d.classList.add('opacity-0');
+                            setTimeout(() => d.classList.add('hidden'), 200);
+                        }
                     });
 
-                    dropdown.classList.toggle('open');
+                    dropdown.classList.toggle('hidden');
+                    // Add a tiny delay to allow display flex to apply before transitioning opacity
+                    setTimeout(() => {
+                        dropdown.classList.toggle('opacity-0');
+                    }, 10);
                     renderOptions(); // Refresh state on open
                 });
 
@@ -1314,10 +961,12 @@
 
                     opts.forEach(opt => {
                         const row = document.createElement('div');
-                        row.className = `multiselect-option ${opt.selected ? 'selected' : ''}`;
+                        row.className = `flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer transition-colors ${opt.selected ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`;
                         row.innerHTML = `
-                           <div class="option-checkbox"></div>
-                           <span class="option-label">${opt.text}</span>
+                           <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors ${opt.selected ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 dark:border-slate-600 bg-transparent'}">
+                                ${opt.selected ? '<i class="fas fa-check text-[10px]"></i>' : ''}
+                           </div>
+                           <span class="text-sm ${opt.selected ? 'font-semibold text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}">${opt.text}</span>
                        `;
 
                         row.addEventListener('click', (e) => {
@@ -1375,9 +1024,9 @@
 
                     // Update disabled state style
                     if (select.disabled) {
-                        trigger.classList.add('disabled');
+                        trigger.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
                     } else {
-                        trigger.classList.remove('disabled');
+                        trigger.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
                     }
                 };
 
@@ -1407,7 +1056,10 @@
             // Close dropdowns on outside click
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.custom-multiselect')) {
-                    document.querySelectorAll('.multiselect-dropdown.open').forEach(d => d.classList.remove('open'));
+                    document.querySelectorAll('.ui-dropdown:not(.hidden)').forEach(d => {
+                        d.classList.add('opacity-0');
+                        setTimeout(() => d.classList.add('hidden'), 200);
+                    });
                 }
             });
 

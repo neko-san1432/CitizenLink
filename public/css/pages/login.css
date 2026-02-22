@@ -322,6 +322,11 @@ body {
   color: rgba(248, 250, 252, 0.5);
 }
 
+.input:hover {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .input:focus {
   outline: none;
   border-color: var(--primary-color);
@@ -690,6 +695,7 @@ body {
   margin-top: 1rem !important;
   padding-top: 0.5rem !important;
 }
+
 /* =========================================
    FIX: Icon Padding Override
    ========================================= */

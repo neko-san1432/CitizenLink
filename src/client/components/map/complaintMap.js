@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!map) return;
     // Remove tile changer (layers control) on this page only
     if (window.simpleMapLayerControl) {
-      try { map.removeControl(window.simpleMapLayerControl); } catch {}
+      try { map.removeControl(window.simpleMapLayerControl); } catch { }
       window.simpleMapLayerControl = null;
     }
     // Nominatim address search (OpenStreetMap) as a Leaflet control embedded in the map
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const dLng = toRad(bLng - aLng);
       const lat1 = toRad(aLat);
       const lat2 = toRad(bLat);
-      const s = (Math.sin(dLat/2) ** 2) + (Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLng/2) ** 2));
+      const s = (Math.sin(dLat / 2) ** 2) + (Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLng / 2) ** 2));
       return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
     }
     function classWeight(cls = "", type = "") {
@@ -131,10 +131,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         resultsList.style.display = "none";
         resultsList.innerHTML = "";
         // Bias search to Digos bounding box and exclude "Digos City" from results
-        const viewbox = ["125.0,7.0","125.7,6.0"]; // lon,lat pairs top-left and bottom-right
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&bounded=1&viewbox=${viewbox.join(",")}&q=${encodeURIComponent(query)}`;
+        const viewbox = ["125.0,7.0", "125.7,6.0"]; // lon,lat pairs top-left and bottom-right
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&bounded=1&viewbox=${viewbox.join(",")}&q=${encodeURIComponent(query)}&email=contact@drims.com`;
         // console.log removed for security
-        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        const res = await fetch(url);
         const data = await res.json();
         // console.log removed for security
         if (!Array.isArray(data) || data.length === 0) {

@@ -443,7 +443,61 @@ document.addEventListener("DOMContentLoaded", () => {
       initializeNotificationButton();
       initializeProfileButton();
       initializeLogoutButton();
-      initializeMenuToggle(); // Initialize menu toggle after header HTML is created
+      initializeMenuToggle(); // Initialize menu toggle after header HTML
+      // The following functions are not defined in the provided context,
+      // assuming they are meant to be added or are placeholders.
+      // setupRoleToggle();
+      // setupClickOutside();
+      // setupThemeToggle();
+
+      console.log("Header initialized with components");
+
+      /* =========================================================================
+         Dynamic Dashboard Layout Wrapper
+         =========================================================================
+         This logic automatically restructures legacy layouts to merge the header
+         inside the #app container and apply flex-column layouts, identical to
+         the citizen/coordinator dashboards. It prevents the need to manually
+         edit 50+ HTML pages.
+      */
+      const appContainer = document.getElementById('app');
+      const headerContainer = document.querySelector('.header-container');
+      const isMapView = window.location.pathname.includes('heatmap') || window.location.pathname.includes('map');
+
+      if (appContainer && headerContainer && appContainer.parentNode && !isMapView) {
+        // Check if header is outside app (legacy layout)
+        if (headerContainer.parentNode !== appContainer) {
+          // 1. Give app flex props
+          appContainer.style.display = 'flex';
+          appContainer.style.flexDirection = 'column';
+
+          // 2. Move Header into app
+          if (appContainer.firstChild) {
+            appContainer.insertBefore(headerContainer, appContainer.firstChild);
+          } else {
+            appContainer.appendChild(headerContainer);
+          }
+
+          // 3. Wrap remaining app children in the scrollable wrapper
+          const wrapper = document.createElement('div');
+          wrapper.className = 'dashboard-main-wrapper';
+          wrapper.style.display = 'flex';
+          wrapper.style.flexDirection = 'column';
+          wrapper.style.flex = '1';
+          wrapper.style.overflowY = 'auto';
+          // For legacy non-dashboard pages, we supply generic padding to mimic dashboard-common.css margins
+          wrapper.style.padding = 'var(--space-6)';
+
+          // Move everything EXCEPT the newly inserted header into the wrapper
+          Array.from(appContainer.childNodes).forEach(node => {
+            if (node !== headerContainer) {
+              wrapper.appendChild(node);
+            }
+          });
+          appContainer.appendChild(wrapper);
+          console.log('Dynamically applied flex layout wrapper.');
+        }
+      }
       initializeThemeToggle();
       initializeHeaderScroll();
       initializeDropdowns();

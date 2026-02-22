@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/css/pages/dashboard-redesign.css" />
   <link rel="stylesheet" href="/css/pages/coordinator-dashboard.css" />
   <link rel="stylesheet" href="/css/viewport-fix.css" />
-    <script type="module" src="/js/utils/theme.js"></script>
+  <script type="module" src="/js/utils/theme.js"></script>
 
   <link rel="stylesheet" href="/brain-analytics/analytics.css">
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
@@ -30,274 +30,335 @@
 <body>
   <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
   <div class="app-container">
-    <div class="header-container"></div>
     <div id="sidebar" class="collapsible"></div>
 
-    <div id="app" class="collapsible coordinator-dashboard">
-      <!-- Welcome Section -->
-      <div class="dashboard-header-section">
-        <h1 class="text-2xl font-bold text-gray-800">LGU Dashboard</h1>
-        <p class="text-gray-600">
-          Review and assign incoming reports.
-        </p>
-      </div>
+    <div id="app" class="collapsible coordinator-dashboard" style="display: flex; flex-direction: column;">
+      <div class="header-container"></div>
 
-      <!-- Main Content Grid -->
-      <div class="dashboard-content gap-6 p-6">
-
-        <!-- Top Row: Quick Actions & Recent Activity (Moved to top to match Citizen) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <!-- Quick Actions -->
-          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button
-                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
-                onclick="window.location.href='/review-queue'">
-                <div
-                  class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h4 class="font-medium text-gray-900">Verify Reports</h4>
-                <p class="text-sm text-gray-500 mt-1">Review incoming data</p>
-              </button>
-
-              <a href="/heatmap"
-                class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group block">
-                <div
-                  class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </div>
-                <h4 class="font-medium text-gray-900">Heatmap Analysis</h4>
-                <p class="text-sm text-gray-500 mt-1">View critical zones</p>
-              </a>
-            </div>
-          </div>
-
-          <!-- Recent Activity -->
-          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
-              <a href="/review-queue" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
-            </div>
-            <div id="recent-activity-list" class="space-y-3">
-              <!-- Loading State -->
-              <div class="animate-pulse space-y-3">
-                <div class="h-16 bg-gray-100 rounded-lg"></div>
-                <div class="h-16 bg-gray-100 rounded-lg"></div>
-                <div class="h-16 bg-gray-100 rounded-lg"></div>
-              </div>
-            </div>
-          </div>
+      <div class="dashboard-main-wrapper" style="display: flex; flex-direction: column; flex: 1;">
+        <!-- Welcome Section -->
+        <div class="dashboard-header-section">
+          <h1 class="text-2xl font-bold text-gray-800">LGU Dashboard</h1>
+          <p class="text-gray-600">
+            Review, manage, and resolve incoming reports.
+          </p>
         </div>
 
-        <!-- Analytics Overview Section -->
-        <div id="analytics-overview-container">
-          <!-- Stats Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <!-- Total Complaints -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Total Complaints</p>
-                <h3 class="text-2xl font-bold text-gray-800" id="totalComplaints">-</h3>
+        <!-- Main Content Grid -->
+        <div class="dashboard-content gap-6 p-6 relative" style="flex: 1;">
+          <!-- Global Skeleton Loader -->
+          <div id="dashboard-loading" class="dashboard-loading"
+            style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+            <!-- Top Row Skeleton -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div class="glass-panel" style="padding: 1rem;">
+                <div class="skeleton" style="height: 24px; width: 150px; border-radius: 4px;"></div>
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                  <div class="skeleton" style="height: 100px; border-radius: 12px;"></div>
+                  <div class="skeleton" style="height: 100px; border-radius: 12px;"></div>
+                </div>
               </div>
-              <div class="p-3 bg-gray-100 text-gray-600 rounded-lg">
-                <i class="fas fa-clipboard-list text-xl"></i>
-              </div>
-            </div>
-
-            <!-- Emergency Cases -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Emergency Cases</p>
-                <h3 class="text-2xl font-bold text-red-600" id="criticalCount">-</h3>
-              </div>
-              <div class="p-3 bg-red-50 text-red-600 rounded-lg">
-                <i class="fas fa-fire text-xl"></i>
+              <div class="glass-panel" style="padding: 1rem;">
+                <div class="skeleton" style="height: 24px; width: 180px; border-radius: 4px;"></div>
+                <div class="space-y-3 mt-4">
+                  <div class="skeleton" style="height: 60px; border-radius: 8px;"></div>
+                  <div class="skeleton" style="height: 60px; border-radius: 8px;"></div>
+                  <div class="skeleton" style="height: 60px; border-radius: 8px;"></div>
+                </div>
               </div>
             </div>
-
-            <!-- High Priority -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">High Priority</p>
-                <h3 class="text-2xl font-bold text-orange-600" id="tier1Count">-</h3>
-              </div>
-              <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
-                <i class="fas fa-exclamation-circle text-xl"></i>
-              </div>
+            <!-- Stats Grid Skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
             </div>
-
-            <!-- Medium Priority -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Medium Priority</p>
-                <h3 class="text-2xl font-bold text-yellow-600" id="tier2Count">-</h3>
-              </div>
-              <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-                <i class="fas fa-exclamation-triangle text-xl"></i>
-              </div>
+            <!-- Widgets Row Skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              <div class="skeleton" style="height: 200px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 200px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 200px; border-radius: 12px;"></div>
             </div>
-
-            <!-- Row 2 -->
-            <!-- Low Priority -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Low Priority</p>
-                <h3 class="text-2xl font-bold text-green-600" id="tier3Count">-</h3>
-              </div>
-              <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                <i class="fas fa-check-circle text-xl"></i>
-              </div>
-            </div>
-
-            <!-- Avg Score -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Avg. Priority Score</p>
-                <h3 class="text-2xl font-bold text-purple-600" id="avgTriageScore">-</h3>
-              </div>
-              <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                <i class="fas fa-chart-line text-xl"></i>
-              </div>
-            </div>
-
-            <!-- Keywords Found -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Keywords Found</p>
-                <h3 class="text-2xl font-bold text-blue-600" id="keywordsDetected">-</h3>
-              </div>
-              <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                <i class="fas fa-key text-xl"></i>
-              </div>
-            </div>
-
-            <!-- Unique Keywords -->
-            <div
-              class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500 font-medium">Unique Keywords</p>
-                <h3 class="text-2xl font-bold text-indigo-600" id="uniqueKeywords">-</h3>
-              </div>
-              <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-                <i class="fas fa-hashtag text-xl"></i>
-              </div>
+            <!-- Charts Row Skeleton -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div class="skeleton" style="height: 300px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 300px; border-radius: 12px;"></div>
             </div>
           </div>
 
-          <!-- Widgets Row (Command Center) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <!-- Recent High Priority Alerts -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <div class="flex items-center gap-2 mb-4">
-                <i class="fas fa-bell text-red-500"></i>
-                <h4 class="font-semibold text-gray-800">Recent High-Priority Alerts</h4>
-                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-auto"></span>
+          <!-- Dashboard Real Content -->
+          <div id="dashboard-main-content" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
+            <!-- Top Row: Quick Actions & Recent Activity (Moved to top to match Citizen) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <!-- Quick Actions -->
+              <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button
+                    class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group"
+                    onclick="window.location.href='/review-queue'">
+                    <div
+                      class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 class="font-medium text-gray-900">Verify Reports</h4>
+                    <p class="text-sm text-gray-500 mt-1">Review incoming data</p>
+                  </button>
+
+                  <a href="/heatmap"
+                    class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200 group block">
+                    <div
+                      class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
+                    <h4 class="font-medium text-gray-900">Heatmap Analysis</h4>
+                    <p class="text-sm text-gray-500 mt-1">View critical zones</p>
+                  </a>
+                </div>
               </div>
-              <div id="recentAlertsTicker" class="overflow-y-auto max-h-[180px]">
-                <div class="text-center text-gray-500 py-4">
-                  <i class="fas fa-spinner fa-spin"></i> Loading alerts...
+
+              <!-- Recent Activity -->
+              <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
+                  <a href="/review-queue" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
+                </div>
+                <div id="recent-activity-list" class="space-y-3">
+                  <!-- Loading State -->
+                  <div class="animate-pulse space-y-3">
+                    <div class="h-16 bg-gray-100 rounded-lg"></div>
+                    <div class="h-16 bg-gray-100 rounded-lg"></div>
+                    <div class="h-16 bg-gray-100 rounded-lg"></div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Category Breakdown -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <div class="flex items-center gap-2 mb-4">
-                <i class="fas fa-chart-pie text-blue-500"></i>
-                <h4 class="font-semibold text-gray-800">Category Breakdown</h4>
-              </div>
-              <div class="flex items-center gap-4">
-                <canvas id="overviewCategoryPie" class="max-w-[120px] max-h-[120px]"></canvas>
-                <div id="categoryLegend" class="flex-1 text-sm min-w-0 overflow-hidden">
-                  <div class="text-center text-gray-500 py-4">Loading...</div>
+            <!-- Analytics Overview Section -->
+            <div id="analytics-overview-container">
+              <!-- Stats Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- Total Complaints -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Complaints</p>
+                    <h3 class="text-2xl font-bold text-gray-800" id="totalComplaints">-</h3>
+                  </div>
+                  <div class="p-3 bg-gray-100 text-gray-600 rounded-lg">
+                    <i class="fas fa-clipboard-list text-xl"></i>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- System Health -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <div class="flex items-center gap-2 mb-4">
-                <i class="fas fa-heartbeat text-green-500"></i>
-                <h4 class="font-semibold text-gray-800">System Health</h4>
-              </div>
-              <div id="systemHealthStatus" class="flex flex-col gap-2">
-                <!-- Health Items (Dynamic) -->
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <span class="text-sm text-gray-700"><i class="fas fa-brain mr-2 text-blue-500"></i> NLP Engine</span>
-                  <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">● Online</span>
+                <!-- Emergency Cases -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Emergency Cases</p>
+                    <h3 class="text-2xl font-bold text-red-600" id="criticalCount">-</h3>
+                  </div>
+                  <div class="p-3 bg-red-50 text-red-600 rounded-lg">
+                    <i class="fas fa-fire text-xl"></i>
+                  </div>
                 </div>
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <span class="text-sm text-gray-700"><i class="fas fa-hourglass-half mr-2 text-yellow-500"></i> Pending
-                    Reviews</span>
-                  <span id="healthPendingCount" class="font-bold text-yellow-600 text-sm">0</span>
-                </div>
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <span class="text-sm text-gray-700"><i class="fas fa-database mr-2 text-indigo-500"></i>
-                    Database</span>
-                  <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">● OK</span>
-                </div>
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                  <span class="text-sm text-gray-700"><i class="fas fa-book mr-2 text-purple-500"></i> Dictionary</span>
-                  <span id="healthDictSize" class="font-bold text-purple-600 text-sm">- entries</span>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Charts Grid -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-pie mr-2 text-gray-500"></i> Priority
-                Distribution</h3>
-              <div class="h-[300px] relative">
-                <canvas id="tierDistChart"></canvas>
-              </div>
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-bar mr-2 text-gray-500"></i>
-                Complaints by Category</h3>
-              <div class="h-[300px] relative">
-                <canvas id="categoryChart"></canvas>
-              </div>
-            </div>
-          </div>
+                <!-- High Priority -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">High Priority</p>
+                    <h3 class="text-2xl font-bold text-orange-600" id="tier1Count">-</h3>
+                  </div>
+                  <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                    <i class="fas fa-exclamation-circle text-xl"></i>
+                  </div>
+                </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-map-marked-alt mr-2 text-gray-500"></i>
-                Complaints by Barangay</h3>
-              <div class="h-[300px] relative">
-                <canvas id="barangayChart"></canvas>
-              </div>
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-brain mr-2 text-gray-500"></i> NLP
-                Intelligence Impact</h3>
-              <div class="h-[300px] relative">
-                <canvas id="nlpImpactChart"></canvas>
-              </div>
-            </div>
-          </div>
+                <!-- Medium Priority -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Medium Priority</p>
+                    <h3 class="text-2xl font-bold text-yellow-600" id="tier2Count">-</h3>
+                  </div>
+                  <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                  </div>
+                </div>
 
+                <!-- Row 2 -->
+                <!-- Low Priority -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Low Priority</p>
+                    <h3 class="text-2xl font-bold text-green-600" id="tier3Count">-</h3>
+                  </div>
+                  <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                    <i class="fas fa-check-circle text-xl"></i>
+                  </div>
+                </div>
+
+                <!-- Avg Score -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Avg. Priority Score</p>
+                    <h3 class="text-2xl font-bold text-purple-600" id="avgTriageScore">-</h3>
+                  </div>
+                  <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                    <i class="fas fa-chart-line text-xl"></i>
+                  </div>
+                </div>
+
+                <!-- Keywords Found -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Keywords Found</p>
+                    <h3 class="text-2xl font-bold text-blue-600" id="keywordsDetected">-</h3>
+                  </div>
+                  <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                    <i class="fas fa-key text-xl"></i>
+                  </div>
+                </div>
+
+                <!-- Unique Keywords -->
+                <div
+                  class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-500 font-medium">Unique Keywords</p>
+                    <h3 class="text-2xl font-bold text-indigo-600" id="uniqueKeywords">-</h3>
+                  </div>
+                  <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <i class="fas fa-hashtag text-xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Widgets Row (Command Center) -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Recent High Priority Alerts -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-bell text-red-500"></i>
+                    <h4 class="font-semibold text-gray-800">Recent High-Priority Alerts</h4>
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-auto"></span>
+                  </div>
+                  <div id="recentAlertsTicker" class="overflow-y-auto max-h-[180px]">
+                    <div class="text-center text-gray-500 py-4">
+                      <i class="fas fa-spinner fa-spin"></i> Loading alerts...
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-chart-pie text-blue-500"></i>
+                    <h4 class="font-semibold text-gray-800">Category Breakdown</h4>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <canvas id="overviewCategoryPie" class="max-w-[120px] max-h-[120px]"></canvas>
+                    <div id="categoryLegend" class="flex-1 text-sm min-w-0 overflow-hidden">
+                      <div class="text-center text-gray-500 py-4">Loading...</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- System Health -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-heartbeat text-green-500"></i>
+                    <h4 class="font-semibold text-gray-800">System Health</h4>
+                  </div>
+                  <div id="systemHealthStatus" class="flex flex-col gap-2">
+                    <!-- Health Items (Dynamic) -->
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span class="text-sm text-gray-700"><i class="fas fa-brain mr-2 text-blue-500"></i> NLP
+                        Engine</span>
+                      <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">●
+                        Online</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span class="text-sm text-gray-700"><i class="fas fa-hourglass-half mr-2 text-yellow-500"></i>
+                        Pending
+                        Reviews</span>
+                      <span id="healthPendingCount" class="font-bold text-yellow-600 text-sm">0</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span class="text-sm text-gray-700"><i class="fas fa-database mr-2 text-indigo-500"></i>
+                        Database</span>
+                      <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">● OK</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span class="text-sm text-gray-700"><i class="fas fa-book mr-2 text-purple-500"></i>
+                        Dictionary</span>
+                      <span id="healthDictSize" class="font-bold text-purple-600 text-sm">- entries</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Charts Row -->
+              <div class="overflow-x-auto pb-4 mb-6" style="-webkit-overflow-scrolling: touch;">
+                <div class="flex gap-6" style="min-width: 1400px;">
+                  <!-- Priority Distribution -->
+                  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-grow" style="flex: 1;">
+                    <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-pie mr-2 text-gray-500"></i>
+                      Priority Distribution</h3>
+                    <div class="h-[300px] relative">
+                      <canvas id="tierDistChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Complaints by Category -->
+                  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-grow" style="flex: 1;">
+                    <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-bar mr-2 text-gray-500"></i>
+                      Complaints by Category</h3>
+                    <div class="h-[300px] relative">
+                      <canvas id="categoryChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Complaints by Barangay -->
+                  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-grow" style="flex: 1;">
+                    <h3 class="font-semibold text-gray-800 mb-4"><i
+                        class="fas fa-map-marked-alt mr-2 text-gray-500"></i>
+                      Complaints by Barangay</h3>
+                    <div class="h-[300px] relative">
+                      <canvas id="barangayChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- NLP Intelligence Impact -->
+                  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-grow" style="flex: 1;">
+                    <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-brain mr-2 text-gray-500"></i> NLP
+                      Intelligence Impact</h3>
+                    <div class="h-[300px] relative">
+                      <canvas id="nlpImpactChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div> <!-- End dashboard-main-content -->
         </div>
-      </div>
+      </div> <!-- End dashboard-main-wrapper -->
     </div>
 
     <div id="toast-container" class="toast-container"></div>
@@ -316,7 +377,7 @@
     <script src="/brain-dashboard/shared/taxonomy.js"></script>
     <script src="/brain-dashboard/nlp-processor.js"></script>
     <script src="/brain-dashboard/causality-manager.js"></script>
-    <script src="/brain-dashboard/simulation-engine.js"></script>
+    <script src="/brain-dashboard/simulation-engine.js?v=3.0.2"></script>
     <script src="/brain-analytics/analytics.js"></script>
 
     <script type="module">

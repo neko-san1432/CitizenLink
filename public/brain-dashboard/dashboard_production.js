@@ -1217,15 +1217,10 @@ async function reverseGeocode(lat, lng) {
     try {
         lastGeocodeTime = Date.now();
 
-        // Nominatim API call
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+        // Backend proxy implementation
+        const url = `/api/reverse-geocode?lat=${lat}&lng=${lng}`;
 
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'DRIMS-Dashboard/3.7 (thesis project; contact: DRIMS@example.com)',
-                'Accept-Language': 'en'
-            }
-        });
+        const response = await fetch(url);
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1401,8 +1396,22 @@ function initMap() {
         })
     };
 
-    // Add default layer
-    baseLayers["Dark Mode"].addTo(map);
+    // Determine initial theme
+    const isDark = document.documentElement.classList.contains('dark');
+    const defaultLayer = isDark ? baseLayers["Dark Mode"] : baseLayers["Light Mode"];
+    defaultLayer.addTo(map);
+
+    // Keep track of current layer to remove it on theme change
+    let currentBaseLayer = defaultLayer;
+
+    // Listen for theme changes from ThemeManager
+    window.addEventListener('themeChanged', (e) => {
+        const newTheme = e.detail.theme;
+        map.removeLayer(currentBaseLayer);
+        currentBaseLayer = newTheme === 'dark' ? baseLayers["Dark Mode"] : baseLayers["Light Mode"];
+        currentBaseLayer.addTo(map);
+        currentBaseLayer.bringToBack(); // Ensure it stays behind markers
+    });
 
     // Add control
     L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);

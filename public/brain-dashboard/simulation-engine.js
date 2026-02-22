@@ -5085,14 +5085,13 @@ const RoadValidator = {
             try {
                 this._lastRequestTime = Date.now();
 
-                const url = `https://nominatim.openstreetmap.org/reverse?lat=${p.latitude}&lon=${p.longitude}&format=jsonv2&zoom=18&addressdetails=1`;
+                const url = `/api/reverse-geocode?lat=${p.latitude}&lng=${p.longitude}`;
 
                 // v4.0.1: Add timeout using AbortController
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
                 const response = await fetch(url, {
-                    headers: { 'User-Agent': 'DRIMS-City-Dashboard/1.0' },
                     signal: controller.signal
                 });
 

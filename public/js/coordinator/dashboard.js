@@ -32,5 +32,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error('Failed to load dashboard stats:', error);
+    } finally {
+        hideDashboardLoader();
     }
 });
+
+function hideDashboardLoader() {
+    const loader = document.getElementById("dashboard-loading");
+    const content = document.getElementById("dashboard-main-content");
+
+    if (loader) {
+        loader.style.setProperty("display", "none", "important");
+    }
+
+    if (content) {
+        content.style.setProperty("display", "block", "important");
+        setTimeout(() => {
+            content.style.opacity = "1";
+        }, 50);
+    }
+}

@@ -33,6 +33,25 @@ async function loadDashboardData() {
   } catch (error) {
     console.error("[CITIZEN] Load dashboard error:", error);
     updateStats([], 0);
+  } finally {
+    hideDashboardLoader();
+  }
+}
+
+function hideDashboardLoader() {
+  const loader = document.getElementById("dashboard-loading");
+  const content = document.getElementById("dashboard-main-content");
+
+  if (loader) {
+    loader.style.setProperty("display", "none", "important");
+  }
+
+  if (content) {
+    content.style.setProperty("display", "block", "important");
+    // Small delay to allow display:block to apply before changing opacity for transition
+    setTimeout(() => {
+      content.style.opacity = "1";
+    }, 50);
   }
 }
 

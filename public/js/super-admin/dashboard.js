@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Charts are initialized after data is fetched
   await loadGrowthTrends();
 
+  hideDashboardLoader();
+
   // Auto refresh
   setInterval(() => {
     loadDashboardData();
@@ -22,6 +24,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadLogs();
   }, 30000);
 });
+
+function hideDashboardLoader() {
+  const loader = document.getElementById("dashboard-loading");
+  const content = document.getElementById("dashboard-main-content");
+
+  if (loader) {
+    loader.style.setProperty("display", "none", "important");
+  }
+
+  if (content) {
+    content.style.setProperty("display", "block", "important");
+    setTimeout(() => {
+      content.style.opacity = "1";
+    }, 50);
+  }
+}
 
 let charts = {
   trend: null,
@@ -167,8 +185,8 @@ async function loadLogs() {
             <div>
               <p class="text-sm font-medium text-gray-800">${log.type}</p>
               <p class="text-xs text-gray-500">${new Date(
-                log.created_at
-              ).toLocaleString()}</p>
+              log.created_at
+            ).toLocaleString()}</p>
             </div>
           </div>
         `

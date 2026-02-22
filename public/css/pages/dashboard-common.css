@@ -125,15 +125,38 @@ html.dark .complaint-item {
    COMPACT MODE OVERRIDES (Consolidated)
    ========================================= */
 /* Dashboard specific adjustments */
-.citizen-dashboard,
-.coordinator-dashboard,
-.lgu-admin-dashboard,
-.superadmin-dashboard {
+#app.citizen-dashboard,
+#app.coordinator-dashboard,
+#app.superadmin-dashboard,
+#app.hr-dashboard,
+#app {
+  flex: 1;
+  overflow: hidden;
+  /* Let the inner wrapper scroll */
+  padding: 0 !important;
+  /* Remove padding from outer app to let header touch edges */
+  height: 100vh;
+}
+
+#app.citizen-dashboard .header-container,
+#app.coordinator-dashboard .header-container,
+#app.superadmin-dashboard .header-container,
+#app.hr-dashboard .header-container,
+#app .header-container {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+#app.citizen-dashboard .dashboard-main-wrapper,
+#app.coordinator-dashboard .dashboard-main-wrapper,
+#app.superadmin-dashboard .dashboard-main-wrapper,
+#app.hr-dashboard .dashboard-main-wrapper,
+#app .dashboard-main-wrapper {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem !important;
-  /* Reduce padding */
-  height: calc(100vh - var(--header-height));
+  padding: var(--space-6);
+  /* Added top and bottom padding alongside lateral space-6 */
 }
 
 /* Compact specific sections */

@@ -465,37 +465,119 @@ class NlpManagementService {
      * Get complete dictionary for NLP engine (Client Consumption)
      */
     async getCompleteDictionary() {
-        const keywords = await this.getKeywords();
+        const _fetchSafe = async (tableName) => {
+            try {
+                const { data, error } = await this.supabase.from(tableName).select('*');
+                if (error) {
+                    console.warn(`[NlpManagementService] Error fetching ${tableName}: ${error.message}`);
+                    return [];
+                }
+                return data || [];
+            } catch (e) {
+                console.warn(`[NlpManagementService] Exception fetching ${tableName}: ${e.message}`);
+                return [];
+            }
+        };
+
+        const [keywords, metaphors, rules] = await Promise.all([
+            this.getKeywords(),
+            _fetchSafe('nlp_metaphors'),
+            _fetchSafe('nlp_dictionary_rules')
+        ]);
 
         const dictionary = {
             _metadata: {
-                version: '1.0.0',
+                version: '2.0.0',
                 generated_at: new Date().toISOString(),
-                total_entries: keywords.length
+                total_entries: keywords.length,
+                languages: ['filipino', 'tagalog', 'cebuano', 'english']
             },
             filipino_keywords: {},
-            english_keywords: {}
+            english_keywords: {},
+            metaphor_filters: { patterns: [] },
+            speculation_patterns: {
+                conditional_triggers: [],
+                risk_assessment_language: [],
+                past_event_markers: []
+            },
+            severity_modifiers: {
+                amplifiers: [],
+                diminishers: []
+            },
+            negation_patterns: { no_issue_indicators: [] },
+            temporal_present: ['ngayon', 'karon', 'currently', 'happening now', 'ongoing'],
+            temporal_past: ['kanina', 'ganina', 'kahapon', 'kagahapon', 'yesterday', 'earlier'],
+            temporal_future: ['bukas', 'ugma', 'later', 'soon', 'mamaya']
         };
 
-        // Helper to add to nested structure
-        const addToDict = (langObj, category, keywordObj) => {
-            if (!langObj[category]) langObj[category] = [];
-            langObj[category].push({
-                term: keywordObj.term,
-                category: keywordObj.category,
-                subcategory: keywordObj.subcategory,
-                confidence: keywordObj.confidence
-            });
-        };
-
+        // Populate keywords
         for (const k of keywords) {
-            // Map 'all', 'cebuano', 'tagalog' to filipino_keywords for now as per legacy structure
-            // or put them in english if language is english
             if (k.language === 'english') {
-                addToDict(dictionary.english_keywords, k.category, k);
+                if (!dictionary.english_keywords[k.category]) {
+                    dictionary.english_keywords[k.category] = [];
+                }
+                dictionary.english_keywords[k.category].push({
+                    term: k.term,
+                    category: k.category,
+                    confidence: k.confidence
+                });
             } else {
-                // Default to filipino bucket for tagalog, cebuano, and all
-                addToDict(dictionary.filipino_keywords, k.category, k);
+                if (!dictionary.filipino_keywords[k.category]) {
+                    dictionary.filipino_keywords[k.category] = {};
+                }
+                const subCat = k.subcategory || k.category;
+                if (!dictionary.filipino_keywords[k.category][subCat]) {
+                    dictionary.filipino_keywords[k.category][subCat] = [];
+                }
+                dictionary.filipino_keywords[k.category][subCat].push({
+                    term: k.term,
+                    translation: k.translation || '',
+                    category: k.category,
+                    subcategory: k.subcategory,
+                    confidence: k.confidence
+                });
+            }
+        }
+
+        // Populate Metaphors
+        for (const m of metaphors) {
+            dictionary.metaphor_filters.patterns.push({
+                pattern: m.pattern,
+                literal: m.literal_meaning || '',
+                actual_meaning: m.actual_meaning || '',
+                filter_type: m.filter_type || 'METAPHOR',
+                is_emergency: m.is_emergency || false
+            });
+        }
+
+        // Populate Rules
+        for (const r of rules) {
+            const patternObj = {
+                pattern: r.pattern,
+                translation: r.translation || ''
+            };
+
+            if (r.rule_type === 'conditional' || r.rule_type === 'conditional_trigger') {
+                patternObj.type = r.rule_type;
+                dictionary.speculation_patterns.conditional_triggers.push(patternObj);
+            } else if (r.rule_type === 'speculative_risk' || r.rule_type === 'risk_assessment_language') {
+                patternObj.type = r.rule_type;
+                dictionary.speculation_patterns.risk_assessment_language.push(patternObj);
+            } else if (r.rule_type === 'past_reference' || r.rule_type === 'past_event_marker') {
+                patternObj.type = r.rule_type;
+                patternObj.is_current_emergency = r.is_current_emergency || false;
+                dictionary.speculation_patterns.past_event_markers.push(patternObj);
+            } else if (r.rule_type === 'severity_amplifier') {
+                patternObj.multiplier = r.multiplier || 1.5;
+                patternObj.term = r.pattern;
+                dictionary.severity_modifiers.amplifiers.push(patternObj);
+            } else if (r.rule_type === 'severity_diminisher') {
+                patternObj.multiplier = r.multiplier || 0.5;
+                patternObj.term = r.pattern;
+                dictionary.severity_modifiers.diminishers.push(patternObj);
+            } else if (r.rule_type === 'negation' || r.rule_type === 'no_issue_indicator') {
+                patternObj.action = r.action || 'filter_out';
+                dictionary.negation_patterns.no_issue_indicators.push(patternObj);
             }
         }
 

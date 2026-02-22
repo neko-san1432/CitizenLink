@@ -103,7 +103,6 @@ router.post(
 // Complete Dictionary (for simulation engine)
 router.get(
     "/dictionary",
-    authenticateUser,
     NlpManagementController.getCompleteDictionary
 );
 

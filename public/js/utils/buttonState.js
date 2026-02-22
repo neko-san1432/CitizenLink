@@ -1,6 +1,6 @@
 // Simple button state helper for consistent UX across forms
 export function setButtonLoading(button, loadingText = "Please wait...") {
-  if (!button) return () => {};
+  if (!button) return () => { };
   const original = {
     html: button.innerHTML,
     text: button.textContent,
@@ -25,7 +25,7 @@ export function setButtonLoading(button, loadingText = "Please wait...") {
 }
 
 export function temporarilyMark(button, text, className, durationMs = 1200) {
-  if (!button) return () => {};
+  if (!button) return () => { };
   const original = {
     className: button.className,
     html: button.innerHTML,
@@ -65,5 +65,5 @@ try {
     style.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(style);
   }
-} catch {}
+} catch { }
 

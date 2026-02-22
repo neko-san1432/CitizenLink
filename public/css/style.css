@@ -489,8 +489,28 @@ a:hover {
   }
 }
 
-.btn:focus-visible,
-.input:focus-visible,
+/* =========================================
+   DYNAMIC DASHBOARD WRAPPER CLASSES
+   ========================================= */
+/* Added to ensure any page processed by the header.js dynamic wrapper renders correctly */
+#app {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 !important;
+  height: 100vh;
+}
+
+#app>.header-container {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+#app>.dashboard-main-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
 
 /* =========================================
    COMPACT MODE OVERRIDES (Consolidated)

@@ -407,6 +407,7 @@ body {
 }
 
 .input:hover {
+  background: rgba(255, 255, 255, 0.05);
   border-color: var(--gray-500);
 }
 
