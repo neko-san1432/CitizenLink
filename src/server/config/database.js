@@ -17,6 +17,26 @@ class Database {
   static getClient() {
     return Database.getInstance().getClient();
   }
+  /**
+   * Get a fresh service-role client that bypasses RLS.
+   * Use this for queries on tables with FORCE ROW LEVEL SECURITY
+   * (e.g., complaints table) where the standard client still triggers RLS.
+   */
+  static getServiceClient() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    }
+    return createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+      db: { schema: 'public' },
+    });
+  }
   _initialize() {
 
     if (this._initialized) {

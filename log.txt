@@ -6544,3 +6544,28 @@
 [2026-02-21T16:43:24.577Z] [LOGIN] Authentication failed: {"email":"[REDACTED]","error":"Invalid login credentials","code":"invalid_credentials"}
 [2026-02-21T16:43:35.234Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
 [2026-02-21T16:43:35.234Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-22T13:51:19.728Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-22T13:51:19.730Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:12:45.071Z] [LOGIN] Authentication failed: {"email":"[REDACTED]","error":"Invalid login credentials","code":"invalid_credentials"}
+[2026-02-24T15:13:07.152Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-24T15:13:07.152Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:16:16.614Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-24T15:16:16.614Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:20:25.318Z] [LOGIN_DEBUG] User: admin@gmail.com, Role: super-admin, SimpleMode: true 
+[2026-02-24T15:20:25.319Z] [LOGIN_DEBUG] Checking role 'super-admin' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:32:36.466Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-24T15:32:36.466Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:35:22.748Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-24T15:35:22.748Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:52:34.191Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-24T15:52:34.195Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:53:44.682Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-24T15:53:44.682Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T15:55:39.286Z] [LOGIN_DEBUG] User: admin@gmail.com, Role: super-admin, SimpleMode: true 
+[2026-02-24T15:55:39.288Z] [LOGIN_DEBUG] Checking role 'super-admin' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T16:27:10.104Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-24T16:27:10.104Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T16:28:39.346Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-24T16:28:39.346Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-24T16:30:18.609Z] [LOGIN_DEBUG] User: admin@gmail.com, Role: super-admin, SimpleMode: true 
+[2026-02-24T16:30:18.609Z] [LOGIN_DEBUG] Checking role 'super-admin' against allowed: ["citizen","super-admin","lgu"]

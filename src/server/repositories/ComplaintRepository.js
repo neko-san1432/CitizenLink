@@ -108,7 +108,8 @@ class ComplaintRepository {
       const { page = 1, limit = 10, status, type, token } = options;
       const offset = (page - 1) * limit;
 
-      const client = this.supabase;
+      // Use service client to bypass RLS recursion on complaints table
+      const client = Database.getServiceClient();
 
 
       /*

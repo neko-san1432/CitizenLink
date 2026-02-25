@@ -583,10 +583,12 @@ class SuperAdminService {
   }
   /**
    * Helper: Get count from table
+   * Uses a fresh service-role client to bypass RLS on tables like complaints
    */
   async getCount(tableName) {
     try {
-      const { count, error } = await this.supabase
+      const client = Database.getServiceClient();
+      const { count, error } = await client
         .from(tableName)
         .select("*", { count: "exact", head: true });
       if (error) throw error;
@@ -663,7 +665,9 @@ class SuperAdminService {
 
       // Aggregate Complaints by Date
       // Note: usage of submitted_at is correct as per schema
-      const { data: complaints, error: complaintError } = await this.supabase
+      // Use service client to bypass RLS recursion on complaints table
+      const serviceClient = Database.getServiceClient();
+      const { data: complaints, error: complaintError } = await serviceClient
         .from("complaints")
         .select("submitted_at")
         .gte("submitted_at", strSevenDaysAgo);

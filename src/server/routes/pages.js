@@ -178,6 +178,37 @@ router.get(
   }
 );
 
+// LGU prefix redirects (sidebar navigation uses /lgu/ prefix)
+router.get(
+  "/lgu/dictionary-manager",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/dictionary-manager");
+  }
+);
+router.get(
+  "/lgu/reports",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/reports");
+  }
+);
+router.get(
+  "/lgu/publish",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/publish");
+  }
+);
+
+// Map alias (sidebar uses /map, actual route is /digos-map)
+router.get("/map", authenticateUser, (req, res) => {
+  res.redirect("/digos-map");
+});
+
 // Dashboard route - protected and routed by role
 router.get("/dashboard", authenticateUser, (req, res) => {
   const userRole = req.user?.role || "citizen";
@@ -383,6 +414,16 @@ router.get(
   (req, res) => {
     res.sendFile(
       path.join(config.rootDir, "views", "pages", "lgu-admin", "publish.html")
+    );
+  }
+);
+router.get(
+  "/reports",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.sendFile(
+      path.join(config.rootDir, "views", "pages", "lgu-admin", "reports.html")
     );
   }
 );
