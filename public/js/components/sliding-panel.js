@@ -17,18 +17,18 @@ class SlidingPanel {
     }
 
     init() {
-        // Create DOM elements if they don't exist
-        if (!document.getElementById('sliding-panel-container')) {
-            this.createElements();
-        } else {
-            this.overlay = document.querySelector('.sliding-panel-overlay');
-            this.panel = document.querySelector('.sliding-panel');
-            this.body = document.querySelector('.sliding-panel-body');
-            this.closeBtn = document.querySelector('.sliding-panel-close-btn');
-        }
-
+        this.ensureElements();
         this.attachEventListeners();
         this.checkInitialState();
+    }
+
+    ensureElements() {
+        // Always create elements if any required piece is missing
+        if (!this.overlay || !this.panel || !this.body || !this.closeBtn) {
+            const existing = document.getElementById('sliding-panel-container');
+            if (existing) existing.remove();
+            this.createElements();
+        }
     }
 
     createElements() {
@@ -65,8 +65,12 @@ class SlidingPanel {
     }
 
     attachEventListeners() {
-        this.closeBtn.addEventListener('click', () => this.close());
-        this.overlay.addEventListener('click', () => this.close());
+        if (this.closeBtn) {
+            this.closeBtn.addEventListener('click', () => this.close());
+        }
+        if (this.overlay) {
+            this.overlay.addEventListener('click', () => this.close());
+        }
 
         // Handle browser back button
         window.addEventListener('popstate', (event) => {
@@ -92,6 +96,7 @@ class SlidingPanel {
 
     async open(complaintId, pushState = true) {
         if (!complaintId) return;
+        this.ensureElements();
 
         this.isOpen = true;
         this.currentComplaintId = complaintId;
@@ -201,6 +206,13 @@ class SlidingPanel {
                                     </div>
                                 </div>
                                 <div id="complaint-actions" class="mt-4 flex flex-col gap-2"></div>
+                            </section>
+
+                            <section id="ai-analytics-section" class="glass-card p-4" style="display: none;">
+                                <h3 class="font-semibold mb-2 flex items-center gap-2">
+                                    <i class="fas fa-brain text-purple-600"></i> AI Intelligence
+                                </h3>
+                                <div id="ai-analytics-content" class="text-sm space-y-2"></div>
                             </section>
 
                             <section class="glass-card p-4">

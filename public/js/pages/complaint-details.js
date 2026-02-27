@@ -540,6 +540,8 @@ export class ComplaintDetails {
 
     // Populate location
     this.renderLocation();
+    // Populate AI Analytics block
+    this.renderAIAnalytics();
     // Populate complainant info (only for admin, officers, coordinators)
     this.renderComplainantInfo();
     // Populate attachments
@@ -739,6 +741,95 @@ export class ComplaintDetails {
         }
       });
   }
+  renderAIAnalytics() {
+    const aiSection = this.getElement("ai-analytics-section");
+    const aiContent = this.getElement("ai-analytics-content");
+
+    if (!aiSection || !aiContent) return;
+
+    // We check if the complaint has intelligence data or an NLP generated urgency_level
+    const intel = this.complaint.intelligence || {};
+    const nlpCategory = typeof this.complaint.category === 'string' && this.complaint.category.length > 3 ? this.complaint.category : null;
+
+    // Determine if we have enough AI data to show the panel
+    const hasAI = intel.confidence_score || intel.geo_verified !== undefined || intel.requires_immediate_action || (this.complaint.urgency_level && this.complaint.priority);
+
+    if (!hasAI) {
+      aiSection.style.display = "none";
+      return;
+    }
+
+    let html = '<div class="flex flex-col gap-3">';
+
+    // Confidence Score
+    if (intel.confidence_score) {
+      const score = Math.round(intel.confidence_score * 100);
+      let colorClass = "text-green-600";
+      if (score < 60) colorClass = "text-red-500";
+      else if (score < 80) colorClass = "text-orange-500";
+
+      html += `
+        <div class="flex justify-between items-center bg-white p-2 rounded border border-gray-100">
+          <span class="text-xs text-gray-500 font-medium tracking-wide">AI CONFIDENCE</span>
+          <span class="font-bold ${colorClass}">${score}%</span>
+        </div>
+      `;
+    }
+
+    // Urgency Check
+    if (intel.requires_immediate_action || this.complaint.priority === 'urgent') {
+      html += `
+        <div class="flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded text-xs">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span class="font-semibold">Immediate Action Recommended by AI</span>
+        </div>
+      `;
+    }
+
+    // Geo-verification
+    if (intel.geo_verified !== undefined) {
+      if (intel.geo_verified) {
+        html += `
+          <div class="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded text-xs">
+            <i class="fas fa-map-marker-check"></i>
+            <span>Location Verified by AI</span>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="flex items-center gap-2 text-orange-600 bg-orange-50 p-2 rounded text-xs">
+            <i class="fas fa-map-marker-exclamation"></i>
+            <span>Location Unverified - Crosscheck Required</span>
+          </div>
+        `;
+      }
+    }
+
+    // Metaphor Detection
+    if (intel.metaphor_probability && intel.metaphor_probability > 0.5) {
+      html += `
+        <div class="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded text-xs">
+          <i class="fas fa-comment-dots"></i>
+          <span>Contains Figurative Language</span>
+        </div>
+      `;
+    }
+
+    // Display parsed category if it was categorized by NLP
+    if (intel.auto_categorized || (intel.method === 'nlp' && nlpCategory)) {
+      html += `
+        <div class="text-xs text-gray-400 mt-2 italic flex items-center gap-1">
+          <i class="fas fa-robot text-[10px]"></i> Auto-categorized by CitizenLink NLP
+        </div>
+      `;
+    }
+
+    html += '</div>';
+
+    aiContent.innerHTML = html;
+    aiSection.style.display = "block";
+  }
+
   renderComplainantInfo() {
     const complainantSection = this.getElement("complainant-section");
     const complainantInfo = this.getElement("complainant-info");

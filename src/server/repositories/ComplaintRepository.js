@@ -10,30 +10,23 @@ class ComplaintRepository {
   async create(complaintData, token = null) {
     const client = this.supabase;
 
+    // Generate ID client-side to avoid needing .select() after .insert().
+    // Chaining .select() triggers RLS SELECT policies on the complaints table,
+    // which recurse through user_profiles → check_is_admin_safe → user_profiles,
+    // causing "infinite recursion detected in policy for relation 'complaints'".
+    const id = complaintData.id || crypto.randomUUID();
+    const dataWithId = { ...complaintData, id };
 
-    /*
-    if (token) {
-      const { createClient } = require("@supabase/supabase-js");
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const anonKey =
-        process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY; // Fallback if anon key missing
-      client = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: token } },
-      });
-    }
-    */
-
-    const { data, error } = await client
+    const { error } = await client
       .from("complaints")
-      .insert(complaintData)
-      .select()
-      .single();
+      .insert(dataWithId);
     if (error) throw error;
-    return new Complaint(data);
+    return new Complaint(dataWithId);
   }
   async findById(id, token = null) {
     try {
-      const client = this.supabase;
+      // Use service client to bypass RLS recursion on complaints table
+      const client = Database.getServiceClient();
 
       // Original logic commented out to prevent RLS trigger
       /*
@@ -74,7 +67,9 @@ class ComplaintRepository {
         return null;
       }
 
-      const complaint = new Complaint(data);
+      // Resolve UUID category/subcategory to name
+      const [resolved] = await this._resolveCategoryNames([data]);
+      const complaint = new Complaint(resolved);
       // Get assignment data for progress tracking (without accessing auth.users)
       const { data: assignments } = await client
         .from("complaint_assignments")
@@ -179,19 +174,85 @@ class ComplaintRepository {
       throw error;
     }
   }
+
+  /**
+   * Resolve UUID-based category/subcategory values to human-readable names.
+   * Uses a simple in-memory cache (5 min TTL) to avoid repeated DB lookups.
+   */
+  async _resolveCategoryNames(complaints) {
+    if (!complaints || complaints.length === 0) return complaints;
+
+    // UUID v4 regex
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    // Check if any complaints need resolution
+    const needsResolution = complaints.some(
+      c => uuidRegex.test(c.category || '') || uuidRegex.test(c.subcategory || '')
+    );
+    if (!needsResolution) return complaints;
+
+    // Use cached lookup maps (refresh every 5 minutes)
+    const now = Date.now();
+    if (!this._categoryCache || now - this._categoryCacheTime > 5 * 60 * 1000) {
+      try {
+        const client = Database.getServiceClient();
+        const [catRes, subRes] = await Promise.all([
+          client.from("categories").select("id, name"),
+          client.from("subcategories").select("id, name"),
+        ]);
+        this._categoryMap = new Map((catRes.data || []).map(c => [c.id, c.name]));
+        this._subcategoryMap = new Map((subRes.data || []).map(s => [s.id, s.name]));
+        this._categoryCache = true;
+        this._categoryCacheTime = now;
+      } catch (err) {
+        console.warn("[REPO] Failed to load category lookup tables:", err.message);
+        return complaints; // Return unresolved rather than crashing
+      }
+    }
+
+    // Resolve UUIDs to names
+    return complaints.map(complaint => {
+      const resolved = { ...complaint };
+      if (uuidRegex.test(resolved.category || '')) {
+        resolved.category_name = this._categoryMap.get(resolved.category) || resolved.category;
+        resolved.category = resolved.category_name;
+      }
+      if (uuidRegex.test(resolved.subcategory || '')) {
+        resolved.subcategory_name = this._subcategoryMap.get(resolved.subcategory) || resolved.subcategory;
+        resolved.subcategory = resolved.subcategory_name;
+      }
+      return resolved;
+    });
+  }
+
   async findAll(options = {}) {
     // Extract filter parameters
-    const { page = 1, limit = 20, status, type, department, search } = options;
+    const { page = 1, limit = 20, status, type, department, search, startDate, endDate } = options;
     const offset = (page - 1) * limit;
 
     console.log('[DEBUG-REPO] findAll called with options:', JSON.stringify(options));
 
-    const client = this.supabase;
+    // Use service client to bypass RLS recursion on complaints table
+    const client = Database.getServiceClient();
 
     let query = client
       .from("complaints")
       .select("*", { count: "exact" })
       .order("submitted_at", { ascending: false });
+
+    // Date Range Filtering
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      query = query.gte('submitted_at', start.toISOString());
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query = query.lte('submitted_at', end.toISOString());
+    }
+
     if (status) {
       if (status === 'pending review') {
         const activeStatuses = ['submitted', 'assigned', 'verified', 'under_review', 'action_taken', 'in_progress', 'pending_approval'];
@@ -216,8 +277,12 @@ class ComplaintRepository {
       offset + limit - 1
     );
     if (error) throw error;
+
+    // Resolve UUID-based category/subcategory values to names
+    const resolved = await this._resolveCategoryNames(data);
+
     return {
-      complaints: data.map((complaint) => new Complaint(complaint)),
+      complaints: resolved.map((complaint) => new Complaint(complaint)),
       total: count,
       page: parseInt(page),
       limit: parseInt(limit),
@@ -434,6 +499,97 @@ class ComplaintRepository {
       return data ? new Complaint(data) : null;
     } catch (error) {
       console.error("[COMPLAINT-REPO] Update status and comment error:", error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch a minimal set of fields needed for the heatmap layer.
+   * Much faster than findAll() — no full-row scan, no joins.
+   */
+  async findLocationsSlim(filters = {}) {
+    try {
+      const client = Database.getServiceClient();
+      const {
+        status,
+        confirmationStatus,
+        category,
+        subcategory,
+        department,
+        startDate,
+        endDate,
+        includeResolved = true,
+      } = filters;
+
+      let query = client
+        .from('complaints')
+        .select('id, latitude, longitude, priority, workflow_status, confirmation_status, category, subcategory, department_r, submitted_at')
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
+
+      // Exclude resolved/cancelled unless includeResolved is true
+      if (!includeResolved) {
+        query = query.not('workflow_status', 'in', '("completed","cancelled")');
+      }
+
+      if (status && status.length > 0) {
+        query = query.in('workflow_status', status);
+      }
+
+      if (confirmationStatus && confirmationStatus.length > 0) {
+        query = query.in('confirmation_status', confirmationStatus);
+      }
+
+      if (category && category.length > 0) {
+        query = query.in('category', category);
+      }
+
+      if (subcategory) {
+        query = query.eq('subcategory', subcategory);
+      }
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        query = query.gte('submitted_at', start.toISOString());
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query = query.lte('submitted_at', end.toISOString());
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // Filter by department in-memory (department_r is an array field)
+      let results = data || [];
+      if (department && department.length > 0) {
+        const deptUpper = department.map(d => String(d).toUpperCase().trim());
+        results = results.filter(c => {
+          const depts = Array.isArray(c.department_r) ? c.department_r : [];
+          return depts.some(d => deptUpper.includes(String(d).toUpperCase().trim()));
+        });
+      }
+
+      // Remap to lat/lng fields for consistency with existing frontend contract
+      return results.map(c => ({
+        id: c.id,
+        lat: parseFloat(c.latitude),
+        lng: parseFloat(c.longitude),
+        priority: c.priority || 'medium',
+        status: c.workflow_status || 'new',
+        workflow_status: c.workflow_status || 'new',
+        confirmation_status: c.confirmation_status || 'pending',
+        category: c.category || null,
+        subcategory: c.subcategory || null,
+        department_r: c.department_r || [],
+        departments: c.department_r || [],
+        submitted_at: c.submitted_at,
+      }));
+    } catch (error) {
+      console.error('[COMPLAINT-REPO] findLocationsSlim error:', error.message);
       throw error;
     }
   }

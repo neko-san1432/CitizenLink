@@ -324,6 +324,7 @@ class ComplaintController {
       startDate,
       endDate,
       includeResolved = "true",
+      lightweight,
     } = req.query;
 
     // Map query params to service filters
@@ -403,9 +404,9 @@ class ComplaintController {
       }
     });
 
-    const locations = await this.complaintService.getComplaintLocations(
-      serviceFilters
-    );
+    const locations = lightweight === "true"
+      ? await this.complaintService.getComplaintLocationSlim(serviceFilters)
+      : await this.complaintService.getComplaintLocations(serviceFilters);
 
     if (
       Array.isArray(locations) &&
@@ -753,7 +754,8 @@ class ComplaintController {
         "Zone 1 (Pob.)", "Zone 2 (Pob.)", "Zone 3 (Pob.)"
       ];
 
-      const supabase = this.complaintService.complaintRepo.supabase;
+      const Database = require("../config/database");
+      const supabase = Database.getServiceClient();
 
       // Fetch all relevant complaints (last 30 days for recency calculations)
       const thirtyDaysAgo = new Date();

@@ -228,21 +228,21 @@ class LguAdminAssignments {
     // Assign buttons
     document.querySelectorAll(".assign-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        const {complaintId} = e.target.dataset;
+        const { complaintId } = e.target.dataset;
         this.openAssignmentModal(complaintId);
       });
     });
     // Reassign buttons
     document.querySelectorAll(".reassign-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        const {complaintId} = e.target.dataset;
+        const { complaintId } = e.target.dataset;
         this.openAssignmentModal(complaintId, true);
       });
     });
     // View buttons
     document.querySelectorAll(".view-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        const {complaintId} = e.target.dataset;
+        const { complaintId } = e.target.dataset;
         this.viewComplaintDetails(complaintId);
       });
     });
@@ -314,8 +314,8 @@ class LguAdminAssignments {
     }
   }
   viewComplaintDetails(complaintId) {
-    // Navigate to complaint details page
-    window.location.href = `/complaint-details?id=${complaintId}`;
+    // Navigate to  viewComplaintDetails(complaintId) {
+    window.location.href = `/coordinator/review-queue?open_complaint_id=${complaintId}`;
   }
   renderPagination() {
     const totalPages = Math.ceil(this.assignments.length / this.itemsPerPage);

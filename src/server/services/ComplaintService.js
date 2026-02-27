@@ -56,6 +56,23 @@ class ComplaintService {
           complaintData.urgency_score = nlpResult.urgency || 30;
         }
 
+        // Derive priority from NLP urgency score (overrides the default 'low')
+        const urgencyVal = complaintData.urgency_score;
+        if (urgencyVal >= 80) {
+          complaintData.priority = 'urgent';
+          complaintData.urgency_level = 'urgent';
+        } else if (urgencyVal >= 60) {
+          complaintData.priority = 'high';
+          complaintData.urgency_level = 'high';
+        } else if (urgencyVal >= 40) {
+          complaintData.priority = 'medium';
+          complaintData.urgency_level = 'medium';
+        } else {
+          complaintData.priority = 'low';
+          complaintData.urgency_level = 'low';
+        }
+        console.log(`[COMPLAINT] NLP urgency: ${urgencyVal} → priority: ${complaintData.priority}`);
+
       } catch (nlpError) {
         console.warn('[COMPLAINT] NLP Classification failed:', nlpError.message);
       }
@@ -1104,9 +1121,10 @@ class ComplaintService {
   async getComplaintStats(filters = {}) {
     const { department, dateFrom, dateTo } = filters;
 
-    // Helper to build base query
+    // Helper to build base query - use service client to bypass RLS recursion
+    const Database = require("../config/database");
     const buildQuery = () => {
-      let query = this.complaintRepo.supabase
+      let query = Database.getServiceClient()
         .from("complaints")
         .select("workflow_status, category, priority, submitted_at");
 
@@ -1182,6 +1200,10 @@ class ComplaintService {
 
     return stats;
   }
+  async getComplaintLocationSlim(filters = {}) {
+    return this.complaintRepo.findLocationsSlim(filters);
+  }
+
   async getComplaintLocations(filters = {}) {
     const {
       status,

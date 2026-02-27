@@ -449,6 +449,8 @@ class HeatmapVisualization {
         "includeResolved",
         sanitizedFilters.includeResolved !== false ? "true" : "false"
       );
+      // Ask backend for lightweight response to reduce payload
+      queryParams.append("lightweight", "true");
       Object.entries(sanitizedFilters).forEach(([key, value]) => {
         // Skip includeResolved as we already set it above
         if (key === "includeResolved") return;
@@ -547,6 +549,9 @@ class HeatmapVisualization {
             submittedAt: item.submittedAt || item.submitted_at || new Date().toISOString(),
           };
 
+          // Cache boundary check to avoid recalculating on filter changes
+          itemWrapper._inBoundary = isWithinCityBoundary(lat, lng);
+
           // Apply Context-Aware Intelligence Analysis
           if (this.intelligence) {
             const analysis = this.intelligence.analyze(itemWrapper);
@@ -571,7 +576,7 @@ class HeatmapVisualization {
 
       if (this.filterByBoundary) {
         withinBoundaryData = sanitizedData.filter((item) => {
-          const withinBoundary = isWithinCityBoundary(item.lat, item.lng);
+          const withinBoundary = item._inBoundary;
           if (!withinBoundary) {
             if (filteredByBoundary.length < 3) {
               console.log(
@@ -1258,15 +1263,10 @@ class HeatmapVisualization {
       this.markerLayer.addTo(this.map);
     }
 
-    // Update visibility of each marker
+    // Update visibility of each marker using CSS opacity instead of DOM removal for performance
     this.markerLayer.eachLayer((marker) => {
-      const complaintId =
-        marker._complaintId ||
-        marker.options?.complaintId ||
-        (this.markerMap &&
-          Array.from(this.markerMap.entries()).find(
-            ([_id, m]) => m === marker
-          )?.[0]);
+      // ID should always exist via marker._complaintId or marker.options.complaintId
+      const complaintId = marker._complaintId || marker.options?.complaintId;
 
       let shouldBeVisible = false;
 
@@ -1282,19 +1282,25 @@ class HeatmapVisualization {
         );
       }
 
-      // Show or hide marker based on filter match
-      // Note: Markers are part of markerLayer, so we manage visibility by adding/removing from layer
+      // Show or hide marker using opacity toggle
       if (shouldBeVisible) {
-        // Show marker - ensure it's in the layer
-        if (!this.markerLayer.hasLayer(marker)) {
-          this.markerLayer.addLayer(marker);
+        if (marker.setOpacity) marker.setOpacity(1);
+        // Restore pointer events for hover/click
+        if (marker._icon) marker._icon.style.pointerEvents = "auto";
+        if (marker.setZIndexOffset) {
+          marker.setZIndexOffset(marker.options.originalZIndex || marker.options.zIndexOffset || 0);
         }
         visibleCount++;
       } else {
-        // Hide marker by removing from layer
-        if (this.markerLayer.hasLayer(marker)) {
-          this.markerLayer.removeLayer(marker);
+        if (marker.setOpacity) marker.setOpacity(0);
+        // Disable hover/clicks when hidden
+        if (marker._icon) marker._icon.style.pointerEvents = "none";
+
+        // Save original z-index before hiding
+        if (marker.options.originalZIndex === undefined) {
+          marker.options.originalZIndex = marker.options.zIndexOffset || 0;
         }
+        if (marker.setZIndexOffset) marker.setZIndexOffset(-9999);
         hiddenCount++;
       }
     });

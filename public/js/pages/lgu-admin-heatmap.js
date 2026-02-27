@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.target.id === "heatmap-controls" &&
-            mutation.attributeName === "class") {
+          mutation.attributeName === "class") {
           const isControlsVisible = !heatmapControls.classList.contains("collapsed");
           // If controls are being shown and sidebar is open, close sidebar
           if (isControlsVisible && sidebar && sidebar.classList.contains("open")) {
@@ -54,10 +54,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 // Global functions for popup buttons
-window.viewComplaintDetails = function(complaintId) {
-  window.location.href = `/complaint-details?id=${complaintId}`;
+window.viewComplaintDetails = function (complaintId) {
+  window.location.href = `/coordinator/review-queue?open_complaint_id=${complaintId}`;
 };
-window.centerOnComplaint = function(lat, lng) {
+window.centerOnComplaint = function (lat, lng) {
   if (heatmapController && heatmapController.map) {
     heatmapController.map.setView([lat, lng], 16);
   }

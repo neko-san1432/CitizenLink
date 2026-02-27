@@ -6569,3 +6569,17 @@
 [2026-02-24T16:28:39.346Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
 [2026-02-24T16:30:18.609Z] [LOGIN_DEBUG] User: admin@gmail.com, Role: super-admin, SimpleMode: true 
 [2026-02-24T16:30:18.609Z] [LOGIN_DEBUG] Checking role 'super-admin' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-26T06:21:20.564Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-26T06:21:20.564Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-26T07:47:26.214Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-26T07:47:26.215Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-26T07:48:03.175Z] [NLP-HITL] ✅ Queued for review: "I have a proble..." (confidence: 0%) 
+[2026-02-26T16:30:10.853Z] [NLP-HITL] ✅ Queued for review: "sdftghfghdfgh..." (confidence: 0%) 
+[2026-02-26T18:08:26.333Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-26T18:08:26.334Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-27T04:18:28.661Z] [LOGIN_DEBUG] User: citizen1@gmail.com, Role: citizen, SimpleMode: true 
+[2026-02-27T04:18:28.661Z] [LOGIN_DEBUG] Checking role 'citizen' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-27T04:18:42.743Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-27T04:18:42.743Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-27T05:38:29.985Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-27T05:38:29.986Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]

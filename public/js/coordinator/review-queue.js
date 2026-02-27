@@ -16,6 +16,38 @@ document.addEventListener('DOMContentLoaded', () => {
             loadReviewQueue(1); // Reset to page 1 on size change
         });
     }
+
+    // Add date filter listener
+    const startDateInput = document.getElementById('filter-start-date');
+    const endDateInput = document.getElementById('filter-end-date');
+
+    // Set default dates to today
+    const today = new Date().toISOString().split('T')[0];
+    if (startDateInput && !startDateInput.value) startDateInput.value = today;
+    if (endDateInput && !endDateInput.value) endDateInput.value = today;
+
+    if (startDateInput) {
+        startDateInput.addEventListener('change', () => {
+            loadReviewQueue(1);
+        });
+    }
+    if (endDateInput) {
+        endDateInput.addEventListener('change', () => {
+            loadReviewQueue(1);
+        });
+    }
+
+    // Auto-open sliding panel if open_complaint_id is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const openComplaintId = urlParams.get('open_complaint_id');
+    if (openComplaintId) {
+        // slight delay to ensure the panel setup completes
+        setTimeout(() => slidingPanel.open(openComplaintId), 300);
+
+        // Remove param from URL without reloading
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+    }
 });
 
 // Update loadReviewQueue to accept page param
@@ -23,7 +55,11 @@ async function loadReviewQueue(page = 1) {
     const tableBody = document.getElementById('complaint-list');
     const loading = document.getElementById('loading');
     const limitSelect = document.getElementById('rows-per-page');
+    const startDateInput = document.getElementById('filter-start-date');
+    const endDateInput = document.getElementById('filter-end-date');
     const limit = limitSelect ? limitSelect.value : 50;
+    const startDate = startDateInput ? startDateInput.value : '';
+    const endDate = endDateInput ? endDateInput.value : '';
 
     // Show partial loading state if needed
     if (loading && page === 1) loading.style.display = 'block';
@@ -32,8 +68,17 @@ async function loadReviewQueue(page = 1) {
     const badge = document.getElementById('queue-count-badge');
     if (badge) badge.textContent = 'Loading...';
 
+    // Construct query parameters
+    const params = new URLSearchParams({
+        page: page,
+        limit: limit
+    });
+
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
     try {
-        const response = await fetch(`/api/coordinator/review-queue?page=${page}&limit=${limit}`);
+        const response = await fetch(`/api/coordinator/review-queue?${params.toString()}`);
         const data = await response.json();
 
         if (loading) loading.style.display = 'none';
@@ -46,7 +91,13 @@ async function loadReviewQueue(page = 1) {
         const complaints = data.complaints || data.data || [];
 
         if (complaints.length > 0) {
-            tableBody.innerHTML = complaints.map(complaint => `
+            tableBody.innerHTML = complaints.map(complaint => {
+                const cat = complaint.category || 'General';
+                const sub = complaint.subcategory;
+                const categoryDisplay = sub ? `${cat} <span style="opacity:0.5">/</span> ${sub}` : cat;
+                const desc = complaint.descriptive_su || complaint.description || '—';
+                const descSafe = (desc || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                return `
                 <tr class="complaint-row cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" data-id="${complaint.id}">
                     <td class="px-2 py-3 whitespace-nowrap">
                         <span class="px-2 py-0.5 inline-flex text-[10px] leading-4 font-bold uppercase tracking-wide rounded-full bg-${getPriorityColor(complaint.priority)}-100 text-${getPriorityColor(complaint.priority)}-800 border border-${getPriorityColor(complaint.priority)}-200">
@@ -54,13 +105,13 @@ async function loadReviewQueue(page = 1) {
                         </span>
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs font-medium text-gray-700">
-                        ${complaint.category || 'General'}
+                        ${categoryDisplay}
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">
                         ${complaint.location_text || 'N/A'}
                     </td>
                     <td class="px-3 py-3 text-xs text-gray-600">
-                        <div class="truncate w-64" title="${complaint.description}">${complaint.description}</div>
+                        <div class="truncate w-64" title="${descSafe}">${desc}</div>
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-400">
                         ${new Date(complaint.submitted_at || complaint.created_at).toLocaleDateString()}
@@ -71,7 +122,7 @@ async function loadReviewQueue(page = 1) {
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             // Attach event listeners to rows and buttons
             tableBody.querySelectorAll('.complaint-row').forEach(row => {
