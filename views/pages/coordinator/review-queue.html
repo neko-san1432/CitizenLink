@@ -102,6 +102,16 @@
                 <!-- Filters Group (Tight) -->
                 <div class="flex flex-wrap gap-1 w-full xl:w-auto items-center">
 
+                  <div class="flex items-center gap-1 bg-white rounded border border-gray-300 px-1 xl:mr-2">
+                    <span class="text-[10px] text-gray-500 font-medium pl-1 hidden xl:inline">Date:</span>
+                    <input type="date" id="filter-start-date"
+                      class="form-input !border-0 bg-transparent py-1 text-xs focus:ring-0 w-[100px]"
+                      title="Start Date">
+                    <span class="text-xs text-gray-400">-</span>
+                    <input type="date" id="filter-end-date"
+                      class="form-input !border-0 bg-transparent py-1 text-xs focus:ring-0 w-[100px]" title="End Date">
+                  </div>
+
                   <select id="filter-priority"
                     class="form-select py-1 text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 bg-white">
                     <option value="">Priority: All</option>
