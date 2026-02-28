@@ -19,7 +19,7 @@ describe("ComplaintService - Management Features", () => {
 
     mockComplaintRepo = {
       supabase: mockSupabase,
-      getComplaintById: jest.fn(),
+      findById: jest.fn(),
       logAction: jest.fn()
     };
 
@@ -39,10 +39,11 @@ describe("ComplaintService - Management Features", () => {
       const userId = "officer-123";
       const reason = "Prank call";
 
-      // Mock getComplaintById
-      mockComplaintRepo.getComplaintById.mockResolvedValue({
+      // Mock findById
+      mockComplaintRepo.findById.mockResolvedValue({
         id: complaintId,
-        submitted_by: "citizen-1"
+        submitted_by: "citizen-1",
+        comment: {}
       });
 
       // Mock logAction
@@ -81,8 +82,8 @@ describe("ComplaintService - Management Features", () => {
       const masterId = "comp-master";
       const userId = "officer-123";
 
-      // Mock getComplaintById for both calls
-      mockComplaintRepo.getComplaintById
+      // Mock findById for both calls
+      mockComplaintRepo.findById
         .mockResolvedValueOnce({ id: complaintId }) // Duplicate
         .mockResolvedValueOnce({ id: masterId });   // Master
 
@@ -109,48 +110,39 @@ describe("ComplaintService - Management Features", () => {
     });
   });
 
-  describe("cancelComplaint", () => {
-    test("should cancel complaint and notify user", async () => {
-      const complaintId = "comp-cancel";
-      const userId = "citizen-1";
-      const reason = "Mistake";
+  describe("updateComplaintStatus", () => {
+    test("should update workflow status and notes", async () => {
+      const complaintId = "comp-update";
+      const userId = "officer-123";
 
-      // Mock getComplaintById
-      mockComplaintRepo.getComplaintById.mockResolvedValue({
+      jest.spyOn(complaintService, "getComplaintById").mockResolvedValue({
         id: complaintId,
-        submitted_by: userId,
-        workflow_status: "new",
-        title: "Test Complaint"
+        submitted_by: "citizen-1",
+        descriptive_su: "Test Complaint",
+        workflow_status: "submitted",
+        priority: "low",
+        comment: {}
       });
 
-      // Mock logAction
-      mockComplaintRepo.logAction.mockResolvedValue(true);
-
-      // Mock Supabase update
-      mockSupabase.single.mockResolvedValueOnce({
-        data: {
-          id: complaintId,
-          workflow_status: "cancelled",
-          cancellation_reason: reason,
-          cancelled_by: userId
-        },
-        error: null
+      mockComplaintRepo.update = jest.fn().mockResolvedValue({
+        id: complaintId,
+        workflow_status: "in_progress"
       });
 
-      const result = await complaintService.cancelComplaint(complaintId, userId, reason);
+      const result = await complaintService.updateComplaintStatus(
+        complaintId,
+        { status: "in_progress", notes: "Assigned to team" },
+        userId
+      );
 
-      expect(result.workflow_status).toBe("cancelled");
-      expect(result.cancellation_reason).toBe(reason);
-
-      // Verify update call
-      expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
-        workflow_status: "cancelled",
-        cancellation_reason: reason,
-        cancelled_by: userId
-      }));
-
-      // Verify notification - skipped as cancelComplaint only notifies officials and citizen is the one cancelling
-      // expect(complaintService.notificationService.notifyComplaintCancelled).toHaveBeenCalled();
+      expect(result.workflow_status).toBe("in_progress");
+      expect(mockComplaintRepo.update).toHaveBeenCalledWith(
+        complaintId,
+        expect.objectContaining({
+          workflow_status: "in_progress",
+          coordinator_notes: "Assigned to team"
+        })
+      );
     });
   });
 });

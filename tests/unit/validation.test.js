@@ -60,7 +60,8 @@ describe("Validation Middleware", () => {
         const data = {
           title: "Valid Complaint",
           description: "This is a valid description of the issue.",
-          type: "Infrastructure",
+          category: "Infrastructure",
+          subcategory: "Pothole",
           preferred_departments: ["Engineering"]
         };
         const { error } = schemas.createComplaint.validate(data);
@@ -70,7 +71,8 @@ describe("Validation Middleware", () => {
       it("should fail if title is missing", () => {
         const data = {
           description: "Description only",
-          type: "Infrastructure"
+          category: "Infrastructure",
+          subcategory: "Pothole"
         };
         const { error } = schemas.createComplaint.validate(data);
         expect(error).toBeDefined();
@@ -96,7 +98,7 @@ describe("Validation Middleware", () => {
       });
 
       it("should fail if reason is too short", () => {
-        const { error } = schemas.markAsFalse.validate({ reason: "Bad" });
+        const { error } = schemas.markAsFalse.validate({ reason: "A" });
         expect(error).toBeDefined();
       });
     });

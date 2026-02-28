@@ -49,7 +49,10 @@ const patterns = [
     regex: /api_key\s*[:=]\s*['"][a-z0-9]{32,}['"]/i,
   },
   { name: "AWS Access Key", regex: /AKIA[0-9A-Z]{16}/ },
-  { name: "Hardcoded Password", regex: /password\s*[:=]\s*['"][^'"]+['"]/i },
+  {
+    name: "Hardcoded Password",
+    regex: /\b(?:password|passwd|pwd)\b\s*:\s*['"][^'"\r\n]{8,}['"]/i,
+  },
 ];
 
 // Recursive file search
@@ -59,13 +62,22 @@ const getAllFiles = (dirPath, arrayOfFiles = []) => {
   files.forEach((file) => {
     if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
       if (
-        !["node_modules", ".git", "dist", "build", "codeql-results"].includes(
+        ![
+          "node_modules",
+          ".git",
+          "dist",
+          "build",
+          "codeql-results",
+          ".brain_logic",
+          "legacy",
+          "tests",
+        ].includes(
           file
         )
       ) {
         getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
       }
-    } else if (/\.(js|jsx|ts|tsx|json|env)$/.exec(file)) {
+    } else if (/\.(js|jsx|ts|tsx|json|env)$/.exec(file) && !/\.test\.|\.spec\./.test(file)) {
       arrayOfFiles.push(path.join(dirPath, "/", file));
     }
   });

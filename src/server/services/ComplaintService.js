@@ -1,5 +1,6 @@
 const ComplaintRepository = require("../repositories/ComplaintRepository");
 const ComplaintAssignmentRepository = require("../repositories/ComplaintAssignmentRepository");
+const Database = require("../config/database");
 const ComplaintHistoryRepository = require("../repositories/ComplaintHistoryRepository");
 const DepartmentRepository = require("../repositories/DepartmentRepository");
 const Complaint = require("../models/Complaint");
@@ -102,8 +103,6 @@ class ComplaintService {
       // All submissions are complaints - no need for user to choose type
       type: "complaint",
       // Map 'description' from client to 'descriptive_su' expected by server model
-      descriptive_su: complaintData.description || complaintData.descriptive_su,
-      // Handle Title (Map 'complaintTitle' or Auto-Generate)
       descriptive_su: complaintData.description || complaintData.descriptive_su,
       // Handle fallback for descriptive_su if generic description is provided
       // No 'title' field in DB anymore
@@ -381,51 +380,6 @@ class ComplaintService {
     } catch (error) {
       console.error("Duplicate detection failed:", error);
       return [];
-    }
-  }
-
-  /**
-   * Mark a complaint as a duplicate of another
-   */
-  async markAsDuplicate(complaintId, masterComplaintId) {
-    try {
-      // Update the duplicate complaint
-      const { error: updateError } = await this.complaintRepo.supabase
-        .from("complaints")
-        .update({
-          is_duplicate: true,
-          master_complaint_id: masterComplaintId,
-          workflow_status: "closed", // Auto-close duplicates? Or 'resolved'? Let's say 'closed'
-          coordinator_notes: `Marked as duplicate of ${  masterComplaintId}`,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", complaintId);
-
-      if (updateError) throw updateError;
-
-      // Increment upvote count on master complaint
-      // RPC is safer for atomic increments, but let's do read-modify-write for now or check if we have an increment RPC
-      // Creating a simple increment logic via SQL usually requires a function.
-      // We'll read, then update.
-      const { data: master, error: masterError } =
-        await this.complaintRepo.supabase
-          .from("complaints")
-          .select("upvote_count")
-          .eq("id", masterComplaintId)
-          .single();
-
-      if (master) {
-        const newCount = (master.upvote_count || 0) + 1;
-        await this.complaintRepo.supabase
-          .from("complaints")
-          .update({ upvote_count: newCount })
-          .eq("id", masterComplaintId);
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error("Marking duplicate failed:", error);
-      throw error;
     }
   }
 
@@ -1216,21 +1170,9 @@ class ComplaintService {
       includeResolved = true,
     } = filters;
     try {
-      // First, get total count of complaints with coordinates for debugging
-      // IMPORTANT: Use direct supabase client to bypass any potential RLS issues
-      // CRITICAL: Create a fresh service role client to ensure we BYPASS RLS
-      // The repository client might be shared or not properly privileged in some contexts
-      const { createClient } = require("@supabase/supabase-js");
-      const supabase = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-          },
-        }
-      );
+      // [PERF] Use the singleton service-role client instead of allocating a new one per request.
+      // Database.getServiceClient() returns the same cached instance every call.
+      const supabase = Database.getServiceClient();
 
       // Use the fresh client for these diagnostic counts as well
       const { count: totalWithCoords } = await supabase

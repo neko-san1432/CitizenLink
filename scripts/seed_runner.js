@@ -20,6 +20,7 @@ async function runSeed() {
   const { data: existingConfigs, error: cfgError } = await supabase.from("nlp_category_config").select("category");
   const existingCatrogeriesSet = new Set(existingConfigs ? existingConfigs.map(c => c.category) : []);
 
+  // eslint-disable-next-line security/detect-unsafe-regex
   const insertRegex = /INSERT INTO\s+(?:public\.)?(\w+)\s*\(([^)]+)\)\s*VALUES\s*([\s\S]*?)(?:ON CONFLICT.*)?;(?=\s*(?:--|$)|$)/gi;
 
   let match;

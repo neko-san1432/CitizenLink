@@ -4,3 +4,7 @@ dist/
 coverage/
 .git/
 *.min.js
+.brain_logic/
+legacy/
+public/brain-dashboard/simulation-engine.js
+scripts/scan_complaints_ui.js

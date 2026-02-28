@@ -4,7 +4,7 @@ const Database = require("../src/server/config/database");
 // LGU Account Details
 const NEW_USER = {
   email: "lgu_officer@example.com",
-  password: "Password123!",
+  password: process.env.LGU_ACCOUNT_PASSWORD,
   role: "lgu", // Unified role for LGU/Coordinator functions
   metadata: {
     first_name: "Juan",
@@ -22,6 +22,11 @@ const NEW_USER = {
 
 async function main() {
   console.log("🚀 Creating LGU Account...");
+
+  if (!NEW_USER.password) {
+    console.error("   ❌ Missing LGU_ACCOUNT_PASSWORD in environment.");
+    process.exit(1);
+  }
 
   const db = Database.getInstance();
   const supabase = db.getClient();

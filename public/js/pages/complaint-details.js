@@ -136,7 +136,7 @@ export class ComplaintDetails {
     }
   }
   // ... (lines 103-1900 skipped) ...
-  setupRoleSpecificActions() {
+  setupRoleSpecificActionsV2() {
     const actionsContainer = document.getElementById("complaint-actions");
     if (!actionsContainer) return;
     // Return early if complaint is not loaded
@@ -252,11 +252,11 @@ export class ComplaintDetails {
       .forEach((button) => {
         button.addEventListener("click", (e) => {
           const action = e.target.getAttribute("data-action");
-          this.handleAction(action);
+          this.handleActionV2(action);
         });
       });
   }
-  async handleAction(action) {
+  async handleActionV2(action) {
     switch (action) {
       case "approve":
         await this.approveComplaint();

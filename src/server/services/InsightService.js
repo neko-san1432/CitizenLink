@@ -35,7 +35,7 @@ class InsightService {
       const stats = this._calculateStatistics(complaints);
 
       // 4. Generate Descriptive Analysis
-      const narrative = this._generateNarrative(stats, clusters, alerts);
+      const narrative = this._generateNarrative(stats, clusterResult.clusters, alerts);
 
       return {
         meta: { generated_at: new Date(), role, deptId },

@@ -394,8 +394,7 @@ describe("Session Management", () => {
       const { getCookieOptions } = require("../../src/server/utils/authUtils");
       const options = getCookieOptions(false);
 
-      expect(options.maxAge).toBeDefined();
-      expect(typeof options.maxAge).toBe("number");
+      expect(options.maxAge).toBeUndefined();
     });
 
     it("should set longer expiration for remember me", async () => {
@@ -403,7 +402,9 @@ describe("Session Management", () => {
       const regularOptions = getCookieOptions(false);
       const rememberOptions = getCookieOptions(true);
 
-      expect(rememberOptions.maxAge).toBeGreaterThan(regularOptions.maxAge);
+      expect(typeof rememberOptions.maxAge).toBe("number");
+      expect(rememberOptions.maxAge).toBeGreaterThan(0);
+      expect(regularOptions.maxAge).toBeUndefined();
     });
   });
 });

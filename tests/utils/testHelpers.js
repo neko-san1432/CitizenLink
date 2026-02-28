@@ -8,10 +8,13 @@ const crypto = require("crypto");
  * Generate a test user object
  */
 function createTestUser(overrides = {}) {
+  const defaultPassword =
+    process.env.TEST_USER_PASSWORD || `Test-${crypto.randomUUID()}-Aa1!`;
+
   return {
     id: crypto.randomUUID(),
     email: `test${Date.now()}@example.com`,
-    password: "Test123!@#",
+    password: defaultPassword,
     firstName: "Test",
     lastName: "User",
     mobileNumber: "+1234567890",

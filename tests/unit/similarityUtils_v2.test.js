@@ -42,7 +42,7 @@ describe("Duplicate Detection Logic (3-Layer)", () => {
     expect(result.reason).toBe("spatial");
   });
 
-  test("Should match Wide Radius for Flood (Environmental)", () => {
+  test("Should match Flood duplicate within Public Safety radius", () => {
     const FLOOD_COMPLAINT = {
       latitude: 6.7578,
       longitude: 125.3572,
@@ -54,14 +54,14 @@ describe("Duplicate Detection Logic (3-Layer)", () => {
     const candidate = {
       ...FLOOD_COMPLAINT,
       id: "3",
-      latitude: 6.7578 + 0.003, // ~330m
+      latitude: 6.7578 + 0.0002, // ~22m
       longitude: 125.3572,
       category: "uuid-2",
       submitted_at: new Date().toISOString(),
     };
 
     const result = isPotentialDuplicate(FLOOD_COMPLAINT, candidate);
-    // Flood radius is 500m. 330m < 500m. Should match.
+    // Flood now uses Public Safety radius (~50m). 22m < 50m, should match.
     expect(result.isMatch).toBe(true);
   });
 

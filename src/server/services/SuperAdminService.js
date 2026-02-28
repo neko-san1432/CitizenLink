@@ -179,6 +179,8 @@ class SuperAdminService {
       */
       // Validate target role - must be LGU officer, admin, HR, coordinator, or super-admin
       // Note: Roles should NOT include department suffix (e.g., use 'lgu-officer' not 'lgu-ceeo')
+      const isLguOfficer = role === "lgu-officer" || role === "lgu";
+      const isLguAdmin = role === "lgu-admin";
       const isLguHR = role === "lgu-hr";
       const isCoordinator = role === "complaint-coordinator";
       const isSuperAdmin = role === "super-admin";

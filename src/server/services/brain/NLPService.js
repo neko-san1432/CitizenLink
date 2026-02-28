@@ -130,6 +130,7 @@ class NLPService {
     // Phrase match
     if (cleanKeyword.includes(" ")) {
       const escaped = cleanKeyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // eslint-disable-next-line security/detect-non-literal-regexp
       const regex = new RegExp(`(?:^|\\s)${escaped}(?:\\s|$|[.,!?])`, "i");
       return regex.test(normalizedText);
     }

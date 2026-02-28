@@ -336,8 +336,6 @@ export const extractComplaintFormData = (formElement) => {
     location_text: getVal("#location"),
     latitude: parseNum("#latitude"),
     longitude: parseNum("#longitude"),
-    latitude: parseNum("#latitude"),
-    longitude: parseNum("#longitude"),
     urgency_level: "low", // Default to low
     departments, // User selected departments (will be merged with NLP suggestions)
   };

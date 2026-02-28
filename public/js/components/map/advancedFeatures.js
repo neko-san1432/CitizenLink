@@ -323,13 +323,6 @@ export const AdvancedFeatures = {
     return maxEl;
   },
 
-  getJurisdiction: (lat, lng) => {
-    // Re-using the internal function if available globally or duplicating logic
-    // For now, assuming Global Scope access or fallback
-    if (typeof getJurisdiction === "function") return getJurisdiction(lat, lng);
-    return null;
-  },
-
   loadBoundaries: async () => {
     await loadBarangayBoundaries();
   },

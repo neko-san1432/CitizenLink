@@ -118,6 +118,33 @@ function isPointInPolygonCoords(lat, lng, coordinates) {
   return inside;
 }
 
+/**
+ * Lazily pre-compute axis-aligned bounding boxes for every barangay on first call.
+ * Subsequent calls are free — they just check window._cityBoundariesBbox !== undefined.
+ */
+function ensureCityBoundariesBbox() {
+  if (window._cityBoundariesBbox) return; // already computed
+  if (!window.cityBoundaries || !Array.isArray(window.cityBoundaries)) return;
+  window._cityBoundariesBbox = window.cityBoundaries.map((b) => {
+    if (!b || !b.geojson) return null;
+    const geom = b.geojson.geometry || b.geojson;
+    if (!geom || !geom.coordinates) return null;
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    const rings =
+      geom.type === "MultiPolygon"
+        ? geom.coordinates.flatMap((poly) => poly[0] || [])
+        : geom.coordinates[0] || [];
+    for (const coord of rings) {
+      const cLng = coord[0], cLat = coord[1];
+      if (cLat < minLat) minLat = cLat;
+      if (cLat > maxLat) maxLat = cLat;
+      if (cLng < minLng) minLng = cLng;
+      if (cLng > maxLng) maxLng = cLng;
+    }
+    return { minLat, maxLat, minLng, maxLng };
+  });
+}
+
 // Check if coordinates are within any barangay boundary
 function isWithinCityBoundary(lat, lng) {
   if (typeof lat !== "number" || typeof lng !== "number") return false;
@@ -153,13 +180,21 @@ function isWithinCityBoundary(lat, lng) {
     }
   }
 
+  // Ensure bounding-box cache is ready, then do a fast AABB rejection before
+  // falling through to the full O(n) ray-cast per polygon.
+  ensureCityBoundariesBbox();
+  const bboxCache = window._cityBoundariesBbox;
+
   // Check if point is within any barangay boundary
-  for (const boundary of window.cityBoundaries) {
-    if (boundary && boundary.geojson) {
-      if (isPointInPolygon(lat, lng, boundary.geojson)) {
-        return true;
-      }
+  for (let i = 0; i < window.cityBoundaries.length; i++) {
+    const boundary = window.cityBoundaries[i];
+    if (!boundary || !boundary.geojson) continue;
+    // Fast AABB rejection: skip expensive polygon test when clearly outside
+    if (bboxCache && bboxCache[i]) {
+      const bb = bboxCache[i];
+      if (lat < bb.minLat || lat > bb.maxLat || lng < bb.minLng || lng > bb.maxLng) continue;
     }
+    if (isPointInPolygon(lat, lng, boundary.geojson)) return true;
   }
 
   return false;
@@ -633,8 +668,11 @@ class HeatmapVisualization {
       this.getIntensityValue(complaint)
     );
 
-    // Find the maximum intensity
-    const maxIntensity = Math.max(...intensities);
+    // Find the maximum intensity — loop avoids spread stack overflow on large arrays
+    let maxIntensity = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i < intensities.length; i++) {
+      if (intensities[i] > maxIntensity) maxIntensity = intensities[i];
+    }
 
     // Ensure minimum value to prevent division by zero
     return Math.max(maxIntensity, this.dynamicScaling.minMaxDensity);
@@ -709,13 +747,7 @@ class HeatmapVisualization {
       this.dynamicScaling.densityHistory.shift();
     }
 
-    console.log(
-      `[HEATMAP] Dynamic scaling updated: max=${newMaxDensity.toFixed(
-        3
-      )}, smoothed=${this.dynamicScaling.smoothedMaxDensity.toFixed(
-        3
-      )}, usingMaxForNormalization=${this.dynamicScaling.maxDensity.toFixed(3)}`
-    );
+    // [PERF] Verbose dynamic-scaling log removed from hot render path
   }
 
   /**
@@ -795,15 +827,9 @@ class HeatmapVisualization {
    * For markers: Role-based filtering applies
    */
   createHeatmapLayer() {
-    // Clear old heatmap layer before creating new one
-    if (this.heatmapLayer) {
-      // Remove from map if it's still attached
-      if (this.map && this.map.hasLayer(this.heatmapLayer)) {
-        this.map.removeLayer(this.heatmapLayer);
-      }
-      // Remove reference
-      this.heatmapLayer = null;
-    }
+    // [PERF] Keep this.heatmapLayer alive across filter changes.
+    // setLatLngs() will update the canvas in-place, avoiding full layer teardown.
+    // Only null it explicitly when a full reset is required (e.g., map destroy).
 
     // Apply filters to determine which complaints should be visible
     this.applyClientSideFilters(this.currentFilters || {});
@@ -829,10 +855,15 @@ class HeatmapVisualization {
       return [complaint.lat, complaint.lng, normalizedIntensity];
     });
 
-    // Debug: Log intensity statistics
+    // Compute intensity bounds in a single O(n) loop — spread into Math.max risks
+    // stack overflow on large datasets and allocates an extra array frame.
     const intensities = heatmapPoints.map((d) => d[2]);
-    const maxIntensity = Math.max(...intensities);
-    const minIntensity = Math.min(...intensities);
+    let maxIntensity = Number.NEGATIVE_INFINITY;
+    let minIntensity = Number.POSITIVE_INFINITY;
+    for (let _i = 0; _i < intensities.length; _i++) {
+      if (intensities[_i] > maxIntensity) maxIntensity = intensities[_i];
+      if (intensities[_i] < minIntensity) minIntensity = intensities[_i];
+    }
     const _intensitiesAt1 = intensities.filter((i) => i >= 0.99).length;
 
     // Ensure at least one point reaches 1.0 (red) by finding all max points and setting them to 1.0
@@ -855,15 +886,7 @@ class HeatmapVisualization {
       );
     }
 
-    console.log(
-      `[HEATMAP] Intensity stats: min=${minIntensity.toFixed(
-        3
-      )}, max=${Math.max(...heatmapPoints.map((d) => d[2])).toFixed(
-        3
-      )}, count at 1.0=${
-        intensities.filter((i) => i >= 0.99).length
-      }, maxDensity=${this.dynamicScaling.maxDensity.toFixed(3)}`
-    );
+    // [PERF] Per-render intensity stats log removed from hot path
 
     // Update heatmap config max value to ensure proper scaling
     // Leaflet.heat uses the 'max' config to scale the gradient
@@ -872,15 +895,26 @@ class HeatmapVisualization {
       max: 1.0, // Always use 1.0 since we're normalizing to [0, 1]
     };
 
-    // console.log removed for security
-    // Create heatmap layer using Leaflet.heat
+    // [PERF] Reuse existing layer via setLatLngs — avoids canvas teardown and re-attach
+    // on every filter change. Create a new layer only on first call.
     try {
-      this.heatmapLayer = L.heatLayer(heatmapPoints, config);
-      // console.log removed for security
+      if (this.heatmapLayer) {
+        this.heatmapLayer.setLatLngs(heatmapPoints);
+        this.heatmapLayer.redraw();
+      } else {
+        this.heatmapLayer = L.heatLayer(heatmapPoints, config);
+      }
       return this.heatmapLayer;
     } catch (error) {
-      console.error("[HEATMAP] Error creating heatmap layer:", error);
-      return null;
+      console.error("[HEATMAP] Error creating/updating heatmap layer:", error);
+      // Fall back to recreation on error
+      try {
+        this.heatmapLayer = L.heatLayer(heatmapPoints, config);
+        return this.heatmapLayer;
+      } catch (fallbackError) {
+        console.error("[HEATMAP] Fallback layer creation also failed:", fallbackError);
+        return null;
+      }
     }
   }
   /**

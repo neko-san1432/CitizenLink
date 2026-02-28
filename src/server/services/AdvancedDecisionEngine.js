@@ -152,6 +152,7 @@ class AdvancedDecisionEngine {
 
     // 1. Check Metaphor Filters (False Positive Prevention)
     for (const meta of this.metaphors) {
+      // eslint-disable-next-line security/detect-non-literal-regexp
       const regex = new RegExp(meta.pattern, "i");
       if (regex.test(normalizedText)) {
         this.logHITL(`Metaphor detected: "${meta.pattern}" -> Ignoring figurative language`);

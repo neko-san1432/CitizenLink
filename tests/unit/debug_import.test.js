@@ -1,23 +1,9 @@
-async function run() {
-  const modules = [
-    "../../src/server/repositories/CoordinatorRepository",
-    "../../src/server/services/DuplicationDetectionService",
-    "../../src/server/services/SimilarityCalculatorService",
-    "../../src/server/services/RuleBasedSuggestionService",
-    "../../src/server/utils/barangayClassifier",
-    "../../src/server/services/CoordinatorService",
-  ];
-
-  modules.forEach((mod) => {
-    try {
-      console.log(`Loading ${mod}...`);
-      // eslint-disable-next-line
-      require(mod);
-      console.log(`✅ Loaded ${mod}`);
-    } catch (e) {
-      console.error(`❌ Failed to load ${mod}:`, e);
-    }
+describe("Module import smoke tests", () => {
+  test("loads active service modules", () => {
+    expect(() => require("../../src/server/services/DuplicationDetectionService")).not.toThrow();
+    expect(() => require("../../src/server/services/SimilarityCalculatorService")).not.toThrow();
+    expect(() => require("../../src/server/services/RuleBasedSuggestionService")).not.toThrow();
+    expect(() => require("../../src/server/utils/barangayClassifier")).not.toThrow();
+    expect(() => require("../../src/server/services/ComplaintService")).not.toThrow();
   });
-}
-
-run();
+});
