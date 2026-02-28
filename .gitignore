@@ -10,3 +10,5 @@ separate_module
 # AI Cache
 storage/ai_cache/
 .brain_logic
+# Application logs
+log.txt
