@@ -18,22 +18,22 @@ router.post("/initialize",
 );
 router.get("/",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => settingController.getAllSettings(req, res)
 );
 router.get("/:key",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => settingController.getSettingByKey(req, res)
 );
 router.post("/",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => settingController.createSetting(req, res)
 );
 router.put("/:key",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => settingController.updateSetting(req, res)
 );
 router.delete("/:key",

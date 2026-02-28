@@ -66,7 +66,7 @@ router.get("/news/:id", async (req, res) => {
   }
 });
 // POST /api/content/news - Create news (admin only)
-router.post("/news", authenticateUser, requireRole(["lgu-admin"]), async (req, res) => {
+router.post("/news", authenticateUser, requireRole(["lgu"]), async (req, res) => {
   try {
     const { title, content, excerpt, image_url, category, tags, status } = req.body;
     if (!title || !content) {
@@ -193,7 +193,7 @@ router.get("/events/:id", async (req, res) => {
   }
 });
 // POST /api/content/events - Create event (admin only)
-router.post("/events", authenticateUser, requireRole(["lgu-admin"]), async (req, res) => {
+router.post("/events", authenticateUser, requireRole(["lgu"]), async (req, res) => {
   try {
     const {
       title,
@@ -328,7 +328,7 @@ router.get("/notices/:id", async (req, res) => {
   }
 });
 // POST /api/content/notices - Create notice (admin only)
-router.post("/notices", authenticateUser, requireRole(["lgu-admin"]), async (req, res) => {
+router.post("/notices", authenticateUser, requireRole(["lgu"]), async (req, res) => {
   try {
     const {
       title,

@@ -75,21 +75,21 @@ router.get(
 router.get(
   "/stats",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getComplaintStats)
 );
 
 router.get(
   "/locations",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getComplaintLocations)
 );
 
 router.get(
   "/",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getAllComplaints)
 );
 
@@ -98,10 +98,7 @@ router.get(
   authenticateUser,
   requireRole([
     "citizen",
-    "coordinator",
-    "lgu-admin",
-    "lgu-officer",
-    "hr",
+    "lgu",
     "super-admin",
   ]),
   wrap(complaintController.getComplaintEvidence)
@@ -122,7 +119,7 @@ router.get(
 router.patch(
   "/:id/status",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  requireRole(["lgu", "super-admin"]),
   validate(schemas.updateStatus),
   wrap(complaintController.updateComplaintStatus)
 );
@@ -130,7 +127,7 @@ router.patch(
 router.get(
   "/:id/status",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin", "complaint-coordinator"]),
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getComplaintStatus)
 );
 
@@ -138,7 +135,7 @@ router.get(
 router.patch(
   "/:id/transition",
   authenticateUser,
-  requireRole([/^lgu-/, "super-admin", "citizen"]),
+  requireRole(["lgu", "super-admin", "citizen"]),
   upload, // allow evidence on transition
   wrap(complaintController.transitionStatus)
 );
@@ -146,8 +143,7 @@ router.patch(
 router.patch(
   "/:id/assign-coordinator",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   validate(schemas.assignCoordinator),
   wrap(complaintController.assignCoordinator)
 );
@@ -155,8 +151,7 @@ router.patch(
 router.patch(
   "/:id/transfer",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   validate(schemas.transferComplaint),
   wrap(complaintController.transferComplaint)
 );
@@ -205,11 +200,10 @@ const completionUpload = multer({
 }).fields([{ name: "completionEvidence", maxCount: 5 }]);
 
 // LGU Officer/Admin endpoints for assignment completion
-// Admins can also complete assignments they've created
 router.post(
   "/:id/mark-complete",
   authenticateUser,
-  requireRole(["lgu", /^lgu-(?!hr)/]), // Allow both officers and admins
+  requireRole(["lgu"]),
   completionUpload,
   wrap(complaintController.markAssignmentComplete)
 );
@@ -221,12 +215,11 @@ router.get(
   wrap(complaintController.getConfirmationMessage)
 );
 
-// False complaint endpoints (coordinator only)
+// False complaint endpoints
 router.post(
   "/:id/mark-false",
   authenticateUser,
-  requireRole(["complaint-coordinator"]),
-  requireRole(["complaint-coordinator"]),
+  requireRole(["lgu", "super-admin"]),
   validate(schemas.markAsFalse),
   wrap(complaintController.markAsFalseComplaint)
 );
@@ -248,8 +241,7 @@ router.post(
 router.post(
   "/:id/mark-duplicate",
   authenticateUser,
-  requireRole(["complaint-coordinator"]),
-  requireRole(["complaint-coordinator"]),
+  requireRole(["lgu", "super-admin"]),
   validate(schemas.markAsDuplicate),
   wrap(complaintController.markAsDuplicate)
 );
@@ -263,14 +255,14 @@ router.post(
 router.get(
   "/false-reports",
   authenticateUser,
-  requireRole(["complaint-coordinator", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getFalseComplaints)
 );
 
 router.get(
   "/false-reports/statistics",
   authenticateUser,
-  requireRole(["complaint-coordinator", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getFalseComplaintStatistics)
 );
 

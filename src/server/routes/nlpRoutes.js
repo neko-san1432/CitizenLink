@@ -11,7 +11,7 @@ const { authenticateUser, requireRole } = require("../middleware/auth");
 router.get(
     "/pending-reviews/count",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpPendingReviewsController.getCount
 );
 
@@ -19,7 +19,7 @@ router.get(
 router.get(
     "/pending-reviews",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpPendingReviewsController.getAll
 );
 
@@ -28,7 +28,7 @@ router.get(
 router.post(
     "/pending-reviews/batch",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpPendingReviewsController.batchQueue
 );
 
@@ -36,7 +36,7 @@ router.post(
 router.post(
     "/pending-reviews/:id/resolve",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpPendingReviewsController.resolve
 );
 
@@ -44,7 +44,7 @@ router.post(
 router.post(
     "/pending-reviews/:id/dismiss",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpPendingReviewsController.dismiss
 );
 
@@ -54,7 +54,7 @@ router.post(
 router.get(
     "/proposals",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpProposalController.getProposals
 );
 
@@ -62,7 +62,7 @@ router.get(
 router.get(
     "/stats",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpProposalController.getStats
 );
 
@@ -70,7 +70,7 @@ router.get(
 router.post(
     "/proposals",
     authenticateUser,
-    requireRole(["lgu-admin", "complaint-coordinator", "super-admin", "lgu"]),
+    requireRole(["lgu", "super-admin"]),
     NlpProposalController.createProposal
 );
 
@@ -78,7 +78,7 @@ router.post(
 router.post(
     "/proposals/:id/approve-coordinator",
     authenticateUser,
-    requireRole(["complaint-coordinator"]),
+    requireRole(["lgu"]),
     NlpProposalController.approveByCoordinator
 );
 
@@ -94,7 +94,7 @@ router.post(
 router.post(
     "/proposals/:id/reject",
     authenticateUser,
-    requireRole(["complaint-coordinator", "super-admin"]),
+    requireRole(["lgu", "super-admin"]),
     NlpProposalController.rejectProposal
 );
 
@@ -110,7 +110,7 @@ router.get(
 router.get(
     "/management/stats",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.getManagementStats
 );
 
@@ -118,28 +118,28 @@ router.get(
 router.get(
     "/keywords",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.getKeywords
 );
 
 router.post(
     "/keywords",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.addKeyword
 );
 
 router.put(
     "/keywords/:id",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.updateKeyword
 );
 
 router.delete(
     "/keywords/:id",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.deleteKeyword
 );
 
@@ -169,21 +169,21 @@ router.delete(
 router.get(
     "/anchors",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.getAnchors
 );
 
 router.post(
     "/anchors",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.addAnchor
 );
 
 router.delete(
     "/anchors/:id",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.deleteAnchor
 );
 
@@ -191,21 +191,21 @@ router.delete(
 router.get(
     "/metaphors",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.getMetaphors
 );
 
 router.post(
     "/metaphors",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.addMetaphor
 );
 
 router.delete(
     "/metaphors/:id",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.deleteMetaphor
 );
 
@@ -213,21 +213,21 @@ router.delete(
 router.get(
     "/dictionary-rules",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.getDictionaryRules
 );
 
 router.post(
     "/dictionary-rules",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.addDictionaryRule
 );
 
 router.delete(
     "/dictionary-rules/:id",
     authenticateUser,
-    requireRole(["super-admin", "lgu-admin", "complaint-coordinator", "lgu"]),
+    requireRole(["super-admin", "lgu"]),
     NlpManagementController.deleteDictionaryRule
 );
 

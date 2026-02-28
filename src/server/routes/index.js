@@ -5,21 +5,23 @@ const departmentRoutes = require("./departmentRoutes");
 const settingRoutes = require("./settingRoutes");
 const supabaseRoutes = require("./supabaseRoutes");
 const captchaRoutes = require("./captchaRoutes");
-const coordinatorRoutes = require("./coordinatorRoutes");
+// [LEGACY] Coordinator routes moved to legacy/routes/coordinatorRoutes.js
+// const coordinatorRoutes = require("./coordinatorRoutes");
 const ocrRoutes = require("./ocrRoutes");
 const verificationRoutes = require("./verificationRoutes");
 const { _apiLimiter } = require("../middleware/rateLimiting");
 
-let hrRoutes;
-try {
-  hrRoutes = require("./hrRoutes");
-  // console.log removed for security
-} catch (error) {
-  console.error("[ROUTES] Error loading HR routes:", error);
-  throw error;
-}
+// [LEGACY] HR routes moved to legacy/routes/hrRoutes.js
+// let hrRoutes;
+// try {
+//   hrRoutes = require("./hrRoutes");
+// } catch (error) {
+//   console.error("[ROUTES] Error loading HR routes:", error);
+//   throw error;
+// }
 const superAdminRoutes = require("./superAdminRoutes");
-const lguAdminRoutes = require("./lguAdminRoutes");
+// [LEGACY] LGU Admin routes moved to legacy/routes/lguAdminRoutes.js
+// const lguAdminRoutes = require("./lguAdminRoutes");
 const lguRoutes = require("./lguOfficerRoutes"); // LGU officer routes (using lguOfficerRoutes file)
 const notificationRoutes = require("./notificationRoutes");
 const storageRoutes = require("./storageRoutes");
@@ -43,12 +45,15 @@ router.use("/auth", authRoutes);
 router.use("/complaints", complaintRoutes);
 router.use("/departments", departmentRoutes);
 router.use("/settings", settingRoutes);
-router.use("/coordinator", coordinatorRoutes);
+// [LEGACY] Coordinator routes disabled — sub-role deprecated
+// router.use("/coordinator", coordinatorRoutes);
 router.use("/identity", ocrRoutes);
 router.use("/verification", verificationRoutes);
-router.use("/hr", hrRoutes);
+// [LEGACY] HR routes disabled — lgu-hr sub-role deprecated
+// router.use("/hr", hrRoutes);
 router.use("/superadmin", superAdminRoutes);
-router.use("/lgu-admin", lguAdminRoutes);
+// [LEGACY] LGU Admin routes disabled — lgu-admin sub-role deprecated
+// router.use("/lgu-admin", lguAdminRoutes);
 router.use("/lgu", lguRoutes); // LGU officer routes (lgu-wst, lgu-engineering, etc.)
 router.use("/notifications", notificationRoutes);
 router.use("/storage", storageRoutes);

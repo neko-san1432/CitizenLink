@@ -26,27 +26,27 @@ router.get("/:id/officers",
 );
 router.get("/",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => departmentController.getAllDepartments(req, res)
 );
 router.get("/:id",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => departmentController.getDepartmentById(req, res)
 );
 router.post("/",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => departmentController.createDepartment(req, res)
 );
 router.put("/:id",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => departmentController.updateDepartment(req, res)
 );
 router.delete("/:id",
   authenticateUser,
-  requireRole(["lgu-admin", "super-admin"]),
+  requireRole(["lgu", "super-admin"]),
   (req, res) => departmentController.deleteDepartment(req, res)
 );
 

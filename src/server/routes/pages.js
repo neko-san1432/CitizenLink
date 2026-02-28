@@ -95,88 +95,90 @@ router.get(
     res.redirect("/settings");
   }
 );
-router.get(
-  "/hr/link-generator",
-  authenticateUser,
-  requireRole(["lgu-hr"]),
-  (req, res) => {
-    res.redirect("/link-generator");
-  }
-);
-router.get(
-  "/hr/role-changer",
-  authenticateUser,
-  requireRole(["lgu-hr"]),
-  (req, res) => {
-    res.redirect("/role-changer");
-  }
-);
-// Coordinator redirects -> Accessible by 'lgu'
-router.get(
-  "/coordinator/review-queue",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/review-queue");
-  }
-);
-router.get(
-  "/coordinator/assignments",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/assignments");
-  }
-);
-router.get(
-  "/coordinator/heatmap",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/heatmap");
-  }
-);
-// LGU Admin redirects -> Accessible by 'lgu'
-router.get(
-  "/lgu-admin/dashboard",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/dashboard");
-  }
-);
-router.get(
-  "/lgu-admin/assignments",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/assignments");
-  }
-);
-router.get(
-  "/lgu-admin/heatmap",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/heatmap");
-  }
-);
-router.get(
-  "/lgu-admin/publish",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/publish");
-  }
-);
-router.get(
-  "/lgu-officer/task-assigned",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/task-assigned");
-  }
-);
+// [LEGACY] HR link-generator route — lgu-hr sub-role deprecated
+// router.get(
+//   "/hr/link-generator",
+//   authenticateUser,
+//   requireRole(["lgu-hr"]),
+//   (req, res) => {
+//     res.redirect("/link-generator");
+//   }
+// );
+// router.get(
+//   "/hr/role-changer",
+//   authenticateUser,
+//   requireRole(["lgu-hr"]),
+//   (req, res) => {
+//     res.redirect("/role-changer");
+//   }
+// );
+// [LEGACY] Coordinator redirect routes — sub-role deprecated, now accessible via simplified URLs
+// router.get(
+//   "/coordinator/review-queue",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/review-queue");
+//   }
+// );
+// router.get(
+//   "/coordinator/assignments",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/assignments");
+//   }
+// );
+// router.get(
+//   "/coordinator/heatmap",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/heatmap");
+//   }
+// );
+// [LEGACY] LGU Admin redirect routes — sub-role deprecated, now accessible via simplified URLs
+// router.get(
+//   "/lgu-admin/dashboard",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/dashboard");
+//   }
+// );
+// router.get(
+//   "/lgu-admin/assignments",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/assignments");
+//   }
+// );
+// router.get(
+//   "/lgu-admin/heatmap",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/heatmap");
+//   }
+// );
+// router.get(
+//   "/lgu-admin/publish",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/publish");
+//   }
+// );
+// [LEGACY] LGU Officer redirect — sub-role deprecated
+// router.get(
+//   "/lgu-officer/task-assigned",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/task-assigned");
+//   }
+// );
 
 // LGU prefix redirects (sidebar navigation uses /lgu/ prefix)
 router.get(
@@ -312,21 +314,13 @@ router.get(
   }
 );
 
+// [LEGACY] lgu-hr removed from role-changer — now super-admin only
 router.get(
   "/role-changer",
   authenticateUser,
-  requireRole(["super-admin", "lgu-hr"]),
+  requireRole(["super-admin"]),
   (req, res) => {
-    const userRole = req.user?.role || "citizen";
-    if (userRole === "super-admin") {
-      res.redirect("/super-admin/user-manager");
-    } else {
-      res
-        .status(403)
-        .send(
-          "Role changer access has been removed. Please contact super-admin for role changes."
-        );
-    }
+    res.redirect("/super-admin/user-manager");
   }
 );
 
@@ -450,34 +444,37 @@ router.get(
 router.get("/lgu", authenticateUser, requireRole(["lgu"]), (req, res) => {
   res.redirect("/dashboard");
 });
-router.get(
-  "/coordinator",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/dashboard");
-  }
-);
-router.get(
-  "/lgu-admin",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/dashboard");
-  }
-);
+// [LEGACY] Coordinator dashboard redirect — sub-role deprecated
+// router.get(
+//   "/coordinator",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/dashboard");
+//   }
+// );
+// [LEGACY] LGU Admin dashboard redirect — sub-role deprecated
+// router.get(
+//   "/lgu-admin",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/dashboard");
+//   }
+// );
 
 // HR specific pages (simplified URLs)
-router.get(
-  "/link-generator",
-  authenticateUser,
-  requireRole(["lgu-hr"]),
-  (req, res) => {
-    res.sendFile(
-      path.join(config.rootDir, "views", "pages", "hr", "link-generator.html")
-    );
-  }
-);
+// [LEGACY] HR link-generator page — lgu-hr sub-role deprecated
+// router.get(
+//   "/link-generator",
+//   authenticateUser,
+//   requireRole(["lgu-hr"]),
+//   (req, res) => {
+//     res.sendFile(
+//       path.join(config.rootDir, "views", "pages", "hr", "link-generator.html")
+//     );
+//   }
+// );
 
 // Super Admin access to HR Link Generator
 router.get(
@@ -542,43 +539,43 @@ router.get(
   }
 );
 
-// Legacy coordinator review page -> redirect
-router.get(
-  "/coordinator/review/:id",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect(`/review/${req.params.id}`);
-  }
-);
+// [LEGACY] Legacy coordinator review redirect — sub-role deprecated
+// router.get(
+//   "/coordinator/review/:id",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect(`/review/${req.params.id}`);
+//   }
+// );
 
-// LGU Officer legacy dashboard URL → redirect to unified dashboard
-router.get(
-  "/lgu-officer/dashboard",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.redirect("/dashboard");
-  }
-);
+// [LEGACY] LGU Officer legacy dashboard redirect — sub-role deprecated
+// router.get(
+//   "/lgu-officer/dashboard",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.redirect("/dashboard");
+//   }
+// );
 
-// LGU Officer tasks page (alias for task-assigned)
-router.get(
-  "/lgu-officer/tasks",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        config.rootDir,
-        "views",
-        "pages",
-        "lgu-officer",
-        "assigned-tasks.html"
-      )
-    );
-  }
-);
+// [LEGACY] LGU Officer tasks — sub-role deprecated
+// router.get(
+//   "/lgu-officer/tasks",
+//   authenticateUser,
+//   requireRole(["lgu"]),
+//   (req, res) => {
+//     res.sendFile(
+//       path.join(
+//         config.rootDir,
+//         "views",
+//         "pages",
+//         "lgu-officer",
+//         "assigned-tasks.html"
+//       )
+//     );
+//   }
+// );
 
 // Super Admin Role Changer dedicated page - redirect to User Manager
 router.get(
@@ -694,17 +691,17 @@ router.get("/terms", (req, res) => {
   );
 });
 
-// Complete Position Signup page (public - no auth required)
-router.get("/complete-position-signup", (req, res) => {
-  res.sendFile(
-    path.join(
-      config.rootDir,
-      "views",
-      "pages",
-      "auth",
-      "complete-position-signup.html"
-    )
-  );
-});
+// [LEGACY] Complete position signup — HR flow deprecated
+// router.get("/complete-position-signup", (req, res) => {
+//   res.sendFile(
+//     path.join(
+//       config.rootDir,
+//       "views",
+//       "pages",
+//       "auth",
+//       "complete-position-signup.html"
+//     )
+//   );
+// });
 
 module.exports = router;

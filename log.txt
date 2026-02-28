@@ -6569,3 +6569,5 @@
 [2026-02-24T16:28:39.346Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]
 [2026-02-24T16:30:18.609Z] [LOGIN_DEBUG] User: admin@gmail.com, Role: super-admin, SimpleMode: true 
 [2026-02-24T16:30:18.609Z] [LOGIN_DEBUG] Checking role 'super-admin' against allowed: ["citizen","super-admin","lgu"]
+[2026-02-28T08:40:04.312Z] [LOGIN_DEBUG] User: lgu_officer@example.com, Role: lgu, SimpleMode: true 
+[2026-02-28T08:40:04.312Z] [LOGIN_DEBUG] Checking role 'lgu' against allowed: ["citizen","super-admin","lgu"]

@@ -37,15 +37,6 @@ router.get(
   authenticateUser,
   requireRole([
     "super-admin",
-    "complaint-coordinator",
-    "lgu-admin",
-    "lgu-engineering",
-    "lgu-wst",
-    "lgu-treasury",
-    "lgu-health",
-    "lgu-pnp",
-    "lgu-bfp",
-    "lgu-mayor",
     "lgu",
   ]),
   async (req, res) => {
@@ -97,15 +88,6 @@ router.get(
   authenticateUser,
   requireRole([
     "super-admin",
-    "complaint-coordinator",
-    "lgu-admin",
-    "lgu-engineering",
-    "lgu-wst",
-    "lgu-treasury",
-    "lgu-health",
-    "lgu-pnp",
-    "lgu-bfp",
-    "lgu-mayor",
     "lgu",
   ]),
   async (req, res) => {
