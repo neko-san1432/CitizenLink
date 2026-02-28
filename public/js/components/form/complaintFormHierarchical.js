@@ -241,7 +241,7 @@ function renderDuplicateWarning(
         </div>
         <p style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #431407;">
             We found ${duplicates.length
-    } similar report(s) near this location. Please check if your issue is already listed.
+} similar report(s) near this location. Please check if your issue is already listed.
             If matched, you can click <strong>"Me Too"</strong> to support the existing report instead of creating a new one.
         </p>
         <div class="duplicate-list">
@@ -289,16 +289,16 @@ function renderBlockingUI(container, duplicates, form) {
         </div>
         <p style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #7f1d1d; font-weight: 500;">
             We have detected a <strong>high number of reports (${duplicates.length
-    })</strong> for this issue in this area.
+})</strong> for this issue in this area.
             <br/><br/>
             To help our coordinators respond faster, we have paused new submissions. 
             <strong>Please UPVOTE an existing report below</strong> to add urgency to this issue.
         </p>
         <div class="duplicate-list">
             ${duplicates
-      .slice(0, 3)
-      .map((d) => renderDuplicateItem(d))
-      .join("")}
+    .slice(0, 3)
+    .map((d) => renderDuplicateItem(d))
+    .join("")}
         </div>
         <div class="dismiss-warning">
             <span style="font-size: 0.8rem; color: #6b7280;">(Submitting new reports is temporarily disabled for this area)</span>
@@ -316,20 +316,20 @@ function renderDuplicateItem(d) {
         <div class="duplicate-item">
             <div class="duplicate-info">
                 <span class="duplicate-title">${d.title || "Untitled Complaint"
-    }</span>
+}</span>
                 <div class="duplicate-meta">
                     <span>📅 ${new Date(
-      d.submitted_at || d.created_at
-    ).toLocaleDateString()}</span>
+    d.submitted_at || d.created_at
+  ).toLocaleDateString()}</span>
                     <span>•</span>
                     <span>📍 ${(d.distance * 1000).toFixed(0)}m away</span>
                     <span style="display: block; margin-top: 4px; color: #4b5563;">
                         ${d.description
-      ? d.description.length > 80
-        ? d.description.substring(0, 80) + "..."
-        : d.description
-      : "No description"
-    }
+    ? d.description.length > 80
+      ? `${d.description.substring(0, 80)  }...`
+      : d.description
+    : "No description"
+}
                     </span>
                 </div>
             </div>
@@ -346,7 +346,7 @@ function attachUpvoteListeners(container) {
   const upvoteButtons = container.querySelectorAll(".btn-me-too");
   upvoteButtons.forEach((btn) => {
     btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.id;
+      const {id} = e.currentTarget.dataset;
       // Optimistic UI update
       const originalText = e.currentTarget.innerHTML;
       e.currentTarget.innerHTML = "<span>Checking...</span>";
@@ -405,7 +405,7 @@ function setupTitleAutoGeneration(form) {
       // Create title from first few words (approx 50 chars)
       let title = desc.split(/\s+/).slice(0, 10).join(" ");
       if (title.length > 50) {
-        title = title.substring(0, 47) + "...";
+        title = `${title.substring(0, 47)  }...`;
       }
       // Ensure specific format if needed, or just clean it
       titleInput.value = title.charAt(0).toUpperCase() + title.slice(1);
@@ -511,7 +511,7 @@ function setupVoiceInput(form) {
       const curentVal = descriptionInput.value;
       // If empty, just set. If not, append.
       const newVal = curentVal
-        ? curentVal.trim() + " " + finalTranscript.trim()
+        ? `${curentVal.trim()  } ${  finalTranscript.trim()}`
         : finalTranscript.trim();
       descriptionInput.value = newVal;
 

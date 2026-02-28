@@ -1,23 +1,23 @@
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+require("dotenv").config();
+const { createClient } = require("@supabase/supabase-js");
 
 async function fixRLS() {
-    console.log('Starting RLS Fix...');
+  console.log("Starting RLS Fix...");
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-        console.error('Missing Supabase credentials in .env');
-        process.exit(1);
-    }
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Missing Supabase credentials in .env");
+    process.exit(1);
+  }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-        auth: { persistSession: false }
-    });
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false }
+  });
 
-    // SQL to execute
-    const sql = `
+  // SQL to execute
+  const sql = `
     -- 1. Create Safe Admin Check Function
     CREATE OR REPLACE FUNCTION public.check_is_admin_safe()
     RETURNS boolean
@@ -53,23 +53,23 @@ async function fixRLS() {
     USING (auth.uid() = id);
   `;
 
-    // We cannot execute SQL directly via JS client unless we use a workaround
-    // Workaround: Use RPC if available, or just log the SQL for the user?
-    // Actually, we can try to use the 'pg' library if we had connection string, but we only have URL/Key.
-    // BUT! We can't run raw SQL via supabase-js client.
+  // We cannot execute SQL directly via JS client unless we use a workaround
+  // Workaround: Use RPC if available, or just log the SQL for the user?
+  // Actually, we can try to use the 'pg' library if we had connection string, but we only have URL/Key.
+  // BUT! We can't run raw SQL via supabase-js client.
 
-    // So this script is actually useless for applying the fix unless we have an RPC 
-    // function like 'exec_sql' exposed (which is dangerous and likely not there).
+  // So this script is actually useless for applying the fix unless we have an RPC
+  // function like 'exec_sql' exposed (which is dangerous and likely not there).
 
-    console.log('=====================================================');
-    console.log('CANNOT EXECUTE RAW SQL VIA SUPABASE JS CLIENT DIRECTLY');
-    console.log('Please execute the following SQL in your Supabase SQL Editor:');
-    console.log('=====================================================');
-    console.log(sql);
-    console.log('=====================================================');
+  console.log("=====================================================");
+  console.log("CANNOT EXECUTE RAW SQL VIA SUPABASE JS CLIENT DIRECTLY");
+  console.log("Please execute the following SQL in your Supabase SQL Editor:");
+  console.log("=====================================================");
+  console.log(sql);
+  console.log("=====================================================");
 
-    // Checking if we can invoke a known RPC that might work?
-    // No known unrestricted SQL exec RPC.
+  // Checking if we can invoke a known RPC that might work?
+  // No known unrestricted SQL exec RPC.
 }
 
 fixRLS();

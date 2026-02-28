@@ -9,10 +9,10 @@ const router = express.Router();
 /**
  * In-memory cache for reverse geocoding results
  * Reduces redundant Nominatim API calls for nearby coordinates
- * 
+ *
  * Key: "lat,lng" with 5-decimal precision (~1.1m accuracy)
  * Value: { data, timestamp }
- * 
+ *
  * @thesis-feature Implements geocode caching from DRIMS_Simulated_System
  */
 const geocodeCache = new Map();
@@ -102,10 +102,10 @@ router.get("/reverse-geocode", apiLimiter, async (req, res) => {
           _cached: true,
           _cacheKey: cacheKey
         });
-      } else {
-        // Expired - remove from cache
-        geocodeCache.delete(cacheKey);
       }
+      // Expired - remove from cache
+      geocodeCache.delete(cacheKey);
+
     }
 
     // ==================== RATE LIMITING ====================

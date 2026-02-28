@@ -172,7 +172,7 @@ class SuperAdminService {
       // Get current role - strict check removed to support flexible role management
       const currentRole = await this.roleService.getUserRole(userId);
       // Logic for strict/flexible mode is handled in the controller
-      /* 
+      /*
       if (currentRole !== "citizen") {
         throw new Error("Can only assign citizens to departments");
       }

@@ -277,23 +277,23 @@ class LinkGenerator {
         <!-- Column 3: Actions -->
         <div class="action-group">
           ${
-            !link.is_used
-              ? `<button class="action-btn copy-link-url-btn" title="Copy URL" data-link-url="${encodeURIComponent(
-                  link.url
-                )}">
+  !link.is_used
+    ? `<button class="action-btn copy-link-url-btn" title="Copy URL" data-link-url="${encodeURIComponent(
+      link.url
+    )}">
                 ${getIcon("copy", { size: 16 })}
                </button>`
-              : ""
-          }
+    : ""
+}
           ${
-            !link.is_used && !link.is_expired
-              ? `<button class="action-btn delete deactivate-link-btn" title="Deactivate" data-link-id="${
-                  link.id
-                }">
+  !link.is_used && !link.is_expired
+    ? `<button class="action-btn delete deactivate-link-btn" title="Deactivate" data-link-id="${
+      link.id
+    }">
                 ${getIcon("trash", { size: 16 })}
                </button>`
-              : ""
-          }
+    : ""
+}
         </div>
 
       </div>

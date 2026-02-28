@@ -1,4 +1,4 @@
-  const SimilarityCalculatorService = require("./SimilarityCalculatorService");
+const SimilarityCalculatorService = require("./SimilarityCalculatorService");
 const BrainService = require("./BrainService"); // New Brain Integration
 const Database = require("../config/database");
 
@@ -102,12 +102,12 @@ class ClusteringScheduler {
       // 1. Fetch Active Complaints
       // We generally want "open" complaints or recent ones
       const { data: complaints, error } = await this.supabase
-        .from('complaints')
-        .select('*')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
+        .from("complaints")
+        .select("*")
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
         // .eq('workflow_status', 'submitted') // Optional: filter by status
-        .order('submitted_at', { ascending: false })
+        .order("submitted_at", { ascending: false })
         .limit(500); // Analyze last 500 complaints
 
       if (error) throw error;
@@ -129,7 +129,7 @@ class ClusteringScheduler {
         radius_meters: c.radius || 100,
         complaint_ids: c.reports.map(r => r.id),
         pattern_type: "brain_detected", // New pattern type
-        status: 'active',
+        status: "active",
         urgency_score: parseFloat(c.urgency_score) || 0,
         confidence: parseFloat(c.confidence) || 0.5,
         created_at: new Date().toISOString()
@@ -145,7 +145,7 @@ class ClusteringScheduler {
       console.log(`[CLUSTERING] Completed in ${duration}s. Clusters: ${mappedClusters.length}, Causal Links: ${intelligence.causalLinks.length}`);
 
       if (intelligence.causalLinks.length > 0) {
-        console.log('[CLUSTERING] Causal Links Detected:', intelligence.causalLinks.map(l => `${l.cause.category} -> ${l.effect.category}`).join(', '));
+        console.log("[CLUSTERING] Causal Links Detected:", intelligence.causalLinks.map(l => `${l.cause.category} -> ${l.effect.category}`).join(", "));
       }
 
       return {

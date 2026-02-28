@@ -572,7 +572,7 @@ class LguAdminController {
             .notifyTaskAssigned(
               assignment.assigned_to,
               complaintId,
-              updatedComplaint.descriptive_su?.slice(0, 100) || 'Complaint',
+              updatedComplaint.descriptive_su?.slice(0, 100) || "Complaint",
               priority === "urgent" ? "urgent" : "info",
               deadline
             )
@@ -591,7 +591,7 @@ class LguAdminController {
             .notifyComplaintAssignedToOfficer(
               complaint.submitted_by,
               complaintId,
-              complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+              complaint.descriptive_su?.slice(0, 100) || "Your complaint",
               {
                 officer_count: createdAssignments.length,
                 department: departmentCode,
@@ -612,7 +612,7 @@ class LguAdminController {
             userId,
             NOTIFICATION_TYPES.ASSIGNMENT_COMPLETED,
             "Assignment Completed",
-            `You successfully assigned "${updatedComplaint.descriptive_su?.slice(0, 100) || 'a complaint'}" to ${createdAssignments.length} officer(s).`,
+            `You successfully assigned "${updatedComplaint.descriptive_su?.slice(0, 100) || "a complaint"}" to ${createdAssignments.length} officer(s).`,
             {
               priority: NOTIFICATION_PRIORITY.INFO,
               link: `/lgu-admin/assignments`,
@@ -910,7 +910,7 @@ class LguAdminController {
           // Use sliced UUID as Display ID since no readable ID exists
           display_id: complaint.id.slice(0, 8),
 
-          title: complaint.descriptive_su?.slice(0, 100) || 'No description',
+          title: complaint.descriptive_su?.slice(0, 100) || "No description",
           description: complaint.descriptive_su, // Mapped from descriptive_su
           location_text: complaint.location_text,
           citizen_name: userProfile
@@ -1314,7 +1314,7 @@ class LguAdminController {
           .notifyComplaintAssignedToOfficer(
             complaint.submitted_by,
             complaintId,
-            complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+            complaint.descriptive_su?.slice(0, 100) || "Your complaint",
             { officer_count: 1, department: departmentCode }
           )
           .catch((notifError) => {
@@ -1453,7 +1453,7 @@ class LguAdminController {
         }
         officerGroups[officerId].complaints.push({
           id: assignment.complaints.id,
-          title: assignment.complaints.descriptive_su?.slice(0, 100) || 'No description',
+          title: assignment.complaints.descriptive_su?.slice(0, 100) || "No description",
           priority: assignment.complaints.priority,
           assigned_days_ago: daysSinceAssignment,
           is_overdue: daysSinceAssignment > 7,

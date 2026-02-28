@@ -34,7 +34,7 @@ class Database {
         autoRefreshToken: false,
         detectSessionInUrl: false,
       },
-      db: { schema: 'public' },
+      db: { schema: "public" },
     });
   }
   _initialize() {

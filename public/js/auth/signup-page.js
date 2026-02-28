@@ -107,7 +107,7 @@ const initializeSignupPage = async () => {
 
   // Wire password strength meter
   attachPasswordStrengthMeter();
-  
+
   // Wire password toggles
   setupPasswordToggles();
 

@@ -1,7 +1,7 @@
 import showMessage from "../components/toast.js";
 import { supabase } from "../config/config.js";
 
-let departmentsCache = [];
+const departmentsCache = [];
 let selectedUser = null;
 let currentUserRole = null;
 let currentUserId = null;
@@ -70,7 +70,7 @@ if (document.readyState === "loading") {
 async function loadDepartments() {
   // Departments are not used in Simple Workflow Mode
   // This function is kept for compatibility but does nothing
-  return;
+
 }
 
 function setupHandlers() {
@@ -314,13 +314,13 @@ function normalizeRoleDisplay(role, department = null) {
     return "LGU Officer";
   } else if (roleLower === "super-admin") {
     return "Super Admin";
-  } else {
-    // Fallback for any unexpected roles
-    return role
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
   }
+  // Fallback for any unexpected roles
+  return role
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
 }
 
 function renderUserRow(u) {
@@ -347,9 +347,9 @@ function renderUserRow(u) {
 
   return `
     <div class="um-user-item user-item" id="user-row-${u.id}" data-user-id="${u.id
-    }" data-user-email="${escapeHtml(
-      u.email || ""
-    )}" data-user-name="${escapeHtml(u.fullName || u.name || "")}">
+}" data-user-email="${escapeHtml(
+  u.email || ""
+)}" data-user-name="${escapeHtml(u.fullName || u.name || "")}">
       <div class="user-item-avatar">
         ${initials}
       </div>
@@ -460,8 +460,8 @@ async function loadUserDetails(userId) {
         <div class="profile-card">
             <div class="profile-avatar">${initials}</div>
             <h2 class="profile-name">${escapeHtml(
-        u.fullName || u.name || "Unknown"
-      )}</h2>
+    u.fullName || u.name || "Unknown"
+  )}</h2>
             <p class="profile-email">${escapeHtml(u.email || "")}</p>
         </div>
 
@@ -479,7 +479,7 @@ async function loadUserDetails(userId) {
             <div class="info-item">
                 <span class="info-label">Status</span>
                 <div class="info-value" style="color:${isBanned ? "#ef4444" : "#10b981"
-        }">
+}">
                     ${isBanned ? "Banned" : "Active"}
                 </div>
             </div>
@@ -491,27 +491,27 @@ async function loadUserDetails(userId) {
 
         <div class="actions-container">
             ${!isTargetSuperAdmin
-          ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(
-            u.email || ""
-          )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
-          }', '${u.role}')">Change Role</button>`
-          : ""
-        }
+    ? `<button class="btn btn-primary" onclick="openPromotionModal('${escapeHtml(
+      u.email || ""
+    )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
+    }', '${u.role}')">Change Role</button>`
+    : ""
+}
             
             ${!isBanned
-          ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(
-            u.email || ""
-          )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
-          }')">Ban User</button>`
-          : currentUserRole === "super-admin"
-            ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban User</button>`
-            : ""
-        }
+    ? `<button class="btn btn-danger" onclick="openBanModal('${escapeHtml(
+      u.email || ""
+    )}', '${escapeHtml(u.fullName || u.name || "")}', '${u.id
+    }')">Ban User</button>`
+    : currentUserRole === "super-admin"
+      ? `<button class="btn btn-success" onclick="unbanUser('${u.id}')">Unban User</button>`
+      : ""
+}
             
             ${canDeleteUser
-          ? `<button class="btn btn-secondary" style="border-color:#fee2e2; color:#991b1b; background:#fff;" id="delete-user-btn">Delete Account</button>`
-          : ""
-        }
+    ? `<button class="btn btn-secondary" style="border-color:#fee2e2; color:#991b1b; background:#fff;" id="delete-user-btn">Delete Account</button>`
+    : ""
+}
         </div>
       `;
 
@@ -584,7 +584,7 @@ function openPromotionModal(email, name, userId, currentRole = null) {
 // Department requirement is no longer needed in Simple Workflow Mode
 function updateDepartmentRequirement() {
   // No-op in Simple Workflow Mode
-  return;
+
 }
 
 function hidePromotionModal() {
@@ -759,7 +759,7 @@ async function onTransferSubmit(e) {
         user_id: selectedUser.id,
         from_department: selectedUser.department,
         to_department: toDepartment,
-        reason: reason,
+        reason,
       }),
     });
 

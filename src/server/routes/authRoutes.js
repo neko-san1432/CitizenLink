@@ -61,7 +61,7 @@ router.get("/login", (req, res) => {
   console.warn("[DEBUG] Query:", req.query);
 
   // Check if this might be a redirect loop or cached 301
-  const isBrowser = req.accepts('html');
+  const isBrowser = req.accepts("html");
 
   res.status(405).json({
     success: false,

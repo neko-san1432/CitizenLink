@@ -156,7 +156,7 @@ const authenticateUser = async (req, res, next) => {
       // OR if it's an LGU role (starts with 'lgu') but NOT one of the restricted legacy ones
       // We need to be careful: 'lgu' is allowed. 'lgu-admin', 'lgu-hr' are NOT.
       // But 'lgu-{dept}' (officer) might need handling.
-      // Based on plan: "lgu-officer is disabled". 
+      // Based on plan: "lgu-officer is disabled".
       // So valid roles are exact matches: 'citizen', 'super-admin'.
       // And 'lgu' (base role).
       // What about 'lgu-{dept}'? The instruction says "lgu (formerly Coordinator/Admin)".
@@ -164,15 +164,15 @@ const authenticateUser = async (req, res, next) => {
       // Usually 'lgu' was the base officer. Now it's the "LGU" role.
 
       // We will check against the ALLOWED_ROLES list from constants: ['citizen', 'lgu', 'super-admin']
-      // We must check if the userRole *starts with* allowed roles if we want to allow variations, 
+      // We must check if the userRole *starts with* allowed roles if we want to allow variations,
       // OR strict equality if we want to block 'lgu-admin'.
 
-      // 'lgu' is in allowed roles. 'lgu-admin' starts with 'lgu'. 
+      // 'lgu' is in allowed roles. 'lgu-admin' starts with 'lgu'.
       // If we strictly check includes, 'lgu-admin' is NOT in ['citizen', 'lgu', 'super-admin'].
       // So simply checking ALLOWED_ROLES.includes(normalizedRole) should work for exact matches.
-      // However, we need to handle the case where 'lgu' might have data appended? 
+      // However, we need to handle the case where 'lgu' might have data appended?
       // Current system uses 'lgu' as the role string in metadata usually, or 'lgu-{dept}'.
-      // If 'lgu-{dept}' is the officer, and we want to disable officer... 
+      // If 'lgu-{dept}' is the officer, and we want to disable officer...
       // But usage of 'lgu' implies the NEW main LGU role.
 
       // Let's assume strict exact match for now as safe default for 'citizen' and 'super-admin'.

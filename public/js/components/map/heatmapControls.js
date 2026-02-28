@@ -806,7 +806,7 @@ class HeatmapControls {
             userDepartmentCode &&
             (dept.code || "").toUpperCase() === userDepartmentCode;
           option.textContent = `${dept.name} (${dept.code})${isUserDept ? " ★" : ""
-            }`;
+          }`;
           if (isUserDept) {
             option.style.fontWeight = "bold";
           }

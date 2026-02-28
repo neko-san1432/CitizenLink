@@ -8,7 +8,7 @@ let filteredComplaints = [];
 let taxonomy = null;
 let barangayGeoJSON = null;
 
-let charts = {};
+const charts = {};
 
 let currentPage = 1;
 let itemsPerPage = 20;
@@ -241,7 +241,7 @@ function computeTriage(point) {
         intelligence: res || null
       };
     } catch (err) {
-      console.error('[ANALYTICS] NLP intelligence error:', err);
+      console.error("[ANALYTICS] NLP intelligence error:", err);
       return { score: 0, tier: 3, breakdown: null, intelligence: null };
     }
   }
@@ -303,7 +303,7 @@ function processComplaint(input) {
   // Category mismatch detection from NLP auto-categorization
   const hasMismatch = Boolean(point.ai_reclassified) || Boolean(point.ai_downgraded) ||
     Boolean(intelligence.breakdown?.emergencyBoost) ||
-    (intelligence.confidence && intelligence.confidence < 0.5 && point.category !== 'Others');
+    (intelligence.confidence && intelligence.confidence < 0.5 && point.category !== "Others");
 
   // Emergency detection from taxonomy + NLP
   const emergency =
@@ -671,7 +671,7 @@ function renderTemporal(stats) {
   );
 
   // Day of Week chart
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const byDayOfWeek = new Array(7).fill(0);
   for (const [day] of stats.byDay.entries()) {
     const d = new Date(day);
@@ -731,7 +731,7 @@ function renderCategories(stats) {
   // Calculate categories summary metrics
   const uniqueCategoryCount = stats.byCategory.size;
   const topCategory = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1])[0];
-  const topCategoryName = topCategory ? topCategory[0] : '-';
+  const topCategoryName = topCategory ? topCategory[0] : "-";
 
   // Calculate NLP confidence average
   let totalConf = 0;
@@ -750,8 +750,8 @@ function renderCategories(stats) {
 
   // Update summary cards
   set("uniqueCategoryCount", uniqueCategoryCount);
-  set("topCategoryName", topCategoryName.length > 18 ? topCategoryName.slice(0, 16) + '...' : topCategoryName);
-  set("nlpAccuracy", avgNlpConf + "%");
+  set("topCategoryName", topCategoryName.length > 18 ? `${topCategoryName.slice(0, 16)  }...` : topCategoryName);
+  set("nlpAccuracy", `${avgNlpConf  }%`);
   set("reclassifiedCount", reclassifiedCount);
 
   const dist = [...stats.byCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16);
@@ -811,12 +811,12 @@ function renderCategories(stats) {
   );
 
   // NLP Method distribution (confidence levels)
-  const confBuckets = { 'High (80%+)': 0, 'Medium (50-79%)': 0, 'Low (<50%)': 0 };
+  const confBuckets = { "High (80%+)": 0, "Medium (50-79%)": 0, "Low (<50%)": 0 };
   for (const c of processedComplaints) {
     const conf = c.intelligence?.confidence || 0;
-    if (conf >= 0.8) confBuckets['High (80%+)']++;
-    else if (conf >= 0.5) confBuckets['Medium (50-79%)']++;
-    else confBuckets['Low (<50%)']++;
+    if (conf >= 0.8) confBuckets["High (80%+)"]++;
+    else if (conf >= 0.5) confBuckets["Medium (50-79%)"]++;
+    else confBuckets["Low (<50%)"]++;
   }
   renderPieChart(
     "nlpMethodChart",
@@ -852,7 +852,7 @@ function openModal(item) {
   const intel = item.intelligence || {};
   const flags = item.flags || {};
 
-  let nlpSection = '';
+  let nlpSection = "";
   if (intel.confidence || flags.metaphor || flags.speculation || flags.mismatch) {
     const badges = [];
     if (flags.emergency) badges.push('<span class="badge badge-danger">Emergency</span>');
@@ -867,12 +867,12 @@ function openModal(item) {
       <div style="margin-top:12px;padding:12px;background:var(--gray-100);border-radius:8px;">
         <div style="font-weight:700;margin-bottom:8px;"><i class="fas fa-brain" style="margin-right:6px;color:var(--primary);"></i>NLP Intelligence</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-size:13px;">
-          <div><strong>Confidence:</strong> ${intel.confidence ? Math.round(intel.confidence * 100) + '%' : '-'}</div>
-          <div><strong>Veracity:</strong> ${intel.veracity_score ? Math.round(intel.veracity_score) + '%' : '-'}</div>
-          ${intel.original_category ? `<div><strong>Original Category:</strong> ${intel.original_category}</div>` : ''}
-          ${intel.reclassified_reason ? `<div style="grid-column:1/-1;"><strong>Reason:</strong> ${intel.reclassified_reason}</div>` : ''}
+          <div><strong>Confidence:</strong> ${intel.confidence ? `${Math.round(intel.confidence * 100)  }%` : "-"}</div>
+          <div><strong>Veracity:</strong> ${intel.veracity_score ? `${Math.round(intel.veracity_score)  }%` : "-"}</div>
+          ${intel.original_category ? `<div><strong>Original Category:</strong> ${intel.original_category}</div>` : ""}
+          ${intel.reclassified_reason ? `<div style="grid-column:1/-1;"><strong>Reason:</strong> ${intel.reclassified_reason}</div>` : ""}
         </div>
-        ${badges.length > 0 ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">${badges.join('')}</div>` : ''}
+        ${badges.length > 0 ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">${badges.join("")}</div>` : ""}
       </div>
     `;
   }
@@ -912,7 +912,7 @@ function renderEdgeCases() {
   ).slice(0, 25);
 
   const speculation = processedComplaints.filter((c) =>
-    c.flags?.speculation || c.intelligence?.is_speculation || c.intelligence?.temporal_tag === 'future'
+    c.flags?.speculation || c.intelligence?.is_speculation || c.intelligence?.temporal_tag === "future"
   ).slice(0, 25);
 
   const mismatches = processedComplaints.filter((c) =>
@@ -920,7 +920,7 @@ function renderEdgeCases() {
     c.intelligence?.category_mismatch ||
     c.intelligence?.ai_reclassified ||
     c.intelligence?.ai_downgraded ||
-    (c.intelligence?.confidence && c.intelligence.confidence < 0.4 && c.category !== 'Others')
+    (c.intelligence?.confidence && c.intelligence.confidence < 0.4 && c.category !== "Others")
   ).slice(0, 25);
 
   const alerts = processedComplaints.filter((c) =>
@@ -947,7 +947,7 @@ function renderEdgeCases() {
     ? Math.round((totalEdgeCases / processedComplaints.length) * 100)
     : 0;
   const rateEl = document.getElementById("edgeCaseRate");
-  if (rateEl) rateEl.textContent = edgeCaseRate + "%";
+  if (rateEl) rateEl.textContent = `${edgeCaseRate  }%`;
 
   const renderList = (id, items, type) => {
     const el = document.getElementById(id);
@@ -961,19 +961,19 @@ function renderEdgeCases() {
     el.innerHTML = items
       .map((c) => {
         // Build badge based on type
-        let badge = '';
-        let detail = '';
-        if (type === 'mismatch' && c.intelligence) {
+        let badge = "";
+        let detail = "";
+        if (type === "mismatch" && c.intelligence) {
           if (c.intelligence.ai_reclassified) {
             badge = `<span class="badge badge-warning" style="font-size:10px;">AI Reclassified</span>`;
-            detail = c.intelligence.original_category ? `From: ${c.intelligence.original_category}` : '';
+            detail = c.intelligence.original_category ? `From: ${c.intelligence.original_category}` : "";
           } else if (c.intelligence.ai_downgraded) {
             badge = `<span class="badge badge-danger" style="font-size:10px;">AI Downgraded</span>`;
-            detail = c.intelligence.reclassified_reason || '';
+            detail = c.intelligence.reclassified_reason || "";
           } else if (c.intelligence.confidence < 0.4) {
             badge = `<span class="badge badge-info" style="font-size:10px;">Low Confidence: ${Math.round(c.intelligence.confidence * 100)}%</span>`;
           }
-        } else if (type === 'speculation' && c.intelligence?.temporal_tag) {
+        } else if (type === "speculation" && c.intelligence?.temporal_tag) {
           badge = `<span class="badge badge-info" style="font-size:10px;">Temporal: ${c.intelligence.temporal_tag}</span>`;
         }
 
@@ -982,8 +982,8 @@ function renderEdgeCases() {
             <span style="font-weight:700;font-size:13px;">${safeText(c.subcategory || c.category)}</span>
             ${badge}
           </div>
-          <div style="color:var(--gray-600);font-size:12px;line-height:1.4;">${safeText(c.description).slice(0, 100)}${c.description?.length > 100 ? '...' : ''}</div>
-          ${detail ? `<div style="color:var(--gray-500);font-size:11px;margin-top:4px;font-style:italic;">${detail}</div>` : ''}
+          <div style="color:var(--gray-600);font-size:12px;line-height:1.4;">${safeText(c.description).slice(0, 100)}${c.description?.length > 100 ? "..." : ""}</div>
+          ${detail ? `<div style="color:var(--gray-500);font-size:11px;margin-top:4px;font-style:italic;">${detail}</div>` : ""}
         </div>`;
       })
       .join("");
@@ -997,10 +997,10 @@ function renderEdgeCases() {
     });
   };
 
-  renderList("metaphorList", metaphors, 'metaphor');
-  renderList("speculationList", speculation, 'speculation');
-  renderList("mismatchList", mismatches, 'mismatch');
-  renderList("alertList", alerts, 'alert');
+  renderList("metaphorList", metaphors, "metaphor");
+  renderList("speculationList", speculation, "speculation");
+  renderList("mismatchList", mismatches, "mismatch");
+  renderList("alertList", alerts, "alert");
 }
 
 function applyFilters() {
@@ -1169,7 +1169,7 @@ function setupListeners() {
       document.getElementById(tabId)?.classList.add("active");
 
       // Auto-render logic for specific tabs
-      if (tabId === 'tab-smart-detection' || tabId === 'edge-cases') {
+      if (tabId === "tab-smart-detection" || tabId === "edge-cases") {
         renderEdgeCases();
         renderEdgeCasesCards();  // Also render card layout if available
       }
@@ -1186,7 +1186,7 @@ function setupListeners() {
   // Note: This is for the card-based layout targeting 'edge-cases-list' element
   // The main renderEdgeCases function (defined earlier) handles the list-based layout
   function renderEdgeCasesCards() {
-    const list = document.getElementById('edge-cases-list');
+    const list = document.getElementById("edge-cases-list");
 
     if (!list) return;
 
@@ -1221,25 +1221,25 @@ function setupListeners() {
       return `
         <div class="edge-case-card" data-id="${c.id}" style="cursor:pointer;">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                <span class="badge ${mismatch ? 'badge-warning' : 'badge-primary'}">
+                <span class="badge ${mismatch ? "badge-warning" : "badge-primary"}">
                     ${c.category}
                 </span>
                 <span style="font-size:12px; color:var(--gray-500);">${new Date(c.timestamp).toLocaleDateString()}</span>
             </div>
-            <p style="margin:0 0 10px; font-size:14px; line-height:1.5;">"${safeText(c.original_text || c.description).slice(0, 120)}${(c.original_text || c.description)?.length > 120 ? '...' : ''}"</p>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.5;">"${safeText(c.original_text || c.description).slice(0, 120)}${(c.original_text || c.description)?.length > 120 ? "..." : ""}"</p>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                ${hasMetaphor ? '<span class="badge badge-info">Metaphor</span>' : ''}
-                ${isSpeculation ? '<span class="badge badge-warning">Speculation</span>' : ''}
-                ${mismatch ? '<span class="badge badge-danger">Mismatch</span>' : ''}
-                ${intel.confidence && intel.confidence < 0.5 ? `<span class="badge badge-secondary">Low Conf: ${Math.round(intel.confidence * 100)}%</span>` : ''}
+                ${hasMetaphor ? '<span class="badge badge-info">Metaphor</span>' : ""}
+                ${isSpeculation ? '<span class="badge badge-warning">Speculation</span>' : ""}
+                ${mismatch ? '<span class="badge badge-danger">Mismatch</span>' : ""}
+                ${intel.confidence && intel.confidence < 0.5 ? `<span class="badge badge-secondary">Low Conf: ${Math.round(intel.confidence * 100)}%</span>` : ""}
             </div>
         </div>
-    `}).join('');
+    `;}).join("");
 
     // Add click handlers
-    list.querySelectorAll('.edge-case-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const id = card.getAttribute('data-id');
+    list.querySelectorAll(".edge-case-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const id = card.getAttribute("data-id");
         const found = processedComplaints.find(c => safeText(c.id) === safeText(id));
         if (found) openModal(found);
       });
@@ -1261,7 +1261,7 @@ function setupListeners() {
       initialSection.classList.add("active");
 
       // Auto-render if initial load is edge cases/smart detection
-      if (initialTab === 'tab-smart-detection' || initialTab === 'edge-cases') {
+      if (initialTab === "tab-smart-detection" || initialTab === "edge-cases") {
         renderEdgeCases();
         renderEdgeCasesCards();
       }
@@ -1372,7 +1372,7 @@ async function queueLowConfidenceForReview(complaints) {
     const intel = c.intelligence || {};
     const conf = intel.confidence || c.nlp?.confidence || 0.5;
     const triage = Number(c.triage_score ?? c.triage?.score ?? 0);
-    const isOthers = c.category === 'Others' || c.subcategory === 'Others';
+    const isOthers = c.category === "Others" || c.subcategory === "Others";
     const keywords = Array.isArray(c.keywords) ? c.keywords : Array.isArray(c.nlp?.keywords) ? c.nlp.keywords : [];
     const hasKeywords = (intel.nlp_keywords?.length > 0) || (keywords.length > 0);
     const noKeywords = !hasKeywords;
@@ -1405,7 +1405,7 @@ async function queueLowConfidenceForReview(complaints) {
   console.log(`[HITL] Filter result: ${lowConfidenceItems.length} low-confidence out of ${complaints.length} total`);
 
   if (lowConfidenceItems.length === 0) {
-    console.log('[HITL] No low-confidence items to queue');
+    console.log("[HITL] No low-confidence items to queue");
     return { queued: 0 };
   }
 
@@ -1420,7 +1420,7 @@ async function queueLowConfidenceForReview(complaints) {
       detected_category: c.category,
       detected_subcategory: c.subcategory,
       confidence: intel.confidence || c.nlp?.confidence || 0.5,
-      method: intel.override_type || (intel.nlp_keywords?.length ? 'RULE_BASED' : 'FALLBACK'),
+      method: intel.override_type || (intel.nlp_keywords?.length ? "RULE_BASED" : "FALLBACK"),
       matched_term: intel.nlp_keywords?.[0] || null
     };
   });
@@ -1437,10 +1437,10 @@ async function queueLowConfidenceForReview(complaints) {
 
   // Use the API to queue items (handles deduplication server-side)
   try {
-    const response = await fetch('/api/nlp/pending-reviews/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+    const response = await fetch("/api/nlp/pending-reviews/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: jsonBody
     });
 
@@ -1451,12 +1451,12 @@ async function queueLowConfidenceForReview(complaints) {
     if (response.ok) {
       console.log(`[HITL] ✅ Queued ${result.queued || 0} items for review (${result.skipped || 0} duplicates skipped)`);
       return result;
-    } else {
-      console.warn('[HITL] Batch queue failed:', response.status, result);
-      return { queued: 0, error: response.status };
     }
+    console.warn("[HITL] Batch queue failed:", response.status, result);
+    return { queued: 0, error: response.status };
+
   } catch (err) {
-    console.warn('[HITL] Could not queue items:', err.message);
+    console.warn("[HITL] Could not queue items:", err.message);
     return { queued: 0, error: err.message };
   }
 }
@@ -1484,7 +1484,7 @@ function initStream() {
       publishAnalyticsState();
     };
   } catch {
-    return;
+
   }
 }
 
@@ -1513,7 +1513,7 @@ function populateCategoryFilter() {
 
 async function init() {
   try {
-    const isBrainHot = sessionStorage.getItem('brain_initialized');
+    const isBrainHot = sessionStorage.getItem("brain_initialized");
 
     // Only show loading if not hot start
     if (!isBrainHot) {
@@ -1521,7 +1521,7 @@ async function init() {
     }
 
     // Load NLP Dictionaries first
-    if (typeof window.loadNLPDictionaries === 'function') {
+    if (typeof window.loadNLPDictionaries === "function") {
 
       if (!isBrainHot) {
         setLoading(true, "Initializing Brain...", "Loading NLP Dictionaries...");
@@ -1529,10 +1529,10 @@ async function init() {
 
       try {
         await window.loadNLPDictionaries();
-        console.log('[ANALYTICS] NLP Dictionaries loaded successfully');
-        sessionStorage.setItem('brain_initialized', 'true');
+        console.log("[ANALYTICS] NLP Dictionaries loaded successfully");
+        sessionStorage.setItem("brain_initialized", "true");
       } catch (err) {
-        console.error('[ANALYTICS] Failed to load NLP Dictionaries:', err);
+        console.error("[ANALYTICS] Failed to load NLP Dictionaries:", err);
       }
     }
 

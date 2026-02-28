@@ -187,7 +187,7 @@ class ComplaintRepository {
 
     // Check if any complaints need resolution
     const needsResolution = complaints.some(
-      c => uuidRegex.test(c.category || '') || uuidRegex.test(c.subcategory || '')
+      c => uuidRegex.test(c.category || "") || uuidRegex.test(c.subcategory || "")
     );
     if (!needsResolution) return complaints;
 
@@ -213,11 +213,11 @@ class ComplaintRepository {
     // Resolve UUIDs to names
     return complaints.map(complaint => {
       const resolved = { ...complaint };
-      if (uuidRegex.test(resolved.category || '')) {
+      if (uuidRegex.test(resolved.category || "")) {
         resolved.category_name = this._categoryMap.get(resolved.category) || resolved.category;
         resolved.category = resolved.category_name;
       }
-      if (uuidRegex.test(resolved.subcategory || '')) {
+      if (uuidRegex.test(resolved.subcategory || "")) {
         resolved.subcategory_name = this._subcategoryMap.get(resolved.subcategory) || resolved.subcategory;
         resolved.subcategory = resolved.subcategory_name;
       }
@@ -230,7 +230,7 @@ class ComplaintRepository {
     const { page = 1, limit = 20, status, type, department, search, startDate, endDate } = options;
     const offset = (page - 1) * limit;
 
-    console.log('[DEBUG-REPO] findAll called with options:', JSON.stringify(options));
+    console.log("[DEBUG-REPO] findAll called with options:", JSON.stringify(options));
 
     // Use service client to bypass RLS recursion on complaints table
     const client = Database.getServiceClient();
@@ -244,18 +244,18 @@ class ComplaintRepository {
     if (startDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
-      query = query.gte('submitted_at', start.toISOString());
+      query = query.gte("submitted_at", start.toISOString());
     }
 
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      query = query.lte('submitted_at', end.toISOString());
+      query = query.lte("submitted_at", end.toISOString());
     }
 
     if (status) {
-      if (status === 'pending review') {
-        const activeStatuses = ['submitted', 'assigned', 'verified', 'under_review', 'action_taken', 'in_progress', 'pending_approval'];
+      if (status === "pending review") {
+        const activeStatuses = ["submitted", "assigned", "verified", "under_review", "action_taken", "in_progress", "pending_approval"];
         query = query.in("workflow_status", activeStatuses);
       } else {
         query = query.eq("workflow_status", status);
@@ -522,42 +522,42 @@ class ComplaintRepository {
       } = filters;
 
       let query = client
-        .from('complaints')
-        .select('id, latitude, longitude, priority, workflow_status, confirmation_status, category, subcategory, department_r, submitted_at')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null);
+        .from("complaints")
+        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category, subcategory, department_r, submitted_at")
+        .not("latitude", "is", null)
+        .not("longitude", "is", null);
 
       // Exclude resolved/cancelled unless includeResolved is true
       if (!includeResolved) {
-        query = query.not('workflow_status', 'in', '("completed","cancelled")');
+        query = query.not("workflow_status", "in", '("completed","cancelled")');
       }
 
       if (status && status.length > 0) {
-        query = query.in('workflow_status', status);
+        query = query.in("workflow_status", status);
       }
 
       if (confirmationStatus && confirmationStatus.length > 0) {
-        query = query.in('confirmation_status', confirmationStatus);
+        query = query.in("confirmation_status", confirmationStatus);
       }
 
       if (category && category.length > 0) {
-        query = query.in('category', category);
+        query = query.in("category", category);
       }
 
       if (subcategory) {
-        query = query.eq('subcategory', subcategory);
+        query = query.eq("subcategory", subcategory);
       }
 
       if (startDate) {
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
-        query = query.gte('submitted_at', start.toISOString());
+        query = query.gte("submitted_at", start.toISOString());
       }
 
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        query = query.lte('submitted_at', end.toISOString());
+        query = query.lte("submitted_at", end.toISOString());
       }
 
       const { data, error } = await query;
@@ -578,10 +578,10 @@ class ComplaintRepository {
         id: c.id,
         lat: parseFloat(c.latitude),
         lng: parseFloat(c.longitude),
-        priority: c.priority || 'medium',
-        status: c.workflow_status || 'new',
-        workflow_status: c.workflow_status || 'new',
-        confirmation_status: c.confirmation_status || 'pending',
+        priority: c.priority || "medium",
+        status: c.workflow_status || "new",
+        workflow_status: c.workflow_status || "new",
+        confirmation_status: c.confirmation_status || "pending",
         category: c.category || null,
         subcategory: c.subcategory || null,
         department_r: c.department_r || [],
@@ -589,7 +589,7 @@ class ComplaintRepository {
         submitted_at: c.submitted_at,
       }));
     } catch (error) {
-      console.error('[COMPLAINT-REPO] findLocationsSlim error:', error.message);
+      console.error("[COMPLAINT-REPO] findLocationsSlim error:", error.message);
       throw error;
     }
   }

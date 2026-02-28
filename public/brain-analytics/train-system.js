@@ -10,7 +10,7 @@ let trainedToday = 0;
 let trainingHistory = [];
 let currentTrainingItem = null;
 
-let trainedComplaintIds = new Set(JSON.parse(localStorage.getItem("DRIMS_trained_ids") || "[]"));
+const trainedComplaintIds = new Set(JSON.parse(localStorage.getItem("DRIMS_trained_ids") || "[]"));
 
 function saveTrainedIds() {
   localStorage.setItem("DRIMS_trained_ids", JSON.stringify([...trainedComplaintIds]));
@@ -65,7 +65,7 @@ function populateCategoryDropdown() {
   console.log("[TRAIN] Pre-populating categories:", categories);
 
   categories.forEach(cat => {
-    const opt = document.createElement('option');
+    const opt = document.createElement("option");
     opt.value = cat;
     opt.textContent = cat;
     catSelect.appendChild(opt);
@@ -115,7 +115,7 @@ async function ensureHITLTaxonomyLoaded() {
   // Fallback
   if (!taxonomy?.categories) {
     try {
-      const res = await fetch('/categories_subcategories.json');
+      const res = await fetch("/categories_subcategories.json");
       if (res.ok) {
         taxonomy = await res.json();
         console.log("[TRAIN] Taxonomy loaded via fallback fetch");
@@ -192,10 +192,10 @@ async function loadLowConfidenceItems() {
         // subcategory: safeText(item.detected_subcategory), // Removed
         confidence: item.confidence || 0,
         created_at: item.created_at,
-        status: item.status || 'pending',
-        method: item.method || 'UNKNOWN',
+        status: item.status || "pending",
+        method: item.method || "UNKNOWN",
         matched_term: item.matched_term,
-        source: 'database' // Track source for UI differentiation
+        source: "database" // Track source for UI differentiation
       })).filter(item => !trainedComplaintIds.has(item.id));
 
       pendingReviews.push(...dbItems);
@@ -249,16 +249,16 @@ async function loadLowConfidenceItems() {
       // subcategory: safeText(item.subcategory), // Removed
       confidence: intel.confidence || 0.5,
       created_at: item.timestamp,
-      status: 'pending',
+      status: "pending",
       is_speculation: Boolean(intel.is_speculation),
       is_metaphor: Boolean(intel.metaphor_score && intel.metaphor_score > 0.5),
       temporal_tag: intel.temporal_tag || null,
-      source: 'memory' // Track source
+      source: "memory" // Track source
     };
   });
 
   pendingReviews.push(...memoryItems);
-  console.log(`[TRAIN] Total pending reviews: ${pendingReviews.length} (${pendingReviews.filter(p => p.source === 'database').length} from DB, ${pendingReviews.filter(p => p.source === 'memory').length} from memory)`);
+  console.log(`[TRAIN] Total pending reviews: ${pendingReviews.length} (${pendingReviews.filter(p => p.source === "database").length} from DB, ${pendingReviews.filter(p => p.source === "memory").length} from memory)`);
 
   updateHITLStats();
   renderTrainingList();
@@ -289,10 +289,10 @@ function renderTrainingList() {
 
   listContainer.innerHTML = pendingReviews.map(c => {
     // Build NLP context badges
-    let nlpBadges = '';
+    let nlpBadges = "";
 
     // Source badge (database vs memory)
-    if (c.source === 'database') {
+    if (c.source === "database") {
       nlpBadges += '<span class="badge badge-primary" style="font-size:9px;margin-right:4px;" title="From auto-queue">DB</span>';
     }
     if (c.method) {
@@ -313,7 +313,7 @@ function renderTrainingList() {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                 <span style="font-weight:600; font-size:13px;">${c.id.substring(0, 8)}...</span>
             </div>
-            ${nlpBadges ? `<div style="margin-bottom:4px;">${nlpBadges}</div>` : ''}
+            ${nlpBadges ? `<div style="margin-bottom:4px;">${nlpBadges}</div>` : ""}
             <div style="font-size:12px; color:var(--gray-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                 ${c.text}
             </div>
@@ -321,7 +321,7 @@ function renderTrainingList() {
                 Predicted: <strong style="color:var(--primary);">${c.ai_suggestion}</strong>
             </div>
         </div>
-    `}).join('');
+    `;}).join("");
 
   // Auto-select first
   if (pendingReviews.length > 0 && !currentTrainingItem) {
@@ -330,9 +330,9 @@ function renderTrainingList() {
 }
 
 function getConfidenceBadge(score) {
-  if (score >= 0.8) return 'badge-success';
-  if (score >= 0.5) return 'badge-warning';
-  return 'badge-danger';
+  if (score >= 0.8) return "badge-success";
+  if (score >= 0.5) return "badge-warning";
+  return "badge-danger";
 }
 
 // Exposed to global scope for onclick
@@ -343,32 +343,32 @@ window.selectTrainingItem = function (id) {
   currentTrainingItem = item;
 
   // UI Updates
-  document.querySelectorAll('.train-item').forEach(el => el.classList.remove('active'));
-  document.getElementById(`train-item-${id}`)?.classList.add('active');
+  document.querySelectorAll(".train-item").forEach(el => el.classList.remove("active"));
+  document.getElementById(`train-item-${id}`)?.classList.add("active");
 
   // Populate Form
-  const badge = document.getElementById('trainingStatusBadge');
+  const badge = document.getElementById("trainingStatusBadge");
   if (badge) {
     badge.textContent = "Reviewing";
     badge.className = "badge badge-primary";
   }
 
-  document.getElementById('lblOriginalText').textContent = item.text;
-  document.getElementById('lblSystemGuess').textContent = item.ai_suggestion;
+  document.getElementById("lblOriginalText").textContent = item.text;
+  document.getElementById("lblSystemGuess").textContent = item.ai_suggestion;
 
   // Enable Form
-  const keyInput = document.getElementById('inputTrainKeyword');
+  const keyInput = document.getElementById("inputTrainKeyword");
   keyInput.disabled = false;
   keyInput.value = "";
 
   // Populate and select the AI suggestion in the category dropdown
-  const catSelect = document.getElementById('selectTrainCategory');
+  const catSelect = document.getElementById("selectTrainCategory");
   catSelect.innerHTML = '<option value="">-- Select Category --</option>';
 
   // Add all categories from taxonomy
   const categories = Object.keys(CATEGORY_TAXONOMY).sort();
   categories.forEach(cat => {
-    const opt = document.createElement('option');
+    const opt = document.createElement("option");
     opt.value = cat;
     opt.textContent = cat;
     catSelect.appendChild(opt);
@@ -386,14 +386,14 @@ window.selectTrainingItem = function (id) {
   // updateSubcategories(); // Removed
 
   // Enable Buttons
-  document.getElementById('btnSaveTrain').disabled = false;
-  document.getElementById('btnSkipTrain').disabled = false;
+  document.getElementById("btnSaveTrain").disabled = false;
+  document.getElementById("btnSkipTrain").disabled = false;
 };
 
 function updateSubcategories() {
   console.log("[TRAIN] updateSubcategories called");
-  const catSelect = document.getElementById('selectTrainCategory');
-  const subSelect = document.getElementById('selectTrainSubcategory');
+  const catSelect = document.getElementById("selectTrainCategory");
+  const subSelect = document.getElementById("selectTrainSubcategory");
 
   if (!catSelect || !subSelect) {
     console.warn("[TRAIN] Select elements not found");
@@ -412,7 +412,7 @@ function updateSubcategories() {
     if (subs.length > 0) {
       subSelect.disabled = false;
       subs.forEach(sub => {
-        const opt = document.createElement('option');
+        const opt = document.createElement("option");
         opt.value = sub;
         opt.textContent = sub;
         if (currentTrainingItem && sub === currentTrainingItem.subcategory) {
@@ -427,8 +427,8 @@ function updateSubcategories() {
 async function saveTrainingResult() {
   if (!currentTrainingItem) return;
 
-  const term = document.getElementById('inputTrainKeyword').value.trim();
-  const category = document.getElementById('selectTrainCategory').value;
+  const term = document.getElementById("inputTrainKeyword").value.trim();
+  const category = document.getElementById("selectTrainCategory").value;
   // const subcategory = document.getElementById('selectTrainSubcategory').value; // Removed
 
   if (!term || !category) {
@@ -440,23 +440,23 @@ async function saveTrainingResult() {
     let autoResolved = 0;
 
     // If item is from database queue, use the resolve endpoint
-    if (currentTrainingItem.source === 'database') {
+    if (currentTrainingItem.source === "database") {
       const res = await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/resolve`, {
         keyword: term,
-        category: category,
+        category,
         // subcategory: subcategory // Removed
       });
 
       if (!res?.success) throw new Error(res?.error || "Failed to resolve");
       autoResolved = res.autoResolved || 0;
-      console.log("[TRAIN] Resolved database queue item:", currentTrainingItem.id, autoResolved > 0 ? `(+${autoResolved} auto-resolved)` : '');
+      console.log("[TRAIN] Resolved database queue item:", currentTrainingItem.id, autoResolved > 0 ? `(+${autoResolved} auto-resolved)` : "");
     } else {
       // Legacy behavior: direct keyword add for memory items
       const res = await apiClient.post("/api/nlp/keywords", {
-        term: term,
-        category: category,
+        term,
+        category,
         // subcategory: subcategory, // Removed
-        language: 'all',
+        language: "all",
         confidence: 1.0
       });
 
@@ -478,7 +478,7 @@ async function saveTrainingResult() {
     }
 
     // Stats
-    addTrainingHistory("Trained keyword", `"${term}" → ${category}${autoResolved > 0 ? ` (+${autoResolved} auto)` : ''}`);
+    addTrainingHistory("Trained keyword", `"${term}" → ${category}${autoResolved > 0 ? ` (+${autoResolved} auto)` : ""}`);
     updateHITLStats();
     renderTrainingHistory();
 
@@ -487,7 +487,7 @@ async function saveTrainingResult() {
     renderTrainingList();
 
     // Trigger Engine Update
-    if (typeof window.loadNLPDictionaries === 'function') {
+    if (typeof window.loadNLPDictionaries === "function") {
       await window.loadNLPDictionaries(true);
       if (window.DRIMSBrainAnalytics?.reprocessAll) {
         window.DRIMSBrainAnalytics.reprocessAll();
@@ -497,7 +497,7 @@ async function saveTrainingResult() {
     showMessage("success", "Training saved successfully!");
 
   } catch (err) {
-    showMessage("error", "Error saving: " + err.message);
+    showMessage("error", `Error saving: ${  err.message}`);
   }
 }
 
@@ -505,7 +505,7 @@ async function skipCurrentItem() {
   if (!currentTrainingItem) return;
 
   // If item is from database queue, use dismiss endpoint
-  if (currentTrainingItem.source === 'database') {
+  if (currentTrainingItem.source === "database") {
     try {
       await apiClient.post(`/api/nlp/pending-reviews/${currentTrainingItem.id}/dismiss`);
       console.log("[TRAIN] Dismissed database queue item:", currentTrainingItem.id);
@@ -524,38 +524,38 @@ async function skipCurrentItem() {
 
 function resetForm() {
   currentTrainingItem = null;
-  const badge = document.getElementById('trainingStatusBadge');
+  const badge = document.getElementById("trainingStatusBadge");
   if (badge) {
     badge.textContent = "No Item Selected";
     badge.className = "badge badge-noise";
   }
 
-  document.getElementById('lblOriginalText').textContent = "Select an item from the left to view details.";
-  document.getElementById('lblSystemGuess').textContent = "-";
+  document.getElementById("lblOriginalText").textContent = "Select an item from the left to view details.";
+  document.getElementById("lblSystemGuess").textContent = "-";
 
-  const keyInput = document.getElementById('inputTrainKeyword');
+  const keyInput = document.getElementById("inputTrainKeyword");
   if (keyInput) {
     keyInput.value = "";
     keyInput.disabled = true;
   }
 
-  const catSelect = document.getElementById('selectTrainCategory');
+  const catSelect = document.getElementById("selectTrainCategory");
   if (catSelect) {
     // Keep categories populated but reset selection and disable
     catSelect.value = "";
     catSelect.disabled = true;
   }
 
-  const subSelect = document.getElementById('selectTrainSubcategory');
+  const subSelect = document.getElementById("selectTrainSubcategory");
   if (subSelect) {
     // subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
     subSelect.disabled = true;
   }
 
-  const saveBtn = document.getElementById('btnSaveTrain');
+  const saveBtn = document.getElementById("btnSaveTrain");
   if (saveBtn) saveBtn.disabled = true;
 
-  const skipBtn = document.getElementById('btnSkipTrain');
+  const skipBtn = document.getElementById("btnSkipTrain");
   if (skipBtn) skipBtn.disabled = true;
 }
 
@@ -585,12 +585,12 @@ function updateHITLStats() {
     }
   }
   const avgConf = confCount > 0 ? Math.round((totalConf / confCount) * 100) : 0;
-  set("avgConfidenceScore", avgConf > 0 ? avgConf + "%" : "-");
+  set("avgConfidenceScore", avgConf > 0 ? `${avgConf  }%` : "-");
 
   // Model accuracy estimation (based on training history vs total processed)
   const totalTrained = trainingHistory.length;
   const accuracy = totalTrained > 10 ? Math.min(95, 70 + Math.round(totalTrained / 5)) : "-";
-  set("modelAccuracy", accuracy === "-" ? accuracy : accuracy + "%");
+  set("modelAccuracy", accuracy === "-" ? accuracy : `${accuracy  }%`);
 }
 
 function addTrainingHistory(title, detail) {

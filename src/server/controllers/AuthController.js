@@ -166,7 +166,7 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: `${requiredFields.missingFields.join(", ")} ${requiredFields.missingFields.length === 1 ? "is" : "are"
-            } required`,
+          } required`,
         });
       }
 
@@ -186,7 +186,7 @@ class AuthController {
         });
       if (authError) {
         // Log detailed error server-side only
-        Logger.log('LOGIN', 'Authentication failed:', {
+        Logger.log("LOGIN", "Authentication failed:", {
           email: "[REDACTED]",
           error: authError.message,
           code: authError.code
@@ -204,7 +204,7 @@ class AuthController {
       const combinedMetadata = extractUserMetadata(authData.user);
 
 
-      Logger.log('LOGIN_DEBUG', `User: ${email}, Role: ${combinedMetadata.role}, SimpleMode: ${process.env.SIMPLE_WORKFLOW_MODE}`);
+      Logger.log("LOGIN_DEBUG", `User: ${email}, Role: ${combinedMetadata.role}, SimpleMode: ${process.env.SIMPLE_WORKFLOW_MODE}`);
 
       // RESTRICT ROLES based on Workflow Mode
       let allowedRoles = ["citizen", "super-admin", "lgu", "complaint-coordinator", "lgu-officer", "lgu-admin", "lgu-hr"];
@@ -217,10 +217,10 @@ class AuthController {
       }
 
       const userRole = combinedMetadata.role || "citizen";
-      Logger.log('LOGIN_DEBUG', `Checking role '${userRole}' against allowed:`, allowedRoles);
+      Logger.log("LOGIN_DEBUG", `Checking role '${userRole}' against allowed:`, allowedRoles);
 
       if (!allowedRoles.includes(userRole)) {
-        Logger.log('LOGIN', `Blocked login attempt for restricted role: ${userRole} (${email})`);
+        Logger.log("LOGIN", `Blocked login attempt for restricted role: ${userRole} (${email})`);
 
         // Return generic error to prevent role enumeration, same as invalid password
         return res.status(401).json({
@@ -255,14 +255,14 @@ class AuthController {
           });
         }
         // Ban has expired, automatically unban (handled by UserManagementService on next check)
-        Logger.log('LOGIN', "Ban expired for user:", userId);
+        Logger.log("LOGIN", "Ban expired for user:", userId);
       }
 
       // Build user object from metadata
       const userName =
         combinedMetadata.name ||
         `${combinedMetadata.first_name || ""} ${combinedMetadata.last_name || ""
-          }`.trim() ||
+        }`.trim() ||
         authData.user.email?.split("@")[0] ||
         "Unknown User";
 
@@ -353,7 +353,7 @@ class AuthController {
       try {
         await UserService.trackLogin(userId, ipAddress, userAgent);
       } catch (trackError) {
-        Logger.log('LOGIN', "⚠️ Login tracking failed:", trackError.message);
+        Logger.log("LOGIN", "⚠️ Login tracking failed:", trackError.message);
       }
       // Set session cookie with proper expiration
       const cookieOptions = getCookieOptions(remember);
@@ -365,7 +365,7 @@ class AuthController {
 
       // Trigger post-login initialization (async - doesn't block response)
       LoginInitializationService.onUserLogin(user).catch(err => {
-        Logger.log('LOGIN', "Post-login initialization warning:", err.message);
+        Logger.log("LOGIN", "Post-login initialization warning:", err.message);
       });
 
       // SECURITY: Access token is set in HttpOnly cookie for server-side use
@@ -381,8 +381,8 @@ class AuthController {
         message: "Login successful",
       });
     } catch (error) {
-      Logger.log('LOGIN', "💥 Login error:", error.message);
-      Logger.log('LOGIN', "Error stack:", error.stack);
+      Logger.log("LOGIN", "💥 Login error:", error.message);
+      Logger.log("LOGIN", "Error stack:", error.stack);
       res.status(500).json({
         success: false,
         error: "Login failed. Please try again.",

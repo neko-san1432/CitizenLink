@@ -64,8 +64,7 @@ router.get(
         : Array.isArray(result?.data)
           ? result.data
           : [];
-      let complaints = rows.map(mapBodyRowToBrainComplaint);
-
+      const complaints = rows.map(mapBodyRowToBrainComplaint);
 
 
       res.json({

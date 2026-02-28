@@ -179,7 +179,7 @@ class HeatmapVisualization {
     this.clusterLayer = null;
 
     // Initialize Clustering Engine (Adaptive DBSCAN)
-    if (typeof AdaptiveDBSCAN !== 'undefined') {
+    if (typeof AdaptiveDBSCAN !== "undefined") {
       this.dbscan = new AdaptiveDBSCAN();
       console.log("HeatmapVisualization: Using Adaptive DBSCAN++");
     } else {
@@ -188,7 +188,7 @@ class HeatmapVisualization {
     }
 
     // Initialize Complaint Intelligence (NLP/Triage)
-    if (typeof ComplaintIntelligence !== 'undefined') {
+    if (typeof ComplaintIntelligence !== "undefined") {
       this.intelligence = new ComplaintIntelligence();
       console.log("HeatmapVisualization: Context-Aware Intelligence v3.6 active");
     }
@@ -1531,18 +1531,18 @@ class HeatmapVisualization {
     return `
       <div class="complaint-popup-content" style="padding: 8px; font-size: 12px; line-height: 1.3;">
         <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold;">${complaint.title
-      }</h4>
+}</h4>
         <div class="complaint-details" style="margin: 0; padding: 0;">
           <p style="margin: 2px 0; font-size: 11px;"><strong>Type:</strong> ${complaint.type
-      }</p>
+}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Status:</strong> <span class="status-${complaint.status.replace(
-        " ",
-        "-"
-      )}">${complaint.status}</span></p>
+    " ",
+    "-"
+  )}">${complaint.status}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Priority:</strong> <span class="priority-${priorityClass}">${complaint.priority
-      }</span></p>
+}</span></p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Location:</strong> ${complaint.location
-      }</p>
+}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Submitted:</strong> ${submittedDate}</p>
           <p style="margin: 2px 0; font-size: 11px;"><strong>Assigned Offices:</strong> ${assignedOffices}</p>
         </div>
@@ -1579,7 +1579,7 @@ class HeatmapVisualization {
         <div class="complaint-detail-popup" style="padding: 8px; font-size: 12px; line-height: 1.3; max-width: 280px;">
           <div class="popup-header" style="margin: 0 0 6px 0; padding: 0;">
             <h3 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">${complaint.title
-        }</h3>
+}</h3>
             <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
               <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
               <span class="badge status-${statusClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.status.toUpperCase()}</span>
@@ -1594,7 +1594,7 @@ class HeatmapVisualization {
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Location:</span>
                 <span class="value" style="text-align: right; max-width: 60%;">${complaint.location
-        }</span>
+}</span>
               </div>
               <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
                 <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1610,24 +1610,24 @@ class HeatmapVisualization {
               ${complaint.intelligence ? `
               <div class="info-row" style="margin: 6px 0 2px 0; padding-top: 4px; border-top: 1px dashed #eee;">
                 <span class="label" style="font-weight: bold; color: #666;">AI Confidence:</span>
-                <span class="value" style="font-weight: bold; color: ${complaint.intelligence.isCritical ? '#dc3545' : '#28a745'}">
+                <span class="value" style="font-weight: bold; color: ${complaint.intelligence.isCritical ? "#dc3545" : "#28a745"}">
                   ${Math.round(complaint.intelligence.urgencyScore)}/100 
-                  ${complaint.intelligence.veracityLabel === 'GEO-VERIFIED' ? '<i class="fas fa-check-circle" title="Location Verified" style="color:#007bff; margin-left:4px;"></i>' : ''}
+                  ${complaint.intelligence.veracityLabel === "GEO-VERIFIED" ? '<i class="fas fa-check-circle" title="Location Verified" style="color:#007bff; margin-left:4px;"></i>' : ""}
                 </span>
               </div>
               ${complaint.intelligence.aiReclassified ? `
               <div class="info-row" style="margin: 2px 0; font-size: 10px; color: #e67e22;">
-                <i class="fas fa-magic"></i> Auto-categorized from <em>${complaint.original_category || 'Others'}</em>
-              </div>` : ''}
+                <i class="fas fa-magic"></i> Auto-categorized from <em>${complaint.original_category || "Others"}</em>
+              </div>` : ""}
               ${complaint.intelligence.metaphorDetected ? `
               <div class="info-row" style="margin: 2px 0; font-size: 10px; color: #17a2b8;">
                 <i class="fas fa-language"></i> Metaphor detected (lowered urgency)
-              </div>` : ''}
+              </div>` : ""}
               ${complaint.intelligence.geoBoost > 0 ? `
               <div class="info-row" style="margin: 2px 0; font-size: 10px; color: #28a745;">
                 <i class="fas fa-map-marker-alt"></i> +${complaint.intelligence.geoBoost} pts: ${complaint.intelligence.geoReason}
-              </div>` : ''}
-              ` : ''}
+              </div>` : ""}
+              ` : ""}
 
             </div>
             </div>
@@ -1647,9 +1647,9 @@ class HeatmapVisualization {
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
               <h3 style="margin: 0; font-size: 13px; font-weight: bold; flex: 1;">${complaint.title}</h3>
               ${complaint.intelligence && complaint.intelligence.isCritical ?
-        '<span class="badge" style="background: #dc3545; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">CRITICAL</span>' : ''}
+    '<span class="badge" style="background: #dc3545; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">CRITICAL</span>' : ""}
               ${complaint.intelligence && complaint.intelligence.isContextSuppressed ?
-        '<span class="badge" style="background: #6c757d; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">SUPPRESSED</span>' : ''}
+    '<span class="badge" style="background: #6c757d; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">SUPPRESSED</span>' : ""}
             </div>
           <div class="complaint-badges" style="display: flex; gap: 4px; margin: 0;">
             <span class="badge priority-${priorityClass}" style="font-size: 9px; padding: 2px 4px;">${complaint.priority.toUpperCase()}</span>
@@ -1665,7 +1665,7 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Location:</span>
               <span class="value" style="text-align: right; max-width: 60%;">${complaint.location
-      }</span>
+}</span>
             </div>
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Assigned Offices:</span>
@@ -1678,17 +1678,17 @@ class HeatmapVisualization {
             <div class="info-row" style="margin: 2px 0; font-size: 11px; display: flex; justify-content: space-between;">
               <span class="label" style="font-weight: bold;">Days Open:</span>
               <span class="value">${daysSinceSubmission} day${daysSinceSubmission !== 1 ? "s" : ""
-      }</span>
+}</span>
             </div>
           </div>
           <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
             <button class="btn-details" onclick="viewComplaintDetails('${complaint.id
-      }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+}')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📋 Details
             </button>
             <button class="btn-location" onclick="centerOnComplaint(${complaint.lat
-      }, ${complaint.lng
-      })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
+}, ${complaint.lng
+})" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📍 Center
             </button>
           </div>
@@ -1831,8 +1831,8 @@ class HeatmapVisualization {
           const lng = parseFloat(complaint.lng);
           return {
             ...complaint, // Spread properties so AdaptiveDBSCAN can access category, subcategory, etc.
-            lat: lat,
-            lng: lng,
+            lat,
+            lng,
             data: complaint
           };
         });
@@ -1854,7 +1854,7 @@ class HeatmapVisualization {
         // Note: clusteringResult.noise is also available if needed
 
         // Analyze chains if method exists (AdaptiveDBSCAN feature)
-        if (typeof this.dbscan.analyzeCausalChains === 'function') {
+        if (typeof this.dbscan.analyzeCausalChains === "function") {
           this.chainAnalysis = this.dbscan.analyzeCausalChains(clusteringResult);
         } else {
           this.chainAnalysis = [];
@@ -1897,7 +1897,7 @@ class HeatmapVisualization {
         radius: clusterRadius * 1000, // Convert km to meters
         color:
           this.clusterConfig.clusterColors[
-          index % this.clusterConfig.clusterColors.length
+            index % this.clusterConfig.clusterColors.length
           ],
         weight: 2,
         opacity: 0.8,
@@ -1909,9 +1909,9 @@ class HeatmapVisualization {
         icon: L.divIcon({
           html: `<div style="
             background-color: ${this.clusterConfig.clusterColors[
-            index % this.clusterConfig.clusterColors.length
-            ]
-            };
+    index % this.clusterConfig.clusterColors.length
+  ]
+};
             color: white;
             border-radius: 50%;
             width: 40px;
@@ -1992,10 +1992,10 @@ class HeatmapVisualization {
 
     // Get Chain Insight
     const chainInfo = this.chainAnalysis ? this.chainAnalysis[clusterIndex] : null;
-    let chainHtml = '';
+    let chainHtml = "";
 
-    if (chainInfo && (chainInfo.chainType === 'DIRECT_CAUSAL' || chainInfo.chainType === 'TRANSITIVE_CHAIN')) {
-      const badgeColor = '#d63384'; // Pink/Purple for Causal
+    if (chainInfo && (chainInfo.chainType === "DIRECT_CAUSAL" || chainInfo.chainType === "TRANSITIVE_CHAIN")) {
+      const badgeColor = "#d63384"; // Pink/Purple for Causal
 
       chainHtml = `
           <div class="cluster-insight" style="margin-bottom: 10px; padding: 8px; background: rgba(214, 51, 132, 0.1); border-left: 3px solid ${badgeColor}; border-radius: 4px;">
@@ -2017,20 +2017,20 @@ class HeatmapVisualization {
           <h5>Status Distribution:</h5>
           <ul>
             ${Object.entries(statusCounts)
-        .map(([status, count]) => `<li>${status}: ${count}</li>`)
-        .join("")}
+    .map(([status, count]) => `<li>${status}: ${count}</li>`)
+    .join("")}
           </ul>
           <h5>Type Distribution:</h5>
           <ul>
             ${Object.entries(typeCounts)
-        .map(([type, count]) => `<li>${type}: ${count}</li>`)
-        .join("")}
+    .map(([type, count]) => `<li>${type}: ${count}</li>`)
+    .join("")}
           </ul>
           <h5>Priority Distribution:</h5>
           <ul>
             ${Object.entries(priorityCounts)
-        .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
-        .join("")}
+    .map(([priority, count]) => `<li>${priority}: ${count}</li>`)
+    .join("")}
           </ul>
         </div>
       </div>

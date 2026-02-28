@@ -43,7 +43,7 @@ class LguOfficerService {
           id: `direct-${complaint.id}`, // specific ID for direct tasks
           complaint_id: complaint.id,
           assigned_by: null, // System / Direct
-          status: complaint.workflow_status === 'new' ? 'assigned' : (complaint.workflow_status || 'assigned'), // Map 'new' to 'assigned' for officer view
+          status: complaint.workflow_status === "new" ? "assigned" : (complaint.workflow_status || "assigned"), // Map 'new' to 'assigned' for officer view
           notes: null,
           priority: complaint.priority,
           deadline: null,
@@ -53,7 +53,7 @@ class LguOfficerService {
           completed_at: complaint.resolved_at,
           complaint: {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || 'Complaint Details',
+            title: complaint.descriptive_su?.slice(0, 100) || "Complaint Details",
             description: complaint.descriptive_su,
             category: complaint.category,
             subcategory: complaint.subcategory,
@@ -110,7 +110,7 @@ class LguOfficerService {
         completed_at: assignment.completed_at,
         complaint: complaint ? {
           id: complaint.id,
-          title: complaint.descriptive_su?.slice(0, 100) || 'Complaint Details',
+          title: complaint.descriptive_su?.slice(0, 100) || "Complaint Details",
           description: complaint.descriptive_su,
           category: complaint.category,
           subcategory: complaint.subcategory,
@@ -194,7 +194,7 @@ class LguOfficerService {
           completed_at: assignment.completed_at,
           complaint: complaint ? {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || 'Complaint Details',
+            title: complaint.descriptive_su?.slice(0, 100) || "Complaint Details",
             description: complaint.descriptive_su,
             category: complaint.category,
             subcategory: complaint.subcategory,
@@ -359,7 +359,7 @@ class LguOfficerService {
         updatedComplaint.submitted_by,
         "complaint_resolved",
         "Complaint Resolved",
-        `Your complaint "${updatedComplaint.descriptive_su?.slice(0, 100) || 'your complaint'}" has been resolved. Please confirm if you're satisfied with the resolution.`,
+        `Your complaint "${updatedComplaint.descriptive_su?.slice(0, 100) || "your complaint"}" has been resolved. Please confirm if you're satisfied with the resolution.`,
         {
           priority: "success",
           link: `/citizen/complaints/${complaintId}`,
@@ -467,7 +467,7 @@ class LguOfficerService {
     // 1. Prepare data
     const updateData = {
       date: new Date().toISOString(),
-      comment: comment
+      comment
     };
 
     // 2. [TIMELINE] Map status to timeline step key
@@ -489,16 +489,16 @@ class LguOfficerService {
           await this.notificationService.notifyComplaintUpdate(
             updatedComplaint.submitted_by,
             complaintId,
-            updatedComplaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+            updatedComplaint.descriptive_su?.slice(0, 100) || "Your complaint",
             comment
           );
         } else {
           await this.notificationService.notifyComplaintStatusChanged(
             updatedComplaint.submitted_by,
             complaintId,
-            updatedComplaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+            updatedComplaint.descriptive_su?.slice(0, 100) || "Your complaint",
             status,
-            'previous' // Placeholder if old status not easily available here
+            "previous" // Placeholder if old status not easily available here
           );
         }
       } catch (err) {

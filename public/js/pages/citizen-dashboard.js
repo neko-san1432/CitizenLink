@@ -114,10 +114,10 @@ function updateActivity(complaints) {
          </div>
          <div class="flex-1 min-w-0">
            <p class="text-base font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || "Untitled Complaint"}</p>
-           <p class="text-sm text-gray-500 mt-1">${new Date(c.submitted_at || c.created_at).toLocaleDateString()} • <span class="capitalize">${c.category || 'General'}</span></p>
+           <p class="text-sm text-gray-500 mt-1">${new Date(c.submitted_at || c.created_at).toLocaleDateString()} • <span class="capitalize">${c.category || "General"}</span></p>
          </div>
          <div class="flex-shrink-0">
-           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusClass.replace('bg-', 'bg-opacity-10 border-')} ${statusClass.replace('bg-', 'text-')}">
+           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusClass.replace("bg-", "bg-opacity-10 border-")} ${statusClass.replace("bg-", "text-")}">
              ${status.toUpperCase()}
            </span>
          </div>

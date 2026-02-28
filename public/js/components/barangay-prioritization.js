@@ -11,13 +11,13 @@ export default class BarangayPrioritization {
 
   async loadInsights() {
     try {
-      const response = await fetch('/api/coordinator/barangay-insights', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await fetch("/api/coordinator/barangay-insights", {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
       });
 
-      if (!response.ok) throw new Error('Failed to load insights');
+      if (!response.ok) throw new Error("Failed to load insights");
 
       const result = await response.json();
       if (result.success && result.data?.barangays) {
@@ -41,13 +41,13 @@ export default class BarangayPrioritization {
       return;
     }
 
-    const barangays = this.insightsData.barangays;
+    const {barangays} = this.insightsData;
 
     this.container.innerHTML = `
       <div class="bp-widget">
-        ${this.renderGraph('Volume', barangays, 'volumeScore', 'var(--primary-500, #3b82f6)')}
-        ${this.renderGraph('Urgency', barangays, 'urgencyScore', 'var(--error-500, #ef4444)')}
-        ${this.renderGraph('Recency', barangays, 'recencyScore', 'var(--success-500, #10b981)')}
+        ${this.renderGraph("Volume", barangays, "volumeScore", "var(--primary-500, #3b82f6)")}
+        ${this.renderGraph("Urgency", barangays, "urgencyScore", "var(--error-500, #ef4444)")}
+        ${this.renderGraph("Recency", barangays, "recencyScore", "var(--success-500, #10b981)")}
       </div>
     `;
   }
@@ -67,7 +67,7 @@ export default class BarangayPrioritization {
               </div>
               <div class="bp-bar-value">${b[scoreKey]}%</div>
             </div>
-          `).join('')}
+          `).join("")}
         </div>
       </div>
     `;
@@ -76,7 +76,7 @@ export default class BarangayPrioritization {
   truncateName(name) {
     // Shorten long barangay names
     if (name.length > 12) {
-      return name.substring(0, 10) + '…';
+      return `${name.substring(0, 10)  }…`;
     }
     return name;
   }

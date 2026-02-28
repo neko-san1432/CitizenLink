@@ -105,8 +105,8 @@ export class ComplaintDetails {
         // If it's something like /review/UUID, the last part is the UUID
         if (!complaintId || complaintId === "complaint-details") {
           // Check if we are in /review/:id format
-          if (pathParts.includes('review') || pathParts.includes('complaint-details')) {
-            complaintId = pathParts[pathParts.indexOf('review') + 1] || pathParts[pathParts.indexOf('complaint-details') + 1];
+          if (pathParts.includes("review") || pathParts.includes("complaint-details")) {
+            complaintId = pathParts[pathParts.indexOf("review") + 1] || pathParts[pathParts.indexOf("complaint-details") + 1];
           }
         }
 
@@ -475,9 +475,9 @@ export class ComplaintDetails {
     if (dateEl && this.complaint.submitted_at) {
       const date = new Date(this.complaint.submitted_at);
       dateEl.textContent =
-        date.toLocaleDateString() +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        `${date.toLocaleDateString()
+        } ${
+          date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
     }
     // Prefer workflow_status, then confirmation_status; map to user-friendly text
     const wf = (this.complaint.workflow_status || "").toLowerCase();
@@ -648,20 +648,20 @@ export class ComplaintDetails {
         (d) => `
         <div class="merge-item" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start;">
             <input type="checkbox" class="merge-checkbox" value="${d.id
-          }" id="chk-${d.id}" style="margin-top: 4px;">
+}" id="chk-${d.id}" style="margin-top: 4px;">
             <label for="chk-${d.id}" style="flex: 1; cursor: pointer;">
                 <div style="font-weight: 600; color: #374151;">${d.title || "Untitled"
-          }</div>
+}</div>
                 <div style="font-size: 0.85rem; color: #6b7280;">
                     ${new Date(d.submitted_at).toLocaleDateString()} • ${(
-            d.distance * 1000
-          ).toFixed(0)}m away
+  d.distance * 1000
+).toFixed(0)}m away
                 </div>
                 <div style="font-size: 0.85rem; color: #4b5563; margin-top: 4px;">
                     ${d.description
-            ? d.description.substring(0, 60) + "..."
-            : ""
-          }
+    ? `${d.description.substring(0, 60)  }...`
+    : ""
+}
                 </div>
             </label>
         </div>
@@ -675,9 +675,9 @@ export class ComplaintDetails {
             <h3 style="margin: 0; color: #9a3412;">Merge Duplicates</h3>
             <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #7c2d12;">
                 Select complaints to merge into THIS complaint (<span style="font-family: monospace;">#${this.complaintId.substring(
-      0,
-      8
-    )}</span>).
+    0,
+    8
+  )}</span>).
                 <br/>
                 Merged complaints will be closed and their upvotes transferred here.
             </p>
@@ -749,7 +749,7 @@ export class ComplaintDetails {
 
     // We check if the complaint has intelligence data or an NLP generated urgency_level
     const intel = this.complaint.intelligence || {};
-    const nlpCategory = typeof this.complaint.category === 'string' && this.complaint.category.length > 3 ? this.complaint.category : null;
+    const nlpCategory = typeof this.complaint.category === "string" && this.complaint.category.length > 3 ? this.complaint.category : null;
 
     // Determine if we have enough AI data to show the panel
     const hasAI = intel.confidence_score || intel.geo_verified !== undefined || intel.requires_immediate_action || (this.complaint.urgency_level && this.complaint.priority);
@@ -777,7 +777,7 @@ export class ComplaintDetails {
     }
 
     // Urgency Check
-    if (intel.requires_immediate_action || this.complaint.priority === 'urgent') {
+    if (intel.requires_immediate_action || this.complaint.priority === "urgent") {
       html += `
         <div class="flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded text-xs">
           <i class="fas fa-exclamation-triangle"></i>
@@ -816,7 +816,7 @@ export class ComplaintDetails {
     }
 
     // Display parsed category if it was categorized by NLP
-    if (intel.auto_categorized || (intel.method === 'nlp' && nlpCategory)) {
+    if (intel.auto_categorized || (intel.method === "nlp" && nlpCategory)) {
       html += `
         <div class="text-xs text-gray-400 mt-2 italic flex items-center gap-1">
           <i class="fas fa-robot text-[10px]"></i> Auto-categorized by CitizenLink NLP
@@ -824,7 +824,7 @@ export class ComplaintDetails {
       `;
     }
 
-    html += '</div>';
+    html += "</div>";
 
     aiContent.innerHTML = html;
     aiSection.style.display = "block";
@@ -907,52 +907,52 @@ export class ComplaintDetails {
                     <div class="complainant-field">
                         <span class="field-label">Name:</span>
                         <span class="field-value">${this.escapeHtml(
-        name
-      )}</span>
+    name
+  )}</span>
                     </div>
                     ${firstName || lastName
-          ? `
+    ? `
                     <div class="complainant-field">
                         <span class="field-label">Full Name:</span>
                         <span class="field-value">${this.escapeHtml(
-            `${firstName} ${lastName}`.trim() || name
-          )}</span>
+    `${firstName} ${lastName}`.trim() || name
+  )}</span>
                     </div>
                     `
-          : ""
-        }
+    : ""
+}
                     <div class="complainant-field">
                         <span class="field-label">Email:</span>
                         <span class="field-value">
                             <a href="mailto:${this.escapeHtml(
-          email
-        )}" class="complainant-link">${this.escapeHtml(
-          email
-        )}</a>
+    email
+  )}" class="complainant-link">${this.escapeHtml(
+  email
+)}</a>
                         </span>
                     </div>
                     <div class="complainant-field">
                         <span class="field-label">Phone Number:</span>
                         <span class="field-value">
                             ${phoneNumber
-          ? `
+    ? `
                             <a href="tel:${this.escapeHtml(
-            phoneNumber
-          )}" class="complainant-link">${this.escapeHtml(
-            phoneNumber
-          )}</a>
+    phoneNumber
+  )}" class="complainant-link">${this.escapeHtml(
+  phoneNumber
+)}</a>
                             `
-          : '<span style="color: #9ca3af;">Not provided</span>'
-        }
+    : '<span style="color: #9ca3af;">Not provided</span>'
+}
                         </span>
                     </div>
                     <div class="complainant-field">
                         <span class="field-label">Address:</span>
                         <span class="field-value">
                             ${fullAddress
-          ? this.escapeHtml(fullAddress)
-          : '<span style="color: #9ca3af;">Not provided</span>'
-        }
+    ? this.escapeHtml(fullAddress)
+    : '<span style="color: #9ca3af;">Not provided</span>'
+}
                         </span>
                     </div>
                 </div>
@@ -1043,15 +1043,15 @@ export class ComplaintDetails {
                 <div class="progress-container">
                     <div class="progress-info">
                         <span class="progress-text">${progress.progressText
-        }</span>
+}</span>
                         <span class="progress-percentage">${progress.progressPercentage
-        }%</span>
+}%</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill ${isCompleted ? "completed" : ""
-        }"
+}"
                              style="width: ${progress.progressPercentage
-        }%"></div>
+}%"></div>
                     </div>
                 </div>
             `;
@@ -1175,7 +1175,7 @@ export class ComplaintDetails {
     if (hasText || hasCoordinates) {
       const canUseBoundaryToggle = this.canUseBoundaryToggle();
 
-      let addressHtml = '';
+      let addressHtml = "";
       if (hasText) {
         addressHtml = `<div class="location-address">${this.complaint.location_text}</div>`;
       } else {
@@ -1185,23 +1185,23 @@ export class ComplaintDetails {
       locationContainer.innerHTML = `
         ${addressHtml}
         ${hasCoordinates
-          ? `
+    ? `
           <div class="location-coordinates" style="color: #6b7280; font-size: 0.85rem; margin-top: 4px;">
               ${parseFloat(this.complaint.latitude).toFixed(6)}, ${parseFloat(this.complaint.longitude).toFixed(6)}
           </div>
           <div class="location-actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
             ${canUseBoundaryToggle
-            ? `
+    ? `
               <button id="toggle-boundary-btn" class="btn btn-secondary btn-xs" type="button" style="font-size: 0.7rem; padding: 2px 8px;">
                 Show Boundary
               </button>
             `
-            : ""
-          }
+    : ""
+}
           </div>
         `
-          : ""
-        }
+    : ""
+}
       `;
 
       // Setup Full Map listener if button exists
@@ -1404,9 +1404,9 @@ export class ComplaintDetails {
           <div id="modal-map" style="width: 100%; height: 500px; border-radius: 8px; margin-bottom: 1rem;"></div>
           <div style="margin-top: 10px; padding: 1rem; background: #f9fafb; border-radius: 8px;">
             <div style="margin-bottom: 0.5rem;"><strong>Address:</strong> ${this.complaint.location_text || "N/A"
-      }</div>
+}</div>
             <div><strong>Coordinates:</strong> ${this.complaint.latitude}, ${this.complaint.longitude
-      }</div>
+}</div>
           </div>
         </div>
       </div>
@@ -1612,14 +1612,14 @@ export class ComplaintDetails {
           `
           <div class="map-popup">
           <h4>${this.escapeHtml(
-            this.complaint.title || "Complaint Location"
-          )}</h4>
+    this.complaint.title || "Complaint Location"
+  )}</h4>
           <p><strong>Address:</strong> ${this.escapeHtml(
-            this.complaint.location_text || "Location pinned on map"
-          )}</p>
+    this.complaint.location_text || "Location pinned on map"
+  )}</p>
           <p><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lng.toFixed(
-            6
-          )}</p>
+  6
+)}</p>
           </div>
                 `
         )
@@ -1865,9 +1865,9 @@ export class ComplaintDetails {
           }).bindPopup(`
                             <div class="map-popup">
                                 <h4>${this.complaint.title || "Complaint Location"
-            }</h4>
+}</h4>
                                 <p><strong>Address:</strong> ${this.complaint.location_text
-            }</p>
+}</p>
                             </div>
                         `);
         }.bind(this),
@@ -1942,20 +1942,20 @@ export class ComplaintDetails {
                     <h4 class="evidence-type-title">📎 Initial Evidence (Submitted with Complaint)</h4>
                     <div class="evidence-list">
                         ${initialEvidence
-          .map(
-            (attachment) => `
+    .map(
+      (attachment) => `
                             <a href="${attachment.url
-              }" class="attachment-item" target="_blank" rel="noopener noreferrer">
+}" class="attachment-item" target="_blank" rel="noopener noreferrer">
                                 <span class="attachment-icon">📎</span>
                                 <span class="attachment-name">${attachment.name || "Attachment"
-              }</span>
+}</span>
                                 <span class="attachment-size">${this.formatFileSize(
-                attachment.size || 0
-              )}</span>
+    attachment.size || 0
+  )}</span>
                             </a>
                         `
-          )
-          .join("")}
+    )
+    .join("")}
                     </div>
                 </div>
             `;
@@ -1968,20 +1968,20 @@ export class ComplaintDetails {
                     <h4 class="evidence-type-title">✅ Completion Evidence (Uploaded by Officers/Admins)</h4>
                     <div class="evidence-list">
                         ${completionEvidence
-          .map(
-            (attachment) => `
+    .map(
+      (attachment) => `
                             <a href="${attachment.url
-              }" class="attachment-item completion-evidence" target="_blank" rel="noopener noreferrer">
+}" class="attachment-item completion-evidence" target="_blank" rel="noopener noreferrer">
                                 <span class="attachment-icon">✅</span>
                                 <span class="attachment-name">${attachment.name || "Attachment"
-              }</span>
+}</span>
                                 <span class="attachment-size">${this.formatFileSize(
-                attachment.size || 0
-              )}</span>
+    attachment.size || 0
+  )}</span>
                             </a>
                         `
-          )
-          .join("")}
+    )
+    .join("")}
                     </div>
                 </div>
             `;
@@ -1993,13 +1993,13 @@ export class ComplaintDetails {
         .map(
           (attachment) => `
                 <a href="${attachment.url
-            }" class="attachment-item" target="_blank" rel="noopener noreferrer">
+}" class="attachment-item" target="_blank" rel="noopener noreferrer">
                     <span class="attachment-icon">📎</span>
                     <span class="attachment-name">${attachment.name || "Attachment"
-            }</span>
+}</span>
                     <span class="attachment-size">${this.formatFileSize(
-              attachment.size || 0
-            )}</span>
+    attachment.size || 0
+  )}</span>
                 </a>
             `
         )
@@ -2020,48 +2020,48 @@ export class ComplaintDetails {
 
     const commentData = this.complaint.comment || {};
     const steps = [
-      { key: 'submitted', label: 'Submitted', icon: '📝', statuses: ['new', 'submitted', 'pending'] },
-      { key: 'verified', label: 'Verified', icon: '✅', statuses: ['assigned', 'verified', 'under_review'] },
-      { key: 'action_taken', label: 'Action Taken', icon: '🛠️', statuses: ['pending_approval', 'action_taken', 'in_progress'] },
-      { key: 'resolved', label: 'Resolved', icon: '🎉', statuses: ['resolved', 'completed', 'closed'] }
+      { key: "submitted", label: "Submitted", icon: "📝", statuses: ["new", "submitted", "pending"] },
+      { key: "verified", label: "Verified", icon: "✅", statuses: ["assigned", "verified", "under_review"] },
+      { key: "action_taken", label: "Action Taken", icon: "🛠️", statuses: ["pending_approval", "action_taken", "in_progress"] },
+      { key: "resolved", label: "Resolved", icon: "🎉", statuses: ["resolved", "completed", "closed"] }
     ];
 
-    const currentStatus = (this.complaint.workflow_status || 'new').toLowerCase();
-    const isCancelled = currentStatus === 'cancelled';
-    const isRejected = currentStatus === 'rejected';
+    const currentStatus = (this.complaint.workflow_status || "new").toLowerCase();
+    const isCancelled = currentStatus === "cancelled";
+    const isRejected = currentStatus === "rejected";
     let currentStepIndex = steps.findIndex(s => s.statuses.includes(currentStatus));
     if (currentStepIndex === -1) currentStepIndex = 0;
 
     let html = '<div class="timeline-stepper-v2">';
 
     steps.forEach((step, index) => {
-      let state = 'future';
-      if (isCancelled && index === 0) state = 'completed';
-      else if (index < currentStepIndex) state = 'completed';
-      else if (index === currentStepIndex) state = 'current';
+      let state = "future";
+      if (isCancelled && index === 0) state = "completed";
+      else if (index < currentStepIndex) state = "completed";
+      else if (index === currentStepIndex) state = "current";
 
       const stepData = commentData[step.key];
-      let commentContent = '';
-      let dateDisplay = '';
+      let commentContent = "";
+      let dateDisplay = "";
 
       if (stepData && stepData.comment) {
         const dateObj = new Date(stepData.date);
-        dateDisplay = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        dateDisplay = dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
         commentContent = `<div class="timeline-comment-v2">"${stepData.comment}"</div>`;
       } else {
         // Hide empty comment boxes to save space
-        commentContent = '';
+        commentContent = "";
       }
 
-      const isActive = state === 'current';
-      const isPast = state === 'completed';
+      const isActive = state === "current";
+      const isPast = state === "completed";
       const isLast = index === steps.length - 1;
 
       html += `
         <div class="timeline-item-v2 ${state}">
           <div class="timeline-left-v2">
-            <div class="timeline-node-v2 ${state}">${isPast || isActive ? step.icon : ''}</div>
-            ${!isLast ? `<div class="timeline-line-v2 ${isPast ? 'active' : ''}"></div>` : ''}
+            <div class="timeline-node-v2 ${state}">${isPast || isActive ? step.icon : ""}</div>
+            ${!isLast ? `<div class="timeline-line-v2 ${isPast ? "active" : ""}"></div>` : ""}
           </div>
           <div class="timeline-content-v2">
             <div class="timeline-header-v2">
@@ -2075,22 +2075,22 @@ export class ComplaintDetails {
     });
 
     if (isRejected || isCancelled) {
-      const type = isRejected ? 'rejected' : 'cancelled';
+      const type = isRejected ? "rejected" : "cancelled";
       html += `
         <div class="timeline-item-v2 terminal ${type}">
           <div class="timeline-left-v2">
-            <div class="timeline-node-v2 terminal">${isRejected ? '❌' : '🛑'}</div>
+            <div class="timeline-node-v2 terminal">${isRejected ? "❌" : "🛑"}</div>
           </div>
           <div class="timeline-content-v2">
             <div class="timeline-header-v2">
-              <span class="timeline-label-v2">${isRejected ? 'Rejected' : 'Cancelled'}</span>
+              <span class="timeline-label-v2">${isRejected ? "Rejected" : "Cancelled"}</span>
             </div>
           </div>
         </div>
       `;
     }
 
-    html += '</div>';
+    html += "</div>";
 
     timelineContainer.innerHTML = html;
   }
@@ -2348,12 +2348,12 @@ export class ComplaintDetails {
   }
 
   showReasonModal(title, placeholder, confirmLabel, onConfirm) {
-    const existing = document.getElementById('action-modal');
+    const existing = document.getElementById("action-modal");
     if (existing) existing.remove();
 
-    const modal = document.createElement('div');
-    modal.id = 'action-modal';
-    modal.className = 'modal active';
+    const modal = document.createElement("div");
+    modal.id = "action-modal";
+    modal.className = "modal active";
     modal.style.cssText = "position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);";
 
     modal.innerHTML = `
@@ -2369,21 +2369,21 @@ export class ComplaintDetails {
 
     document.body.appendChild(modal);
 
-    const input = modal.querySelector('#modal-input');
+    const input = modal.querySelector("#modal-input");
     input.focus();
 
     const close = () => modal.remove();
 
-    modal.querySelector('#modal-cancel').onclick = close;
-    modal.querySelector('#modal-confirm').onclick = async () => {
+    modal.querySelector("#modal-cancel").onclick = close;
+    modal.querySelector("#modal-confirm").onclick = async () => {
       const value = input.value.trim();
       if (!value) {
-        showToast('Please enter a value', 'warning');
+        showToast("Please enter a value", "warning");
         return;
       }
-      const btn = modal.querySelector('#modal-confirm');
+      const btn = modal.querySelector("#modal-confirm");
       const originalText = btn.textContent;
-      btn.textContent = 'Processing...';
+      btn.textContent = "Processing...";
       btn.disabled = true;
 
       try {
@@ -2393,7 +2393,7 @@ export class ComplaintDetails {
         btn.textContent = originalText;
         btn.disabled = false;
         console.error(e);
-        showToast(e.message, 'error');
+        showToast(e.message, "error");
       }
     };
 
@@ -2405,9 +2405,9 @@ export class ComplaintDetails {
 
   async rejectComplaint() {
     this.showReasonModal(
-      'Reject Complaint',
-      'Please provide a reason for rejection...',
-      'Reject Complaint',
+      "Reject Complaint",
+      "Please provide a reason for rejection...",
+      "Reject Complaint",
       async (reason) => {
         const response = await fetch(
           `/ api / coordinator / review - queue / ${this.complaintId}/decide`,
@@ -2475,7 +2475,7 @@ export class ComplaintDetails {
 
     if (!status) return;
     status = status.toLowerCase().trim();
-    status = status.replace(' ', '_'); // handle 'under review' -> 'under_review'
+    status = status.replace(" ", "_"); // handle 'under review' -> 'under_review'
 
     if (!validStatuses.includes(status)) {
       alert("Invalid status. Please use one of the allowed statuses.");
@@ -2495,8 +2495,8 @@ export class ComplaintDetails {
           },
           credentials: "include",
           body: JSON.stringify({
-            status: status,
-            comment: comment
+            status,
+            comment
           }),
         }
       );
@@ -2517,9 +2517,9 @@ export class ComplaintDetails {
   }
   async addComment() {
     this.showReasonModal(
-      'Add Comment / Note',
-      'Enter your comment here...',
-      'Add Comment',
+      "Add Comment / Note",
+      "Enter your comment here...",
+      "Add Comment",
       async (comment) => {
         const response = await fetch(
           `/api/lgu/complaints/${this.complaintId}/update-status`,
@@ -2529,7 +2529,7 @@ export class ComplaintDetails {
             body: JSON.stringify({
               // Send current status to just add a note without changing status
               status: this.complaint.workflow_status,
-              comment: comment
+              comment
             }),
           }
         );
@@ -2685,10 +2685,10 @@ export class ComplaintDetails {
 }
 // Initialize when DOM is loaded - only if on the dedicated details page
 document.addEventListener("DOMContentLoaded", () => {
-  const isDetailsPage = window.location.pathname.includes('/complaint-details') ||
-    window.location.pathname.includes('/review/');
+  const isDetailsPage = window.location.pathname.includes("/complaint-details") ||
+    window.location.pathname.includes("/review/");
 
-  if (isDetailsPage && !window.location.search.includes('view=panel')) {
+  if (isDetailsPage && !window.location.search.includes("view=panel")) {
     new ComplaintDetails();
   }
 });

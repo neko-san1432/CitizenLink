@@ -41,11 +41,11 @@ class ComplaintService {
 
     if (complaintText && (!complaintData.category || !complaintData.urgency_score)) {
       try {
-        console.log('[COMPLAINT] 🧠 Running Advanced Decision Engine...');
+        console.log("[COMPLAINT] 🧠 Running Advanced Decision Engine...");
         nlpResult = await AdvancedDecisionEngine.classify(complaintText);
 
         // Auto-fill category if missing
-        if (!complaintData.category && nlpResult.category && nlpResult.category !== 'Others') {
+        if (!complaintData.category && nlpResult.category && nlpResult.category !== "Others") {
           console.log(`[COMPLAINT] Auto-categorized: ${nlpResult.category} (${nlpResult.method})`);
           complaintData.category = nlpResult.category;
           // subcategory assignment removed
@@ -59,22 +59,22 @@ class ComplaintService {
         // Derive priority from NLP urgency score (overrides the default 'low')
         const urgencyVal = complaintData.urgency_score;
         if (urgencyVal >= 80) {
-          complaintData.priority = 'urgent';
-          complaintData.urgency_level = 'urgent';
+          complaintData.priority = "urgent";
+          complaintData.urgency_level = "urgent";
         } else if (urgencyVal >= 60) {
-          complaintData.priority = 'high';
-          complaintData.urgency_level = 'high';
+          complaintData.priority = "high";
+          complaintData.urgency_level = "high";
         } else if (urgencyVal >= 40) {
-          complaintData.priority = 'medium';
-          complaintData.urgency_level = 'medium';
+          complaintData.priority = "medium";
+          complaintData.urgency_level = "medium";
         } else {
-          complaintData.priority = 'low';
-          complaintData.urgency_level = 'low';
+          complaintData.priority = "low";
+          complaintData.urgency_level = "low";
         }
         console.log(`[COMPLAINT] NLP urgency: ${urgencyVal} → priority: ${complaintData.priority}`);
 
       } catch (nlpError) {
-        console.warn('[COMPLAINT] NLP Classification failed:', nlpError.message);
+        console.warn("[COMPLAINT] NLP Classification failed:", nlpError.message);
       }
     }
 
@@ -168,7 +168,7 @@ class ComplaintService {
         mappedData.submitted_by_snapshot = snapshot;
         mappedData.account_preservation_data = {
           preserved_at: new Date().toISOString(),
-          source: 'complaint_submission'
+          source: "complaint_submission"
         };
       } else {
         console.warn("[COMPLAINT] Could not fetch user details for snapshot:", userError ? userError.message : "User not found");
@@ -212,7 +212,7 @@ class ComplaintService {
         await this.notificationService.notifyComplaintSubmitted(
           userId,
           createdComplaint.id,
-          createdComplaint.descriptive_su?.slice(0, 100) || 'Your complaint'
+          createdComplaint.descriptive_su?.slice(0, 100) || "Your complaint"
         );
       } catch (notifError) {
         console.warn(
@@ -226,7 +226,7 @@ class ComplaintService {
         const coordResult =
           await this.notificationService.notifyAllCoordinators(
             createdComplaint.id,
-            createdComplaint.descriptive_su?.slice(0, 100) || 'New complaint'
+            createdComplaint.descriptive_su?.slice(0, 100) || "New complaint"
           );
         if (!coordResult.success) {
           console.warn(
@@ -396,7 +396,7 @@ class ComplaintService {
           is_duplicate: true,
           master_complaint_id: masterComplaintId,
           workflow_status: "closed", // Auto-close duplicates? Or 'resolved'? Let's say 'closed'
-          coordinator_notes: "Marked as duplicate of " + masterComplaintId,
+          coordinator_notes: `Marked as duplicate of ${  masterComplaintId}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", complaintId);
@@ -618,7 +618,7 @@ class ComplaintService {
       try {
         // Store in evidence subfolder for initial evidence
         const fileName = `${complaintId}/evidence/${Date.now()}-${file.originalname
-          }`;
+        }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -692,7 +692,7 @@ class ComplaintService {
       try {
         // Store in completion subfolder
         const fileName = `${complaintId}/completion/${Date.now()}-${file.originalname
-          }`;
+        }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -789,7 +789,7 @@ class ComplaintService {
               name:
                 combined.name ||
                 `${combined.first_name || ""} ${combined.last_name || ""
-                  }`.trim() ||
+                }`.trim() ||
                 user.email,
               first_name: combined.first_name,
               last_name: combined.last_name,
@@ -949,8 +949,8 @@ class ComplaintService {
       subcategory,
       notes,
     } = typeof updateData === "string"
-        ? { status: updateData, notes: userId } // Handle legacy signature if needed
-        : updateData;
+      ? { status: updateData, notes: userId } // Handle legacy signature if needed
+      : updateData;
 
     const dataToUpdate = { updated_at: new Date().toISOString() };
 
@@ -1012,7 +1012,7 @@ class ComplaintService {
     // [HISTORY] Persist comment/note if provided or status changed
     if (notes || (workflowStatus && workflowStatus !== complaint.workflow_status)) {
       try {
-        const action = workflowStatus ? `status_change_to_${workflowStatus}` : 'update_notes';
+        const action = workflowStatus ? `status_change_to_${workflowStatus}` : "update_notes";
         await this.historyRepo.addEntry(
           id,
           action,
@@ -1030,7 +1030,7 @@ class ComplaintService {
         await this.notificationService.notifyComplaintStatusChanged(
           complaint.submitted_by,
           id,
-          complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+          complaint.descriptive_su?.slice(0, 100) || "Your complaint",
           workflowStatus,
           complaint.workflow_status
         );
@@ -1046,7 +1046,7 @@ class ComplaintService {
         await this.notificationService.notifyComplaintUpdate(
           complaint.submitted_by,
           id,
-          complaint.descriptive_su?.slice(0, 100) || 'Your complaint',
+          complaint.descriptive_su?.slice(0, 100) || "Your complaint",
           notes
         );
       } catch (notifError) {
@@ -1516,7 +1516,7 @@ class ComplaintService {
               if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
               return {
                 id: complaint.id,
-                title: complaint.descriptive_su?.slice(0, 100) || 'Complaint',
+                title: complaint.descriptive_su?.slice(0, 100) || "Complaint",
                 status: complaint.workflow_status,
                 priority: complaint.priority || "medium",
                 lat,
@@ -1583,7 +1583,7 @@ class ComplaintService {
 
           return {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || 'Complaint',
+            title: complaint.descriptive_su?.slice(0, 100) || "Complaint",
             status: complaint.workflow_status,
             priority: complaint.priority || "medium",
             lat,
@@ -1721,7 +1721,7 @@ class ComplaintService {
               assignment.assigned_to,
               "complaint_reminder",
               "Complaint Reminder",
-              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || 'Your assigned complaint'}"`,
+              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || "Your assigned complaint"}"`,
               {
                 priority: "warning",
                 link: `/lgu-officer/tasks/${complaintId}`,
@@ -1735,7 +1735,7 @@ class ComplaintService {
               assignment.assigned_by,
               "complaint_reminder",
               "Complaint Reminder",
-              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || 'Pending complaint'}"`,
+              `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}"`,
               {
                 priority: "warning",
                 link: `/lgu-admin/department-queue`,
@@ -1763,7 +1763,7 @@ class ComplaintService {
    */
   async getFalseComplaints(filters = {}) {
     try {
-      const supabase = this.complaintRepo.supabase;
+      const {supabase} = this.complaintRepo;
       let query = supabase
         .from("complaints")
         .select("*")
@@ -1793,7 +1793,7 @@ class ComplaintService {
    */
   async getFalseComplaintStatistics() {
     try {
-      const supabase = this.complaintRepo.supabase;
+      const {supabase} = this.complaintRepo;
 
       // Get total count of false complaints
       const { count: total, error: countError } = await supabase
@@ -1841,7 +1841,7 @@ class ComplaintService {
    */
   async getComplaintEvidence(complaintId, user) {
     try {
-      const supabase = this.complaintRepo.supabase;
+      const {supabase} = this.complaintRepo;
       // First, verify the user has access to this complaint
       const { data: complaint, error: complaintError } = await supabase
         .from("complaints")
@@ -1944,7 +1944,7 @@ class ComplaintService {
   async confirmResolution(complaintId, citizenId, confirmed, _feedback = null) {
     try {
       // Use repository client (service-role) to avoid RLS issues
-      const supabase = this.complaintRepo.supabase;
+      const {supabase} = this.complaintRepo;
 
       // Bypass table update for now
       const updatedComplaint = {

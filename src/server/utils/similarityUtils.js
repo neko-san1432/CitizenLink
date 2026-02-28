@@ -1,17 +1,17 @@
 /**
  * Similarity Utilities for Duplicate Detection
  * Implements the 3-Layer Filter Architecture
- * 
+ *
  * v5.0: THESIS-VALIDATED ADAPTIVE DBSCAN PARAMETERS
  * @thesis-feature Synchronized with CitizenLink_Simulated_System
- * 
+ *
  * CRITICAL: Parameters derived from Thesis K-Distance Graphs
- * 
+ *
  * Key Values:
  * - Infrastructure (Roads, Pipelines): 0.001125 ≈ 125 meters
  * - Public Safety (Events): 0.00045 ≈ 50 meters
  * - Sanitation (Specific Piles): 0.000144 ≈ 16 meters
- * 
+ *
  * Unit Conversion: 1 degree ≈ 111km, so 0.001 degrees ≈ 111 meters
  */
 
@@ -20,12 +20,12 @@ const { calculateDistance } = require("./locationUtils");
 // ==================== ADAPTIVE EPSILON CONFIGURATION ====================
 /**
  * [THESIS-VALIDATED] Adaptive Epsilon Parameters (Aligned with Simulation Engine)
- * 
+ *
  * Unit: Degrees (approximately 1 degree = 111km)
  * - 0.001125 ≈ 125 meters (Infrastructure)
  * - 0.00045 ≈ 50 meters (Public Safety)
  * - 0.000144 ≈ 16 meters (Sanitation/Specific)
- * 
+ *
  * @thesis-parameter Derived from K-Distance Elbow Method Analysis
  */
 const ADAPTIVE_EPSILON = {
@@ -101,10 +101,10 @@ const ADAPTIVE_EPSILON = {
 // ==================== ADAPTIVE MINPTS CONFIGURATION ====================
 /**
  * [THESIS-VALIDATED] Adaptive MinPts Parameters
- * 
+ *
  * Defines minimum reports required to form a cluster.
  * Critical incidents need fewer reports to trigger immediate attention.
- * 
+ *
  * @thesis-parameter Derived from operational response requirements
  */
 const ADAPTIVE_MINPTS = {
@@ -172,36 +172,36 @@ const SMALL_EPSILON = 0.00018;  // ~20 meters
 /**
  * Get epsilon for a specific category.
  * Primary lookup function for DBSCAN clustering.
- * 
+ *
  * @param {string} category - Category name
  * @returns {number} Epsilon value in degrees
  */
 function getEpsilonForCategory(category) {
   if (!category) return ADAPTIVE_EPSILON["default"];
   const normalized = category.trim();
-  return ADAPTIVE_EPSILON[normalized] !== undefined 
-    ? ADAPTIVE_EPSILON[normalized] 
+  return ADAPTIVE_EPSILON[normalized] !== undefined
+    ? ADAPTIVE_EPSILON[normalized]
     : ADAPTIVE_EPSILON["default"];
 }
 
 /**
  * Get minPts for a specific category.
- * 
+ *
  * @param {string} category - Category name
  * @returns {number} MinPts value
  */
 function getMinPtsForCategory(category) {
   if (!category) return ADAPTIVE_MINPTS["default"];
   const normalized = category.trim();
-  return ADAPTIVE_MINPTS[normalized] !== undefined 
-    ? ADAPTIVE_MINPTS[normalized] 
+  return ADAPTIVE_MINPTS[normalized] !== undefined
+    ? ADAPTIVE_MINPTS[normalized]
     : ADAPTIVE_MINPTS["default"];
 }
 
 /**
  * Get dynamic Epsilon (radius) based on category
  * v5.0: Uses ADAPTIVE_EPSILON lookup with fallback chain
- * 
+ *
  * @param {string} categoryId - The category UUID (ignored in v5.0)
  * @param {string} [categoryName] - Category name for adaptive lookup
  * @param {string} [subcategoryName] - Subcategory name for more specific lookup
@@ -253,7 +253,7 @@ function getDynamicEpsilon(categoryId, categoryName = "", subcategoryName = "") 
 
 /**
  * v5.0: Get dynamic MinPts based on category
- * 
+ *
  * @param {string} categoryName - Category name
  * @param {string} [subcategoryName] - Subcategory name for more specific lookup
  * @returns {number} MinPts value
@@ -274,7 +274,7 @@ function getDynamicMinPts(categoryName = "", subcategoryName = "") {
   }
 
   // Heuristic fallback for critical keywords
-  const lowerName = (catLower + " " + subLower).toLowerCase();
+  const lowerName = (`${catLower  } ${  subLower}`).toLowerCase();
   if (
     lowerName.includes("fire") ||
     lowerName.includes("explosion") ||
@@ -341,7 +341,7 @@ function checkTemporalProximity(date1, date2) {
 /**
  * The Master Filter Function
  * Runs the 3-Layer Check
- * 
+ *
  * v5.0: Uses thesis-validated adaptive epsilon (in degrees)
  */
 function isPotentialDuplicate(newComplaint, existingComplaint) {
@@ -351,7 +351,7 @@ function isPotentialDuplicate(newComplaint, existingComplaint) {
     newComplaint.categoryName || newComplaint.category_name || "",
     newComplaint.subcategoryName || newComplaint.subcategory || ""
   );
-  
+
   // Calculate distance using Haversine (returns meters)
   const distanceMeters = calculateDistance(
     newComplaint.latitude,
@@ -359,7 +359,7 @@ function isPotentialDuplicate(newComplaint, existingComplaint) {
     existingComplaint.latitude,
     existingComplaint.longitude
   );
-  
+
   // Convert epsilon from degrees to meters for comparison (1 degree ≈ 111km)
   const epsilonMeters = epsilon * 111000;
 
@@ -411,15 +411,15 @@ function verifyThesisParameters() {
   console.log(`Testing Default Radius: ${ADAPTIVE_EPSILON["default"]} (Should be 0.00030 ≈ 33m)`);
   console.log(`  → In meters: ${epsilonToMeters(ADAPTIVE_EPSILON["default"])}m`);
   console.log("=====================================");
-  
+
   // Validation checks
-  const passed = 
+  const passed =
     ADAPTIVE_EPSILON["Infrastructure"] === 0.001125 &&
     ADAPTIVE_EPSILON["Sanitation"] === 0.000144 &&
     ADAPTIVE_EPSILON["Fire"] === 0.00045 &&
     ADAPTIVE_EPSILON["default"] === 0.00030;
-  
-  console.log(`\n✅ VERIFICATION ${passed ? 'PASSED' : '❌ FAILED'}`);
+
+  console.log(`\n✅ VERIFICATION ${passed ? "PASSED" : "❌ FAILED"}`);
   return passed;
 }
 
@@ -427,24 +427,24 @@ module.exports = {
   // v5.0: Thesis-validated DBSCAN exports
   ADAPTIVE_EPSILON,
   ADAPTIVE_MINPTS,
-  
+
   // Primary lookup functions
   getEpsilonForCategory,
   getMinPtsForCategory,
-  
+
   // Legacy-compatible functions
   getDynamicEpsilon,
   getDynamicMinPts,
-  
+
   // Utility functions
   epsilonToMeters,
   verifyThesisParameters,
-  
+
   // Legacy exports
   checkTemporalProximity,
   areCategoriesRelated,
   isPotentialDuplicate,
-  
+
   // Constants
   DEFAULT_EPSILON,
   LARGE_EPSILON,

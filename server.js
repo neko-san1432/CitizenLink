@@ -37,11 +37,11 @@ const app = new DRIMSApp();
 console.log("🔄 Starting server on port", config.port);
 app.start(config.port).then(() => {
   // Start the automated reporting scheduler
-  const SchedulerService = require('./src/server/services/SchedulerService');
+  const SchedulerService = require("./src/server/services/SchedulerService");
   SchedulerService.start();
 
   // [OPTIMIZATION] Pre-load AI Engine to prevent delay on first complaint submission
-  const AdvancedDecisionEngine = require('./src/server/services/AdvancedDecisionEngine');
+  const AdvancedDecisionEngine = require("./src/server/services/AdvancedDecisionEngine");
   AdvancedDecisionEngine.initialize().catch(err => {
     console.error("⚠️ AI Engine failed to preload (will retry on demand):", err.message);
   });

@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (progressLabel) {
       progressLabel.textContent = `Step ${current + 1} of ${steps.length
-        } · ${pct}% complete`;
+      } · ${pct}% complete`;
     }
   };
 

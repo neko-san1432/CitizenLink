@@ -9,72 +9,72 @@
 let mapInstance = null;
 let currentCriticalPoints = [];
 let criticalMarkersLayer = null;
-let geocodeCache = new Map();
+const geocodeCache = new Map();
 let lastGeocodeTime = 0;
 const GEOCODE_RATE_LIMIT_MS = 1100;
 let barangayGeoJSON = null;
 
 export const AdvancedFeatures = {
-    /**
+  /**
      * Initialize the advanced features
      * @param {L.Map} map - Leaflet map instance
      */
-    init: async (map) => {
-        mapInstance = map;
-        await loadBarangayBoundaries();
-        initEmergencyPanelListeners();
-        AdvancedFeatures.initializeInsights();
-        console.log('[ADVANCED] Features initialized');
-    },
+  init: async (map) => {
+    mapInstance = map;
+    await loadBarangayBoundaries();
+    initEmergencyPanelListeners();
+    AdvancedFeatures.initializeInsights();
+    console.log("[ADVANCED] Features initialized");
+  },
 
-    initializeInsights() {
-        // 1. Always setup button listeners first (Robustness)
-        AdvancedFeatures.setupButtonAndListeners();
+  initializeInsights() {
+    // 1. Always setup button listeners first (Robustness)
+    AdvancedFeatures.setupButtonAndListeners();
 
-        // 2. Only create panel markup if completely missing
-        if (!document.getElementById('insightsPanel')) {
-            AdvancedFeatures.createInsightsPanel();
+    // 2. Only create panel markup if completely missing
+    if (!document.getElementById("insightsPanel")) {
+      AdvancedFeatures.createInsightsPanel();
+    }
+  },
+
+  setupButtonAndListeners() {
+    const insightsBtn = document.getElementById("toolbar-insights-btn");
+
+    if (insightsBtn) {
+      console.log("[ADVANCED] Found Insights button, unhiding...");
+      insightsBtn.classList.remove("hidden");
+
+      // Re-attach listener (cloning to remove any old listeners)
+      const newBtn = insightsBtn.cloneNode(true);
+
+      // Ensure we insert it back in the same position
+      if (insightsBtn.parentNode) {
+        insightsBtn.parentNode.replaceChild(newBtn, insightsBtn);
+      }
+
+      newBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const panel = document.getElementById("insightsPanel");
+        if (panel) {
+          panel.classList.toggle("hidden");
+          // Hide emergency panel if open
+          const emergency = document.getElementById("emergencyPanel");
+          if (emergency) emergency.classList.add("hidden");
         }
-    },
+      });
 
-    setupButtonAndListeners() {
-        const insightsBtn = document.getElementById('toolbar-insights-btn');
+      // Close button listener
+      document.getElementById("closeInsightsBtn")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        document.getElementById("insightsPanel")?.classList.add("hidden");
+      });
+    } else {
+      console.warn("[ADVANCED] Insights button not found in DOM");
+    }
+  },
 
-        if (insightsBtn) {
-            console.log("[ADVANCED] Found Insights button, unhiding...");
-            insightsBtn.classList.remove('hidden');
-
-            // Re-attach listener (cloning to remove any old listeners)
-            const newBtn = insightsBtn.cloneNode(true);
-
-            // Ensure we insert it back in the same position
-            if (insightsBtn.parentNode) {
-                insightsBtn.parentNode.replaceChild(newBtn, insightsBtn);
-            }
-
-            newBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const panel = document.getElementById('insightsPanel');
-                if (panel) {
-                    panel.classList.toggle('hidden');
-                    // Hide emergency panel if open
-                    const emergency = document.getElementById('emergencyPanel');
-                    if (emergency) emergency.classList.add('hidden');
-                }
-            });
-
-            // Close button listener
-            document.getElementById('closeInsightsBtn')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('insightsPanel')?.classList.add('hidden');
-            });
-        } else {
-            console.warn("[ADVANCED] Insights button not found in DOM");
-        }
-    },
-
-    createInsightsPanel() {
-        const panelHTML = `
+  createInsightsPanel() {
+    const panelHTML = `
         <aside class="insights-panel hidden" id="insightsPanel">
             <div class="insights-header">
                 <div class="insights-title">
@@ -135,114 +135,114 @@ export const AdvancedFeatures = {
         </aside>
         `;
 
-        // Try to find the correct container for the heatmap
-        const mapContainer = document.querySelector('.heatmap-container') || document.querySelector('.flex-1.relative') || document.body;
-        if (mapContainer) {
-            mapContainer.insertAdjacentHTML('beforeend', panelHTML);
-        }
+    // Try to find the correct container for the heatmap
+    const mapContainer = document.querySelector(".heatmap-container") || document.querySelector(".flex-1.relative") || document.body;
+    if (mapContainer) {
+      mapContainer.insertAdjacentHTML("beforeend", panelHTML);
+    }
 
-        AdvancedFeatures.setupButtonAndListeners();
-    },
+    AdvancedFeatures.setupButtonAndListeners();
+  },
 
-    updateInsights: (complaints, clusters) => {
-        if (!complaints || !clusters) return;
+  updateInsights: (complaints, clusters) => {
+    if (!complaints || !clusters) return;
 
-        // --- Calculate Stats ---
-        const totalInputs = complaints.length;
-        // Mocking "Verified" as roughly 15% of inputs for realism
-        const verifiedCount = Math.floor(totalInputs * 0.15) + 3;
-        // Priority Zones = Clusters with > 3 items
-        const priorityZones = clusters.filter(c => c.length >= 3).length;
-        // Noise reduction (mock metric)
-        const noiseReduction = 92 + Math.floor(Math.random() * 6);
+    // --- Calculate Stats ---
+    const totalInputs = complaints.length;
+    // Mocking "Verified" as roughly 15% of inputs for realism
+    const verifiedCount = Math.floor(totalInputs * 0.15) + 3;
+    // Priority Zones = Clusters with > 3 items
+    const priorityZones = clusters.filter(c => c.length >= 3).length;
+    // Noise reduction (mock metric)
+    const noiseReduction = 92 + Math.floor(Math.random() * 6);
 
-        // --- Update Stats DOM ---
-        const elInputs = document.getElementById('statInputs');
-        if (elInputs) elInputs.textContent = totalInputs;
+    // --- Update Stats DOM ---
+    const elInputs = document.getElementById("statInputs");
+    if (elInputs) elInputs.textContent = totalInputs;
 
-        const elVerified = document.getElementById('statVerified');
-        if (elVerified) elVerified.textContent = verifiedCount;
+    const elVerified = document.getElementById("statVerified");
+    if (elVerified) elVerified.textContent = verifiedCount;
 
-        const elPriority = document.getElementById('statPriority');
-        if (elPriority) elPriority.textContent = priorityZones;
+    const elPriority = document.getElementById("statPriority");
+    if (elPriority) elPriority.textContent = priorityZones;
 
-        const elNoise = document.getElementById('statNoise');
-        if (elNoise) elNoise.textContent = noiseReduction + '%';
+    const elNoise = document.getElementById("statNoise");
+    if (elNoise) elNoise.textContent = `${noiseReduction  }%`;
 
 
-        // --- Generate Feed Cards ---
-        let html = '';
+    // --- Generate Feed Cards ---
+    let html = "";
 
-        // 1. Critical Clusters (Priority Zones)
-        const criticalClusters = clusters
-            .filter(c => c.length >= 2)
-            .sort((a, b) => b.length - a.length)
-            .slice(0, 5); // Show top 5
+    // 1. Critical Clusters (Priority Zones)
+    const criticalClusters = clusters
+      .filter(c => c.length >= 2)
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 5); // Show top 5
 
-        criticalClusters.forEach((cluster, idx) => {
-            const size = cluster.length;
-            const categories = cluster.map(c => c.category || c.type);
-            const dominant = AdvancedFeatures.getMode(categories) || 'General';
-            const lat = cluster[0].lat || cluster[0].latitude;
-            const lng = cluster[0].lng || cluster[0].longitude;
+    criticalClusters.forEach((cluster, idx) => {
+      const size = cluster.length;
+      const categories = cluster.map(c => c.category || c.type);
+      const dominant = AdvancedFeatures.getMode(categories) || "General";
+      const lat = cluster[0].lat || cluster[0].latitude;
+      const lng = cluster[0].lng || cluster[0].longitude;
 
-            // Try to find a zone name (barangay) from the first point
-            const zoneName = AdvancedFeatures.getJurisdiction(lat, lng) || `ZONE ${idx + 1}`;
+      // Try to find a zone name (barangay) from the first point
+      const zoneName = AdvancedFeatures.getJurisdiction(lat, lng) || `ZONE ${idx + 1}`;
 
-            // Suggest team based on category
-            let suggestedTeam = 'General Services';
-            let iconClass = 'fa-exclamation-circle'; // Default icon
+      // Suggest team based on category
+      let suggestedTeam = "General Services";
+      let iconClass = "fa-exclamation-circle"; // Default icon
 
-            if (dominant === 'Roads') {
-                suggestedTeam = 'Road Maintenance Team';
-                iconClass = 'fa-road';
-            }
-            if (dominant === 'Flood') {
-                suggestedTeam = 'Drainage & Flood Control';
-                iconClass = 'fa-water';
-            }
-            if (dominant === 'Garbage') {
-                suggestedTeam = 'Waste Management Unit';
-                iconClass = 'fa-trash-alt';
-            }
-            if (dominant === 'Health') {
-                suggestedTeam = 'Emergency Health Unit';
-                iconClass = 'fa-briefcase-medical';
-            }
-            if (dominant === 'Fire') {
-                suggestedTeam = 'Fire Department';
-                iconClass = 'fa-fire';
-            }
-            if (dominant === 'Crime') {
-                suggestedTeam = 'Police Department';
-                iconClass = 'fa-shield-alt';
-            }
-            if (dominant === 'Accident') {
-                suggestedTeam = 'Traffic Management Unit';
-                iconClass = 'fa-car-crash';
-            }
-            if (dominant === 'Casualty') {
-                suggestedTeam = 'Emergency Response Team';
-                iconClass = 'fa-skull-crossbones';
-            }
-            if (dominant === 'Protest') {
-                suggestedTeam = 'Public Order and Safety';
-                iconClass = 'fa-users';
-            }
-            if (dominant === 'Power Outage') {
-                suggestedTeam = 'Electrical Services';
-                iconClass = 'fa-lightbulb';
-            }
-            if (dominant === 'Water Shortage') {
-                suggestedTeam = 'Water Utility Services';
-                iconClass = 'fa-tint';
-            }
-            if (dominant === 'Animal Control') {
-                suggestedTeam = 'Animal Welfare Unit';
-                iconClass = 'fa-paw';
-            }
+      if (dominant === "Roads") {
+        suggestedTeam = "Road Maintenance Team";
+        iconClass = "fa-road";
+      }
+      if (dominant === "Flood") {
+        suggestedTeam = "Drainage & Flood Control";
+        iconClass = "fa-water";
+      }
+      if (dominant === "Garbage") {
+        suggestedTeam = "Waste Management Unit";
+        iconClass = "fa-trash-alt";
+      }
+      if (dominant === "Health") {
+        suggestedTeam = "Emergency Health Unit";
+        iconClass = "fa-briefcase-medical";
+      }
+      if (dominant === "Fire") {
+        suggestedTeam = "Fire Department";
+        iconClass = "fa-fire";
+      }
+      if (dominant === "Crime") {
+        suggestedTeam = "Police Department";
+        iconClass = "fa-shield-alt";
+      }
+      if (dominant === "Accident") {
+        suggestedTeam = "Traffic Management Unit";
+        iconClass = "fa-car-crash";
+      }
+      if (dominant === "Casualty") {
+        suggestedTeam = "Emergency Response Team";
+        iconClass = "fa-skull-crossbones";
+      }
+      if (dominant === "Protest") {
+        suggestedTeam = "Public Order and Safety";
+        iconClass = "fa-users";
+      }
+      if (dominant === "Power Outage") {
+        suggestedTeam = "Electrical Services";
+        iconClass = "fa-lightbulb";
+      }
+      if (dominant === "Water Shortage") {
+        suggestedTeam = "Water Utility Services";
+        iconClass = "fa-tint";
+      }
+      if (dominant === "Animal Control") {
+        suggestedTeam = "Animal Welfare Unit";
+        iconClass = "fa-paw";
+      }
 
-            html += `
+      html += `
             <div class="bg-white dark:bg-gray-800 rounded-xl p-0 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden animate-fade-in-up">
                 <div class="bg-gray-100 dark:bg-gray-900/50 px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center gap-2">
@@ -287,11 +287,11 @@ export const AdvancedFeatures = {
                     </div>
                 </div>
             </div>`;
-        });
+    });
 
-        // Fallback for no clusters
-        if (html === '') {
-            html = `
+    // Fallback for no clusters
+    if (html === "") {
+      html = `
             <div class="text-center py-10 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
                 <div class="bg-gray-100 dark:bg-gray-700 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                     <i class="fas fa-shield-alt text-gray-400 text-xl"></i>
@@ -299,281 +299,281 @@ export const AdvancedFeatures = {
                 <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">No Critical Anomalies</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">System is actively monitoring incoming citizen reports. Status is nominal.</p>
             </div>`;
-        }
-
-        const contentEl = document.getElementById('insightsContent');
-        if (contentEl) {
-            contentEl.innerHTML = html;
-        }
-    },
-
-    getMode: (array) => {
-        if (array.length == 0) return null;
-        var modeMap = {};
-        var maxEl = array[0], maxCount = 1;
-        for (var i = 0; i < array.length; i++) {
-            var el = array[i];
-            if (modeMap[el] == null) modeMap[el] = 1;
-            else modeMap[el]++;
-            if (modeMap[el] > maxCount) {
-                maxEl = el;
-                maxCount = modeMap[el];
-            }
-        }
-        return maxEl;
-    },
-
-    getJurisdiction: (lat, lng) => {
-        // Re-using the internal function if available globally or duplicating logic
-        // For now, assuming Global Scope access or fallback
-        if (typeof getJurisdiction === 'function') return getJurisdiction(lat, lng);
-        return null;
-    },
-
-    loadBoundaries: async () => {
-        await loadBarangayBoundaries();
-    },
-
-    getJurisdiction: (lat, lng) => {
-        return getJurisdiction(lat, lng);
-    },
-
-    getDetailedLocation: async (point) => {
-        return await getDetailedLocation(point);
-    },
-
-    renderCriticalMarkers: (criticalPoints) => {
-        renderCriticalMarkers(criticalPoints);
-    },
-
-    renderEmergencyPanel: (criticalPoints) => {
-        renderEmergencyPanel(criticalPoints);
-    },
-
-    dispatchEmergency: (idx) => {
-        dispatchEmergency(idx);
     }
+
+    const contentEl = document.getElementById("insightsContent");
+    if (contentEl) {
+      contentEl.innerHTML = html;
+    }
+  },
+
+  getMode: (array) => {
+    if (array.length == 0) return null;
+    const modeMap = {};
+    let maxEl = array[0], maxCount = 1;
+    for (let i = 0; i < array.length; i++) {
+      const el = array[i];
+      if (modeMap[el] == null) modeMap[el] = 1;
+      else modeMap[el]++;
+      if (modeMap[el] > maxCount) {
+        maxEl = el;
+        maxCount = modeMap[el];
+      }
+    }
+    return maxEl;
+  },
+
+  getJurisdiction: (lat, lng) => {
+    // Re-using the internal function if available globally or duplicating logic
+    // For now, assuming Global Scope access or fallback
+    if (typeof getJurisdiction === "function") return getJurisdiction(lat, lng);
+    return null;
+  },
+
+  loadBoundaries: async () => {
+    await loadBarangayBoundaries();
+  },
+
+  getJurisdiction: (lat, lng) => {
+    return getJurisdiction(lat, lng);
+  },
+
+  getDetailedLocation: async (point) => {
+    return await getDetailedLocation(point);
+  },
+
+  renderCriticalMarkers: (criticalPoints) => {
+    renderCriticalMarkers(criticalPoints);
+  },
+
+  renderEmergencyPanel: (criticalPoints) => {
+    renderEmergencyPanel(criticalPoints);
+  },
+
+  dispatchEmergency: (idx) => {
+    dispatchEmergency(idx);
+  }
 };
 
 // ==================== INTERNAL LOGIC ====================
 
 async function loadBarangayBoundaries() {
-    try {
-        // Adjust path if needed based on where this is served
-        const response = await fetch('/assets/json/brgy_boundaries_location.json');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        barangayGeoJSON = {
-            type: 'FeatureCollection',
-            features: data.map(brgy => ({
-                type: 'Feature',
-                properties: { name: brgy.name },
-                geometry: brgy.geojson
-            }))
-        };
-        console.log('[ZONE] Barangay boundaries loaded:', barangayGeoJSON.features.length, 'zones');
-    } catch (error) {
-        console.warn('[ZONE] Failed to load barangay boundaries:', error.message);
-    }
+  try {
+    // Adjust path if needed based on where this is served
+    const response = await fetch("/assets/json/brgy_boundaries_location.json");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    barangayGeoJSON = {
+      type: "FeatureCollection",
+      features: data.map(brgy => ({
+        type: "Feature",
+        properties: { name: brgy.name },
+        geometry: brgy.geojson
+      }))
+    };
+    console.log("[ZONE] Barangay boundaries loaded:", barangayGeoJSON.features.length, "zones");
+  } catch (error) {
+    console.warn("[ZONE] Failed to load barangay boundaries:", error.message);
+  }
 }
 
 function getJurisdiction(lat, lng) {
-    if (!barangayGeoJSON || !barangayGeoJSON.features) return 'Unmapped Zone';
-    if (typeof turf === 'undefined') return 'Turf.js Missing';
+  if (!barangayGeoJSON || !barangayGeoJSON.features) return "Unmapped Zone";
+  if (typeof turf === "undefined") return "Turf.js Missing";
 
-    try {
-        const point = turf.point([lng, lat]);
-        for (const feature of barangayGeoJSON.features) {
-            if (turf.booleanPointInPolygon(point, feature)) {
-                return feature.properties.name || 'Unknown Barangay';
-            }
-        }
-        return 'Unmapped Zone';
-    } catch (error) {
-        return 'Detection Error';
+  try {
+    const point = turf.point([lng, lat]);
+    for (const feature of barangayGeoJSON.features) {
+      if (turf.booleanPointInPolygon(point, feature)) {
+        return feature.properties.name || "Unknown Barangay";
+      }
     }
+    return "Unmapped Zone";
+  } catch (error) {
+    return "Detection Error";
+  }
 }
 
 async function reverseGeocode(lat, lng) {
-    const cacheKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
-    if (geocodeCache.has(cacheKey)) return geocodeCache.get(cacheKey);
+  const cacheKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+  if (geocodeCache.has(cacheKey)) return geocodeCache.get(cacheKey);
 
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastGeocodeTime;
-    if (timeSinceLastRequest < GEOCODE_RATE_LIMIT_MS) {
-        await new Promise(resolve => setTimeout(resolve, GEOCODE_RATE_LIMIT_MS - timeSinceLastRequest));
-    }
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastGeocodeTime;
+  if (timeSinceLastRequest < GEOCODE_RATE_LIMIT_MS) {
+    await new Promise(resolve => setTimeout(resolve, GEOCODE_RATE_LIMIT_MS - timeSinceLastRequest));
+  }
 
-    try {
-        lastGeocodeTime = Date.now();
-        const url = `/api/reverse-geocode?lat=${lat}&lng=${lng}`;
+  try {
+    lastGeocodeTime = Date.now();
+    const url = `/api/reverse-geocode?lat=${lat}&lng=${lng}`;
 
-        const response = await fetch(url);
+    const response = await fetch(url);
 
-        if (!response.ok) throw new Error('Geocode failed');
+    if (!response.ok) throw new Error("Geocode failed");
 
-        const data = await response.json();
-        const address = {
-            street: data.address?.road || data.address?.street || null,
-            barangay: data.address?.village || data.address?.suburb || null,
-            city: data.address?.city || data.address?.town || null
-        };
+    const data = await response.json();
+    const address = {
+      street: data.address?.road || data.address?.street || null,
+      barangay: data.address?.village || data.address?.suburb || null,
+      city: data.address?.city || data.address?.town || null
+    };
 
-        console.log(`[GEOCODE] Resolved: ${address.street}`);
-        geocodeCache.set(cacheKey, address);
-        return address;
-    } catch (error) {
-        const fallback = { street: null, barangay: null, error: error.message };
-        geocodeCache.set(cacheKey, fallback);
-        return fallback;
-    }
+    console.log(`[GEOCODE] Resolved: ${address.street}`);
+    geocodeCache.set(cacheKey, address);
+    return address;
+  } catch (error) {
+    const fallback = { street: null, barangay: null, error: error.message };
+    geocodeCache.set(cacheKey, fallback);
+    return fallback;
+  }
 }
 
 async function getDetailedLocation(point) {
-    if (!point.lat && !point.latitude) return 'Unknown Location';
-    const lat = point.lat || point.latitude;
-    const lng = point.lng || point.longitude;
+  if (!point.lat && !point.latitude) return "Unknown Location";
+  const lat = point.lat || point.latitude;
+  const lng = point.lng || point.longitude;
 
-    const barangay = getJurisdiction(lat, lng);
-    try {
-        const address = await reverseGeocode(lat, lng);
-        if (address.street) return `${address.street}, ${barangay}`;
-        return barangay;
-    } catch {
-        return barangay;
-    }
+  const barangay = getJurisdiction(lat, lng);
+  try {
+    const address = await reverseGeocode(lat, lng);
+    if (address.street) return `${address.street}, ${barangay}`;
+    return barangay;
+  } catch {
+    return barangay;
+  }
 }
 
 function renderCriticalMarkers(criticalPoints) {
-    if (!mapInstance) return;
-    if (criticalMarkersLayer) mapInstance.removeLayer(criticalMarkersLayer);
+  if (!mapInstance) return;
+  if (criticalMarkersLayer) mapInstance.removeLayer(criticalMarkersLayer);
 
-    criticalMarkersLayer = L.layerGroup();
+  criticalMarkersLayer = L.layerGroup();
 
-    criticalPoints.forEach((point, idx) => {
-        const type = point.category ? point.category.toUpperCase() : 'EMERGENCY';
-        const iconMap = {
-            'FIRE': 'fire',
-            'FLOOD': 'water',
-            'CRIME': 'user-shield',
-            'ACCIDENT': 'car-crash',
-            'MEDICAL': 'heartbeat',
-            'CASUALTY': 'skull-crossbones'
-        };
-        const icon = iconMap[type] || 'exclamation-triangle';
-        const typeClass = type.toLowerCase();
+  criticalPoints.forEach((point, idx) => {
+    const type = point.category ? point.category.toUpperCase() : "EMERGENCY";
+    const iconMap = {
+      "FIRE": "fire",
+      "FLOOD": "water",
+      "CRIME": "user-shield",
+      "ACCIDENT": "car-crash",
+      "MEDICAL": "heartbeat",
+      "CASUALTY": "skull-crossbones"
+    };
+    const icon = iconMap[type] || "exclamation-triangle";
+    const typeClass = type.toLowerCase();
 
-        const pulsingIcon = L.divIcon({
-            className: 'leaflet-critical-icon',
-            html: `
+    const pulsingIcon = L.divIcon({
+      className: "leaflet-critical-icon",
+      html: `
                 <div class="critical-pulse-marker ${typeClass}">
                     <div class="critical-marker-inner ${typeClass}">
                         <i class="fas fa-${icon}"></i>
                     </div>
                 </div>
             `,
-            iconSize: [40, 40],
-            iconAnchor: [20, 20],
-            popupAnchor: [0, -20]
-        });
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+      popupAnchor: [0, -20]
+    });
 
-        const lat = point.lat || point.latitude;
-        const lng = point.lng || point.longitude;
+    const lat = point.lat || point.latitude;
+    const lng = point.lng || point.longitude;
 
-        const marker = L.marker([lat, lng], {
-            icon: pulsingIcon,
-            zIndexOffset: 1000
-        });
+    const marker = L.marker([lat, lng], {
+      icon: pulsingIcon,
+      zIndexOffset: 1000
+    });
 
-        const popupContent = `
+    const popupContent = `
             <div class="critical-popup" style="min-width: 250px;">
                 <div style="background: #dc2626; color: white; padding: 8px; border-radius: 4px 4px 0 0; font-weight: bold;">
                     🚨 ${type} ALERT
                 </div>
                 <div style="padding: 10px;">
-                    <p style="margin: 0 0 5px;">"${point.description || 'No description'}"</p>
+                    <p style="margin: 0 0 5px;">"${point.description || "No description"}"</p>
                     <small>Category: ${point.category}</small>
                 </div>
             </div>
         `;
 
-        marker.bindPopup(popupContent);
-        criticalMarkersLayer.addLayer(marker);
-    });
+    marker.bindPopup(popupContent);
+    criticalMarkersLayer.addLayer(marker);
+  });
 
-    criticalMarkersLayer.addTo(mapInstance);
+  criticalMarkersLayer.addTo(mapInstance);
 }
 
 function renderEmergencyPanel(criticalPoints) {
-    const content = document.getElementById('emergencyContent');
-    const countBadge = document.getElementById('emergencyCount');
-    const panel = document.getElementById('emergencyPanel');
+  const content = document.getElementById("emergencyContent");
+  const countBadge = document.getElementById("emergencyCount");
+  const panel = document.getElementById("emergencyPanel");
 
-    if (!content || !countBadge) return;
+  if (!content || !countBadge) return;
 
-    currentCriticalPoints = criticalPoints || [];
-    countBadge.textContent = currentCriticalPoints.length;
+  currentCriticalPoints = criticalPoints || [];
+  countBadge.textContent = currentCriticalPoints.length;
 
-    if (currentCriticalPoints.length > 0 && panel) {
-        panel.classList.remove('hidden');
-        panel.classList.add('active');
-    }
+  if (currentCriticalPoints.length > 0 && panel) {
+    panel.classList.remove("hidden");
+    panel.classList.add("active");
+  }
 
-    if (currentCriticalPoints.length === 0) {
-        content.innerHTML = `
+  if (currentCriticalPoints.length === 0) {
+    content.innerHTML = `
             <div class="emergency-placeholder">
                 <i class="fas fa-shield-alt"></i>
                 <p>No active emergencies</p>
             </div>`;
-        return;
-    }
+    return;
+  }
 
-    content.innerHTML = currentCriticalPoints.map((point, idx) => {
-        const type = point.category ? point.category.toUpperCase() : 'EMERGENCY';
-        const lat = point.lat || point.latitude;
-        const lng = point.lng || point.longitude;
-        const barangay = getJurisdiction(lat, lng);
+  content.innerHTML = currentCriticalPoints.map((point, idx) => {
+    const type = point.category ? point.category.toUpperCase() : "EMERGENCY";
+    const lat = point.lat || point.latitude;
+    const lng = point.lng || point.longitude;
+    const barangay = getJurisdiction(lat, lng);
 
-        return `
+    return `
             <div class="emergency-card" onclick="window.panToEmergency(${lat}, ${lng})">
                 <div class="emergency-card-header">
                     <span class="emergency-type-badge">${type}</span>
                 </div>
                 <div class="emergency-card-body">
-                    <p>"${point.description || 'Report'}"</p>
+                    <p>"${point.description || "Report"}"</p>
                     <small><i class="fas fa-map-marker-alt"></i> ${barangay}</small>
                 </div>
             </div>
         `;
-    }).join('');
+  }).join("");
 }
 
 window.panToEmergency = (lat, lng) => {
-    if (mapInstance) {
-        mapInstance.flyTo([lat, lng], 18, { duration: 1 });
-    }
+  if (mapInstance) {
+    mapInstance.flyTo([lat, lng], 18, { duration: 1 });
+  }
 };
 
 function dispatchEmergency(idx) {
-    alert("Dispatch Simulated: Unit notified.");
+  alert("Dispatch Simulated: Unit notified.");
 }
 
 function initEmergencyPanelListeners() {
-    // Port listeners for closing/minimizing
+  // Port listeners for closing/minimizing
 }
 
 function getMode(array) {
-    if (array.length == 0) return null;
-    var modeMap = {};
-    var maxEl = array[0], maxCount = 1;
-    for (var i = 0; i < array.length; i++) {
-        var el = array[i];
-        if (modeMap[el] == null) modeMap[el] = 1;
-        else modeMap[el]++;
-        if (modeMap[el] > maxCount) {
-            maxEl = el;
-            maxCount = modeMap[el];
-        }
+  if (array.length == 0) return null;
+  const modeMap = {};
+  let maxEl = array[0], maxCount = 1;
+  for (let i = 0; i < array.length; i++) {
+    const el = array[i];
+    if (modeMap[el] == null) modeMap[el] = 1;
+    else modeMap[el]++;
+    if (modeMap[el] > maxCount) {
+      maxEl = el;
+      maxCount = modeMap[el];
     }
-    return maxEl;
+  }
+  return maxEl;
 }

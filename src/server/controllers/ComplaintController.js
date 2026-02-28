@@ -90,7 +90,6 @@ class ComplaintController {
   }
 
 
-
   /**
    * Send reminder for complaint
    */
@@ -731,7 +730,7 @@ class ComplaintController {
 
     // Check permission by fetching complaint with validation
     // If citizen, userId ensures ownership check. If admin/officer, passed as null (role checks handled by middleware/service logic)
-    const checkUserId = user.role === 'citizen' ? user.id : null;
+    const checkUserId = user.role === "citizen" ? user.id : null;
     await this.complaintService.getComplaintById(id, checkUserId);
 
     const history = await this.complaintService.getComplaintHistory(id);

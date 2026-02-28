@@ -231,7 +231,7 @@ async function main() {
     },
   };
 
-  fs.writeFileSync(outputPath, JSON.stringify(config, null, 2) + "\n", "utf8");
+  fs.writeFileSync(outputPath, `${JSON.stringify(config, null, 2)  }\n`, "utf8");
   console.log(`OK: wrote ${outputPath}`);
   console.log(`- causal links: ${links.length}`);
   console.log(`- dictionary keywords: ${keywords.length}`);

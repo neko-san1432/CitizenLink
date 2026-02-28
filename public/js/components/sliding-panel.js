@@ -4,37 +4,37 @@
  */
 
 class SlidingPanel {
-    constructor() {
-        this.overlay = null;
-        this.panel = null;
-        this.body = null;
-        this.closeBtn = null;
-        this.isOpen = false;
-        this.currentComplaintId = null;
-        this.detailsInstance = null;
-        this.originalUrl = window.location.href;
-        this.init();
-    }
+  constructor() {
+    this.overlay = null;
+    this.panel = null;
+    this.body = null;
+    this.closeBtn = null;
+    this.isOpen = false;
+    this.currentComplaintId = null;
+    this.detailsInstance = null;
+    this.originalUrl = window.location.href;
+    this.init();
+  }
 
-    init() {
-        this.ensureElements();
-        this.attachEventListeners();
-        this.checkInitialState();
-    }
+  init() {
+    this.ensureElements();
+    this.attachEventListeners();
+    this.checkInitialState();
+  }
 
-    ensureElements() {
-        // Always create elements if any required piece is missing
-        if (!this.overlay || !this.panel || !this.body || !this.closeBtn) {
-            const existing = document.getElementById('sliding-panel-container');
-            if (existing) existing.remove();
-            this.createElements();
-        }
+  ensureElements() {
+    // Always create elements if any required piece is missing
+    if (!this.overlay || !this.panel || !this.body || !this.closeBtn) {
+      const existing = document.getElementById("sliding-panel-container");
+      if (existing) existing.remove();
+      this.createElements();
     }
+  }
 
-    createElements() {
-        const container = document.createElement('div');
-        container.id = 'sliding-panel-container';
-        container.innerHTML = `
+  createElements() {
+    const container = document.createElement("div");
+    container.id = "sliding-panel-container";
+    container.innerHTML = `
             <div class="sliding-panel-overlay"></div>
             <div class="sliding-panel">
                 <div class="sliding-panel-header">
@@ -56,114 +56,114 @@ class SlidingPanel {
                 </div>
             </div>
         `;
-        document.body.appendChild(container);
+    document.body.appendChild(container);
 
-        this.overlay = container.querySelector('.sliding-panel-overlay');
-        this.panel = container.querySelector('.sliding-panel');
-        this.body = container.querySelector('.sliding-panel-body');
-        this.closeBtn = container.querySelector('.sliding-panel-close-btn');
+    this.overlay = container.querySelector(".sliding-panel-overlay");
+    this.panel = container.querySelector(".sliding-panel");
+    this.body = container.querySelector(".sliding-panel-body");
+    this.closeBtn = container.querySelector(".sliding-panel-close-btn");
+  }
+
+  attachEventListeners() {
+    if (this.closeBtn) {
+      this.closeBtn.addEventListener("click", () => this.close());
+    }
+    if (this.overlay) {
+      this.overlay.addEventListener("click", () => this.close());
     }
 
-    attachEventListeners() {
-        if (this.closeBtn) {
-            this.closeBtn.addEventListener('click', () => this.close());
-        }
-        if (this.overlay) {
-            this.overlay.addEventListener('click', () => this.close());
-        }
+    // Handle browser back button
+    window.addEventListener("popstate", (event) => {
+      if (this.isOpen) {
+        this.close(false); // Close without pushing new state
+      } else if (event.state && event.state.complaintId) {
+        this.open(event.state.complaintId, false);
+      }
+    });
 
-        // Handle browser back button
-        window.addEventListener('popstate', (event) => {
-            if (this.isOpen) {
-                this.close(false); // Close without pushing new state
-            } else if (event.state && event.state.complaintId) {
-                this.open(event.state.complaintId, false);
-            }
-        });
+    // Listen for global open events if needed
+    window.addEventListener("open-complaint-panel", (e) => {
+      if (e.detail && e.detail.complaintId) {
+        this.open(e.detail.complaintId);
+      }
+    });
+  }
 
-        // Listen for global open events if needed
-        window.addEventListener('open-complaint-panel', (e) => {
-            if (e.detail && e.detail.complaintId) {
-                this.open(e.detail.complaintId);
-            }
-        });
+  checkInitialState() {
+    // If we load the page with a complaint ID in the URL on a page that supports panels
+    // For now, let's keep it simple and just listen for events or manual calls
+  }
+
+  async open(complaintId, pushState = true) {
+    if (!complaintId) return;
+    this.ensureElements();
+
+    this.isOpen = true;
+    this.currentComplaintId = complaintId;
+
+    // Show panel and overlay
+    this.overlay.classList.add("active");
+    this.panel.classList.add("active");
+    document.body.style.overflow = "hidden"; // Prevent background scroll
+
+    // Update URL and history
+    if (pushState) {
+      const newUrl = `/review/${complaintId}?view=panel`; // Use a visual indicator in URL
+      history.pushState({ complaintId }, "", newUrl);
     }
 
-    checkInitialState() {
-        // If we load the page with a complaint ID in the URL on a page that supports panels
-        // For now, let's keep it simple and just listen for events or manual calls
+    // Load content
+    await this.loadComplaint(complaintId);
+  }
+
+  async close(pushState = true) {
+    if (!this.isOpen) return;
+
+    this.isOpen = false;
+    this.currentComplaintId = null;
+
+    // Hide panel and overlay
+    this.overlay.classList.remove("active");
+    this.panel.classList.remove("active");
+    document.body.style.overflow = ""; // Restore scroll
+
+    // Restore URL
+    if (pushState) {
+      // Go back to the original view (e.g., /review-queue)
+      // If the user came from a direct link, this might be tricky,
+      // but usually they click from a list.
+      if (history.state && history.state.complaintId) {
+        history.back();
+      } else {
+        history.pushState({}, "", this.originalUrl);
+      }
     }
 
-    async open(complaintId, pushState = true) {
-        if (!complaintId) return;
-        this.ensureElements();
+    // Cleanup the renderer instance
+    if (this.detailsInstance) {
+      this.detailsInstance.cleanup();
+      this.detailsInstance = null;
+    }
+  }
 
-        this.isOpen = true;
-        this.currentComplaintId = complaintId;
+  async loadComplaint(id) {
+    const container = document.getElementById("panel-content-container");
+    const loader = document.getElementById("panel-loader");
 
-        // Show panel and overlay
-        this.overlay.classList.add('active');
-        this.panel.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent background scroll
+    container.innerHTML = "";
+    loader.style.display = "block";
 
-        // Update URL and history
-        if (pushState) {
-            const newUrl = `/review/${complaintId}?view=panel`; // Use a visual indicator in URL
-            history.pushState({ complaintId }, '', newUrl);
-        }
-
-        // Load content
-        await this.loadComplaint(complaintId);
+    // Cleanup previous instance if any
+    if (this.detailsInstance) {
+      this.detailsInstance.cleanup();
+      this.detailsInstance = null;
     }
 
-    async close(pushState = true) {
-        if (!this.isOpen) return;
+    try {
+      // Dynamically import the ComplaintDetails class
+      const { ComplaintDetails } = await import("../pages/complaint-details.js");
 
-        this.isOpen = false;
-        this.currentComplaintId = null;
-
-        // Hide panel and overlay
-        this.overlay.classList.remove('active');
-        this.panel.classList.remove('active');
-        document.body.style.overflow = ''; // Restore scroll
-
-        // Restore URL
-        if (pushState) {
-            // Go back to the original view (e.g., /review-queue)
-            // If the user came from a direct link, this might be tricky,
-            // but usually they click from a list.
-            if (history.state && history.state.complaintId) {
-                history.back();
-            } else {
-                history.pushState({}, '', this.originalUrl);
-            }
-        }
-
-        // Cleanup the renderer instance
-        if (this.detailsInstance) {
-            this.detailsInstance.cleanup();
-            this.detailsInstance = null;
-        }
-    }
-
-    async loadComplaint(id) {
-        const container = document.getElementById('panel-content-container');
-        const loader = document.getElementById('panel-loader');
-
-        container.innerHTML = '';
-        loader.style.display = 'block';
-
-        // Cleanup previous instance if any
-        if (this.detailsInstance) {
-            this.detailsInstance.cleanup();
-            this.detailsInstance = null;
-        }
-
-        try {
-            // Dynamically import the ComplaintDetails class
-            const { ComplaintDetails } = await import('../pages/complaint-details.js');
-
-            container.innerHTML = `
+      container.innerHTML = `
                 <div id="complaint-details" class="complaint-details" style="display: none;">
                     <div class="details-header mb-4">
                         <div class="flex items-center justify-between">
@@ -235,28 +235,28 @@ class SlidingPanel {
                 </div>
             `;
 
-            // Initialize the ComplaintDetails renderer in the specified container
-            this.detailsInstance = new ComplaintDetails(container, id);
-            const details = this.detailsInstance;
+      // Initialize the ComplaintDetails renderer in the specified container
+      this.detailsInstance = new ComplaintDetails(container, id);
+      const details = this.detailsInstance;
 
-            // Update panel title area once data is loaded (via listener or polling)
-            const checkData = setInterval(() => {
-                if (details.complaint) {
-                    const titleArea = document.getElementById('sliding-panel-title-area');
-                    if (titleArea) {
-                        titleArea.textContent = `Complaint Details`;
-                    }
-                    clearInterval(checkData);
-                }
-            }, 100);
-
-        } catch (error) {
-            console.error('Failed to load complaint in panel:', error);
-            container.innerHTML = `<div style="padding: 20px; color: #ef4444;">Error loading details: ${error.message}</div>`;
-        } finally {
-            loader.style.display = 'none';
+      // Update panel title area once data is loaded (via listener or polling)
+      const checkData = setInterval(() => {
+        if (details.complaint) {
+          const titleArea = document.getElementById("sliding-panel-title-area");
+          if (titleArea) {
+            titleArea.textContent = `Complaint Details`;
+          }
+          clearInterval(checkData);
         }
+      }, 100);
+
+    } catch (error) {
+      console.error("Failed to load complaint in panel:", error);
+      container.innerHTML = `<div style="padding: 20px; color: #ef4444;">Error loading details: ${error.message}</div>`;
+    } finally {
+      loader.style.display = "none";
     }
+  }
 }
 
 // Global instance

@@ -4,7 +4,7 @@ const { getDynamicMinPts, getDynamicEpsilon } = require("../utils/similarityUtil
 /**
  * SimilarityCalculatorService
  * Advanced similarity calculations and pattern detection
- * 
+ *
  * Enhanced with Adaptive DBSCAN Parameters:
  * - Uses category-specific minPts values for clustering
  * - Fire/Medical emergencies require minPts=1 (immediate attention)
@@ -258,12 +258,12 @@ class SimilarityCalculatorService {
   }
   /**
    * DBSCAN-like clustering algorithm with Adaptive minPts
-   * 
+   *
    * Enhanced Implementation:
    * - Uses category-specific minPts values (Fire=1, Medical=1, Trash=4, etc.)
    * - Critical complaints (fire, medical) can form clusters with fewer neighbors
    * - Routine complaints require more neighbors to confirm pattern
-   * 
+   *
    * @param {Array} complaints - Array of complaint objects with lat/lng
    * @param {number} radiusKm - Base radius for neighbor search
    * @param {number} defaultMinPoints - Fallback minPts if category not found
@@ -275,13 +275,13 @@ class SimilarityCalculatorService {
     complaints.forEach((complaint, _index) => {
       if (visited.has(complaint.id)) return;
       visited.add(complaint.id);
-      
+
       // Get adaptive minPts based on complaint category
       // Fall back to default if category not found in lookup
-      const category = complaint.type || complaint.category || '';
-      const subcategory = complaint.subtype || complaint.subcategory || '';
+      const category = complaint.type || complaint.category || "";
+      const subcategory = complaint.subtype || complaint.subcategory || "";
       const adaptiveMinPts = getDynamicMinPts(category, subcategory) || defaultMinPoints;
-      
+
       // Find neighbors
       const neighbors = this.findNeighbors(complaint, complaints, radiusKm);
       if (neighbors.length < adaptiveMinPts) {
@@ -303,12 +303,12 @@ class SimilarityCalculatorService {
         const neighbor = neighbors[i];
         if (!visited.has(neighbor.id)) {
           visited.add(neighbor.id);
-          
+
           // Get adaptive minPts for this neighbor too
-          const neighborCategory = neighbor.type || neighbor.category || '';
-          const neighborSubcategory = neighbor.subtype || neighbor.subcategory || '';
+          const neighborCategory = neighbor.type || neighbor.category || "";
+          const neighborSubcategory = neighbor.subtype || neighbor.subcategory || "";
           const neighborMinPts = getDynamicMinPts(neighborCategory, neighborSubcategory) || defaultMinPoints;
-          
+
           const neighborNeighbors = this.findNeighbors(
             neighbor,
             complaints,

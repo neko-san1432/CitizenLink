@@ -2,11 +2,11 @@
  * DRIMS Statistical Analysis Integration
  * =============================================
  * Replaces Excel Export with Python-powered Statistical Analysis
- * 
+ *
  * This module sends dashboard data to the local statistical server
  * which runs the Python analysis script and returns thesis-ready
  * statistical metrics.
- * 
+ *
  * @version 1.0.0
  * @requires statistical_server.js running on port 3456
  */
@@ -14,11 +14,11 @@
 // ==================== CONFIGURATION ====================
 
 const STATS_CONFIG = {
-    // Dynamically use current hostname to support LAN environments
-    // Fallback to localhost if window.location.hostname is empty (e.g., when opening from file system)
-    serverUrl: `http://${window.location.hostname || 'localhost'}:3456`,
-    timeout: 60000, // 60 seconds for analysis
-    retryAttempts: 3
+  // Dynamically use current hostname to support LAN environments
+  // Fallback to localhost if window.location.hostname is empty (e.g., when opening from file system)
+  serverUrl: `http://${window.location.hostname || "localhost"}:3456`,
+  timeout: 60000, // 60 seconds for analysis
+  retryAttempts: 3
 };
 
 // ==================== SERVER CONNECTION ====================
@@ -27,22 +27,22 @@ const STATS_CONFIG = {
  * Check if the statistical server is running
  */
 async function checkStatisticalServer() {
-    try {
-        const response = await fetch(`${STATS_CONFIG.serverUrl}/health`, {
-            method: 'GET',
-            timeout: 5000
-        });
+  try {
+    const response = await fetch(`${STATS_CONFIG.serverUrl}/health`, {
+      method: "GET",
+      timeout: 5000
+    });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log('[STATS] Server connected:', data.service);
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.warn('[STATS] Server not available:', error.message);
-        return false;
+    if (response.ok) {
+      const data = await response.json();
+      console.log("[STATS] Server connected:", data.service);
+      return true;
     }
+    return false;
+  } catch (error) {
+    console.warn("[STATS] Server not available:", error.message);
+    return false;
+  }
 }
 
 // ==================== DATA PREPARATION ====================
@@ -51,288 +51,288 @@ async function checkStatisticalServer() {
  * Prepare dashboard data for statistical analysis
  */
 function prepareDashboardDataForAnalysis() {
-    // Get data from simulation engine
-    let complaints = [];
-    let clusters = [];
-    let noisePoints = [];
+  // Get data from simulation engine
+  let complaints = [];
+  let clusters = [];
+  let noisePoints = [];
 
-    if (typeof simulationEngine !== 'undefined') {
-        complaints = simulationEngine.complaints || [];
-    } else if (typeof window.simulationEngine !== 'undefined') {
-        complaints = window.simulationEngine.complaints || [];
+  if (typeof simulationEngine !== "undefined") {
+    complaints = simulationEngine.complaints || [];
+  } else if (typeof window.simulationEngine !== "undefined") {
+    complaints = window.simulationEngine.complaints || [];
+  }
+
+  // Get clusters from global state (set by dashboard_production.js)
+  if (typeof currentClusters !== "undefined") {
+    clusters = currentClusters || [];
+  } else if (typeof window.currentClusters !== "undefined") {
+    clusters = window.currentClusters || [];
+  }
+
+  // Get noise points
+  if (typeof currentNoisePoints !== "undefined") {
+    noisePoints = currentNoisePoints || [];
+  } else if (typeof window.currentNoisePoints !== "undefined") {
+    noisePoints = window.currentNoisePoints || [];
+  }
+
+  // v3.9.1 FIX: Get NLP dictionary for running fresh analysis on complaints without nlp_result
+  let nlpDictionary = null;
+  if (typeof NLP_DICTIONARIES !== "undefined" && NLP_DICTIONARIES) {
+    nlpDictionary = NLP_DICTIONARIES;
+  } else if (typeof window.NLP_DICTIONARIES !== "undefined" && window.NLP_DICTIONARIES) {
+    nlpDictionary = window.NLP_DICTIONARIES;
+  }
+
+  // v3.9.1 FIX: Helper function to run NLP analysis on a complaint
+  const runNLPAnalysis = (text) => {
+    if (!text || !nlpDictionary) return null;
+
+    // Try to use NLPProcessor if available
+    if (typeof NLPProcessor !== "undefined" && NLPProcessor.analyzeText) {
+      return NLPProcessor.analyzeText(text, nlpDictionary);
+    } else if (typeof window.NLPProcessor !== "undefined" && window.NLPProcessor.analyzeText) {
+      return window.NLPProcessor.analyzeText(text, nlpDictionary);
+    } else if (typeof analyzeText === "function") {
+      return analyzeText(text, nlpDictionary);
+    } else if (typeof window.analyzeText === "function") {
+      return window.analyzeText(text, nlpDictionary);
+    }
+    return null;
+  };
+
+  // Prepare classification data with NLP results
+  const classificationData = complaints.map(complaint => {
+    // Get actual category (from source data - what the USER selected)
+    // v3.9 AUDIT FIX: Use subcategory if available to match NLP specificity
+    const actualCategory = complaint.subcategory || complaint.category || complaint.source_category || "Unknown";
+
+    // v3.9.1 FIX: Get NLP predicted category - NEVER default to actualCategory!
+    // This is the NLP system's prediction based on the description text
+    let predictedCategory = null;
+    let nlpResult = null;
+
+    // First, try to get existing NLP result
+    if (complaint.nlp_result && complaint.nlp_result.category) {
+      predictedCategory = complaint.nlp_result.category;
+      nlpResult = complaint.nlp_result;
+    } else if (complaint.analyzed_category) {
+      predictedCategory = complaint.analyzed_category;
     }
 
-    // Get clusters from global state (set by dashboard_production.js)
-    if (typeof currentClusters !== 'undefined') {
-        clusters = currentClusters || [];
-    } else if (typeof window.currentClusters !== 'undefined') {
-        clusters = window.currentClusters || [];
-    }
-
-    // Get noise points
-    if (typeof currentNoisePoints !== 'undefined') {
-        noisePoints = currentNoisePoints || [];
-    } else if (typeof window.currentNoisePoints !== 'undefined') {
-        noisePoints = window.currentNoisePoints || [];
-    }
-
-    // v3.9.1 FIX: Get NLP dictionary for running fresh analysis on complaints without nlp_result
-    let nlpDictionary = null;
-    if (typeof NLP_DICTIONARIES !== 'undefined' && NLP_DICTIONARIES) {
-        nlpDictionary = NLP_DICTIONARIES;
-    } else if (typeof window.NLP_DICTIONARIES !== 'undefined' && window.NLP_DICTIONARIES) {
-        nlpDictionary = window.NLP_DICTIONARIES;
-    }
-
-    // v3.9.1 FIX: Helper function to run NLP analysis on a complaint
-    const runNLPAnalysis = (text) => {
-        if (!text || !nlpDictionary) return null;
-
-        // Try to use NLPProcessor if available
-        if (typeof NLPProcessor !== 'undefined' && NLPProcessor.analyzeText) {
-            return NLPProcessor.analyzeText(text, nlpDictionary);
-        } else if (typeof window.NLPProcessor !== 'undefined' && window.NLPProcessor.analyzeText) {
-            return window.NLPProcessor.analyzeText(text, nlpDictionary);
-        } else if (typeof analyzeText === 'function') {
-            return analyzeText(text, nlpDictionary);
-        } else if (typeof window.analyzeText === 'function') {
-            return window.analyzeText(text, nlpDictionary);
+    // v3.9.1 FIX: If no NLP result exists, run NLP analysis NOW
+    if (!predictedCategory) {
+      const text = complaint.description || complaint.text || "";
+      if (text && nlpDictionary) {
+        nlpResult = runNLPAnalysis(text);
+        if (nlpResult && nlpResult.category) {
+          predictedCategory = nlpResult.category;
+          // Cache the result back to the complaint for future use
+          complaint.nlp_result = nlpResult;
         }
-        return null;
+      }
+    }
+
+    // v3.9.1 FIX: If STILL no prediction, mark as "Unclassified" NOT actualCategory
+    // This prevents data leakage (100% accuracy from using same value for both)
+    if (!predictedCategory) {
+      predictedCategory = "Unclassified";
+    }
+
+    // v3.9 AUDIT FIX: Normalize labels to ensure consistency in confusion matrix
+    const normalize = (cat) => {
+      if (!cat) return "Unknown";
+      const c = cat.toString().trim();
+      // Map common variants/synonyms/sub-categories to main categories
+      // This ensures the confusion matrix reflects functional accuracy
+      const map = {
+        // Infrastructure
+        "Pothole": "Infrastructure",
+        "Road Damage": "Infrastructure",
+        "Broken Streetlight": "Infrastructure",
+        "Streetlight": "Infrastructure",
+        "Bridge Collapse": "Infrastructure",
+
+        // Sanitation
+        "Trash": "Sanitation",
+        "Garbage": "Sanitation",
+        "Overflowing Trash": "Sanitation",
+        "Illegal Dumping": "Sanitation",
+        "Bad Odor": "Sanitation",
+        "Dead Animal": "Sanitation",
+        "Clogged Drainage": "Sanitation",
+        "Clogged Canal": "Sanitation",
+        "Sewage Leak": "Sanitation",
+
+        // Utilities
+        "No Water": "Utilities",
+        "Pipe Leak": "Utilities",
+        "Blackout": "Utilities",
+        "Transformer Explosion": "Utilities",
+        "Power Line Down": "Utilities",
+        "Low Pressure": "Utilities",
+
+        // Environment
+        "Flooding": "Environment",
+        "Flood": "Environment",
+        "Landslide": "Environment",
+        "Fallen Tree": "Environment",
+
+        // Public Safety
+        "Fire": "Public Safety",
+        "Accident": "Public Safety",
+        "Crime": "Public Safety",
+        "Medical": "Public Safety",
+        "Rescue": "Public Safety",
+        "Stray Dog": "Public Safety",
+        "Smoke": "Public Safety",
+        "Noise Complaint": "Public Safety",
+        "Evacuation": "Public Safety",
+
+        // Traffic
+        "Traffic Jam": "Traffic",
+        "Road Obstruction": "Traffic",
+        "Vehicle Breakdown": "Traffic"
+      };
+
+      return map[c] || c;
     };
-
-    // Prepare classification data with NLP results
-    const classificationData = complaints.map(complaint => {
-        // Get actual category (from source data - what the USER selected)
-        // v3.9 AUDIT FIX: Use subcategory if available to match NLP specificity
-        const actualCategory = complaint.subcategory || complaint.category || complaint.source_category || 'Unknown';
-
-        // v3.9.1 FIX: Get NLP predicted category - NEVER default to actualCategory!
-        // This is the NLP system's prediction based on the description text
-        let predictedCategory = null;
-        let nlpResult = null;
-
-        // First, try to get existing NLP result
-        if (complaint.nlp_result && complaint.nlp_result.category) {
-            predictedCategory = complaint.nlp_result.category;
-            nlpResult = complaint.nlp_result;
-        } else if (complaint.analyzed_category) {
-            predictedCategory = complaint.analyzed_category;
-        }
-
-        // v3.9.1 FIX: If no NLP result exists, run NLP analysis NOW
-        if (!predictedCategory) {
-            const text = complaint.description || complaint.text || '';
-            if (text && nlpDictionary) {
-                nlpResult = runNLPAnalysis(text);
-                if (nlpResult && nlpResult.category) {
-                    predictedCategory = nlpResult.category;
-                    // Cache the result back to the complaint for future use
-                    complaint.nlp_result = nlpResult;
-                }
-            }
-        }
-
-        // v3.9.1 FIX: If STILL no prediction, mark as "Unclassified" NOT actualCategory
-        // This prevents data leakage (100% accuracy from using same value for both)
-        if (!predictedCategory) {
-            predictedCategory = 'Unclassified';
-        }
-
-        // v3.9 AUDIT FIX: Normalize labels to ensure consistency in confusion matrix
-        const normalize = (cat) => {
-            if (!cat) return 'Unknown';
-            let c = cat.toString().trim();
-            // Map common variants/synonyms/sub-categories to main categories
-            // This ensures the confusion matrix reflects functional accuracy
-            const map = {
-                // Infrastructure
-                'Pothole': 'Infrastructure',
-                'Road Damage': 'Infrastructure',
-                'Broken Streetlight': 'Infrastructure',
-                'Streetlight': 'Infrastructure',
-                'Bridge Collapse': 'Infrastructure',
-
-                // Sanitation
-                'Trash': 'Sanitation',
-                'Garbage': 'Sanitation',
-                'Overflowing Trash': 'Sanitation',
-                'Illegal Dumping': 'Sanitation',
-                'Bad Odor': 'Sanitation',
-                'Dead Animal': 'Sanitation',
-                'Clogged Drainage': 'Sanitation',
-                'Clogged Canal': 'Sanitation',
-                'Sewage Leak': 'Sanitation',
-
-                // Utilities
-                'No Water': 'Utilities',
-                'Pipe Leak': 'Utilities',
-                'Blackout': 'Utilities',
-                'Transformer Explosion': 'Utilities',
-                'Power Line Down': 'Utilities',
-                'Low Pressure': 'Utilities',
-
-                // Environment
-                'Flooding': 'Environment',
-                'Flood': 'Environment',
-                'Landslide': 'Environment',
-                'Fallen Tree': 'Environment',
-
-                // Public Safety
-                'Fire': 'Public Safety',
-                'Accident': 'Public Safety',
-                'Crime': 'Public Safety',
-                'Medical': 'Public Safety',
-                'Rescue': 'Public Safety',
-                'Stray Dog': 'Public Safety',
-                'Smoke': 'Public Safety',
-                'Noise Complaint': 'Public Safety',
-                'Evacuation': 'Public Safety',
-
-                // Traffic
-                'Traffic Jam': 'Traffic',
-                'Road Obstruction': 'Traffic',
-                'Vehicle Breakdown': 'Traffic'
-            };
-
-            return map[c] || c;
-        };
-
-        return {
-            actual: normalize(actualCategory),
-            predicted: normalize(predictedCategory),
-            description: complaint.description || complaint.text || '',
-            urgency_score: complaint.urgency_score || complaint.nlp_result?.urgencyScore || 0,
-            triage_level: complaint.triage_level || 'Unknown'
-        };
-    });
-
-    // Calculate cluster metrics
-    // Note: clusters are ARRAYS of complaint objects, not objects with complaints property
-    const clusterMetrics = clusters.map((cluster, idx) => {
-        // Handle both array format (from DBSCAN++) and object format
-        const complaints = Array.isArray(cluster) ? cluster : (cluster.complaints || cluster.points || []);
-        const categories = complaints.map(c => c.category);
-        const dominantCategory = categories.length > 0
-            ? categories.sort((a, b) => categories.filter(c => c === a).length - categories.filter(c => c === b).length).pop()
-            : 'Unknown';
-
-        // Calculate dynamic epsilon used (matching simulation-engine.js logic)
-        let epsilonUsed = 40; // Standard
-        const highPriority = ['Fire', 'Accident', 'Crime', 'Public Safety', 'Rescue', 'Trapped'];
-        const largeArea = ['Flooding', 'Flood', 'No Water', 'Blackout', 'Utilities', 'Environment'];
-
-        if (highPriority.includes(dominantCategory)) epsilonUsed = 25;
-        else if (largeArea.includes(dominantCategory)) epsilonUsed = 60;
-
-        // Calculate center
-        let center = { lat: 0, lng: 0 };
-        if (complaints.length > 0) {
-            const latSum = complaints.reduce((sum, c) => sum + (c.lat || c.latitude || 0), 0);
-            const lngSum = complaints.reduce((sum, c) => sum + (c.lng || c.longitude || 0), 0);
-            center = { lat: latSum / complaints.length, lng: lngSum / complaints.length };
-        }
-
-        return {
-            id: `CLUSTER-${idx + 1}`,
-            complaint_count: complaints.length,
-            category: dominantCategory,
-            center: center,
-            urgency: Math.max(...complaints.map(c => c.urgency_score || c.urgencyScore || 0), 0),
-            epsilon_used: epsilonUsed,
-            is_merged: false,
-            correlation_score: 0
-        };
-    });
-
-    // Build test scenario results from actual clustering
-    const scenarioResults = buildScenarioResults(clusters, noisePoints);
 
     return {
-        // Raw data
-        complaints: complaints,
-        clusters: clusters,
-        noisePoints: noisePoints,
-
-        // Processed data for Python
-        classification: classificationData,
-        clusterMetrics: clusterMetrics,
-        scenarioResults: scenarioResults,
-
-        // v3.9 Recursive Calibration Loop Data
-        calibrationHistory: (typeof RecursiveCalibrator !== 'undefined') ? RecursiveCalibrator.history : [],
-
-        // Summary metrics
-        metrics: {
-            total_complaints: complaints.length,
-            total_clusters: clusters.length,
-            noise_points: noisePoints.length,
-            merge_rate: clusters.length > 0 ?
-                (complaints.length - noisePoints.length) / complaints.length : 0,
-            cluster_efficiency: complaints.length > 0 ?
-                clusters.length / complaints.length : 0
-        },
-
-        // Timestamp
-        exported_at: new Date().toISOString()
+      actual: normalize(actualCategory),
+      predicted: normalize(predictedCategory),
+      description: complaint.description || complaint.text || "",
+      urgency_score: complaint.urgency_score || complaint.nlp_result?.urgencyScore || 0,
+      triage_level: complaint.triage_level || "Unknown"
     };
+  });
+
+  // Calculate cluster metrics
+  // Note: clusters are ARRAYS of complaint objects, not objects with complaints property
+  const clusterMetrics = clusters.map((cluster, idx) => {
+    // Handle both array format (from DBSCAN++) and object format
+    const complaints = Array.isArray(cluster) ? cluster : (cluster.complaints || cluster.points || []);
+    const categories = complaints.map(c => c.category);
+    const dominantCategory = categories.length > 0
+      ? categories.sort((a, b) => categories.filter(c => c === a).length - categories.filter(c => c === b).length).pop()
+      : "Unknown";
+
+    // Calculate dynamic epsilon used (matching simulation-engine.js logic)
+    let epsilonUsed = 40; // Standard
+    const highPriority = ["Fire", "Accident", "Crime", "Public Safety", "Rescue", "Trapped"];
+    const largeArea = ["Flooding", "Flood", "No Water", "Blackout", "Utilities", "Environment"];
+
+    if (highPriority.includes(dominantCategory)) epsilonUsed = 25;
+    else if (largeArea.includes(dominantCategory)) epsilonUsed = 60;
+
+    // Calculate center
+    let center = { lat: 0, lng: 0 };
+    if (complaints.length > 0) {
+      const latSum = complaints.reduce((sum, c) => sum + (c.lat || c.latitude || 0), 0);
+      const lngSum = complaints.reduce((sum, c) => sum + (c.lng || c.longitude || 0), 0);
+      center = { lat: latSum / complaints.length, lng: lngSum / complaints.length };
+    }
+
+    return {
+      id: `CLUSTER-${idx + 1}`,
+      complaint_count: complaints.length,
+      category: dominantCategory,
+      center,
+      urgency: Math.max(...complaints.map(c => c.urgency_score || c.urgencyScore || 0), 0),
+      epsilon_used: epsilonUsed,
+      is_merged: false,
+      correlation_score: 0
+    };
+  });
+
+  // Build test scenario results from actual clustering
+  const scenarioResults = buildScenarioResults(clusters, noisePoints);
+
+  return {
+    // Raw data
+    complaints,
+    clusters,
+    noisePoints,
+
+    // Processed data for Python
+    classification: classificationData,
+    clusterMetrics,
+    scenarioResults,
+
+    // v3.9 Recursive Calibration Loop Data
+    calibrationHistory: (typeof RecursiveCalibrator !== "undefined") ? RecursiveCalibrator.history : [],
+
+    // Summary metrics
+    metrics: {
+      total_complaints: complaints.length,
+      total_clusters: clusters.length,
+      noise_points: noisePoints.length,
+      merge_rate: clusters.length > 0 ?
+        (complaints.length - noisePoints.length) / complaints.length : 0,
+      cluster_efficiency: complaints.length > 0 ?
+        clusters.length / complaints.length : 0
+    },
+
+    // Timestamp
+    exported_at: new Date().toISOString()
+  };
 }
 
 /**
  * Build test scenario results from actual clustering output
  */
 function buildScenarioResults(clusters, noisePoints) {
-    const results = {};
+  const results = {};
 
-    // Process each cluster as a scenario
-    // Note: clusters are ARRAYS of complaint objects, not objects with complaints property
-    clusters.forEach((cluster, idx) => {
-        const scenarioId = `CLUSTER-${String(idx + 1).padStart(2, '0')}`;
+  // Process each cluster as a scenario
+  // Note: clusters are ARRAYS of complaint objects, not objects with complaints property
+  clusters.forEach((cluster, idx) => {
+    const scenarioId = `CLUSTER-${String(idx + 1).padStart(2, "0")}`;
 
-        // Handle both array format (from DBSCAN++) and object format
-        const complaints = Array.isArray(cluster) ? cluster : (cluster.complaints || cluster.points || []);
+    // Handle both array format (from DBSCAN++) and object format
+    const complaints = Array.isArray(cluster) ? cluster : (cluster.complaints || cluster.points || []);
 
-        if (complaints.length === 0) {
-            console.log(`[STATS] Cluster ${idx + 1} has no complaints, skipping...`);
-            return;
-        }
+    if (complaints.length === 0) {
+      console.log(`[STATS] Cluster ${idx + 1} has no complaints, skipping...`);
+      return;
+    }
 
-        const category = complaints[0]?.category || 'Unknown';
-        let epsilonUsed = 40;
-        const highPriority = ['Fire', 'Accident', 'Crime', 'Public Safety', 'Rescue', 'Trapped'];
-        const largeArea = ['Flooding', 'Flood', 'No Water', 'Blackout', 'Utilities', 'Environment'];
-        if (highPriority.includes(category)) epsilonUsed = 25;
-        else if (largeArea.includes(category)) epsilonUsed = 60;
+    const category = complaints[0]?.category || "Unknown";
+    let epsilonUsed = 40;
+    const highPriority = ["Fire", "Accident", "Crime", "Public Safety", "Rescue", "Trapped"];
+    const largeArea = ["Flooding", "Flood", "No Water", "Blackout", "Utilities", "Environment"];
+    if (highPriority.includes(category)) epsilonUsed = 25;
+    else if (largeArea.includes(category)) epsilonUsed = 60;
 
-        results[scenarioId] = {
-            actual_clusters: 1, // Each cluster is 1 merged result
-            points: complaints.map(c => [
-                c.lat || c.latitude || c.location?.lat || 0,
-                c.lng || c.longitude || c.location?.lng || 0
-            ]),
-            labels: complaints.map(() => 0), // All points in same cluster
-            pass: true,
-            category: category,
-            epsilon_used: epsilonUsed,
-            urgency: Math.max(...complaints.map(c => c.urgency_score || c.urgencyScore || 0))
-        };
-    });
+    results[scenarioId] = {
+      actual_clusters: 1, // Each cluster is 1 merged result
+      points: complaints.map(c => [
+        c.lat || c.latitude || c.location?.lat || 0,
+        c.lng || c.longitude || c.location?.lng || 0
+      ]),
+      labels: complaints.map(() => 0), // All points in same cluster
+      pass: true,
+      category,
+      epsilon_used: epsilonUsed,
+      urgency: Math.max(...complaints.map(c => c.urgency_score || c.urgencyScore || 0))
+    };
+  });
 
-    // Process noise points as separate scenarios
-    noisePoints.forEach((noise, idx) => {
-        const scenarioId = `NOISE-${String(idx + 1).padStart(2, '0')}`;
+  // Process noise points as separate scenarios
+  noisePoints.forEach((noise, idx) => {
+    const scenarioId = `NOISE-${String(idx + 1).padStart(2, "0")}`;
 
-        results[scenarioId] = {
-            actual_clusters: 1,
-            points: [[noise.lat || noise.latitude || 0, noise.lng || noise.longitude || 0]],
-            labels: [-1], // Noise label
-            pass: true,
-            category: noise.category || 'Unknown',
-            urgency: noise.urgency_score || 0
-        };
-    });
+    results[scenarioId] = {
+      actual_clusters: 1,
+      points: [[noise.lat || noise.latitude || 0, noise.lng || noise.longitude || 0]],
+      labels: [-1], // Noise label
+      pass: true,
+      category: noise.category || "Unknown",
+      urgency: noise.urgency_score || 0
+    };
+  });
 
-    return results;
+  return results;
 }
 
 // ==================== ANALYSIS EXECUTION ====================
@@ -341,87 +341,87 @@ function buildScenarioResults(clusters, noisePoints) {
  * Run statistical analysis on dashboard data
  */
 async function runStatisticalAnalysis() {
-    const btn = document.getElementById('exportExcelBtn');
-    const originalContent = btn ? btn.innerHTML : '';
+  const btn = document.getElementById("exportExcelBtn");
+  const originalContent = btn ? btn.innerHTML : "";
 
-    try {
-        // Update button state
-        if (btn) {
-            btn.classList.add('exporting');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Analyzing...</span>';
-            btn.disabled = true;
-        }
-
-        // Check server connection
-        console.log('[STATS] Checking server connection...');
-        const serverAvailable = await checkStatisticalServer();
-
-        if (!serverAvailable) {
-            throw new Error(
-                'Statistical server not running!\n\n' +
-                'Please start the server first:\n' +
-                '1. Open a terminal\n' +
-                '2. Navigate to: scripts/\n' +
-                '3. Run: node statistical_server.js\n' +
-                '4. Then try again'
-            );
-        }
-
-        // v3.9: Run Recursive Calibration Loop before report generation
-        if (typeof RecursiveCalibrator !== 'undefined' && simulationEngine) {
-            console.log('[STATS] Running Recursive Calibration Loop...');
-            RecursiveCalibrator.runOptimization(simulationEngine.complaints);
-        }
-
-        // Prepare data
-        console.log('[STATS] Preparing dashboard data...');
-        const dashboardData = prepareDashboardDataForAnalysis();
-
-        if (!dashboardData.complaints || dashboardData.complaints.length === 0) {
-            throw new Error('No data loaded. Please click "Load City Data" first.');
-        }
-
-        console.log(`[STATS] Sending ${dashboardData.complaints.length} complaints for analysis...`);
-
-        // Send to server
-        const response = await fetch(`${STATS_CONFIG.serverUrl}/analyze`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dashboardData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (!result.success) {
-            throw new Error(result.error || 'Analysis failed');
-        }
-
-        console.log('[STATS] Analysis complete!');
-
-        // Show results modal
-        showStatisticalResultsModal(result);
-
-        return result;
-
-    } catch (error) {
-        console.error('[STATS] Error:', error.message);
-        alert('Statistical Analysis Error:\n\n' + error.message);
-        throw error;
-
-    } finally {
-        // Restore button state
-        if (btn) {
-            btn.classList.remove('exporting');
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-        }
+  try {
+    // Update button state
+    if (btn) {
+      btn.classList.add("exporting");
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Analyzing...</span>';
+      btn.disabled = true;
     }
+
+    // Check server connection
+    console.log("[STATS] Checking server connection...");
+    const serverAvailable = await checkStatisticalServer();
+
+    if (!serverAvailable) {
+      throw new Error(
+        "Statistical server not running!\n\n" +
+                "Please start the server first:\n" +
+                "1. Open a terminal\n" +
+                "2. Navigate to: scripts/\n" +
+                "3. Run: node statistical_server.js\n" +
+                "4. Then try again"
+      );
+    }
+
+    // v3.9: Run Recursive Calibration Loop before report generation
+    if (typeof RecursiveCalibrator !== "undefined" && simulationEngine) {
+      console.log("[STATS] Running Recursive Calibration Loop...");
+      RecursiveCalibrator.runOptimization(simulationEngine.complaints);
+    }
+
+    // Prepare data
+    console.log("[STATS] Preparing dashboard data...");
+    const dashboardData = prepareDashboardDataForAnalysis();
+
+    if (!dashboardData.complaints || dashboardData.complaints.length === 0) {
+      throw new Error('No data loaded. Please click "Load City Data" first.');
+    }
+
+    console.log(`[STATS] Sending ${dashboardData.complaints.length} complaints for analysis...`);
+
+    // Send to server
+    const response = await fetch(`${STATS_CONFIG.serverUrl}/analyze`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(dashboardData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || "Analysis failed");
+    }
+
+    console.log("[STATS] Analysis complete!");
+
+    // Show results modal
+    showStatisticalResultsModal(result);
+
+    return result;
+
+  } catch (error) {
+    console.error("[STATS] Error:", error.message);
+    alert(`Statistical Analysis Error:\n\n${  error.message}`);
+    throw error;
+
+  } finally {
+    // Restore button state
+    if (btn) {
+      btn.classList.remove("exporting");
+      btn.innerHTML = originalContent;
+      btn.disabled = false;
+    }
+  }
 }
 
 // ==================== RESULTS DISPLAY ====================
@@ -430,16 +430,16 @@ async function runStatisticalAnalysis() {
  * Show statistical results in a modal
  */
 function showStatisticalResultsModal(result) {
-    // Remove existing modal if any
-    const existingModal = document.getElementById('statsResultsModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
+  // Remove existing modal if any
+  const existingModal = document.getElementById("statsResultsModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
 
-    const metrics = result.results || {};
+  const metrics = result.results || {};
 
-    // Create modal HTML
-    const modalHTML = `
+  // Create modal HTML
+  const modalHTML = `
         <div id="statsResultsModal" class="stats-modal-overlay">
             <div class="stats-modal">
                 <div class="stats-modal-header">
@@ -456,28 +456,28 @@ function showStatisticalResultsModal(result) {
                             <div class="stats-card-icon"><i class="fas fa-project-diagram"></i></div>
                             <div class="stats-card-value">${formatMetric(metrics.silhouette?.mean, 2)}</div>
                             <div class="stats-card-label">COHESION COEFFICIENT</div>
-                            <div class="stats-card-quality">${getQualityLabel(metrics.silhouette?.mean, 'silhouette')}</div>
+                            <div class="stats-card-quality">${getQualityLabel(metrics.silhouette?.mean, "silhouette")}</div>
                         </div>
                         
                         <div class="stats-card accuracy">
                             <div class="stats-card-icon"><i class="fas fa-bullseye"></i></div>
                             <div class="stats-card-value">${formatPercent(metrics.classification?.accuracy)}</div>
                             <div class="stats-card-label">VECTOR ACCURACY</div>
-                            <div class="stats-card-quality">${getQualityLabel(metrics.classification?.accuracy, 'accuracy')}</div>
+                            <div class="stats-card-quality">${getQualityLabel(metrics.classification?.accuracy, "accuracy")}</div>
                         </div>
                         
                         <div class="stats-card recall">
                             <div class="stats-card-icon"><i class="fas fa-search"></i></div>
                             <div class="stats-card-value">${formatPercent(metrics.classification?.recall)}</div>
                             <div class="stats-card-label">CRITICAL RECALL (ALPHA)</div>
-                            <div class="stats-card-quality">${getQualityLabel(metrics.classification?.recall, 'recall')}</div>
+                            <div class="stats-card-quality">${getQualityLabel(metrics.classification?.recall, "recall")}</div>
                         </div>
                         
                         <div class="stats-card passrate">
                             <div class="stats-card-icon"><i class="fas fa-check-circle"></i></div>
                             <div class="stats-card-value">${formatPercent(metrics.scenario_metrics?.pass_rate)}</div>
                             <div class="stats-card-label">PROTOCOL SUCCESS RATE</div>
-                            <div class="stats-card-quality">${getQualityLabel(metrics.scenario_metrics?.pass_rate, 'passrate')}</div>
+                            <div class="stats-card-quality">${getQualityLabel(metrics.scenario_metrics?.pass_rate, "passrate")}</div>
                         </div>
                     </div>
 
@@ -585,7 +585,7 @@ function showStatisticalResultsModal(result) {
                             </div>
                             <div class="ttest-result">
                                 <span class="ttest-label">p-value:</span>
-                                <span class="ttest-value ${metrics.ttest?.p_value < 0.05 ? 'significant' : ''}">${formatPValue(metrics.ttest?.p_value)}</span>
+                                <span class="ttest-value ${metrics.ttest?.p_value < 0.05 ? "significant" : ""}">${formatPValue(metrics.ttest?.p_value)}</span>
                             </div>
                             <div class="ttest-result">
                                 <span class="ttest-label">Cohen's d:</span>
@@ -593,8 +593,8 @@ function showStatisticalResultsModal(result) {
                             </div>
                             <div class="ttest-interpretation">
                                 ${metrics.ttest?.p_value < 0.05 ?
-            '<i class="fas fa-check-circle"></i> Adaptive parameters demonstrate statistically significant performance gains' :
-            '<i class="fas fa-info-circle"></i> Null hypothesis maintained: No significant variance detected'}
+    '<i class="fas fa-check-circle"></i> Adaptive parameters demonstrate statistically significant performance gains' :
+    '<i class="fas fa-info-circle"></i> Null hypothesis maintained: No significant variance detected'}
                             </div>
                         </div>
                     </div>
@@ -613,8 +613,8 @@ function showStatisticalResultsModal(result) {
                             </div>
                             <div class="chisquare-interpretation">
                                 ${metrics.chi_square?.cramers_v > 0.3 ?
-            '<i class="fas fa-check-circle"></i> Strong causal correlation between incident vectors validated' :
-            '<i class="fas fa-info-circle"></i> Moderate correlation detected within telemetric clusters'}
+    '<i class="fas fa-check-circle"></i> Strong causal correlation between incident vectors validated' :
+    '<i class="fas fa-info-circle"></i> Moderate correlation detected within telemetric clusters'}
                             </div>
                         </div>
                     </div>
@@ -626,7 +626,7 @@ function showStatisticalResultsModal(result) {
                             <p>Technical validation demonstrates that the ResMap Architecture (v3.9.5) achieves robust 
                             performance across all heuristic metrics. The DBSCAN++ spatio-temporal clustering algorithm 
                             yielded a mean Cohesion Coefficient of <strong>${formatMetric(metrics.silhouette?.mean, 2)}</strong>, 
-                            confirming ${getQualityLabel(metrics.silhouette?.mean, 'silhouette').toLowerCase()} cluster 
+                            confirming ${getQualityLabel(metrics.silhouette?.mean, "silhouette").toLowerCase()} cluster 
                             differentiation. Vector classification accuracy achieved <strong>${formatPercent(metrics.classification?.accuracy)}</strong> 
                             with a <strong>${formatPercent(metrics.classification?.recall)}</strong> Alpha-Recall rate, 
                             ensuring high-fidelity detection of critical vectors. Inferential analysis (Paired T-Test) 
@@ -656,101 +656,101 @@ function showStatisticalResultsModal(result) {
         </div>
     `;
 
-    // Add modal to document
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+  // Add modal to document
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-    // Store results for download
-    window.lastStatsResults = result;
+  // Store results for download
+  window.lastStatsResults = result;
 
-    // Add animation
-    setTimeout(() => {
-        document.getElementById('statsResultsModal').classList.add('visible');
-    }, 10);
+  // Add animation
+  setTimeout(() => {
+    document.getElementById("statsResultsModal").classList.add("visible");
+  }, 10);
 }
 
 /**
  * Close the statistics modal
  */
 function closeStatsModal() {
-    const modal = document.getElementById('statsResultsModal');
-    if (modal) {
-        modal.classList.remove('visible');
-        setTimeout(() => modal.remove(), 300);
-    }
+  const modal = document.getElementById("statsResultsModal");
+  if (modal) {
+    modal.classList.remove("visible");
+    setTimeout(() => modal.remove(), 300);
+  }
 }
 
 /**
  * Copy thesis paragraph to clipboard
  */
 function copyThesisParagraph() {
-    const paragraph = document.querySelector('.thesis-paragraph p');
-    if (paragraph) {
-        navigator.clipboard.writeText(paragraph.innerText).then(() => {
-            const btn = document.querySelector('.copy-thesis-btn');
-            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
-            }, 2000);
-        });
-    }
+  const paragraph = document.querySelector(".thesis-paragraph p");
+  if (paragraph) {
+    navigator.clipboard.writeText(paragraph.innerText).then(() => {
+      const btn = document.querySelector(".copy-thesis-btn");
+      btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
+      }, 2000);
+    });
+  }
 }
 
 /**
  * Download the full statistical report
  */
 function downloadFullReport() {
-    if (window.lastStatsResults && window.lastStatsResults.report) {
-        const blob = new Blob([window.lastStatsResults.report], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `DRIMS_Statistical_Report_${new Date().toISOString().slice(0, 10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } else {
-        alert('No report available. Please run analysis first.');
-    }
+  if (window.lastStatsResults && window.lastStatsResults.report) {
+    const blob = new Blob([window.lastStatsResults.report], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `DRIMS_Statistical_Report_${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } else {
+    alert("No report available. Please run analysis first.");
+  }
 }
 
 // ==================== HELPER FUNCTIONS ====================
 
 function formatMetric(value, decimals = 2) {
-    if (value === undefined || value === null || isNaN(value)) return '--';
-    return Number(value).toFixed(decimals);
+  if (value === undefined || value === null || isNaN(value)) return "--";
+  return Number(value).toFixed(decimals);
 }
 
 function formatPercent(value) {
-    if (value === undefined || value === null || isNaN(value)) return '--%';
-    return (value * 100).toFixed(1) + '%';
+  if (value === undefined || value === null || isNaN(value)) return "--%";
+  return `${(value * 100).toFixed(1)  }%`;
 }
 
 function formatPValue(value) {
-    if (value === undefined || value === null || isNaN(value)) return '--';
-    if (value < 0.001) return '< 0.001';
-    return value.toFixed(4);
+  if (value === undefined || value === null || isNaN(value)) return "--";
+  if (value < 0.001) return "< 0.001";
+  return value.toFixed(4);
 }
 
 function getQualityLabel(value, type) {
-    if (value === undefined || value === null || isNaN(value)) return 'N/A';
+  if (value === undefined || value === null || isNaN(value)) return "N/A";
 
-    switch (type) {
-        case 'silhouette':
-            if (value > 0.7) return 'Excellent';
-            if (value > 0.5) return 'Good';
-            if (value > 0.25) return 'Fair';
-            return 'Poor';
-        case 'accuracy':
-        case 'recall':
-        case 'passrate':
-            if (value > 0.95) return 'Excellent';
-            if (value > 0.90) return 'Good';
-            if (value > 0.80) return 'Fair';
-            return 'Needs Improvement';
-        default:
-            return '';
-    }
+  switch (type) {
+    case "silhouette":
+      if (value > 0.7) return "Excellent";
+      if (value > 0.5) return "Good";
+      if (value > 0.25) return "Fair";
+      return "Poor";
+    case "accuracy":
+    case "recall":
+    case "passrate":
+      if (value > 0.95) return "Excellent";
+      if (value > 0.90) return "Good";
+      if (value > 0.80) return "Fair";
+      return "Needs Improvement";
+    default:
+      return "";
+  }
 }
 
 // ==================== MODAL STYLES ====================
@@ -1114,43 +1114,43 @@ const statsModalStyles = `
  * Initialize the statistical analysis integration
  */
 function initStatisticalAnalysis() {
-    // Add modal styles to document
-    if (!document.getElementById('statsModalStyles')) {
-        document.head.insertAdjacentHTML('beforeend', statsModalStyles);
-    }
+  // Add modal styles to document
+  if (!document.getElementById("statsModalStyles")) {
+    document.head.insertAdjacentHTML("beforeend", statsModalStyles);
+  }
 
-    // Replace Excel export button functionality
-    const exportBtn = document.getElementById('exportExcelBtn');
+  // Replace Excel export button functionality
+  const exportBtn = document.getElementById("exportExcelBtn");
 
-    if (exportBtn) {
-        // Update button appearance
-        exportBtn.innerHTML = '<i class="fas fa-chart-pie"></i><span>Generate Statistics</span>';
-        exportBtn.title = 'Generate Statistical Analysis Report';
+  if (exportBtn) {
+    // Update button appearance
+    exportBtn.innerHTML = '<i class="fas fa-chart-pie"></i><span>Generate Statistics</span>';
+    exportBtn.title = "Generate Statistical Analysis Report";
 
-        // Remove old event listeners by cloning
-        const newBtn = exportBtn.cloneNode(true);
-        exportBtn.parentNode.replaceChild(newBtn, exportBtn);
+    // Remove old event listeners by cloning
+    const newBtn = exportBtn.cloneNode(true);
+    exportBtn.parentNode.replaceChild(newBtn, exportBtn);
 
-        // Add new click handler
-        newBtn.addEventListener('click', async () => {
-            try {
-                await runStatisticalAnalysis();
-            } catch (error) {
-                console.error('[STATS] Analysis failed:', error);
-            }
-        });
+    // Add new click handler
+    newBtn.addEventListener("click", async () => {
+      try {
+        await runStatisticalAnalysis();
+      } catch (error) {
+        console.error("[STATS] Analysis failed:", error);
+      }
+    });
 
-        console.log('[STATS] Statistical Analysis module initialized');
-        console.log('[STATS] Export button replaced with Generate Statistics');
-    }
+    console.log("[STATS] Statistical Analysis module initialized");
+    console.log("[STATS] Export button replaced with Generate Statistics");
+  }
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initStatisticalAnalysis);
+document.addEventListener("DOMContentLoaded", initStatisticalAnalysis);
 
 // Also try to initialize immediately if DOM is already loaded
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(initStatisticalAnalysis, 100);
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  setTimeout(initStatisticalAnalysis, 100);
 }
 
 // Export functions globally

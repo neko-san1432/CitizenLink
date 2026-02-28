@@ -1,7 +1,7 @@
 /**
  * DBSCAN (Density-Based Spatial Clustering of Applications with Noise) Algorithm
  * Implementation for complaint location clustering
- * 
+ *
  * OPTIMIZED: Now uses Grid-Based Spatial Indexing for O(n) neighbor lookup
  * instead of O(n²) brute force approach.
  */
@@ -139,7 +139,7 @@ class DBSCAN {
     // Use spatial grid if available (optimized path)
     if (this.spatialGrid) {
       const candidates = this.spatialGrid.getNearbyCandidates(point);
-      
+
       for (const i of candidates) {
         if (i !== pointIndex) {
           const distance = this.calculateDistance(point, points[i]);

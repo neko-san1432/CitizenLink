@@ -241,15 +241,15 @@ class AssignedTasks {
             <div class="task-card">
                 <div class="task-header">
                     <h3 class="task-title">${task.complaint?.descriptive_su || "Complaint"
-          }</h3>
+}</h3>
                     <div class="task-meta">
                         <span class="task-tag status-${task.status?.toLowerCase().replace(" ", "_") ||
           "assigned"
-          }">
+}">
                             ${task.status || "Assigned"}
                         </span>
                         <span class="task-tag priority-${task.priority?.toLowerCase() || "medium"
-          }">
+}">
                             ${task.priority || "Medium"}
                         </span>
                         <span class="task-id">#${task.complaint_id}</span>
@@ -258,7 +258,7 @@ class AssignedTasks {
                 
                 <div class="task-content">
                     <p>${task.complaint?.description || "No description provided"
-          }</p>
+}</p>
                     
                     <div class="task-details-grid">
                         <div class="task-detail">
@@ -268,22 +268,22 @@ class AssignedTasks {
                         <div class="task-detail">
                             <span>📍</span>
                             <span>${task.complaint?.location_text || "No location"
-          }</span>
+}</span>
                         </div>
                         <div class="task-detail">
                             <span>🏷️</span>
                             <span>${task.complaint?.category || "General"
-          }</span>
+}</span>
                         </div>
                         ${task.deadline
-            ? `
+    ? `
                             <div class="task-detail">
                                 <span>⏰</span>
                                 <span>${this.formatDate(task.deadline)}</span>
                             </div>
                         `
-            : ""
-          }
+    : ""
+}
                     </div>
                 </div>
 
@@ -343,8 +343,8 @@ class AssignedTasks {
       return `
                 <div class="deadline-warning overdue">
                     ⚠️ This task is overdue! Deadline was ${this.formatDate(
-        task.deadline
-      )}
+    task.deadline
+  )}
                 </div>
             `;
     } else if (hoursUntilDeadline < 24) {

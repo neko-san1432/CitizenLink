@@ -9,226 +9,226 @@ const { authenticateUser, requireRole } = require("../middleware/auth");
 
 // Get pending reviews count
 router.get(
-    "/pending-reviews/count",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpPendingReviewsController.getCount
+  "/pending-reviews/count",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpPendingReviewsController.getCount
 );
 
 // Get all pending reviews
 router.get(
-    "/pending-reviews",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpPendingReviewsController.getAll
+  "/pending-reviews",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpPendingReviewsController.getAll
 );
 
 // Batch queue multiple items for review (used by analytics scan)
 // IMPORTANT: This must come BEFORE :id routes to prevent Express matching "batch" as an id
 router.post(
-    "/pending-reviews/batch",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpPendingReviewsController.batchQueue
+  "/pending-reviews/batch",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpPendingReviewsController.batchQueue
 );
 
 // Resolve a pending review (train keyword)
 router.post(
-    "/pending-reviews/:id/resolve",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpPendingReviewsController.resolve
+  "/pending-reviews/:id/resolve",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpPendingReviewsController.resolve
 );
 
 // Dismiss a pending review
 router.post(
-    "/pending-reviews/:id/dismiss",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpPendingReviewsController.dismiss
+  "/pending-reviews/:id/dismiss",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpPendingReviewsController.dismiss
 );
 
 // ============ PROPOSAL WORKFLOW ROUTES ============
 
 // Get proposals (All authenticated staff can view status, but filtering might be useful)
 router.get(
-    "/proposals",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpProposalController.getProposals
+  "/proposals",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpProposalController.getProposals
 );
 
 // Get Stats (Counts)
 router.get(
-    "/stats",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpProposalController.getStats
+  "/stats",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpProposalController.getStats
 );
 
 // Submit Proposal (LGU Admin)
 router.post(
-    "/proposals",
-    authenticateUser,
-    requireRole(["lgu", "super-admin"]),
-    NlpProposalController.createProposal
+  "/proposals",
+  authenticateUser,
+  requireRole(["lgu", "super-admin"]),
+  NlpProposalController.createProposal
 );
 
 // Approve by Coordinator
 router.post(
-    "/proposals/:id/approve-coordinator",
-    authenticateUser,
-    requireRole(["lgu"]),
-    NlpProposalController.approveByCoordinator
+  "/proposals/:id/approve-coordinator",
+  authenticateUser,
+  requireRole(["lgu"]),
+  NlpProposalController.approveByCoordinator
 );
 
 // Approve by Super Admin (Final)
 router.post(
-    "/proposals/:id/approve-admin",
-    authenticateUser,
-    requireRole(["super-admin"]),
-    NlpProposalController.approveBySuperAdmin
+  "/proposals/:id/approve-admin",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  NlpProposalController.approveBySuperAdmin
 );
 
 // Reject Proposal (Both can reject)
 router.post(
-    "/proposals/:id/reject",
-    authenticateUser,
-    requireRole(["lgu", "super-admin"]),
-    NlpProposalController.rejectProposal
+  "/proposals/:id/reject",
+  authenticateUser,
+  requireRole(["lgu", "super-admin"]),
+  NlpProposalController.rejectProposal
 );
 
 // ============ SUPER ADMIN DIRECT MANAGEMENT ROUTES ============
 
 // Complete Dictionary (for simulation engine)
 router.get(
-    "/dictionary",
-    NlpManagementController.getCompleteDictionary
+  "/dictionary",
+  NlpManagementController.getCompleteDictionary
 );
 
 // Management Stats
 router.get(
-    "/management/stats",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.getManagementStats
+  "/management/stats",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.getManagementStats
 );
 
 // Keywords CRUD
 router.get(
-    "/keywords",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.getKeywords
+  "/keywords",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.getKeywords
 );
 
 router.post(
-    "/keywords",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.addKeyword
+  "/keywords",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.addKeyword
 );
 
 router.put(
-    "/keywords/:id",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.updateKeyword
+  "/keywords/:id",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.updateKeyword
 );
 
 router.delete(
-    "/keywords/:id",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.deleteKeyword
+  "/keywords/:id",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.deleteKeyword
 );
 
 // Categories CRUD
 router.get(
-    "/categories",
-    authenticateUser,
-    requireRole(["super-admin"]),
-    NlpManagementController.getCategories
+  "/categories",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  NlpManagementController.getCategories
 );
 
 router.post(
-    "/categories",
-    authenticateUser,
-    requireRole(["super-admin"]),
-    NlpManagementController.addCategory
+  "/categories",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  NlpManagementController.addCategory
 );
 
 router.delete(
-    "/categories/:category",
-    authenticateUser,
-    requireRole(["super-admin"]),
-    NlpManagementController.deleteCategory
+  "/categories/:category",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  NlpManagementController.deleteCategory
 );
 
 // Anchors CRUD
 router.get(
-    "/anchors",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.getAnchors
+  "/anchors",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.getAnchors
 );
 
 router.post(
-    "/anchors",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.addAnchor
+  "/anchors",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.addAnchor
 );
 
 router.delete(
-    "/anchors/:id",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.deleteAnchor
+  "/anchors/:id",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.deleteAnchor
 );
 
 // Metaphors CRUD
 router.get(
-    "/metaphors",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.getMetaphors
+  "/metaphors",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.getMetaphors
 );
 
 router.post(
-    "/metaphors",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.addMetaphor
+  "/metaphors",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.addMetaphor
 );
 
 router.delete(
-    "/metaphors/:id",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.deleteMetaphor
+  "/metaphors/:id",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.deleteMetaphor
 );
 
 // Dictionary Rules CRUD
 router.get(
-    "/dictionary-rules",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.getDictionaryRules
+  "/dictionary-rules",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.getDictionaryRules
 );
 
 router.post(
-    "/dictionary-rules",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.addDictionaryRule
+  "/dictionary-rules",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.addDictionaryRule
 );
 
 router.delete(
-    "/dictionary-rules/:id",
-    authenticateUser,
-    requireRole(["super-admin", "lgu"]),
-    NlpManagementController.deleteDictionaryRule
+  "/dictionary-rules/:id",
+  authenticateUser,
+  requireRole(["super-admin", "lgu"]),
+  NlpManagementController.deleteDictionaryRule
 );
 
 module.exports = router;

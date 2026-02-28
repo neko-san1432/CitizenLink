@@ -41,7 +41,7 @@ function hideDashboardLoader() {
   }
 }
 
-let charts = {
+const charts = {
   trend: null,
   distribution: null,
 };
@@ -185,8 +185,8 @@ async function loadLogs() {
             <div>
               <p class="text-sm font-medium text-gray-800">${log.type}</p>
               <p class="text-xs text-gray-500">${new Date(
-              log.created_at
-            ).toLocaleString()}</p>
+    log.created_at
+  ).toLocaleString()}</p>
             </div>
           </div>
         `
