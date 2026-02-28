@@ -634,8 +634,6 @@ async function startOAuthPopup(provider) {
       startedAt: Date.now(),
     });
 
-    console.log("[OAUTH] Starting OAuth flow:", { provider, intent });
-
     // Direct redirect (no popup) - simpler and more reliable
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,

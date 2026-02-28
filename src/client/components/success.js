@@ -99,7 +99,6 @@ async function updateOAuthProviders(user, provider) {
     await supabase.auth.updateUser({
       data: { oauth_providers: nextProviders },
     });
-    console.log("[SUCCESS] Updated OAuth providers:", nextProviders);
   } catch (err) {
     console.error("[SUCCESS] Error updating OAuth providers:", err);
   }

@@ -374,10 +374,6 @@ class HeatmapVisualization {
         }
       }
 
-      console.log("[HEATMAP] User role initialized:", {
-        role: this.userRole,
-        department: this.userDepartment,
-      });
     } catch (error) {
       console.error("[HEATMAP] Failed to initialize user role:", error);
       this.userRole = "citizen"; // Default fallback
@@ -1169,13 +1165,9 @@ class HeatmapVisualization {
     // LGU Admins: Only complaints assigned to their office/department
     else if (this.userRole === "lgu-admin" && this.userDepartment) {
       complaintsForMarkers = this.getRoleScopedComplaints();
-      console.log(
-        `[HEATMAP] LGU Admin (${this.userDepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`
-      );
     }
     // Default: No markers
     else {
-      console.log(`[HEATMAP] Role ${this.userRole}: Markers disabled`);
       this.markerLayer = L.layerGroup(); // Empty layer group
       this.markerMap.clear();
       return this.markerLayer;

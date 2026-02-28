@@ -26,8 +26,6 @@ if (!signupCode) {
       const parsed = JSON.parse(savedData);
       if (parsed.signupCode) {
         signupCode = parsed.signupCode;
-        console.log("Restored signup code from storage:", signupCode);
-
         // Update URL to reflect code
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set("code", signupCode);
@@ -163,8 +161,6 @@ function setupFormPersistence() {
   function loadFormData() {
     try {
       const savedData = sessionStorage.getItem(FORM_STORAGE_KEY);
-      console.log("Loading form data from storage:", savedData ? "Found data" : "No data");
-
       if (!savedData) return;
 
       const parsedData = JSON.parse(savedData);
@@ -191,7 +187,7 @@ function setupFormPersistence() {
   }
 
   // Load saved data on init
-  console.log("Initializing form persistence...");
+
   loadFormData();
 
   // Save data on input changes

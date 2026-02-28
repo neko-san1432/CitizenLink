@@ -322,26 +322,12 @@ function setupOAuthPopupBridge() {
   window.addEventListener("message", async (event) => {
     if (event.origin !== window.location.origin) return;
 
-    // Log the full event data to debug
-    // console.log('[SIGNUP] Received message from popup:', event.data); // Redacted for security
-    console.log("[SIGNUP] Full event:", {
-      type: event.data?.type,
-      redirectTo: event.data?.redirectTo,
-      incomplete: event.data?.incomplete,
-      // payload: event.data?.payload, // Redacted for security
-      // fullData: event.data // Redacted for security
-    });
+    // Event data intentionally not logged to prevent auth state leakage
 
     const { type, payload, redirectTo, incomplete } = event.data || {};
 
     if (type === "oauth-signup-success") {
       const provider = (payload?.provider || "OAuth").replace(/^\w/, (c) => c.toUpperCase());
-      console.log("[SIGNUP] ✅ OAuth signup success, provider:", provider);
-      console.log("[SIGNUP] Message details:", {
-        redirectTo,
-        incomplete,
-        hasPayload: Boolean(payload)
-      });
 
       try {
         const ctx = getOAuthContext() || {};
@@ -358,10 +344,6 @@ function setupOAuthPopupBridge() {
 
       if (accessToken && refreshToken) {
         try {
-          console.log("[SIGNUP] Setting session in main window...");
-          console.log("[SIGNUP] Access token length:", accessToken.length);
-          console.log("[SIGNUP] Refresh token length:", refreshToken.length);
-
           // Set the session using setSession
           const { _data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -376,10 +358,8 @@ function setupOAuthPopupBridge() {
 
             // Verify session is actually set
             const { data: { session: verifySession }, error: verifyError } = await supabase.auth.getSession();
-            if (verifySession) {
-              console.log("[SIGNUP] ✅ Session verified - user ID:", verifySession.user?.id);
-            } else {
-              console.error("[SIGNUP] ❌ Session verification failed:", verifyError);
+            if (!verifySession) {
+              console.error("[SIGNUP] Session verification failed after setSession");
             }
 
             // Also set server-side cookie
@@ -413,17 +393,6 @@ function setupOAuthPopupBridge() {
       // Extract redirectTo from event.data if not in destructured variables
       const actualRedirectTo = redirectTo || event.data?.redirectTo || "/oauth-continuation";
 
-      console.log("[SIGNUP] Redirect decision:", {
-        willRedirect: true,
-        redirectTo: actualRedirectTo,
-        incomplete: incomplete !== undefined ? incomplete : event.data?.incomplete,
-        eventDataKeys: Object.keys(event.data || {}),
-        hasAccessToken: Boolean(accessToken),
-        hasRefreshToken: Boolean(refreshToken)
-      });
-
-      console.log("[SIGNUP] ✅ REDIRECTING TO:", actualRedirectTo);
-
       // CRITICAL: If we have tokens, pass them in URL hash for Supabase to pick up
       // This is how Supabase normally handles OAuth redirects
       let redirectUrl = actualRedirectTo;
@@ -434,7 +403,6 @@ function setupOAuthPopupBridge() {
         hashParams.set("refresh_token", refreshToken);
         hashParams.set("type", "recovery"); // This tells Supabase to set the session
         redirectUrl = `${actualRedirectTo}#${hashParams.toString()}`;
-        console.log("[SIGNUP] Adding session tokens to URL hash for Supabase");
       }
 
       // Increased delay to ensure session is fully set and persisted before redirect
@@ -442,8 +410,6 @@ function setupOAuthPopupBridge() {
         // Double-check session before redirect
         const { data: { session: finalCheck }, error: _finalError } = await supabase.auth.getSession();
         if (finalCheck) {
-          console.log("[SIGNUP] ✅ Final session check passed - user ID:", finalCheck.user?.id);
-          console.log("[SIGNUP] Executing redirect now...");
           window.location.href = redirectUrl;
         } else {
           console.warn("[SIGNUP] ⚠️ Session check failed, but redirecting anyway with tokens in URL");

@@ -208,7 +208,7 @@ function getMenuItemsForRole(role) {
   const originalRole = role;
   role = normalizeRole(role);
   if (originalRole !== role) {
-    console.log("[SIDEBAR] Normalizing role from", originalRole, "to", role, "for menu items");
+    // Role normalized — not logged to avoid exposing user role in browser console
   }
 
   // Simple Workflow Mode: Only 3 roles supported
@@ -248,7 +248,6 @@ function getMenuItemsForRole(role) {
 
   // Return menu items for the role
   const items = menuItems[role] || menuItems["citizen"];
-  console.log("[SIDEBAR] Menu items for role:", role, "found", items.length, "items");
   return items;
 }
 // Sidebar search removed per requirements
