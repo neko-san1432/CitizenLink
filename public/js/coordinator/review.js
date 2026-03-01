@@ -198,7 +198,10 @@ function renderComplaint(complaint) {
   }
   setText("complaint-category-badge", catName);
 
-  setText("complaint-title", complaint.title || "No Title");
+  // Build "Category - Subcategory" heading
+  const subName = complaint.subcategory || complaint.subtype || "";
+  const catSubLabel = subName ? `${catName} - ${subName}` : catName;
+  setText("complaint-cat-subcat", catSubLabel);
 
   // Meta Info
   const dateStr = new Date(complaint.submitted_at || complaint.created_at).toLocaleString("en-US", {

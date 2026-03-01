@@ -33,6 +33,7 @@ const complianceRoutes = require("./complianceRoutes");
 const officeConfirmationRoutes = require("./officeConfirmationRoutes");
 const publicApiRoutes = require("./publicApiRoutes");
 const brainDashboardRoutes = require("./brainDashboardRoutes");
+const coordinatorRoutes = require("./coordinatorRoutes");
 
 const router = express.Router();
 // CAPTCHA routes
@@ -66,6 +67,7 @@ router.use("/office-confirmation", officeConfirmationRoutes);
 // NLP Routes
 router.use("/nlp", require("./nlpRoutes"));
 router.use("/brain", brainDashboardRoutes);
+router.use("/coordinator", coordinatorRoutes);
 // Public API routes (boundaries, geocoding)
 router.use("/", publicApiRoutes);
 // User routes (roles, profile info)

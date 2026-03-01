@@ -1,6 +1,6 @@
 import BarangayPrioritization from "../components/barangay-prioritization.js";
 
-import slidingPanel from "../components/sliding-panel.js";
+import slidingPanel from "../components/sliding-panel.js?v=20260301";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadReviewQueue(1);

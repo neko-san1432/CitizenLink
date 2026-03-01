@@ -63,9 +63,9 @@ export class ComplaintDetails {
       if (descriptionEl) {
         descriptionEl.textContent = "";
       }
-      const titleEl = document.getElementById("complaint-title");
-      if (titleEl) {
-        titleEl.textContent = "";
+      const catSubEl = this.getElement("complaint-cat-subcat");
+      if (catSubEl) {
+        catSubEl.textContent = "";
       }
       const idEl = document.getElementById("complaint-id");
       if (idEl) {
@@ -442,15 +442,17 @@ export class ComplaintDetails {
       console.warn("Cannot render complaint details: complaint is null");
       return;
     }
-    // Populate basic complaint info
-    const titleEl = document.getElementById("complaint-title");
-    if (titleEl) {
-      // Use title if available and not generic, otherwise derive from description
-      let displayTitle = this.complaint.title;
-      if (!displayTitle || displayTitle === "Complaint" || displayTitle === "Assignment") {
-        displayTitle = (this.complaint.descriptive_su || this.complaint.description || "Complaint").substring(0, 50) + (this.complaint.descriptive_su && this.complaint.descriptive_su.length > 50 ? "..." : "");
+    // Populate Category - Subcategory heading
+    const catSubEl = this.getElement("complaint-cat-subcat");
+    if (catSubEl) {
+      let catName = this.complaint.category || "General";
+      if (this.complaint.categories && this.complaint.categories.name) {
+        catName = this.complaint.categories.name;
+      } else if (this.complaint.category_name) {
+        catName = this.complaint.category_name;
       }
-      titleEl.textContent = displayTitle;
+      const subName = this.complaint.subcategory || this.complaint.subtype || "";
+      catSubEl.textContent = subName ? `${catName} - ${subName}` : catName;
     }
 
     this.getElement(

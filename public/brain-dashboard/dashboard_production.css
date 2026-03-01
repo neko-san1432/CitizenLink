@@ -301,7 +301,6 @@ body {
     border-radius: 12px;
     padding: 8px 0;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -787,6 +786,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
+    will-change: transform;
 }
 
 /* ==================== LOADING OVERLAY ==================== */
@@ -2098,7 +2098,6 @@ body {
     overflow: hidden;
     resize: both;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(8px);
 }
 
 .emergency-panel.active {

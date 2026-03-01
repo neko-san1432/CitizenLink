@@ -1173,49 +1173,53 @@ class HeatmapVisualization {
       return this.markerLayer;
     }
 
-    // Create marker layer and store all markers
-    // IMPORTANT: Do NOT add layer to map during creation - caller will handle visibility
+    // Create marker layer immediately (empty) so callers get a non-null reference right away
     this.markerLayer = L.layerGroup();
     this.markerMap.clear();
+    this._markersBuilding = true;
 
-    complaintsForMarkers.forEach((complaint, index) => {
-      try {
-        const marker = this.createComplaintMarker(complaint, index);
-        // Add marker to layer group (but NOT to map)
-        this.markerLayer.addLayer(marker);
-        // Store marker reference by complaint ID for quick lookup
-        if (complaint.id) {
-          this.markerMap.set(complaint.id, marker);
+    // Build markers asynchronously in batches so the main thread is never blocked
+    this._buildMarkersAsync(complaintsForMarkers);
+
+    return this.markerLayer;
+  }
+
+  /**
+   * Build complaint markers in chunks, yielding to the browser between each batch.
+   * When all batches are complete, adds the layer to the map and applies current filters.
+   * @param {Array} complaints
+   */
+  async _buildMarkersAsync(complaints) {
+    const BATCH_SIZE = 50; // markers per frame
+    for (let i = 0; i < complaints.length; i += BATCH_SIZE) {
+      const chunk = complaints.slice(i, i + BATCH_SIZE);
+      chunk.forEach((complaint, j) => {
+        try {
+          const marker = this.createComplaintMarker(complaint, i + j);
+          this.markerLayer.addLayer(marker);
+          if (complaint.id) {
+            this.markerMap.set(complaint.id, marker);
+          }
+        } catch (error) {
+          console.error(`[HEATMAP] Failed to create marker ${i + j + 1}:`, error);
         }
-        // Ensure marker is NOT on the map (safety check)
-        if (this.map && this.map.hasLayer(marker)) {
-          this.map.removeLayer(marker);
-        }
-      } catch (error) {
-        console.error(
-          `[HEATMAP] Failed to create marker ${index + 1}:`,
-          error,
-          complaint
-        );
-      }
-    });
+      });
+      // Yield to the browser so it can render/handle input between chunks
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
 
-    console.log(
-      `[HEATMAP] Created ${
-        this.markerLayer.getLayers().length
-      } marker(s) for all complaints`
-    );
+    this._markersBuilding = false;
 
-    // CRITICAL: Ensure marker layer is NOT on the map during creation
-    // The caller will handle adding/removing based on zoom level and initial load state
+    // Ensure the layer is NOT on the map yet — updateMarkerVisibility will add it
+    // respecting the current filters so no markers flash in then get hidden.
     if (this.map && this.map.hasLayer(this.markerLayer)) {
       this.map.removeLayer(this.markerLayer);
     }
 
-    // Don't apply visibility here - let the caller handle it based on zoom level
-    // Markers will be shown/hidden by updateZoomBasedVisibility() in heatmap-init.js
-
-    return this.markerLayer;
+    // Apply filters and show markers now that all are ready
+    if (!window.isInitialLoad) {
+      this.updateMarkerVisibility();
+    }
   }
 
   /**
@@ -1224,15 +1228,8 @@ class HeatmapVisualization {
   updateMarkerVisibility() {
     if (!this.markerLayer || !this.map) return;
 
-    // Check if we're in initial load mode (markers should stay hidden)
-    // This is a safety check - the caller should prevent this during initial load
+    // During initial load keep markers fully off the map
     if (window.isInitialLoad === true) {
-      // During initial load, don't show markers - just ensure they're hidden
-      this.markerLayer.eachLayer((marker) => {
-        if (this.map.hasLayer(marker)) {
-          this.map.removeLayer(marker);
-        }
-      });
       if (this.map.hasLayer(this.markerLayer)) {
         this.map.removeLayer(this.markerLayer);
       }
@@ -1246,67 +1243,47 @@ class HeatmapVisualization {
     let visibleCount = 0;
     let hiddenCount = 0;
 
-    // Ensure marker layer is on the map first (only if not initial load)
+    // Keep the whole markerLayer on the map — individual markers are toggled via CSS,
+    // which avoids a costly DOM insertion/removal (and reflow) per marker.
     if (!this.map.hasLayer(this.markerLayer)) {
       this.markerLayer.addTo(this.map);
     }
 
-    // Update visibility of each marker
     this.markerLayer.eachLayer((marker) => {
-      // Get complaint ID from marker (try multiple ways)
-      const complaintId =
-        marker._complaintId ||
-        marker.options?.complaintId ||
-        (this.markerMap &&
-          Array.from(this.markerMap.entries()).find(
-            ([_id, m]) => m === marker
-          )?.[0]);
+      // _complaintId is always set by createComplaintMarker(); options fallback for safety
+      const complaintId = marker._complaintId || marker.options?.complaintId;
+      const shouldBeVisible = complaintId
+        ? visibleComplaintIds.has(complaintId)
+        : false;
 
-      // Determine if marker should be visible
-      let shouldBeVisible = false;
-      if (complaintId) {
-        shouldBeVisible = visibleComplaintIds.has(complaintId);
+      const el = marker.getElement ? marker.getElement() : null;
+      if (el) {
+        // Fast path: CSS toggle — no DOM tree modification, no reflow
+        el.style.visibility = shouldBeVisible ? "" : "hidden";
+        el.style.pointerEvents = shouldBeVisible ? "" : "none";
       } else {
-        // Fallback: check by coordinates (less reliable but works if ID is missing)
-        const latLng = marker.getLatLng();
-        shouldBeVisible = this.complaintData.some(
-          (c) =>
-            Math.abs(c.lat - latLng.lat) < 0.0001 &&
-            Math.abs(c.lng - latLng.lng) < 0.0001
-        );
-      }
-
-      // Show or hide marker based on filter match
-      // Note: Markers are part of markerLayer, so we manage visibility by adding/removing from layer
-      if (shouldBeVisible) {
-        // Show marker - ensure it's in the layer (it should be, but check anyway)
-        if (!this.markerLayer.hasLayer(marker)) {
+        // Cold path: marker not yet rendered (element not mounted)
+        // Ensure it's added to the layer so it renders next frame
+        if (shouldBeVisible && !this.markerLayer.hasLayer(marker)) {
           this.markerLayer.addLayer(marker);
         }
-        // Also ensure it's visible on the map
-        if (!this.map.hasLayer(marker)) {
-          marker.addTo(this.map);
-        }
-        visibleCount++;
-      } else {
-        // Hide marker by removing from map (but keep in layer for later)
-        if (this.map.hasLayer(marker)) {
-          this.map.removeLayer(marker);
-        }
-        hiddenCount++;
       }
+
+      if (shouldBeVisible) visibleCount++;
+      else hiddenCount++;
     });
 
     // Dispatch custom event for marker visibility update
     if (typeof window !== "undefined" && window.dispatchEvent) {
-      const event = new CustomEvent("markerVisibilityUpdated", {
-        detail: {
-          visibleCount,
-          hiddenCount,
-          totalCount: this.markerLayer.getLayers().length,
-        },
-      });
-      window.dispatchEvent(event);
+      window.dispatchEvent(
+        new CustomEvent("markerVisibilityUpdated", {
+          detail: {
+            visibleCount,
+            hiddenCount,
+            totalCount: this.markerLayer.getLayers().length,
+          },
+        })
+      );
     }
   }
   /**
@@ -1343,9 +1320,9 @@ class HeatmapVisualization {
     });
     // Also store directly on marker for quick access
     marker._complaintId = complaint.id;
-    // Create popup content
-    const popupContent = this.createComplaintPopup(complaint);
-    marker.bindPopup(popupContent, {
+    // Lazy popup: build HTML only when the user actually clicks the marker,
+    // not at creation time. Avoids building hundreds of HTML strings up-front.
+    marker.bindPopup(() => this.createComplaintPopup(complaint), {
       maxWidth: 250,
       className: "complaint-popup",
     });
@@ -2120,21 +2097,24 @@ class HeatmapVisualization {
   updateMarkerSizes() {
     if (!this.markerLayer || !this.map) return;
 
-    const markers = this.markerLayer.getLayers();
-    markers.forEach((marker, index) => {
-      // Get the original complaint data from marker's lat/lng
-      const latLng = marker.getLatLng();
-      const complaint = this.complaintData.find(
-        (c) =>
-          Math.abs(c.lat - latLng.lat) < 0.0001 &&
-          Math.abs(c.lng - latLng.lng) < 0.0001
+    // RAF gate: if already scheduled, skip — only one update per animation frame
+    if (this._updateMarkerSizesRaf) return;
+    this._updateMarkerSizesRaf = requestAnimationFrame(() => {
+      this._updateMarkerSizesRaf = null;
+      const markers = this.markerLayer.getLayers();
+      // Build a single O(n) id→complaint lookup map instead of O(n) find() per marker
+      const dataById = new Map(
+        (this.complaintData || []).map((c) => [c.id, c])
       );
-
-      if (complaint) {
-        // Create new icon with updated size and color based on current zoom and complaint status
-        const newIcon = this.getComplaintIcon(complaint, index);
-        marker.setIcon(newIcon);
-      }
+      markers.forEach((marker, index) => {
+        // marker._complaintId is always set by createComplaintMarker()
+        const complaint = marker._complaintId
+          ? dataById.get(marker._complaintId)
+          : null;
+        if (complaint) {
+          marker.setIcon(this.getComplaintIcon(complaint, index));
+        }
+      });
     });
   }
 

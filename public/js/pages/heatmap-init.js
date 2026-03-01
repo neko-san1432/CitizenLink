@@ -112,7 +112,10 @@ window.isInitialLoad = false;
         window.isInitialLoad = false;
       }
 
-      updateZoomBasedVisibility(currentZoom);
+      // NOTE: do NOT call updateZoomBasedVisibility() here — that callback is
+      // expensive (may recreate markers / iterate all DOM nodes) and fires on
+      // every animation frame during a pinch-zoom or scroll-wheel zoom.
+      // The `zoomend` listener above handles the full update once the gesture ends.
     });
 
     // Initialize heatmap visualization
@@ -430,29 +433,32 @@ function updateZoomBasedVisibility(zoom) {
     //   }
     // } else {
     // Non-citizens: Show markers based on zoom and filters
-    // Create markers lazily if they don't exist yet (first time user zooms in)
+    // Create markers lazily if they don't exist yet (first time user zooms in).
+    // _markersBuilding: async build is in progress — don't retrigger.
     if (
       !heatmapViz.markerLayer ||
-      heatmapViz.markerLayer.getLayers().length === 0
+      (heatmapViz.markerLayer.getLayers().length === 0 &&
+        !heatmapViz._markersBuilding)
     ) {
       heatmapViz.createMarkerLayer();
+      // Markers are being built asynchronously. _buildMarkersAsync will call
+      // updateMarkerVisibility() when the batch is complete — nothing else to do here.
     }
 
     if (
       heatmapViz.markerLayer &&
-      heatmapViz.markerLayer.getLayers().length > 0
+      heatmapViz.markerLayer.getLayers().length > 0 &&
+      !heatmapViz._markersBuilding
     ) {
-      // First ensure the marker layer is on the map
+      // Markers already exist — ensure layer is on the map
       if (!heatmapViz.map.hasLayer(heatmapViz.markerLayer)) {
         heatmapViz.markerLayer.addTo(heatmapViz.map);
       }
 
       // Trigger marker visibility update based on current filters
-      // This ensures markers respect filter settings when zooming in
       if (heatmapViz.updateMarkerVisibility) {
         heatmapViz.updateMarkerVisibility();
       } else {
-        // Fallback: show all markers if updateMarkerVisibility doesn't exist
         heatmapViz.showMarkers();
       }
 
@@ -668,20 +674,9 @@ function setupControlPanel() {
       }
       heatmapViz.createHeatmapLayer();
 
-      // Trigger marker visibility update if markers exist and are visible
-      if (
-        heatmapViz.markerLayer &&
-        map &&
-        map.hasLayer(heatmapViz.markerLayer)
-      ) {
-        // Markers are visible - update their visibility based on filters
-        if (heatmapViz.updateMarkerVisibility) {
-          heatmapViz.updateMarkerVisibility();
-        }
-      }
-
-      // Apply zoom-based visibility (this will handle both markers and heatmap)
-      // Don't call updateMarkerVisibility() directly - let updateZoomBasedVisibility handle it
+      // Apply zoom-based visibility — this handles both heatmap and markers in one pass,
+      // including calling updateMarkerVisibility() when zoom > threshold.
+      // Do NOT call updateMarkerVisibility() directly here to avoid running it twice.
       const currentZoom = map ? map.getZoom() : 11;
       updateZoomBasedVisibility(currentZoom);
       updateStatistics();

@@ -14,18 +14,73 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/toast.css" />
-  <div class="header-container"></div>
-
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
+  <link rel="stylesheet" href="/css/viewport-fix.css" />
   <link rel="stylesheet" href="/css/pages/complaint-details.css" />
   <style>
-    /* Coordinator specific overrides */
-    .main-content {
+    /* ── Coordinator Review Page Overrides ──
+       complaint-details.css locks every ancestor to overflow:hidden + fixed
+       heights for its 3-column grid layout. This page is NOT a 3-column grid
+       — it's a sequential flow. Break the hidden chain on desktop. */
+
+    html, body {
+      overflow: auto !important;
+      height: auto !important;
+    }
+
+    #app.coordinator-review {
+      height: auto !important;
+      min-height: 100vh;
+      overflow: visible !important;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #app.coordinator-review .dashboard-main-wrapper {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      flex: 1;
+      padding: 0 !important;
+    }
+
+    #app.coordinator-review .main-content {
+      overflow: visible !important;
+      height: auto !important;
+      flex: 1;
+      padding: 0 !important;
+    }
+
+    #app.coordinator-review .container {
+      overflow: visible !important;
+      height: auto !important;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 16px !important;
     }
 
-    .review-container {
-      max-width: 1200px;
-      margin: 0 auto;
+    /* The wrapper that replaced complaint-details */
+    .review-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 16px !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    /* The inner .complaint-content is the actual 2-column grid */
+    .review-wrapper .complaint-content {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .review-wrapper .glass-panel {
+      height: auto !important;
+      overflow: visible !important;
     }
 
     .action-buttons-container {
@@ -35,21 +90,34 @@
       margin-top: 16px;
     }
 
-    /* Ensure modals still work */
-    .modal {
-      z-index: 9999;
+    .modal { z-index: 9999; }
+
+    @media (max-width: 768px) {
+      .review-wrapper .complaint-content {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
+</head>
 
-  <div class="review-container complaint-details" id="complaint-details" style="display: block;">
-    <a href="/review-queue" class="back-button breadcrumb-link" style="margin-bottom: 16px; display: inline-flex;">
-      <i class="icon-arrow-left"></i> Back to Complaints
-    </a>
+<body>
+  <header class="header-container"></header>
+  <div id="sidebar" class="collapsible"></div>
 
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Loading complaint details...</p>
-    </div>
+  <div id="app" class="coordinator-review">
+    <main class="main-content">
+      <div class="container">
+        <div class="review-wrapper" id="complaint-details">
+
+          <a href="/review-queue" class="back-button breadcrumb-link"
+            style="margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.9rem;">
+            <i class="icon-arrow-left"></i> Back to Queue
+          </a>
+
+          <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading complaint details...</p>
+          </div>
 
     <div id="error-message" class="empty-state" style="display: none">
       <h2>⚠️ Error Loading Complaint</h2>
@@ -70,7 +138,7 @@
             <span id="complaint-id-header" class="complaint-id" style="color: #4b5563;">#ID</span>
           </div>
 
-          <h1 id="complaint-title" class="complaint-title">Title</h1>
+          <h1 id="complaint-cat-subcat" class="complaint-title" style="font-size: 1.35rem; font-weight: 700; color: #1e293b;">Category - Subcategory</h1>
 
           <div class="complaint-meta mt-3">
             <!-- Re-using existing status logic but wrapped in new structure -->
@@ -195,8 +263,7 @@
 
       </div>
     </div>
-  </div>
-
+  </div><!-- /.review-wrapper -->
 
   <!-- Mark as Duplicate Modal -->
   <div id="duplicate-modal" class="modal">
@@ -284,22 +351,25 @@
         </div>
       </div>
     </div>
-  </div>
-
+  </div><!-- /.reject-modal -->
 
   <!-- Toast container -->
   <div id="toast-container"></div>
 
-  <script type="module" src="../../js/components/header.js"></script>
-  <script type="module" src="../../js/components/sidebar.js"></script>
-  <script type="module" src="../../js/auth/authChecker.js"></script>
-  <script type="module" src="../../js/auth/roleToggle.js"></script>
-  <script type="module" src="../../js/components/toast.js"></script>
+      </div><!-- /.container -->
+    </main><!-- /.main-content -->
+  </div><!-- /#app -->
+
+  <script type="module" src="/js/components/header.js"></script>
+  <script type="module" src="/js/components/sidebar.js"></script>
+  <script type="module" src="/js/auth/authChecker.js"></script>
+  <script type="module" src="/js/auth/roleToggle.js"></script>
+  <script type="module" src="/js/components/toast.js"></script>
   <script type="module" src="/js/components/complaint/falseComplaintMarker.js"></script>
   <script type="module" src="/js/components/complaint/evidencePreview.js"></script>
   <script type="module" src="/js/components/complaint/complaintMap.js"></script>
   <script type="module" src="/js/coordinator/review.js"></script>
   <script type="module" src="/js/coordinator/review-init.js"></script>
-  </body>
+</body>
 
 </html>

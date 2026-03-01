@@ -330,44 +330,10 @@ function addLiveComplaintMarker(complaint) {
     zIndexOffset: 2000
   }).addTo(map);
 
-  // v4.0: Unified Popup Card (Feature 3 Support)
-  // Uses the same high-fidelity Intelligence card as regular complaints
-  const popupContent = generateComplaintPopupHTML(
-    complaint,
-    null,      // Not part of a cluster yet
-    color,     // Visual consistency
-    null       // No dominant category context needed
-  );
-
-  marker.bindPopup(popupContent, {
-    maxWidth: 350,
-    className: "complaint-audit-popup-container"
-  });
-
-  // v4.0: Street-level location loader (Nomimatim)
-  // Synchronized with clustered markers for consistent user experience
-  marker.on("popupopen", async () => {
-    const streetElements = document.querySelectorAll(".complaint-street-location");
-    for (const element of streetElements) {
-      const streetValue = element.querySelector(".street-value");
-      if (streetValue && streetValue.textContent.includes("Loading")) {
-        const lat = parseFloat(element.dataset.lat);
-        const lng = parseFloat(element.dataset.lng);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          try {
-            const address = await reverseGeocode(lat, lng);
-            if (address && address.street) {
-              streetValue.innerHTML = `<strong>${address.street}</strong> <span class="street-barangay">(${address.suburb || getJurisdiction(lat, lng)})</span>`;
-            } else if (address && address.suburb) {
-              streetValue.innerHTML = `<span class="street-barangay">${address.suburb}</span> <span class="no-street">(no street name)</span>`;
-            } else {
-              streetValue.innerHTML = '<span class="no-street">Street name unavailable</span>';
-            }
-          } catch (error) {
-            streetValue.innerHTML = '<span class="no-street">Geocoding failed</span>';
-          }
-        }
-      }
+  // Open intelligence panel on click (lazy — no upfront HTML generation)
+  marker.on("click", () => {
+    if (window.mapIntelligencePanel) {
+      window.mapIntelligencePanel.show(complaint, null, color, null);
     }
   });
 
@@ -4818,6 +4784,9 @@ function generateComplaintPopupHTML(point, clusterId = null, clusterColor = "#6b
     `;
 }
 
+// Expose for map-intelligence-panel.js (lazy rendering)
+window.generateComplaintPopupHTML = generateComplaintPopupHTML;
+
 /**
  * Create Glass Box cluster popup explaining AI reasoning.
  * Uses Multi-Jurisdiction Voting for accurate location (Feature 3).
@@ -5383,44 +5352,11 @@ function visualizeClusters(clusters) {
       // 1. Create marker at POINT's coordinates (NOT cluster center)
       const marker = simulationEngine.createSpotlightMarker(point, color, 0.8);
 
-      // 2. Generate popup using POINT's individual data
-      //    Pass cluster context for transparency
-      const complaintPopup = generateComplaintPopupHTML(
-        point,                    // POINT data (NOT cluster data)
-        idx + 1,                  // Cluster ID for context
-        color,                    // Visual consistency
-        dominantCategory          // For merged warning
-      );
-
-      // 3. Bind popup to marker
-      marker.bindPopup(complaintPopup, {
-        maxWidth: 350,
-        className: "complaint-audit-popup-container"
-      });
-
-      // v3.7: Load street-level location when popup opens
-      marker.on("popupopen", async () => {
-        const streetElements = document.querySelectorAll(".complaint-street-location");
-        for (const element of streetElements) {
-          const streetValue = element.querySelector(".street-value");
-          if (streetValue && streetValue.textContent.includes("Loading")) {
-            const lat = parseFloat(element.dataset.lat);
-            const lng = parseFloat(element.dataset.lng);
-            if (!isNaN(lat) && !isNaN(lng)) {
-              try {
-                const address = await reverseGeocode(lat, lng);
-                if (address && address.street) {
-                  streetValue.innerHTML = `<strong>${address.street}</strong> <span class="street-barangay">(${address.suburb || getJurisdiction(lat, lng)})</span>`;
-                } else if (address && address.suburb) {
-                  streetValue.innerHTML = `<span class="street-barangay">${address.suburb}</span> <span class="no-street">(no street name)</span>`;
-                } else {
-                  streetValue.innerHTML = '<span class="no-street">Street name unavailable</span>';
-                }
-              } catch (error) {
-                streetValue.innerHTML = '<span class="no-street">Geocoding failed</span>';
-              }
-            }
-          }
+      // 2. Open intelligence panel on click — content generated lazily
+      const capturedIdx = idx + 1;
+      marker.on("click", () => {
+        if (window.mapIntelligencePanel) {
+          window.mapIntelligencePanel.show(point, capturedIdx, color, dominantCategory);
         }
       });
     });
@@ -5650,36 +5586,10 @@ function visualizeNoisePoints(noisePoints) {
       className: `noise-marker-container${  point.spatial_warning || point.road_proximity_anomaly ? " spatial-anomaly-marker" : ""}`
     });
 
-    // CRITICAL: Bind detailed popup for noise point transparency
-    const noisePopup = createNoisePointPopup(point, mismatchResult);
-    marker.bindPopup(noisePopup, {
-      maxWidth: 320,
-      className: "noise-point-popup-container"
-    });
-
-    // v3.7: Load street-level location when popup opens
-    marker.on("popupopen", async () => {
-      const streetElements = document.querySelectorAll(".complaint-street-location");
-      for (const element of streetElements) {
-        const streetValue = element.querySelector(".street-value");
-        if (streetValue && streetValue.textContent.includes("Loading")) {
-          const lat = parseFloat(element.dataset.lat);
-          const lng = parseFloat(element.dataset.lng);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            try {
-              const address = await reverseGeocode(lat, lng);
-              if (address && address.street) {
-                streetValue.innerHTML = `<strong>${address.street}</strong> <span class="street-barangay">(${address.suburb || getJurisdiction(lat, lng)})</span>`;
-              } else if (address && address.suburb) {
-                streetValue.innerHTML = `<span class="street-barangay">${address.suburb}</span> <span class="no-street">(no street name)</span>`;
-              } else {
-                streetValue.innerHTML = '<span class="no-street">Street name unavailable</span>';
-              }
-            } catch (error) {
-              streetValue.innerHTML = '<span class="no-street">Geocoding failed</span>';
-            }
-          }
-        }
+    // Open intelligence panel on click — lazy, cached
+    marker.on("click", () => {
+      if (window.mapIntelligencePanel) {
+        window.mapIntelligencePanel.show(point, null, noiseColor, null);
       }
     });
 
@@ -5707,6 +5617,10 @@ async function loadFullSimulation() {
   const loadingOverlay = document.getElementById("loadingOverlay");
   const statusIndicator = document.getElementById("statusIndicator");
   const loadButton = document.getElementById("loadCityData");
+
+  // Invalidate the intelligence panel cache — stale results must not
+  // persist across dataset refreshes.
+  window.mapIntelligencePanel?.invalidateCache();
 
   // ================================================================
   // RESET PHASE 2: Disable causal analysis when reloading data

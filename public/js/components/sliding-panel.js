@@ -161,13 +161,13 @@ class SlidingPanel {
 
     try {
       // Dynamically import the ComplaintDetails class
-      const { ComplaintDetails } = await import("../pages/complaint-details.js");
+      const { ComplaintDetails } = await import("../pages/complaint-details.js?v=20260301");
 
       container.innerHTML = `
                 <div id="complaint-details" class="complaint-details" style="display: none;">
                     <div class="details-header mb-4">
                         <div class="flex items-center justify-between">
-                            <h2 id="complaint-title" class="text-xl font-bold"></h2>
+                            <h2 id="complaint-cat-subcat" class="text-xl font-bold"></h2>
                             <span id="complaint-category-badge" class="badge"></span>
                         </div>
                         <div class="flex items-center gap-2 text-sm text-gray-500 mt-1">
@@ -239,12 +239,19 @@ class SlidingPanel {
       this.detailsInstance = new ComplaintDetails(container, id);
       const details = this.detailsInstance;
 
-      // Update panel title area once data is loaded (via listener or polling)
+      // Update panel title area with Category - Subcategory once data is loaded
       const checkData = setInterval(() => {
         if (details.complaint) {
           const titleArea = document.getElementById("sliding-panel-title-area");
           if (titleArea) {
-            titleArea.textContent = `Complaint Details`;
+            let catName = details.complaint.category || "General";
+            if (details.complaint.categories && details.complaint.categories.name) {
+              catName = details.complaint.categories.name;
+            } else if (details.complaint.category_name) {
+              catName = details.complaint.category_name;
+            }
+            const subName = details.complaint.subcategory || details.complaint.subtype || "";
+            titleArea.textContent = subName ? `${catName} - ${subName}` : catName;
           }
           clearInterval(checkData);
         }

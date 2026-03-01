@@ -331,3 +331,102 @@ Given a realistic dataset of **500 complaint points** with the boundary filter e
 3. **Virtual viewport culling**: For very large datasets (5 000+ points), only send heatmap points within the current map viewport bounding box to `L.heatLayer`. Points outside the viewport contribute nothing to the visual output but still cost time in the intensity calculation pass.
 
 4. **Web Worker offload**: `applyClientSideFilters` + `getIntensityValue` are pure computation with no DOM access. Moving them into a Web Worker would free the main thread during map interaction.
+
+---
+
+## Phase 2 — Post-Load Interaction Lag (Session 2)
+
+**Symptom reported:** Heatmap and marker view continued to lag _after_ the initial page load — specifically on zoom, pan, and filter changes.
+
+**Root cause analysis:** Phase 1 fixes addressed the initial data-fetch and render path. The remaining lag came from four separate issues in the _interaction_ event loop.
+
+---
+
+### Fix 7 — O(n²) `updateMarkerSizes` on every zoom
+
+| | |
+|---|---|
+| **File** | `src/client/components/map/heatmapVisualization.js` |
+| **Problem** | `updateMarkerSizes()` fires on every `zoomend`. Inside, it called `this.complaintData.find()` (O(n) coordinate scan) for each of the n markers — making the total **O(n²)**. For 500 markers: 250 000 comparisons + 500 `marker.setIcon()` DOM repaints per zoom gesture. |
+| **Fix** | Pre-build a `Map<id, complaint>` once per call (O(n)); look up each marker via its stored `_complaintId` in O(1). Gate the entire function behind `requestAnimationFrame` so duplicate queued calls are coalesced into one. |
+
+**Before (simplified):**
+```js
+markers.forEach((marker, i) => {
+  const complaint = this.complaintData.find(c =>   // O(n) per marker
+    Math.abs(c.lat - marker.getLatLng().lat) < 0.0001 && ...
+  );
+  if (complaint) marker.setIcon(this.getComplaintIcon(complaint, i));
+});
+```
+
+**After:**
+```js
+if (this._updateMarkerSizesRaf) return;           // RAF gate
+this._updateMarkerSizesRaf = requestAnimationFrame(() => {
+  this._updateMarkerSizesRaf = null;
+  const dataById = new Map(this.complaintData.map(c => [c.id, c]));  // O(n) once
+  markers.forEach((marker, i) => {
+    const complaint = dataById.get(marker._complaintId);  // O(1)
+    if (complaint) marker.setIcon(this.getComplaintIcon(complaint, i));
+  });
+});
+```
+
+---
+
+### Fix 8 — `map.on("zoom")` fired full visibility update every animation frame
+
+| | |
+|---|---|
+| **File** | `public/js/pages/heatmap-init.js` |
+| **Problem** | Two zoom listeners were registered — `zoomend` (fires once) and `zoom` (fires every frame of the animation). Both called `updateZoomBasedVisibility()` which iterates all markers and runs `applyClientSideFilters()`. On a 60 fps display, one zoom gesture could trigger 20–60 full passes. |
+| **Fix** | The `zoom` listener now only updates the `isInitialLoad` boolean flag. All expensive visibility work stays in `zoomend`. |
+
+---
+
+### Fix 9 — Double `updateMarkerVisibility()` on filter change
+
+| | |
+|---|---|
+| **File** | `public/js/pages/heatmap-init.js` · `applyFiltersAndUpdate()` |
+| **Problem** | `applyFiltersAndUpdate()` called `updateMarkerVisibility()` directly, then called `updateZoomBasedVisibility()` — which also calls `updateMarkerVisibility()` internally. Every checkbox click triggered two full marker-visibility passes. |
+| **Fix** | Remove the direct call. `updateZoomBasedVisibility()` is the single authoritative entry point. |
+
+---
+
+### Fix 10 — Per-marker DOM insertion/removal in `updateMarkerVisibility`
+
+| | |
+|---|---|
+| **File** | `src/client/components/map/heatmapVisualization.js` |
+| **Problem** | Hiding a marker called `this.map.removeLayer(marker)`; showing it called `marker.addTo(this.map)`. Each call inserts or removes a DOM node, triggering browser **layout reflow** per marker. 500 markers × one filter change = 500 sequential DOM mutations. |
+| **Fix** | Keep all markers rendered in `markerLayer` (which stays on the map). Toggle visibility with `el.style.visibility` and `el.style.pointerEvents` via `marker.getElement()`. CSS-only changes bypass layout reflow entirely. |
+
+**Before:**
+```js
+if (shouldBeVisible) {
+  if (!this.map.hasLayer(marker)) marker.addTo(this.map);       // DOM insert → reflow
+} else {
+  if (this.map.hasLayer(marker)) this.map.removeLayer(marker);  // DOM remove → reflow
+}
+```
+
+**After:**
+```js
+const el = marker.getElement ? marker.getElement() : null;
+if (el) {
+  el.style.visibility   = shouldBeVisible ? "" : "hidden";      // CSS only — no reflow
+  el.style.pointerEvents = shouldBeVisible ? "" : "none";
+}
+```
+
+---
+
+### Phase 2 Files Changed
+
+| File | Changes | Nature |
+|---|---|---|
+| `src/client/components/map/heatmapVisualization.js` | `updateMarkerSizes` rewrite, `updateMarkerVisibility` rewrite | Fixes 7, 10 |
+| `public/js/pages/heatmap-init.js` | `zoom` listener trimmed, `applyFiltersAndUpdate` deduplicated | Fixes 8, 9 |
+
