@@ -27,7 +27,7 @@ Built for Digos City, Davao del Sur, the system enables data-driven decision-mak
 | **Statistical Analysis** | Client-side statistical validation with local analysis server for thesis-ready reporting |
 | **Real-time Notifications** | Comprehensive notification system with priority levels and deduplication |
 | **Interactive Heatmap** | Live complaint visualization with cluster overlays and filtering |
-| **6-Status Workflow** | Complaint lifecycle: New → Assigned → In Progress → Pending Approval → Completed (+ Cancelled) |
+| **5-Phase Workflow** | Complaint lifecycle: Submitted → Verified → Under Review → Action Taken → Resolved (migrated from original 6-status; application constants still reference original values) |
 | **Settings Management** | Role-protected system settings with category-based organization and public/private scoping |
 | **Security Scanning** | Automated 3-phase pipeline: npm audit, ESLint security plugins, and pattern-based secret scanning |
 
@@ -135,9 +135,15 @@ DRIMS/
 ├── 📁 views/
 │   └── 📁 pages/                 # HTML templates
 │       ├── 📁 admin/
+│       ├── 📁 auth/
+│       ├── 📁 citizen/
 │       ├── 📁 coordinator/
+│       ├── 📁 hr/
+│       ├── 📁 lgu/
 │       ├── 📁 lgu-admin/
-│       └── 📁 citizen/
+│       ├── 📁 lgu-officer/
+│       ├── 📁 shared/
+│       └── 📁 super-admin/
 ├── 📁 docs/                      # Documentation & audit reports
 │   └── 📁 performance/           # Benchmark reports
 ├── 📁 database/                  # Migration scripts
@@ -146,7 +152,7 @@ DRIMS/
 ├── 📁 scripts/                   # Utility & diagnostic scripts
 ├── 📁 storage/
 │   └── 📁 ai_cache/              # TF model & anchor embedding cache
-└── 📁 tests/                     # Test suites (25 suites, 206 tests)
+└── 📁 tests/                     # Test suites (25 suites, 211 tests)
 ```
 
 ### Architectural Pattern
@@ -218,7 +224,7 @@ These parameters were derived using the **Sorted K-Distance Graph (Elbow Method)
 |------|----------|-------------|--------|-----------|
 | **Infrastructure** | Infrastructure | 125m (0.001125°) | 5 | Large-scale road damage patterns |
 | **Public Safety** | Flooding | 50m (0.00045°) | 3 | Emergency events need moderate radius |
-| **Public Safety** | Utilities | 50m (0.00045°) | 4 | Localized outage reports |
+| **Public Safety** | Utilities | 50m (0.00045°) | 3 | Localized outage reports (falls to default minPts) |
 | **Public Safety** | Fire | 50m (0.00045°) | 2 | Critical — even 2 reports demand attention |
 | **Public Safety** | Accident | 50m (0.00045°) | 3 | Traffic accidents are localized |
 | **Public Safety** | Crime | 50m (0.00045°) | 3 | Public safety concern |
@@ -398,9 +404,9 @@ The system detects duplicate complaints using three dimensions:
 finalScore = (textScore * 0.4) + (locationScore * 0.4) + (temporalScore * 0.2);
 
 // Thresholds
-if (finalScore > 0.85) → "Very High Confidence Duplicate"
-if (finalScore > 0.75) → "High Confidence Duplicate"
-if (finalScore > 0.60) → "Medium Confidence Duplicate"
+if (finalScore >= 0.85) → "Very High Confidence Duplicate"
+if (finalScore >= 0.75) → "High Confidence Duplicate"
+if (finalScore >= 0.60) → "Medium Confidence Duplicate"
 ```
 
 **File:** `src/server/services/DuplicationDetectionService.js`
@@ -486,25 +492,25 @@ One-click generation of:
 
 | Type | Icon | Priority | Use Case |
 |------|------|----------|----------|
-| `COMPLAINT_SUBMITTED` | 📝 | Normal | Citizen confirmation |
+| `COMPLAINT_SUBMITTED` | ✅ | Normal | Citizen confirmation |
 | `COMPLAINT_STATUS_CHANGED` | 🔄 | Normal | Status updates |
-| `COMPLAINT_UPDATE` | 💬 | Normal | Notes/comments added |
 | `COMPLAINT_DUPLICATE` | 🔗 | Normal | Duplicate detected |
-| `COMPLAINT_ASSIGNED` | 👤 | Normal | Assigned to staff |
-| `COMPLAINT_RESOLVED` | ✅ | Normal | Resolution confirmed |
+| `COMPLAINT_ASSIGNED` | 👷 | Normal | Assigned to staff |
+| `COMPLAINT_RESOLVED` | ✔️ | Normal | Resolution confirmed |
 | `TASK_ASSIGNED` | 📋 | High | Officer assignment |
-| `TASK_COMPLETED` | ✅ | Normal | Task finished |
-| `TASK_DEADLINE_APPROACHING` | ⚠️ | High | 24h warning |
-| `TASK_OVERDUE` | ⏰ | Critical | Missed deadline |
-| `ASSIGNMENT_COMPLETED` | 🎯 | Normal | Assignment done |
-| `NEW_COMPLAINT_REVIEW` | 👀 | High | New review needed |
-| `APPROVAL_REQUIRED` | 👍 | High | Needs approval |
-| `OFFICER_REMINDER` | 🔔 | Normal | Officer nudge |
-| `ADMIN_REMINDER` | 📢 | High | Admin nudge |
-| `PENDING_TASK_REMINDER` | ⏳ | Normal | Pending task alert |
-| `WORKFLOW_STEP_COMPLETED` | ➡️ | Normal | Step advanced |
-| `LGU_WORK_COMPLETED` | 🏗️ | Normal | LGU work done |
-| `RESOLUTION_REVIEW_NEEDED` | 👁️ | High | Review resolution |
+| `TASK_DEADLINE_APPROACHING` | ⏰ | High | 24h warning |
+| `TASK_OVERDUE` | 🚨 | Critical | Missed deadline |
+| `ASSIGNMENT_COMPLETED` | ✅ | Normal | Assignment done |
+| `NEW_COMPLAINT_REVIEW` | 🔍 | High | New review needed |
+| `APPROVAL_REQUIRED` | 🔐 | High | Needs approval |
+| `OFFICER_REMINDER` | 💬 | Normal | Officer nudge |
+| `ADMIN_REMINDER` | 🔔 | High | Admin nudge |
+| `PENDING_TASK_REMINDER` | ⏰ | Normal | Pending task alert |
+| `WORKFLOW_STEP_COMPLETED` | 📈 | Normal | Step advanced |
+| `LGU_WORK_COMPLETED` | 🎯 | Normal | LGU work done |
+| `RESOLUTION_REVIEW_NEEDED` | 🔍 | High | Review resolution |
+
+> **Note:** The codebase defines 25 notification types in `src/shared/constants.js`. This table shows the 17 most commonly triggered types. Additional types include `COMPLAINT_REJECTED`, `OFFICER_UPDATE`, `TASK_PRIORITY_CHANGED`, `COORDINATOR_NOTE`, `DUPLICATE_DETECTED`, `SIMILAR_COMPLAINTS`, `RESOLUTION_PENDING_APPROVAL`, and `COMPLAINT_ESCALATED`.
 
 ### Features
 
@@ -548,8 +554,9 @@ CREATE TABLE public.complaints (
   longitude DOUBLE PRECISION,
   category TEXT,
   department_r TEXT[] DEFAULT '{}',
-  workflow_status TEXT DEFAULT 'new'
-    CHECK (workflow_status IN ('new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled')),
+  workflow_status TEXT DEFAULT 'submitted'
+    CHECK (workflow_status IN ('submitted', 'verified', 'under_review', 'action_taken', 'resolved')),
+  -- Note: Migrated from original 6-status system by 20260205_update_workflow_constraint.
   priority TEXT DEFAULT 'low'
     CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
   assigned_coordinator_id UUID,
@@ -582,7 +589,7 @@ CREATE TABLE public.complaints (
 |--------|----------|-------------|
 | GET | `/api/settings` | Get all settings (authenticated) |
 | GET | `/api/settings/public` | Get public-scoped settings |
-| GET | `/api/settings/category/:cat` | Get settings by category |
+| GET | `/api/settings/category/:category` | Get settings by category |
 | POST | `/api/settings` | Create setting (lgu/super-admin) |
 | PUT | `/api/settings/:key` | Update setting (lgu/super-admin) |
 | DELETE | `/api/settings/:key` | Delete setting (super-admin only) |
@@ -676,7 +683,7 @@ npm run security-scan    # Run custom 3-phase security scanner
 | Metric | Result |
 |--------|--------|
 | Test suites | 25 passing |
-| Tests | 206 passing, 0 failures |
+| Tests | 211 passing, 0 failures |
 | npm vulnerabilities | 0 |
 | ESLint errors | 0 (538 non-blocking warnings) |
 | Secret scan findings | 0 |
