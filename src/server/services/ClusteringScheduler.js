@@ -5,7 +5,7 @@ const Database = require("../config/database");
 /**
  * ClusteringScheduler
  * Handles automatic scheduling of DBSCAN clustering operations
- * Integrated with BrainService for Advanced Logic (DBSCAN++ & Causality)
+ * Integrated with BrainService for Advanced Logic (DBSCAN++)
  */
 class ClusteringScheduler {
   constructor() {
@@ -136,22 +136,16 @@ class ClusteringScheduler {
       }));
 
       // 4. Save Clusters (Using SimilarityService to handle DB ops)
-      // Note: We might want to save Causal Links too later
       const saveResult = await this.similarityService.saveClusters(mappedClusters);
 
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       this.lastClusteringTime = new Date().toISOString();
 
-      console.log(`[CLUSTERING] Completed in ${duration}s. Clusters: ${mappedClusters.length}, Causal Links: ${intelligence.causalLinks.length}`);
-
-      if (intelligence.causalLinks.length > 0) {
-        console.log("[CLUSTERING] Causal Links Detected:", intelligence.causalLinks.map(l => `${l.cause.category} -> ${l.effect.category}`).join(", "));
-      }
+      console.log(`[CLUSTERING] Completed in ${duration}s. Clusters: ${mappedClusters.length}`);
 
       return {
         success: true,
         clustersFound: mappedClusters.length,
-        causalLinks: intelligence.causalLinks.length,
         duration,
         timestamp: this.lastClusteringTime
       };

@@ -35,7 +35,6 @@ let currentFilterOffice = "all";
 let currentFilterStartDate = null;
 let currentFilterEndDate = null;
 let clustersVisible = true; // Track cluster visibility state
-let causalAnalysisEnabled = false; // Phase 2: Only show causal chains after user triggers analysis
 
 // Performance: Use requestAnimationFrame for smooth animations
 const rafId = null;
@@ -2110,12 +2109,7 @@ function generateSmartInsights(clusters, noise, allData) {
       });
     }
 
-    // ================================================================
-    // LOGIC 3: Multi-Cascade Failures - MOVED TO PHASE 2 (User-Triggered)
-    // Causal chain detection is now handled by runCausalAnalysis()
-    // Trigger via the "Causal Analysis" button in the control panel
-    // ================================================================
-  });
+    });
 
   // SUMMARY CARD: System Performance Report
   if (allData.length > 0 && clusters.length > 0) {
@@ -2267,763 +2261,6 @@ function calculateOptimalZoom(points) {
   return 11;                           // ~15km+ - city and surroundings
 }
 
-// ==================== PHASE 2: CAUSAL ANALYSIS (USER-TRIGGERED) ====================
-
-/**
- * State for causal link visualization on the map
- */
-let causalLinkLines = [];
-let causalAnalysisRunning = false;
-
-/**
- * PHASE 2: Run Causal Chain Analysis
- * ==================================
- * This function is triggered manually by the user via the "Causal Analysis" button.
- * It performs two types of causal detection:
- *
- * 1. INTRA-CLUSTER: Detects causal chains WITHIN a single cluster (e.g., a cluster
- *    containing both "Flood" and "Traffic" reports → Flood caused Traffic)
- *
- * 2. INTER-CLUSTER: Detects causal chains BETWEEN clusters using the CausalityManager
- *    module (e.g., Cluster A = Flood, Cluster B = Traffic 50m away → linked)
- *
- * Results are displayed as insight cards in the Command Center panel and
- * visualized as dashed lines on the map connecting related clusters.
- *
- * @returns {Promise<void>}
- */
-async function runCausalAnalysis() {
-  if (causalAnalysisRunning) {
-    console.log("[CAUSAL] Analysis already in progress...");
-    return;
-  }
-
-  if (!currentClusters || currentClusters.length === 0) {
-    alert("Please load city data and run clustering first (Phase 1).");
-    return;
-  }
-
-  causalAnalysisRunning = true;
-
-  // ================================================================
-  // PHASE 2 ACTIVATION: Enable cross-category causal clustering
-  // This flag is checked by simulation-engine.js to allow RELATIONSHIP_MATRIX
-  // merging and cross-category cluster correlation
-  // ================================================================
-  causalAnalysisEnabled = true;
-  console.log("[CAUSAL] Phase 2 activated - cross-category clustering now enabled");
-
-  const causalBtn = document.getElementById("runCausalAnalysis");
-  const statusIndicator = document.getElementById("statusIndicator");
-
-  // Update UI to show processing
-  if (causalBtn) {
-    causalBtn.disabled = true;
-    causalBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Re-clustering...</span>';
-  }
-  if (statusIndicator) {
-    statusIndicator.classList.add("processing");
-    const statusSpan = statusIndicator.querySelector("span");
-    if (statusSpan) statusSpan.textContent = "Causal Re-clustering...";
-  }
-
-  console.log("╔════════════════════════════════════════════════════════════╗");
-  console.log("║           🔗 PHASE 2: CAUSAL CHAIN ANALYSIS                ║");
-  console.log("╠════════════════════════════════════════════════════════════╣");
-  console.log(`║  Re-running clustering with causal links enabled...        ║`);
-  console.log("╚════════════════════════════════════════════════════════════╝");
-
-  // Clear previous causal link visualizations
-  clearCausalLinks();
-
-  const causalInsights = [];
-  let intraClusterLinks = 0;
-  let interClusterLinks = 0;
-
-  try {
-    // ================================================================
-    // STEP 0: RE-RUN CLUSTERING WITH CAUSAL ANALYSIS ENABLED
-    // Now that causalAnalysisEnabled=true, the RELATIONSHIP_MATRIX
-    // cross-category merging will be active in simulation-engine.js
-    // ================================================================
-    console.log("[CAUSAL] Step 0: Re-running DBSCAN++ with cross-category clustering enabled...");
-
-    // Get the current data (filtered by category if applicable)
-    const allData = simulationEngine.complaints;
-    let filteredData = allData;
-    if (currentFilterCategory !== "all") {
-      filteredData = allData.filter(p => p.category === currentFilterCategory);
-    }
-
-    // Extract critical points (they bypass clustering)
-    const { criticalPoints, standardPoints } = window.extractCriticalPoints
-      ? window.extractCriticalPoints(filteredData)
-      : { criticalPoints: [], standardPoints: filteredData };
-
-    // Re-run clustering with causal analysis now enabled
-    const clusteringResult = clusterComplaints(standardPoints, {
-      MIN_PTS: 1,
-      ENABLE_LOGGING: true
-    });
-
-    // Update global state with new clusters
-    currentClusters = clusteringResult.clusters;
-    currentNoisePoints = clusteringResult.noise;
-
-    console.log(`[CAUSAL] Step 0 complete: ${currentClusters.length} clusters after causal merging`);
-
-    // Re-visualize clusters with new causal-merged data
-    visualizeClusters(currentClusters);
-    visualizeNoisePoints(currentNoisePoints);
-
-    // ================================================================
-    // STEP 1: INTRA-CLUSTER CAUSAL DETECTION
-    // Detect causal chains WITHIN each cluster (multi-category clusters)
-    // ================================================================
-    console.log("[CAUSAL] Step 1: Analyzing intra-cluster relationships...");
-
-    currentClusters.forEach((cluster, idx) => {
-      const categories = [...new Set(cluster.map(p => p.subcategory || p.category))];
-
-      if (categories.length >= 2) {
-        const chainResult = detectCausalChain(categories);
-
-        if (chainResult && chainResult.detected) {
-          intraClusterLinks++;
-
-          const location = getClusterCenterFromPoints(cluster);
-          const zoom = calculateOptimalZoom(cluster);
-          const detectedBarangay = getJurisdiction(location.lat, location.lng);
-
-          let cardType, badgeText;
-          if (chainResult.alertLevel === "CRITICAL") {
-            cardType = "cascade-critical";
-            badgeText = `${chainResult.icon} CRITICAL CHAIN`;
-          } else if (chainResult.alertLevel === "WARNING") {
-            cardType = "cascade-warning";
-            badgeText = `${chainResult.icon} WARNING CHAIN`;
-          } else {
-            cardType = "cascade-info";
-            badgeText = `${chainResult.icon} MONITOR`;
-          }
-
-          causalInsights.push({
-            type: cardType,
-            badge: badgeText,
-            title: chainResult.displayTitle,
-            zoneBadge: detectedBarangay,
-            description: `<span class="report-count">${chainResult.chain.join(" → ")}</span> detected within cluster. ${chainResult.alertLevel === "CRITICAL" ? "Life-safety threat requiring immediate response." : "Coordinate response for operational efficiency."}`,
-            action: `<span class="coordinator-action">${chainResult.suggestedAction}</span>`,
-            icon: chainResult.alertLevel === "CRITICAL" ? "exclamation-circle" : "project-diagram",
-            location: { lat: location.lat, lng: location.lng, zoom },
-            clusterId: idx,
-            chainData: chainResult,
-            coordinatorAction: chainResult.suggestedAction,
-            linkType: "intra-cluster"
-          });
-        }
-      }
-    });
-
-    console.log(`[CAUSAL] Step 1 complete: ${intraClusterLinks} intra-cluster chains detected`);
-
-    // ================================================================
-    // STEP 2: INTER-CLUSTER CAUSAL DETECTION
-    // Detect causal chains BETWEEN clusters using CausalityManager
-    // ================================================================
-    console.log("[CAUSAL] Step 2: Analyzing inter-cluster relationships...");
-
-    // Build cluster objects with required metadata for CausalityManager
-    const clusterObjects = currentClusters.map((cluster, idx) => {
-      const center = getClusterCenterFromPoints(cluster);
-      const dominantCategory = getMostCommonCategory(cluster);
-      const avgTimestamp = getClusterAverageTime ? getClusterAverageTime(cluster) : Date.now();
-
-      return {
-        id: idx,
-        points: cluster,
-        center,
-        category: dominantCategory,
-        timestamp: avgTimestamp,
-        latitude: center.lat,
-        longitude: center.lng
-      };
-    });
-
-    // Use CausalityManager to find links between clusters
-    if (typeof window.findAllCausalLinks === "function" && clusterObjects.length >= 2) {
-      const interLinks = window.findAllCausalLinks(clusterObjects);
-
-      interLinks.forEach(link => {
-        interClusterLinks++;
-
-        const causeCluster = clusterObjects[link.causeIndex];
-        const effectCluster = clusterObjects[link.effectIndex];
-
-        // Draw visual link on map
-        drawCausalLink(causeCluster.center, effectCluster.center, link.verification);
-
-        const detectedBarangay = getJurisdiction(effectCluster.center.lat, effectCluster.center.lng);
-
-        causalInsights.push({
-          type: "cascade-warning",
-          badge: "🔗 CROSS-CLUSTER LINK",
-          title: `${causeCluster.category} → ${effectCluster.category}`,
-          zoneBadge: detectedBarangay,
-          description: `<span class="report-count">Cluster #${link.causeIndex + 1}</span> (${causeCluster.category}) likely caused <span class="report-count">Cluster #${link.effectIndex + 1}</span> (${effectCluster.category}). Distance: ${Math.round(link.verification.distance || 0)}m.`,
-          action: `<span class="coordinator-action">🔍 INVESTIGATE AS LINKED INCIDENT</span>`,
-          icon: "link",
-          location: { lat: effectCluster.center.lat, lng: effectCluster.center.lng, zoom: 16 },
-          clusterId: link.effectIndex,
-          linkData: link,
-          coordinatorAction: "Investigate as linked incident",
-          linkType: "inter-cluster"
-        });
-      });
-
-      console.log(`[CAUSAL] Step 2 complete: ${interClusterLinks} inter-cluster links detected`);
-    } else {
-      console.log("[CAUSAL] Step 2 skipped: CausalityManager not loaded or insufficient clusters");
-    }
-
-    // ================================================================
-    // STEP 3: UPDATE UI WITH CAUSAL INSIGHTS
-    // ================================================================
-    console.log("[CAUSAL] Step 3: Updating Command Center...");
-
-    // Re-visualize clusters so popups now show causal chain data
-    console.log("[CAUSAL] Re-rendering cluster popups with causal chain data...");
-    visualizeClusters(currentClusters);
-
-    // ================================================================
-    // STEP 4: REGENERATE INSIGHTS WITH NEW CLUSTER DATA
-    // ================================================================
-    console.log("[CAUSAL] Step 4: Regenerating insights with causal-merged clusters...");
-
-    // Reuse filteredData from Step 0 (allData already declared there)
-    const insights = generateSmartInsights(currentClusters, currentNoisePoints, filteredData);
-    updateStatsDisplay(insights);
-    renderInsightsCards(insights);
-
-    if (causalInsights.length > 0) {
-      // Sort: Critical first, then Warning, then Info
-      const order = { "cascade-critical": 0, "cascade-warning": 1, "cascade-info": 2 };
-      causalInsights.sort((a, b) => (order[a.type] || 3) - (order[b.type] || 3));
-
-      // Render causal insight cards (append to existing insights)
-      renderCausalInsightCards(causalInsights);
-
-      // Show success toast
-      showCausalToast(`Re-clustered! Found ${intraClusterLinks + interClusterLinks} causal chains.`, "success");
-    } else {
-      showCausalToast("Re-clustering complete. No causal chains detected.", "info");
-    }
-
-    console.log("╔════════════════════════════════════════════════════════════╗");
-    console.log("║           ✅ CAUSAL ANALYSIS COMPLETE                      ║");
-    console.log("╠════════════════════════════════════════════════════════════╣");
-    console.log(`║  Clusters after causal merge: ${currentClusters.length.toString().padEnd(26)} ║`);
-    console.log(`║  Intra-cluster chains: ${intraClusterLinks.toString().padEnd(33)} ║`);
-    console.log(`║  Inter-cluster links:  ${interClusterLinks.toString().padEnd(33)} ║`);
-    console.log(`║  Total causal links:   ${(intraClusterLinks + interClusterLinks).toString().padEnd(33)} ║`);
-    console.log("╚════════════════════════════════════════════════════════════╝");
-
-  } catch (error) {
-    console.error("[CAUSAL] Analysis failed:", error);
-    showCausalToast(`Causal analysis failed: ${  error.message}`, "error");
-  } finally {
-    // Reset UI state
-    causalAnalysisRunning = false;
-
-    if (causalBtn) {
-      causalBtn.disabled = false;
-      causalBtn.innerHTML = '<i class="fas fa-link"></i> <span>Causal Analysis</span>';
-    }
-    if (statusIndicator) {
-      statusIndicator.classList.remove("processing");
-      const statusSpan = statusIndicator.querySelector("span");
-      if (statusSpan) statusSpan.textContent = "Causal Analysis Done";
-    }
-  }
-}
-
-/**
- * Draw a dashed line on the map connecting two causally-linked clusters.
- *
- * @param {Object} causeCenter - { lat, lng } of cause cluster
- * @param {Object} effectCenter - { lat, lng } of effect cluster
- * @param {Object} verification - Verification result from CausalityManager
- */
-function drawCausalLink(causeCenter, effectCenter, verification) {
-  if (!map || !causeCenter || !effectCenter) return;
-
-  const color = verification?.checks?.direction ? "#a855f7" : "#64748b"; // Purple for verified, gray otherwise
-
-  const polyline = L.polyline(
-    [[causeCenter.lat, causeCenter.lng], [effectCenter.lat, effectCenter.lng]],
-    {
-      color,
-      weight: 3,
-      opacity: 0.8,
-      dashArray: "10, 10",
-      className: "causal-link-line"
-    }
-  ).addTo(map);
-
-  // Add arrow marker at midpoint
-  const midLat = (causeCenter.lat + effectCenter.lat) / 2;
-  const midLng = (causeCenter.lng + effectCenter.lng) / 2;
-
-  const arrowMarker = L.marker([midLat, midLng], {
-    icon: L.divIcon({
-      html: '<div class="causal-arrow-icon">→</div>',
-      className: "causal-arrow-marker",
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
-    })
-  }).addTo(map);
-
-  // Popup on the line
-  polyline.bindPopup(`
-        <div style="font-family: 'Inter', sans-serif; padding: 8px;">
-            <strong style="color: #a855f7;">🔗 Causal Link</strong><br>
-            <span style="font-size: 12px; color: #64748b;">
-                Direction: ${verification?.checks?.direction ? "✅ Verified" : "⚠️ Unverified"}<br>
-                Temporal: ${verification?.checks?.temporal ? "✅ Valid" : "⚠️ Unknown"}<br>
-                Spatial: ${verification?.checks?.spatial ? "✅ Within range" : "⚠️ Far"}
-            </span>
-        </div>
-    `, { className: "causal-link-popup" });
-
-  causalLinkLines.push(polyline, arrowMarker);
-}
-
-/**
- * Clear all causal link visualizations from the map.
- */
-function clearCausalLinks() {
-  causalLinkLines.forEach(layer => {
-    if (map && layer) {
-      map.removeLayer(layer);
-    }
-  });
-  causalLinkLines = [];
-  console.log("[CAUSAL] Cleared previous link visualizations");
-}
-
-/**
- * Render causal insight cards in the Command Center panel.
- * Appends to existing insights rather than replacing.
- *
- * @param {Array} causalInsights - Array of causal insight card objects
- */
-function renderCausalInsightCards(causalInsights) {
-  const insightsContent = document.getElementById("insightsContent");
-  if (!insightsContent) return;
-
-  // Create a separator for causal insights
-  const separator = document.createElement("div");
-  separator.className = "causal-section-separator";
-  separator.innerHTML = `
-        <div class="separator-line"></div>
-        <span class="separator-label">🔗 CAUSAL CHAIN ANALYSIS (Phase 2)</span>
-        <div class="separator-line"></div>
-    `;
-  insightsContent.appendChild(separator);
-
-  // Render each causal insight card
-  causalInsights.forEach(card => {
-    const cardElement = document.createElement("div");
-    cardElement.className = `insight-card ${card.type}`;
-    cardElement.innerHTML = `
-            <div class="card-header">
-                <span class="card-badge ${card.type}">${card.badge}</span>
-                ${card.zoneBadge ? `<span class="zone-badge">${sanitizeHTML(card.zoneBadge)}</span>` : ""}
-            </div>
-            <h3 class="card-title">
-                <i class="fas fa-${card.icon}"></i>
-                ${sanitizeHTML(card.title)}
-            </h3>
-            <p class="card-description">${card.description}</p>
-            <div class="card-action">${card.action}</div>
-            ${card.linkType ? `<div class="link-type-badge">${card.linkType === "inter-cluster" ? "🔗 Cross-Cluster" : "📍 Within Cluster"}</div>` : ""}
-        `;
-
-    // Click to navigate to location
-    if (card.location) {
-      cardElement.style.cursor = "pointer";
-      cardElement.addEventListener("click", () => {
-        map.flyTo([card.location.lat, card.location.lng], card.location.zoom || 16, {
-          duration: 1.5
-        });
-      });
-    }
-
-    insightsContent.appendChild(cardElement);
-  });
-}
-
-/**
- * Show a toast notification for causal analysis results.
- *
- * @param {string} message - Message to display
- * @param {string} type - 'success', 'info', or 'error'
- */
-function showCausalToast(message, type = "success") {
-  const existing = document.querySelector(".causal-toast");
-  if (existing) existing.remove();
-
-  const iconMap = {
-    success: "check-circle",
-    info: "info-circle",
-    error: "exclamation-circle"
-  };
-
-  const toast = document.createElement("div");
-  toast.className = `causal-toast ${type}`;
-  toast.innerHTML = `
-        <i class="fas fa-${iconMap[type] || "info-circle"}"></i>
-        <span>${sanitizeHTML(message)}</span>
-    `;
-
-  document.body.appendChild(toast);
-
-  requestAnimationFrame(() => toast.classList.add("active"));
-
-  setTimeout(() => {
-    toast.classList.remove("active");
-    setTimeout(() => toast.remove(), 400);
-  }, 4000);
-}
-
-// ==================== MODULE 3: DETERMINISTIC CAUSAL CHAINS ====================
-/**
- * Detect and classify causal chains with COORDINATOR-CENTRIC actions.
- *
- * Instead of just flagging severity, this now suggests specific Command Center actions.
- * - CRITICAL: Life-safety threats requiring immediate multi-agency response
- * - WARNING: Operational disruptions requiring traffic/utility coordination
- * - INFO: Linked events for monitoring
- *
- * SPATIAL REQUIREMENT: Clusters must be within 100m for chain detection.
- *
- * @param {Array} categories - Array of category strings in cluster
- * @param {Object} clusterA - First cluster with center coordinates (optional)
- * @param {Object} clusterB - Second cluster with center coordinates (optional)
- * @returns {Object|null} Coordinator action object or null if no chain detected
- *
- * @example
- * // Flood + Traffic cluster within 100m
- * detectCausalChain(['Flood', 'Traffic'], clusterA, clusterB)
- * // Returns: {
- * //   detected: true,
- * //   alertLevel: 'WARNING',
- * //   suggestedAction: '⚠️ DEPLOY TRAFFIC CONTROL',
- * //   displayTitle: 'CONGESTION DUE TO FLOOD'
- * // }
- */
-function detectCausalChain(categories, clusterA = null, clusterB = null) {
-  // ==================== SPATIAL VALIDATION (100m requirement) ====================
-  // If two clusters are provided, check if they're within 100m
-  if (clusterA && clusterB && clusterA.center && clusterB.center) {
-    const distance = window.haversineDistance ?
-      window.haversineDistance(
-        clusterA.center.lat, clusterA.center.lng,
-        clusterB.center.lat, clusterB.center.lng
-      ) : 0;
-
-    if (distance > 100) {
-      console.log(`[CAUSAL] Clusters too far apart: ${distance.toFixed(0)}m > 100m threshold`);
-      return null; // No chain if too far apart
-    }
-  }
-
-  // ==================== COORDINATOR ACTION MAP ====================
-  // Maps "Cause|Effect" pairs to specific Command Center actions.
-  // This is the single source of truth for causal chain responses.
-
-  const ACTION_MAP = {
-    // ============ CRITICAL: LIFE SAFETY (Red Panel) ============
-    // These require immediate multi-agency emergency response
-
-    "Fire|Accident": {
-      action: "🚨 DISPATCH AMBULANCE & FIRE TRUCK",
-      level: "CRITICAL",
-      title: "FIRE WITH CASUALTIES",
-      icon: "🔥",
-      priority: 1
-    },
-    "Fire|Medical": {
-      action: "🚨 DISPATCH AMBULANCE & FIRE TRUCK",
-      level: "CRITICAL",
-      title: "FIRE WITH INJURIES",
-      icon: "🔥",
-      priority: 1
-    },
-    "Fire|Collapse": {
-      action: "🚨 EVACUATE AREA IMMEDIATELY",
-      level: "CRITICAL",
-      title: "STRUCTURAL COLLAPSE RISK",
-      icon: "🔥",
-      priority: 1
-    },
-    "Fire|Road Damage": {
-      action: "🚨 CLOSE ROAD & DISPATCH FIRE",
-      level: "CRITICAL",
-      title: "FIRE DAMAGE TO INFRASTRUCTURE",
-      icon: "🔥",
-      priority: 1
-    },
-    "Explosion|Fire": {
-      action: "🚨 EVACUATE & DISPATCH ALL UNITS",
-      level: "CRITICAL",
-      title: "EXPLOSION FIRE",
-      icon: "💥",
-      priority: 1
-    },
-    "Flooding|Accident": {
-      action: "🚨 DISPATCH RESCUE TEAM",
-      level: "CRITICAL",
-      title: "FLOOD RESCUE NEEDED",
-      icon: "🌊",
-      priority: 1
-    },
-    "Flood|Accident": {
-      action: "🚨 DISPATCH RESCUE TEAM",
-      level: "CRITICAL",
-      title: "FLOOD RESCUE NEEDED",
-      icon: "🌊",
-      priority: 1
-    },
-    "Crime|Accident": {
-      action: "🚨 DISPATCH POLICE & AMBULANCE",
-      level: "CRITICAL",
-      title: "VIOLENT INCIDENT",
-      icon: "🚨",
-      priority: 1
-    },
-    "Crime|Medical": {
-      action: "🚨 DISPATCH POLICE & AMBULANCE",
-      level: "CRITICAL",
-      title: "ASSAULT WITH INJURIES",
-      icon: "🚨",
-      priority: 1
-    },
-    "Collapse|Accident": {
-      action: "🚨 SEARCH & RESCUE TEAM",
-      level: "CRITICAL",
-      title: "STRUCTURAL COLLAPSE",
-      icon: "🏚️",
-      priority: 1
-    },
-
-    // ============ WARNING: OPERATIONAL (Yellow Panel) ============
-    // These require coordination but are not life-threatening
-
-    // Traffic/Congestion Management
-    "Flooding|Traffic": {
-      action: "⚠️ DEPLOY TRAFFIC CONTROL",
-      level: "WARNING",
-      title: "CONGESTION DUE TO FLOOD",
-      icon: "🚦",
-      priority: 2
-    },
-    "Flood|Traffic": {
-      action: "⚠️ DEPLOY TRAFFIC CONTROL",
-      level: "WARNING",
-      title: "CONGESTION DUE TO FLOOD",
-      icon: "🚦",
-      priority: 2
-    },
-    "Road Damage|Traffic": {
-      action: "⚠️ REROUTE VEHICLES",
-      level: "WARNING",
-      title: "BOTTLENECK DETECTED",
-      icon: "🚧",
-      priority: 2
-    },
-    "Infrastructure|Traffic": {
-      action: "⚠️ MANAGE CONGESTION",
-      level: "WARNING",
-      title: "INFRASTRUCTURE IMPACT",
-      icon: "🚧",
-      priority: 2
-    },
-    "Environment|Traffic": {
-      action: "⚠️ COORDINATE RESPONSE",
-      level: "WARNING",
-      title: "ENVIRONMENTAL TRAFFIC IMPACT",
-      icon: "🌿",
-      priority: 2
-    },
-
-    // Water/Utility Issues
-    "Pipe Leak|Flooding": {
-      action: "🔧 NOTIFY WATER DISTRICT",
-      level: "WARNING",
-      title: "PIPE LEAK CAUSING FLOOD",
-      icon: "💧",
-      priority: 2
-    },
-    "Pipe Leak|Flood": {
-      action: "🔧 NOTIFY WATER DISTRICT",
-      level: "WARNING",
-      title: "PIPE LEAK CAUSING FLOOD",
-      icon: "💧",
-      priority: 2
-    },
-    "No Water|Pipe Leak": {
-      action: "🔧 DISPATCH WATER REPAIR CREW",
-      level: "WARNING",
-      title: "WATER OUTAGE SOURCE FOUND",
-      icon: "💧",
-      priority: 2
-    },
-    "Utilities|No Water": {
-      action: "🔧 INVESTIGATE UTILITY ISSUE",
-      level: "WARNING",
-      title: "UTILITY SERVICE DISRUPTION",
-      icon: "⚡",
-      priority: 2
-    },
-
-    // Road/Infrastructure Degradation
-    "Flooding|Road Damage": {
-      action: "🔧 SCHEDULE ROAD ASSESSMENT",
-      level: "WARNING",
-      title: "FLOOD DAMAGE TO ROAD",
-      icon: "🛣️",
-      priority: 2
-    },
-    "Flood|Road Damage": {
-      action: "🔧 SCHEDULE ROAD ASSESSMENT",
-      level: "WARNING",
-      title: "FLOOD DAMAGE TO ROAD",
-      icon: "🛣️",
-      priority: 2
-    },
-    "Road Damage|Pothole": {
-      action: "🔧 PRIORITIZE ROAD REPAIR",
-      level: "WARNING",
-      title: "ROAD DEGRADATION CASCADE",
-      icon: "🛣️",
-      priority: 3
-    },
-    "Pothole|Road Damage": {
-      action: "🔧 ASSESS ROAD CONDITION",
-      level: "WARNING",
-      title: "ROAD DETERIORATION",
-      icon: "🛣️",
-      priority: 3
-    },
-
-    // Sanitation Chains
-    "Trash|Bad Odor": {
-      action: "🧹 PRIORITIZE GARBAGE COLLECTION",
-      level: "WARNING",
-      title: "SANITATION ISSUE",
-      icon: "🗑️",
-      priority: 3
-    },
-    "Trash|Overflowing Trash": {
-      action: "🧹 EMERGENCY GARBAGE PICKUP",
-      level: "WARNING",
-      title: "WASTE OVERFLOW",
-      icon: "🗑️",
-      priority: 3
-    },
-    "Sanitation|Bad Odor": {
-      action: "🧹 DISPATCH SANITATION TEAM",
-      level: "WARNING",
-      title: "HEALTH HAZARD",
-      icon: "🏥",
-      priority: 2
-    },
-
-    // Environmental
-    "Environment|Flooding": {
-      action: "🌿 COORDINATE DRRMO + ENRO",
-      level: "WARNING",
-      title: "ENVIRONMENTAL FLOOD EVENT",
-      icon: "🌿",
-      priority: 2
-    },
-
-    // ============ INFO: SAFETY HAZARDS (Speculative) ============
-    // These are preventive alerts, not active emergencies
-
-    "Streetlight|Accident": {
-      action: "👀 VERIFY LIGHTING CONDITION",
-      level: "INFO",
-      title: "POOR VISIBILITY RISK",
-      icon: "💡",
-      priority: 3
-    },
-    "Broken Streetlight|Accident": {
-      action: "👀 VERIFY LIGHTING CONDITION",
-      level: "INFO",
-      title: "POOR VISIBILITY RISK",
-      icon: "💡",
-      priority: 3
-    },
-    "Road Damage|Accident": {
-      action: "👀 INSTALL WARNING SIGNS",
-      level: "INFO",
-      title: "ROAD HAZARD RISK",
-      icon: "⚠️",
-      priority: 3
-    },
-    "Pothole|Accident": {
-      action: "👀 MARK HAZARD AREA",
-      level: "INFO",
-      title: "POTHOLE HAZARD",
-      icon: "⚠️",
-      priority: 3
-    }
-  };
-
-  // ==================== CHAIN DETECTION LOGIC ====================
-  // Check all category pairs against the ACTION_MAP
-
-  let bestMatch = null;
-
-  for (let i = 0; i < categories.length; i++) {
-    for (let j = 0; j < categories.length; j++) {
-      if (i === j) continue;
-
-      const cause = categories[i];
-      const effect = categories[j];
-      const pairKey = `${cause}|${effect}`;
-
-      if (ACTION_MAP[pairKey]) {
-        const mapping = ACTION_MAP[pairKey];
-
-        // Keep the highest priority (lowest number) match
-        if (!bestMatch || mapping.priority < bestMatch.priority) {
-          bestMatch = {
-            detected: true,
-            chain: [cause, effect],
-            pairKey,
-
-            // NEW: Coordinator-Centric fields
-            suggestedAction: mapping.action,
-            alertLevel: mapping.level,
-            displayTitle: mapping.title,
-            icon: mapping.icon,
-            priority: mapping.priority,
-
-            // LEGACY: Keep for backward compatibility
-            severity: mapping.level,
-            label: mapping.title,
-            dispatchHint: mapping.action.replace(/^[^\s]+\s/, "") // Remove emoji prefix
-          };
-        }
-      }
-    }
-  }
-
-  return bestMatch; // null if no chain detected
-}
 
 function analyzeCategoryDistribution(data) {
   const counts = {};
@@ -3378,14 +2615,13 @@ function toggleClusters() {
 /**
  * v4.1: Initialize Map Layers Dropdown
  * Consolidates visualization toggles into a single dropdown for cleaner header.
- * Handles: Heatmap toggle, Clusters toggle, Causal Analysis, Emergency Panel
+ * Handles: Heatmap toggle, Clusters toggle, Emergency Panel
  */
 function initMapLayersDropdown() {
   const dropdownBtn = document.getElementById("mapLayersToggle");
   const dropdownMenu = document.getElementById("layersDropdownMenu");
   const heatmapSwitch = document.getElementById("heatmapSwitch");
   const clustersSwitch = document.getElementById("clustersSwitch");
-  const causalItem = document.getElementById("causalAnalysisItem");
   const emergencyItem = document.getElementById("emergencyPanelItem");
 
   if (!dropdownBtn || !dropdownMenu) {
@@ -3444,23 +2680,6 @@ function initMapLayersDropdown() {
         clustersSwitch.checked = !clustersSwitch.checked;
         toggleClustersFromDropdown(clustersSwitch.checked);
       }
-    });
-  }
-
-  // Causal Analysis action
-  if (causalItem) {
-    causalItem.addEventListener("click", () => {
-      // Check if data is loaded
-      if (!simulationEngine || !simulationEngine.complaints || simulationEngine.complaints.length === 0) {
-        console.warn("[CAUSAL] No data loaded - cannot run analysis");
-        showToast("Load city data first to run causal analysis", "warning");
-        return;
-      }
-
-      // Close dropdown and run analysis
-      dropdownMenu.classList.remove("show");
-      dropdownBtn.classList.remove("active");
-      runCausalAnalysis();
     });
   }
 
@@ -3742,7 +2961,7 @@ const CATEGORY_CONTEXT_NOUNS = {
  * v3.7.2 UPGRADE: Now includes physical span measurement and semantic context.
  *
  * @param {Array} cluster - Array of complaints in this cluster
- * @returns {Object} { type, emoji, title, explanation, causalPair, span, contextNoun }
+ * @returns {Object} { type, emoji, title, explanation, span, contextNoun }
  */
 function analyzeClusterRationale(cluster) {
   const categories = [...new Set(cluster.map(p => p.subcategory || p.category))];
@@ -3786,54 +3005,20 @@ function analyzeClusterRationale(cluster) {
     cluster.length > 5 ? "High concentration of" :
       "Cluster of";
 
-  // Check for causal chain (multi-category incident)
-  // v3.9.1: Only detect causal chains if Phase 2 analysis has been triggered
-  if (categories.length >= 2 && causalAnalysisEnabled) {
-    // Use the RELATIONSHIP_MATRIX to find causal connections
-    const causalPairs = findCausalPairs(categories);
-
-    if (causalPairs.length > 0) {
-      const primaryPair = causalPairs[0];
-
-      // v3.7.2: Build multi-chain explanation if multiple pairs detected
-      let chainExplanation;
-      if (causalPairs.length > 1) {
-        // Multiple chains: "Illegal Dumping → Overflowing Trash → Bad Odor"
-        const chainParts = causalPairs.slice(0, 3).map(p => `"${p.cause}" → "${p.effect}"`);
-        chainExplanation = `${densityAdjective} linked reports ${locationPhrase} covering a ${contextNoun} of ~${spanRounded}m. ${causalPairs.length} causal links detected: ${chainParts.join(", ")}. System suggests a cascading incident.`;
-      } else {
-        chainExplanation = `${densityAdjective} linked reports ${locationPhrase} covering a ${contextNoun} of ~${spanRounded}m. "${primaryPair.cause}" → "${primaryPair.effect}" pattern detected (${Math.round(primaryPair.correlation * 100)}% correlation). System suggests a single cascading incident.`;
-      }
-
-      return {
-        type: "causal-chain",
-        emoji: "🔗",
-        title: "CAUSAL CHAIN DETECTED",
-        explanation: chainExplanation,
-        causalPair: primaryPair,
-        allCausalPairs: causalPairs,  // v3.7.2: Include ALL detected pairs
-        allCategories: categories,
-        span: spanRounded,
-        sizeDescription,
-        contextNoun,
-        street: dominantStreet
-      };
-    }
-
-    // Multiple categories but no known causal link
+  // Multiple categories detected
+  if (categories.length >= 2) {
     return {
       type: "multi-issue",
       emoji: "📋",
       title: "MULTI-ISSUE ZONE",
       explanation: `${densityAdjective} ${categories.length} issue types ${locationPhrase} covering ~${spanRounded}m (${categories.join(", ")}). Multi-department coordination may be required.`,
-      causalPair: null,
-      allCausalPairs: [],
       allCategories: categories,
       span: spanRounded,
       sizeDescription,
       contextNoun,
       street: dominantStreet
     };
+  }
   }
 
   // Single category - spatial hotspot
@@ -3854,7 +3039,6 @@ function analyzeClusterRationale(cluster) {
     emoji: "📍",
     title: "SPATIAL HOTSPOT",
     explanation,
-    causalPair: null,
     allCategories: categories,
     span: spanRounded,
     sizeDescription,
@@ -3867,224 +3051,6 @@ function analyzeClusterRationale(cluster) {
 window.calculateClusterSpan = calculateClusterSpan;
 window.getMode = getMode;
 window.CATEGORY_CONTEXT_NOUNS = CATEGORY_CONTEXT_NOUNS;
-
-/**
- * Find causal pairs between categories using RELATIONSHIP_MATRIX
- * v3.7.3: Comprehensive causal link database covering all category relationships
- */
-function findCausalPairs(categories) {
-  const knownCausalLinks = (window.DRIMSBrainConfig && window.DRIMSBrainConfig.correlations && window.DRIMSBrainConfig.correlations.knownCausalLinks)
-    ? window.DRIMSBrainConfig.correlations.knownCausalLinks
-    : [
-      // ================================================================
-      // WATER & FLOODING CHAIN
-      // ================================================================
-      { cause: "Pipe Leak", effect: "Flooding", correlation: 0.92 },
-      { cause: "Pipe Leak", effect: "Flood", correlation: 0.92 },
-      { cause: "Pipe Leak", effect: "No Water", correlation: 0.85 },
-      { cause: "Pipe Leak", effect: "Low Pressure", correlation: 0.80 },
-      { cause: "Pipe Leak", effect: "Road Damage", correlation: 0.55 },
-      { cause: "Flooding", effect: "Traffic", correlation: 0.85 },
-      { cause: "Flood", effect: "Traffic", correlation: 0.85 },
-      { cause: "Flooding", effect: "Traffic Congestion", correlation: 0.88 },
-      { cause: "Flood", effect: "Traffic Congestion", correlation: 0.88 },
-      { cause: "Flooding", effect: "Road Obstruction", correlation: 0.90 },
-      { cause: "Flood", effect: "Road Obstruction", correlation: 0.90 },
-      { cause: "Flooding", effect: "Traffic Light Issue", correlation: 0.60 },
-      { cause: "Flood", effect: "Traffic Light Issue", correlation: 0.60 },
-      { cause: "Flooding", effect: "Road Damage", correlation: 0.65 },
-      { cause: "Flood", effect: "Road Damage", correlation: 0.65 },
-      { cause: "Flooding", effect: "Accident", correlation: 0.60 },
-      { cause: "Flood", effect: "Accident", correlation: 0.60 },
-      { cause: "Flooding", effect: "Stranded", correlation: 0.75 },
-      { cause: "Flood", effect: "Stranded", correlation: 0.75 },
-      { cause: "Flooding", effect: "Evacuation", correlation: 0.70 },
-      { cause: "Flood", effect: "Evacuation", correlation: 0.70 },
-      { cause: "Heavy Rain", effect: "Flooding", correlation: 0.90 },
-      { cause: "Heavy Rain", effect: "Flood", correlation: 0.90 },
-      { cause: "Heavy Rain", effect: "Traffic", correlation: 0.75 },
-      { cause: "Heavy Rain", effect: "Accident", correlation: 0.70 },
-      { cause: "Clogged Drainage", effect: "Flooding", correlation: 0.88 },
-      { cause: "Clogged Drainage", effect: "Flood", correlation: 0.88 },
-      { cause: "Clogged Canal", effect: "Flooding", correlation: 0.85 },
-      { cause: "Clogged Canal", effect: "Flood", correlation: 0.85 },
-
-      // ================================================================
-      // INFRASTRUCTURE & ROAD CHAIN
-      // ================================================================
-      { cause: "Pothole", effect: "Road Damage", correlation: 0.75 },
-      { cause: "Pothole", effect: "Accident", correlation: 0.65 },
-      { cause: "Pothole", effect: "Traffic", correlation: 0.55 },
-      { cause: "Road Damage", effect: "Traffic", correlation: 0.70 },
-      { cause: "Road Damage", effect: "Accident", correlation: 0.65 },
-      { cause: "Road Obstruction", effect: "Traffic", correlation: 0.85 },
-      { cause: "Road Obstruction", effect: "Traffic Congestion", correlation: 0.90 },
-      { cause: "Road Obstruction", effect: "Accident", correlation: 0.60 },
-      { cause: "Fallen Tree", effect: "Road Obstruction", correlation: 0.90 },
-      { cause: "Fallen Tree", effect: "Traffic", correlation: 0.80 },
-      { cause: "Fallen Tree", effect: "Blackout", correlation: 0.70 },
-      { cause: "Landslide", effect: "Road Obstruction", correlation: 0.95 },
-      { cause: "Landslide", effect: "Traffic", correlation: 0.85 },
-      { cause: "Landslide", effect: "Evacuation", correlation: 0.80 },
-      { cause: "Bridge Collapse", effect: "Traffic", correlation: 0.95 },
-      { cause: "Bridge Collapse", effect: "Stranded", correlation: 0.85 },
-      { cause: "Construction", effect: "Traffic", correlation: 0.75 },
-      { cause: "Construction", effect: "Noise", correlation: 0.80 },
-      { cause: "Construction", effect: "Road Obstruction", correlation: 0.70 },
-
-      // ================================================================
-      // SANITATION & WASTE CHAIN
-      // ================================================================
-      { cause: "Trash", effect: "Bad Odor", correlation: 0.80 },
-      { cause: "Overflowing Trash", effect: "Bad Odor", correlation: 0.85 },
-      { cause: "Garbage", effect: "Bad Odor", correlation: 0.78 },
-      { cause: "Illegal Dumping", effect: "Bad Odor", correlation: 0.75 },
-      { cause: "Illegal Dumping", effect: "Overflowing Trash", correlation: 0.70 },
-      { cause: "Illegal Dumping", effect: "Clogged Drainage", correlation: 0.65 },
-      { cause: "Trash", effect: "Stray Dog", correlation: 0.65 },
-      { cause: "Overflowing Trash", effect: "Stray Dog", correlation: 0.60 },
-      { cause: "Garbage", effect: "Stray Dog", correlation: 0.60 },
-      { cause: "Trash", effect: "Pest Infestation", correlation: 0.75 },
-      { cause: "Garbage", effect: "Pest Infestation", correlation: 0.75 },
-      { cause: "Trash", effect: "Clogged Drainage", correlation: 0.60 },
-      { cause: "Dead Animal", effect: "Bad Odor", correlation: 0.90 },
-      { cause: "Dead Animal", effect: "Health Hazard", correlation: 0.85 },
-      { cause: "Sewage Leak", effect: "Bad Odor", correlation: 0.92 },
-      { cause: "Sewage Leak", effect: "Health Hazard", correlation: 0.85 },
-      { cause: "Sewage Leak", effect: "Flooding", correlation: 0.60 },
-
-      // ================================================================
-      // FIRE & EMERGENCY CHAIN
-      // ================================================================
-      { cause: "Fire", effect: "Traffic", correlation: 0.80 },
-      { cause: "Fire", effect: "Smoke", correlation: 0.95 },
-      { cause: "Fire", effect: "Evacuation", correlation: 0.90 },
-      { cause: "Fire", effect: "Road Obstruction", correlation: 0.70 },
-      { cause: "Fire", effect: "Blackout", correlation: 0.55 },
-      { cause: "Fire", effect: "Public Safety", correlation: 0.85 },
-      { cause: "Smoke", effect: "Health Hazard", correlation: 0.80 },
-      { cause: "Smoke", effect: "Traffic", correlation: 0.60 },
-      { cause: "Explosion", effect: "Fire", correlation: 0.85 },
-      { cause: "Explosion", effect: "Evacuation", correlation: 0.90 },
-      { cause: "Explosion", effect: "Public Safety", correlation: 0.95 },
-      { cause: "Gas Leak", effect: "Fire", correlation: 0.75 },
-      { cause: "Gas Leak", effect: "Explosion", correlation: 0.70 },
-      { cause: "Gas Leak", effect: "Evacuation", correlation: 0.80 },
-
-      // ================================================================
-      // ACCIDENT & TRAFFIC CHAIN
-      // ================================================================
-      { cause: "Accident", effect: "Traffic", correlation: 0.90 },
-      { cause: "Accident", effect: "Road Obstruction", correlation: 0.75 },
-      { cause: "Accident", effect: "Medical", correlation: 0.70 },
-      { cause: "Accident", effect: "Public Safety", correlation: 0.65 },
-      { cause: "Vehicle Breakdown", effect: "Traffic", correlation: 0.70 },
-      { cause: "Vehicle Breakdown", effect: "Road Obstruction", correlation: 0.65 },
-      { cause: "Reckless Driving", effect: "Accident", correlation: 0.80 },
-      { cause: "Reckless Driving", effect: "Public Safety", correlation: 0.70 },
-      { cause: "Drunk Driving", effect: "Accident", correlation: 0.85 },
-      { cause: "Traffic", effect: "Air Pollution", correlation: 0.65 },
-      { cause: "Traffic", effect: "Noise", correlation: 0.60 },
-
-      // ================================================================
-      // UTILITIES & POWER CHAIN
-      // ================================================================
-      { cause: "Blackout", effect: "Crime", correlation: 0.65 },
-      { cause: "Blackout", effect: "Accident", correlation: 0.55 },
-      { cause: "Blackout", effect: "Traffic", correlation: 0.60 },
-      { cause: "Blackout", effect: "Public Safety", correlation: 0.70 },
-      { cause: "Broken Streetlight", effect: "Crime", correlation: 0.60 },
-      { cause: "Broken Streetlight", effect: "Accident", correlation: 0.55 },
-      { cause: "Broken Streetlight", effect: "Public Safety", correlation: 0.65 },
-      { cause: "Streetlight", effect: "Crime", correlation: 0.55 },
-      { cause: "Streetlight", effect: "Accident", correlation: 0.50 },
-      { cause: "Power Line Down", effect: "Blackout", correlation: 0.90 },
-      { cause: "Power Line Down", effect: "Fire", correlation: 0.60 },
-      { cause: "Power Line Down", effect: "Public Safety", correlation: 0.85 },
-      { cause: "Transformer Explosion", effect: "Blackout", correlation: 0.95 },
-      { cause: "Transformer Explosion", effect: "Fire", correlation: 0.70 },
-      { cause: "No Water", effect: "Fire", correlation: 0.40 },
-      { cause: "No Water", effect: "Health Hazard", correlation: 0.55 },
-
-      // ================================================================
-      // CRIME & SAFETY CHAIN
-      // ================================================================
-      { cause: "Crime", effect: "Public Safety", correlation: 0.85 },
-      { cause: "Robbery", effect: "Crime", correlation: 0.95 },
-      { cause: "Robbery", effect: "Public Safety", correlation: 0.80 },
-      { cause: "Theft", effect: "Crime", correlation: 0.90 },
-      { cause: "Vandalism", effect: "Crime", correlation: 0.75 },
-      { cause: "Vandalism", effect: "Broken Streetlight", correlation: 0.60 },
-      { cause: "Drug Activity", effect: "Crime", correlation: 0.85 },
-      { cause: "Drug Activity", effect: "Public Safety", correlation: 0.80 },
-      { cause: "Gunshot", effect: "Crime", correlation: 0.90 },
-      { cause: "Gunshot", effect: "Public Safety", correlation: 0.95 },
-      { cause: "Assault", effect: "Crime", correlation: 0.90 },
-      { cause: "Assault", effect: "Medical", correlation: 0.70 },
-      { cause: "Trespassing", effect: "Crime", correlation: 0.70 },
-      { cause: "Loitering", effect: "Public Safety", correlation: 0.50 },
-      { cause: "Gang Activity", effect: "Crime", correlation: 0.90 },
-      { cause: "Gang Activity", effect: "Public Safety", correlation: 0.85 },
-
-      // ================================================================
-      // NOISE & DISTURBANCE CHAIN
-      // ================================================================
-      { cause: "Noise", effect: "Public Safety", correlation: 0.45 },
-      { cause: "Noise Complaint", effect: "Public Safety", correlation: 0.45 },
-      { cause: "Loud Music", effect: "Noise", correlation: 0.90 },
-      { cause: "Loud Party", effect: "Noise", correlation: 0.90 },
-      { cause: "Karaoke", effect: "Noise", correlation: 0.85 },
-      { cause: "Barking Dog", effect: "Noise", correlation: 0.75 },
-      { cause: "Construction", effect: "Noise", correlation: 0.80 },
-
-      // ================================================================
-      // ANIMAL & HEALTH CHAIN
-      // ================================================================
-      { cause: "Stray Dog", effect: "Public Safety", correlation: 0.60 },
-      { cause: "Stray Dog", effect: "Noise", correlation: 0.55 },
-      { cause: "Stray Animal", effect: "Public Safety", correlation: 0.55 },
-      { cause: "Snake Sighting", effect: "Public Safety", correlation: 0.75 },
-      { cause: "Pest Infestation", effect: "Health Hazard", correlation: 0.80 },
-      { cause: "Mosquito Breeding", effect: "Health Hazard", correlation: 0.85 },
-      { cause: "Dengue", effect: "Health Hazard", correlation: 0.95 },
-      { cause: "Stagnant Water", effect: "Mosquito Breeding", correlation: 0.85 },
-      { cause: "Stagnant Water", effect: "Bad Odor", correlation: 0.65 },
-
-      // ================================================================
-      // STRUCTURAL & BUILDING CHAIN
-      // ================================================================
-      { cause: "Building Collapse", effect: "Evacuation", correlation: 0.95 },
-      { cause: "Building Collapse", effect: "Road Obstruction", correlation: 0.80 },
-      { cause: "Building Collapse", effect: "Rescue", correlation: 0.90 },
-      { cause: "Earthquake", effect: "Building Collapse", correlation: 0.75 },
-      { cause: "Earthquake", effect: "Evacuation", correlation: 0.85 },
-      { cause: "Earthquake", effect: "Fire", correlation: 0.55 },
-      { cause: "Illegal Construction", effect: "Building Collapse", correlation: 0.60 },
-      { cause: "Illegal Construction", effect: "Public Safety", correlation: 0.65 },
-
-      // ================================================================
-      // ENVIRONMENTAL CHAIN
-      // ================================================================
-      { cause: "Air Pollution", effect: "Health Hazard", correlation: 0.75 },
-      { cause: "Water Pollution", effect: "Health Hazard", correlation: 0.80 },
-      { cause: "Burning Trash", effect: "Smoke", correlation: 0.90 },
-      { cause: "Burning Trash", effect: "Air Pollution", correlation: 0.85 },
-      { cause: "Burning Trash", effect: "Fire", correlation: 0.55 },
-      { cause: "Open Burning", effect: "Smoke", correlation: 0.90 },
-      { cause: "Open Burning", effect: "Air Pollution", correlation: 0.85 }
-    ];
-
-  const foundPairs = [];
-
-  for (const link of knownCausalLinks) {
-    if (categories.includes(link.cause) && categories.includes(link.effect)) {
-      foundPairs.push(link);
-    }
-  }
-
-  // Sort by correlation score (strongest first)
-  return foundPairs.sort((a, b) => b.correlation - a.correlation);
-}
 
 /**
  * Get adaptive epsilon for a category (used in explanations)
@@ -4868,62 +3834,6 @@ function createGlassBoxPopup(cluster, idx, color, rationale, allClusters = null)
     severityLevel = "ROUTINE";
   }
 
-  // Causal chain visualization (RIGHT COLUMN)
-  // v3.7.2: Now shows ALL detected causal pairs, not just the primary one
-  let causalChainHTML = "";
-  if (rationale.type === "causal-chain" && rationale.allCausalPairs && rationale.allCausalPairs.length > 0) {
-    // Build chain flow showing all linked categories
-    const allCategories = rationale.allCategories || [];
-    const pairs = rationale.allCausalPairs;
-
-    // Create flow items for each pair
-    const pairFlowsHTML = pairs.slice(0, 3).map((pair, idx) => `
-            <div class="causal-flow-item">
-                <span class="causal-cause">${pair.cause}</span>
-                <span class="causal-arrow">→</span>
-                <span class="causal-effect">${pair.effect}</span>
-                <span class="causal-pct">${Math.round(pair.correlation * 100)}%</span>
-            </div>
-        `).join("");
-
-    // Calculate average correlation
-    const avgCorrelation = Math.round(
-      pairs.reduce((sum, p) => sum + p.correlation, 0) / pairs.length * 100
-    );
-
-    causalChainHTML = `
-            <div class="causal-chain-box">
-                <div class="causal-header">
-                    <i class="fas fa-link"></i> CAUSAL LINKS DETECTED (${pairs.length})
-                </div>
-                <div class="causal-flows">
-                    ${pairFlowsHTML}
-                </div>
-                <div class="causal-correlation">
-                    <i class="fas fa-chart-line"></i> Avg ${avgCorrelation}% Correlation
-                </div>
-            </div>
-        `;
-  } else if (rationale.type === "causal-chain" && rationale.causalPair) {
-    // Fallback for single pair
-    const pair = rationale.causalPair;
-    causalChainHTML = `
-            <div class="causal-chain-box">
-                <div class="causal-header">
-                    <i class="fas fa-link"></i> CAUSAL LINK DETECTED
-                </div>
-                <div class="causal-flow">
-                    <span class="causal-cause">${pair.cause}</span>
-                    <span class="causal-arrow">→</span>
-                    <span class="causal-effect">${pair.effect}</span>
-                </div>
-                <div class="causal-correlation">
-                    <i class="fas fa-chart-line"></i> ${Math.round(pair.correlation * 100)}% Correlation
-                </div>
-            </div>
-        `;
-  }
-
   // Jurisdiction voting visualization (LEFT COLUMN - under location)
   let votingResultHTML = "";
   if (jurisdictionVotes.isBoundaryZone) {
@@ -5034,9 +3944,6 @@ function createGlassBoxPopup(cluster, idx, color, rationale, allClusters = null)
                         <i class="fas fa-brain"></i> THE INTELLIGENCE
                     </div>
                     
-                    <!-- Causal Chain (if applicable) -->
-                    ${causalChainHTML}
-                    
                     <!-- AI Reasoning Box -->
                     <div class="ai-reasoning-box">
                         <div class="ai-header">
@@ -5104,11 +4011,6 @@ function generateCorrelatedClustersHTML(clusterIdx, allClusters, color) {
     const correlationPct = Math.round(neighbor.correlationScore * 100);
     const distanceLabel = neighbor.distance < 100 ? `${neighbor.distance}m` : `${(neighbor.distance / 1000).toFixed(1)}km`;
 
-    // Get causal link labels
-    const causalLabels = neighbor.causalLinks.slice(0, 2).map(link =>
-      `${link.cause} → ${link.effect}`
-    ).join(", ");
-
     // Determine correlation strength class
     let strengthClass = "weak";
     if (correlationPct >= 70) strengthClass = "strong";
@@ -5124,11 +4026,6 @@ function generateCorrelatedClustersHTML(clusterIdx, allClusters, color) {
                     <span class="neighbor-distance"><i class="fas fa-ruler"></i> ${distanceLabel}</span>
                     <span class="neighbor-correlation">${correlationPct}% correlated</span>
                 </div>
-                ${neighbor.causalLinks.length > 0 ? `
-                    <div class="neighbor-causal">
-                        <i class="fas fa-link"></i> ${causalLabels}
-                    </div>
-                ` : ""}
             </div>
         `;
   }).join("");
@@ -5157,7 +4054,7 @@ function generateCorrelatedClustersHTML(clusterIdx, allClusters, color) {
             </div>
             <div class="correlated-insight">
                 <i class="fas fa-lightbulb"></i>
-                ${suggestionText || "These clusters share causal patterns and may be part of a larger incident."}
+                ${suggestionText || "These clusters share patterns and may be part of a larger incident."}
             </div>
         </div>
     `;
@@ -5441,8 +4338,7 @@ function visualizeClusters(clusters) {
 
     // Dynamic label based on cluster type
     const labelEmoji = rationale.emoji;
-    const labelText = rationale.type === "causal-chain" ? "CHAIN" :
-      rationale.type === "multi-issue" ? "MULTI" : "HOTSPOT";
+    const labelText = rationale.type === "multi-issue" ? "MULTI" : "HOTSPOT";
 
     const marker = L.marker([center.lat, center.lng], {
       icon: L.divIcon({
@@ -5622,17 +4518,8 @@ async function loadFullSimulation() {
   // persist across dataset refreshes.
   window.mapIntelligencePanel?.invalidateCache();
 
-  // ================================================================
-  // RESET PHASE 2: Disable causal analysis when reloading data
-  // User must trigger Phase 2 again after new clustering
-  // ================================================================
-  causalAnalysisEnabled = false;
-  clearCausalLinks();
-
   // v4.0.1: Clear any temporary live markers before re-rendering
   clearLiveMarkers();
-
-  console.log("[CAUSAL] Phase 2 reset - causal chains hidden until re-triggered");
 
   try {
     // Show loading state
@@ -5810,16 +4697,6 @@ async function loadFullSimulation() {
       statusIndicator.classList.remove("error");
       const statusSpan = statusIndicator.querySelector("span");
       if (statusSpan) statusSpan.textContent = "Analysis Complete";
-    }
-
-    // ================================================================
-    // PHASE 2: Enable Causal Analysis button now that clustering is done
-    // ================================================================
-    const causalBtn = document.getElementById("runCausalAnalysis");
-    if (causalBtn) {
-      causalBtn.disabled = false;
-      causalBtn.title = `Run Causal Chain Analysis on ${  currentClusters.length  } clusters`;
-      console.log("[CAUSAL] Phase 2 button enabled - ready for user trigger");
     }
 
     // ================================================================
@@ -6293,11 +5170,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ==================== v4.1: MAP LAYERS DROPDOWN ====================
   initMapLayersDropdown();
-
-  // ================================================================
-  // PHASE 2: Causal Analysis Button (Now in dropdown)
-  // ================================================================
-  // Causal analysis is handled via dropdown click in initMapLayersDropdown()
 
   const categoryFilterEl = document.getElementById("categoryFilter");
   if (categoryFilterEl) {

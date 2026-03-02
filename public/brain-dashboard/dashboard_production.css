@@ -170,31 +170,6 @@ body {
     color: #B4D3F5;
 }
 
-/* Causal Analysis Button (Phase 2) */
-.control-btn.causal-btn {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(139, 92, 246, 0.15));
-    border-color: #a855f7;
-    color: #d8b4fe;
-}
-
-.control-btn.causal-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(139, 92, 246, 0.3));
-    border-color: #c084fc;
-    color: #e9d5ff;
-}
-
-.control-btn.causal-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: linear-gradient(135deg, rgba(100, 116, 139, 0.1), rgba(71, 85, 105, 0.1));
-    border-color: #475569;
-    color: #64748b;
-}
-
-.control-btn.causal-btn .fa-spinner {
-    animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -423,7 +398,7 @@ body {
     background: white;
 }
 
-/* Action items (Causal Analysis, Emergency Panel) */
+/* Action items (Emergency Panel) */
 .layer-toggle-item.action-item {
     border-left: 3px solid transparent;
     margin-left: 0;
@@ -1630,20 +1605,6 @@ body {
 
 .complaint-audit-popup-container .leaflet-popup-tip {
     background: #ffffff;
-}
-
-/* Causal chain animation in cluster labels */
-.cluster-label [data-type="causal-chain"] {
-    animation: causal-pulse 2s ease-in-out infinite;
-}
-
-@keyframes causal-pulse {
-    0%, 100% {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    50% {
-        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.6), 0 0 30px rgba(139, 92, 246, 0.3);
-    }
 }
 
 /* ==================== INTERACTIVE INSIGHT CARDS ==================== */
@@ -4272,102 +4233,6 @@ body {
     transition: width 0.3s ease;
 }
 
-/* Causal Chain Box (Purple Gradient) - v3.7.3 Compact */
-.causal-chain-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin: 12px 12px 8px;
-    color: #ffffff;
-}
-
-.causal-header {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    opacity: 0.9;
-    margin-bottom: 8px;
-}
-
-.causal-header i {
-    font-size: 11px;
-}
-
-.causal-flow {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
-
-/* v3.7.3: Multiple causal flows container - Compact */
-.causal-flows {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 6px;
-}
-
-.causal-flow-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 0;
-}
-
-.causal-flow-item .causal-cause,
-.causal-flow-item .causal-effect {
-    background: rgba(255, 255, 255, 0.25);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.causal-flow-item .causal-arrow {
-    font-size: 12px;
-    font-weight: 700;
-    opacity: 0.9;
-}
-
-.causal-flow-item .causal-pct {
-    font-size: 9px;
-    font-weight: 600;
-    opacity: 0.75;
-    margin-left: auto;
-}
-
-.causal-cause,
-.causal-effect {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    backdrop-filter: blur(4px);
-}
-
-.causal-arrow {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.causal-correlation {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    opacity: 0.85;
-}
-
-.causal-correlation i {
-    font-size: 10px;
-}
-
 /* AI Reasoning Box (Light Blue) - v3.7.3 Compact */
 .ai-reasoning-box {
     background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
@@ -4530,7 +4395,7 @@ body {
 }
 
 /* ==================== CORRELATED CLUSTERS UI v1.0 ==================== */
-/* Shows neighboring clusters that share causal relationships */
+/* Shows neighboring clusters that share relationships */
 
 .correlated-clusters-box {
     background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
@@ -4649,20 +4514,6 @@ body {
 .neighbor-correlation {
     font-weight: 600;
     color: #8b5cf6;
-}
-
-.neighbor-causal {
-    font-size: 9px;
-    color: #6b21a8;
-    background: #f3e8ff;
-    padding: 4px 6px;
-    border-radius: 4px;
-    display: inline-block;
-}
-
-.neighbor-causal i {
-    margin-right: 4px;
-    font-size: 8px;
 }
 
 .correlated-insight {
@@ -4816,183 +4667,6 @@ body {
     color: #22c55e;
 }
 
-/* ==================== PHASE 2: CAUSAL ANALYSIS STYLES ==================== */
-
-/* Causal Toast Notification */
-.causal-toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-    color: white;
-    padding: 14px 24px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 10px 40px rgba(139, 92, 246, 0.3);
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    z-index: 10001;
-    font-size: 14px;
-    font-weight: 500;
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.causal-toast.active {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
-
-.causal-toast.success {
-    background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
-    border-color: rgba(52, 211, 153, 0.4);
-    box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
-}
-
-.causal-toast.success i {
-    color: #6ee7b7;
-}
-
-.causal-toast.info {
-    background: linear-gradient(135deg, #1e3a5f 0%, #0f2942 100%);
-    border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3);
-}
-
-.causal-toast.info i {
-    color: #93c5fd;
-}
-
-.causal-toast.error {
-    background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
-    border-color: rgba(239, 68, 68, 0.4);
-    box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
-}
-
-.causal-toast.error i {
-    color: #fca5a5;
-}
-
-.causal-toast i {
-    font-size: 18px;
-    color: #c4b5fd;
-}
-
-/* Causal Section Separator */
-.causal-section-separator {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 20px 0 16px;
-    padding: 0 4px;
-}
-
-.causal-section-separator .separator-line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
-}
-
-.causal-section-separator .separator-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #c4b5fd;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    padding: 6px 12px;
-    background: rgba(168, 85, 247, 0.15);
-    border-radius: 20px;
-    border: 1px solid rgba(168, 85, 247, 0.3);
-}
-
-/* Link Type Badge on Cards */
-.link-type-badge {
-    margin-top: 10px;
-    font-size: 10px;
-    font-weight: 600;
-    color: #c4b5fd;
-    background: rgba(168, 85, 247, 0.15);
-    padding: 4px 10px;
-    border-radius: 12px;
-    display: inline-block;
-    border: 1px solid rgba(168, 85, 247, 0.25);
-}
-
-/* Causal Link Line on Map */
-.causal-link-line {
-    pointer-events: auto;
-}
-
-/* Causal Arrow Marker */
-.causal-arrow-marker {
-    background: transparent !important;
-    border: none !important;
-}
-
-.causal-arrow-icon {
-    font-size: 20px;
-    font-weight: bold;
-    color: #a855f7;
-    text-shadow: 0 0 8px rgba(168, 85, 247, 0.8), 0 2px 4px rgba(0, 0, 0, 0.5);
-    animation: arrow-pulse 2s ease-in-out infinite;
-}
-
-@keyframes arrow-pulse {
-    0%, 100% { 
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% { 
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
-}
-
-/* Causal Link Popup */
-.causal-link-popup .leaflet-popup-content-wrapper {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    border-radius: 10px;
-}
-
-.causal-link-popup .leaflet-popup-tip {
-    background: #1e1b4b;
-    border: 1px solid rgba(168, 85, 247, 0.4);
-}
-
-/* Cascade Card Styles (Phase 2 specific) */
-.insight-card.cascade-critical {
-    border-left-color: #ef4444;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(185, 28, 28, 0.05) 100%);
-}
-
-.insight-card.cascade-warning {
-    border-left-color: #a855f7;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
-}
-
-.insight-card.cascade-info {
-    border-left-color: #3b82f6;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.05) 100%);
-}
-
-.card-badge.cascade-critical {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-}
-
-.card-badge.cascade-warning {
-    background: rgba(168, 85, 247, 0.2);
-    color: #d8b4fe;
-}
-
-.card-badge.cascade-info {
-    background: rgba(59, 130, 246, 0.2);
-    color: #93c5fd;
-}
 .tooltip-item-value.penalty {
     color: #ef4444;
 }

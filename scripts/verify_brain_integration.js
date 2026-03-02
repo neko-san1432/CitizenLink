@@ -17,18 +17,13 @@ async function testBrain() {
     const nlpResult = await BrainService.analyzeReport(text, "Others");
     console.log("NLP Result:", nlpResult);
 
-    // 2. Test Intelligence Cycle (Clustering + Causality)
+    // 2. Test Intelligence Cycle (Clustering)
     const cycleResult = BrainService.runIntelligenceCycle(incidents);
     console.log("Cycle Result Stats:", cycleResult.stats);
 
     if (cycleResult.clusters.length > 0) {
       console.log("Clusters:", cycleResult.clusters.length);
       console.log("First Cluster Category:", cycleResult.clusters[0].category);
-    }
-
-    if (cycleResult.causalLinks.length > 0) {
-      console.log("Causal Links:", cycleResult.causalLinks.length);
-      console.log("Link:", `${cycleResult.causalLinks[0].cause.category} -> ${cycleResult.causalLinks[0].effect.category}`);
     }
 
   } catch (e) {

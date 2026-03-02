@@ -504,7 +504,7 @@ function showStatisticalResultsModal(result) {
                                 <p class="visual-caption">Fig 2: Semantic vector classification accuracy.</p>
                             </div>
                             <div class="stats-visual-item">
-                                <h4>Causal Correlation Proof</h4>
+                                <h4>Chi-Square Correlation Proof</h4>
                                 <img src="http://${window.location.hostname}:3456/figures/fig4_chi_square_table.png?t=${new Date().getTime()}" 
                                      alt="Chi-Square Matrix" class="stats-plot">
                                 <p class="visual-caption">Fig 4: Observed vs Expected incident associations.</p>
@@ -613,7 +613,7 @@ function showStatisticalResultsModal(result) {
                             </div>
                             <div class="chisquare-interpretation">
                                 ${metrics.chi_square?.cramers_v > 0.3 ?
-    '<i class="fas fa-check-circle"></i> Strong causal correlation between incident vectors validated' :
+    '<i class="fas fa-check-circle"></i> Strong correlation between incident vectors validated' :
     '<i class="fas fa-info-circle"></i> Moderate correlation detected within telemetric clusters'}
                             </div>
                         </div>

@@ -6,8 +6,6 @@
  * Optimized for Geospatial Incident Clustering
  */
 
-const CAUSALITY_MANAGER = require("./CausalityService");
-
 class ClusteringService {
   constructor() {
     // System Constants
@@ -206,8 +204,6 @@ class ClusteringService {
   }
 
   postProcessClusters(clusters) {
-    // Run Causal Analysis if needed (Optional here, can be done in Orchestrator)
-    // For now, we just return the raw clusters
     return clusters;
   }
 }

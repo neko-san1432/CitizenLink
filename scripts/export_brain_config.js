@@ -38,28 +38,6 @@ function loadTaxonomyJson() {
   return { taxonomyPath, taxonomy };
 }
 
-function extractCausalLinksFromDashboard() {
-  const dashboardPath = path.join(__dirname, "..", "public", "brain-dashboard", "dashboard_production.js");
-  const content = fs.readFileSync(dashboardPath, "utf8");
-  const lines = content.split(/\r?\n/);
-
-  const links = [];
-  const re =
-    /\{\s*cause:\s*'([^']+)'\s*,\s*effect:\s*'([^']+)'\s*,\s*correlation:\s*([0-9.]+)\s*\}/;
-
-  for (const line of lines) {
-    const m = line.match(re);
-    if (!m) continue;
-    links.push({
-      cause: m[1],
-      effect: m[2],
-      correlation: Number(m[3]),
-    });
-  }
-
-  return { dashboardPath, links };
-}
-
 function buildDictionaryFromDb({ keywords, anchors, metaphors, rules }) {
   const filipino_keywords = {};
   const english_keywords = {};
@@ -196,7 +174,6 @@ async function main() {
   const outputPath = path.join(__dirname, "..", "public", "brain-config.json");
 
   const { taxonomy } = loadTaxonomyJson();
-  const { links } = extractCausalLinksFromDashboard();
 
   const supabase = Database.getClient();
   const keywords = await fetchAllRows(
@@ -222,18 +199,14 @@ async function main() {
     metadata: {
       version: new Date().toISOString().slice(0, 10),
       generated_at: new Date().toISOString(),
-      bundle: ["taxonomy", "dictionaries", "correlations"],
+      bundle: ["taxonomy", "dictionaries"],
     },
     taxonomy,
     dictionaries,
-    correlations: {
-      knownCausalLinks: links,
-    },
   };
 
   fs.writeFileSync(outputPath, `${JSON.stringify(config, null, 2)  }\n`, "utf8");
   console.log(`OK: wrote ${outputPath}`);
-  console.log(`- causal links: ${links.length}`);
   console.log(`- dictionary keywords: ${keywords.length}`);
   console.log(`- dictionary anchors: ${anchors.length}`);
   console.log(`- dictionary metaphors: ${metaphors.length}`);

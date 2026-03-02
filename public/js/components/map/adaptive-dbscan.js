@@ -4,7 +4,7 @@
  *
  * Features:
  * - Adaptive Epsilon/MinPts based on Category Tiers
- * - Semantic Relationship Clustering (Causal Chains)
+ * - Semantic Relationship Clustering
  * - Temporal Awareness (Time Decay)
  * - Keyword-based Similarity Boosting
  * - Transitive Chain Discovery (Pipe -> Flood -> Traffic)
@@ -222,7 +222,7 @@ const KEYWORD_DICTIONARY = {
   "hindi": ["problem_marker"],
   "why": ["problem_marker"],
   "school": ["location_marker", "Public Safety"],
-  "due": ["causal_marker"]
+  "due": ["related_marker"]
 };
 
 // ==================== HELPER FUNCTIONS ====================
@@ -434,7 +434,7 @@ function checkSemanticRelation(categoryA, categoryB) {
   const CORRELATION_THRESHOLD = 0.50;
 
   if (isRelated && score >= CORRELATION_THRESHOLD) {
-    relationship = sameParent ? "SIBLING" : "CAUSAL";
+    relationship = sameParent ? "SIBLING" : "RELATED";
   } else if (isRelated) {
     relationship = "WEAK";
   }
@@ -645,40 +645,6 @@ class AdaptiveDBSCAN {
       metadata
     };
   }
-
-  analyzeCausalChains(clusteringResult) {
-    const chainAnalysis = [];
-
-    clusteringResult.clusters.forEach((cluster, idx) => {
-      const categories = cluster.map(p => p.category);
-      const uniqueCategories = [...new Set(categories)];
-      const chainLog = clusteringResult.clusterChains ? clusteringResult.clusterChains[idx] : [];
-
-      let chainType = "SINGLE";
-      let chainDescription = uniqueCategories[0];
-
-      if (uniqueCategories.length === 1 && cluster.length > 1) {
-        chainType = "REDUNDANCY";
-        chainDescription = `${cluster.length}x ${uniqueCategories[0]}`;
-      } else if (uniqueCategories.length === 2) {
-        chainType = "DIRECT_CAUSAL";
-        chainDescription = `${uniqueCategories[0]} -> ${uniqueCategories[1]}`;
-      } else if (uniqueCategories.length >= 3) {
-        chainType = "TRANSITIVE_CHAIN";
-        chainDescription = chainLog.map(c => c.category).join(" -> ");
-      }
-
-      chainAnalysis.push({
-        clusterId: idx,
-        chainType,
-        chainDescription,
-        size: cluster.length
-      });
-    });
-
-    return chainAnalysis;
-  }
-}
 
 // Expose to global scope for HeatmapVisualization
 window.AdaptiveDBSCAN = AdaptiveDBSCAN;

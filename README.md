@@ -1,4 +1,4 @@
-# CitizenLink (DRIMS 2.0)
+# DRIMS 2.0
 
 **Intelligent Citizen Complaint Management System with Advanced Geospatial Analytics & AI-Powered NLP**
 
@@ -8,12 +8,11 @@
 
 ### Introduction
 
-CitizenLink (formerly DRIMS 2.0) is a comprehensive web-based complaint management system designed for Local Government Units (LGUs) in the Philippines. The system's primary innovations are:
+DRIMS 2.0 (Disaster Risk Information Management System) is a comprehensive web-based complaint management system designed for Local Government Units (LGUs) in the Philippines. The system's primary innovations are:
 
 1. **Adaptive DBSCAN Clustering** - Category-specific geospatial analysis for complaint hotspot detection
 2. **Hybrid Edge-AI NLP Engine** - Multi-layer natural language processing with Tagalog/Bisaya/English (Bislish) support
-3. **Causality Analysis** - Physics-based disaster chain detection and correlation mapping
-4. **Human-in-the-Loop (HITL) Learning** - Continuous improvement through supervised keyword training
+3. **Human-in-the-Loop (HITL) Learning** - Continuous improvement through supervised keyword training
 
 Built for Digos City, Davao del Sur, the system enables data-driven decision-making for resource allocation, policy development, and urban planning.
 
@@ -21,14 +20,16 @@ Built for Digos City, Davao del Sur, the system enables data-driven decision-mak
 
 | Feature | Description |
 |---------|-------------|
-| **Adaptive DBSCAN Clustering** | Category-specific epsilon/minPts parameters (Fire=25m, Sanitation=16m) with semantic relationship awareness |
-| **Hybrid NLP Processor** | 5-layer classification pipeline with rule-based fast path and TensorFlow.js AI fallback |
+| **Adaptive DBSCAN Clustering** | Thesis-validated, category-specific epsilon/minPts parameters (3-tier: Infrastructure 125m, Public Safety 50m, Sanitation 16m) synchronized with DRIMS_Simulated_System |
+| **Hybrid NLP Processor** | 5-layer classification pipeline with bilingual keyword registry (Filipino/English), negation detection, false-positive filtering, and TensorFlow.js AI fallback |
 | **Bislish Typo Tolerance** | Levenshtein-distance fuzzy matching for common Bisaya-English misspellings |
-| **Causality Manager** | Physics-based disaster chain detection (Flood→Traffic, Fire→Evacuation) |
 | **Duplication Detection** | Multi-modal similarity scoring (text, location, temporal) |
-| **Statistical Analysis** | Integrated Python-powered statistical validation with thesis-ready reporting |
+| **Statistical Analysis** | Client-side statistical validation with local analysis server for thesis-ready reporting |
 | **Real-time Notifications** | Comprehensive notification system with priority levels and deduplication |
 | **Interactive Heatmap** | Live complaint visualization with cluster overlays and filtering |
+| **6-Status Workflow** | Complaint lifecycle: New → Assigned → In Progress → Pending Approval → Completed (+ Cancelled) |
+| **Settings Management** | Role-protected system settings with category-based organization and public/private scoping |
+| **Security Scanning** | Automated 3-phase pipeline: npm audit, ESLint security plugins, and pattern-based secret scanning |
 
 ---
 
@@ -38,7 +39,6 @@ Built for Digos City, Davao del Sur, the system enables data-driven decision-mak
 
 - **Node.js** 18+ (LTS recommended)
 - **PostgreSQL** 13+ or **Supabase** account
-- **Python** 3.10+ (for statistical analysis)
 - **npm** or **yarn** package manager
 
 ### Installation Steps
@@ -46,21 +46,17 @@ Built for Digos City, Davao del Sur, the system enables data-driven decision-mak
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd CitizenLink
+cd DRIMS
 
 # Install Node.js dependencies
 npm install
 
 # Create environment file
-cp .env.example .env
-# Edit .env with your configuration
+cp .env .env.backup  # if needed
+# Edit .env with your Supabase URL, keys, and other config
 
-# Run database migrations
-npm run migrate
-
-# Apply Row Level Security (RLS) policies
-# Run the SQL script in your Supabase SQL Editor:
-# scripts/setup_rls.sql
+# Apply database migrations
+# Run the SQL files in database/migrations/ in your Supabase SQL Editor
 
 # Start development server
 npm run dev
@@ -71,12 +67,19 @@ npm run dev
 | Package | Version | Purpose |
 |---------|---------|---------|
 | **@supabase/supabase-js** | ^2.57.4 | PostgreSQL database client with real-time capabilities |
-| **@tensorflow/tfjs-node** | ^4.x | Server-side AI inference (Universal Sentence Encoder) |
+| **@tensorflow/tfjs-node** | ^4.x | Server-side AI inference with native C++ bindings |
+| **@tensorflow-models/universal-sentence-encoder** | ^1.x | Sentence embedding model for NLP classification |
 | **chart.js** | ^4.5.0 | Data visualization for analytics dashboards |
+| **compression** | ^1.x | HTTP response compression middleware |
 | **express** | ^4.21.2 | Core HTTP server framework |
 | **helmet** | ^8.1.0 | Security middleware with CSP |
 | **joi** | ^18.0.2 | Schema validation for API payloads |
 | **multer** | ^2.0.2 | File upload handling for evidence attachments |
+| **xss** / **isomorphic-dompurify** | latest | XSS sanitization for user inputs |
+| **sentiment** | latest | Sentiment analysis for complaint text |
+| **node-cron** | latest | Scheduled task execution (clustering, reminders) |
+
+> **Note:** A `tar` → `^7.5.8` override is applied to patch a transitive vulnerability from `tfjs-node`.
 
 ---
 
@@ -85,7 +88,7 @@ npm run dev
 ### Directory Structure
 
 ```
-CitizenLink/
+DRIMS/
 ├── 📁 config/                    # Configuration management
 ├── 📁 public/
 │   ├── 📁 brain-analytics/       # Analytics dashboard UI
@@ -95,7 +98,7 @@ CitizenLink/
 │   ├── 📁 brain-dashboard/       # Simulation & Intelligence Engine
 │   │   ├── simulation-engine.js  # Adaptive DBSCAN (9,400+ lines)
 │   │   ├── nlp-processor.js      # Hybrid NLP Engine (2,200+ lines)
-│   │   ├── causality-manager.js  # Disaster chain reasoning
+│   │   ├── map-intelligence-panel.js  # Slide-in complaint detail panel
 │   │   ├── statistical-analysis.js
 │   │   └── statistical-excel-export.js
 │   ├── 📁 css/                   # Stylesheets
@@ -104,37 +107,51 @@ CitizenLink/
 │           └── 📁 map/           # Map & heatmap components
 ├── 📁 src/
 │   ├── 📁 server/
-│   │   ├── 📁 controllers/       # Request handlers (19 controllers)
-│   │   ├── 📁 services/          # Business logic (32 services)
+│   │   ├── 📁 controllers/       # Request handlers (17 controllers)
+│   │   ├── 📁 services/          # Business logic (34 services)
 │   │   │   ├── AdvancedDecisionEngine.js   # Hybrid AI + HITL
-│   │   │   ├── ClusteringService.js        # Backend DBSCAN
+│   │   │   ├── 📁 brain/                   # Intelligence services
+│   │   │   │   ├── ClusteringService.js    # DBSCAN++ with Haversine
+│   │   │   │   └── NLPService.js           # Bilingual NLP engine
 │   │   │   ├── ClusteringScheduler.js      # Scheduled clustering
 │   │   │   ├── DuplicationDetectionService.js
 │   │   │   ├── NlpManagementService.js     # Dictionary management
 │   │   │   ├── NotificationService.js      # Real-time alerts
 │   │   │   ├── SimilarityCalculatorService.js
-│   │   │   └── TensorFlowService.js        # AI model management
+│   │   │   └── TensorFlowService.js        # AI model management (cached)
 │   │   ├── 📁 repositories/      # Data access layer
 │   │   ├── 📁 models/            # Data models & validation
 │   │   ├── 📁 middleware/        # Express middleware
-│   │   ├── 📁 routes/            # Route definitions (29 route files)
+│   │   ├── 📁 routes/            # Route definitions (26 route files)
 │   │   └── 📁 utils/
-│   │       └── similarityUtils.js # Centralized DBSCAN parameters
+│   │       └── similarityUtils.js # Thesis-validated DBSCAN params (v5.0)
 │   └── 📁 client/                # Frontend components
+├── 📁 legacy/                    # Deprecated code (HR, old LGU routes)
+│   ├── 📁 controllers/           # HRController, LguAdminController
+│   ├── 📁 routes/                # Old analytics, coordinator, HR, LGU routes
+│   ├── 📁 views/                 # Old auth, coordinator, HR views
+│   ├── 📁 client-hr/             # Old HR dashboard client code
+│   └── 📁 js/                    # Old HR dashboard scripts
 ├── 📁 views/
-│   └── 📁 pages/                 # HTML templates (51 pages)
+│   └── 📁 pages/                 # HTML templates
 │       ├── 📁 admin/
 │       ├── 📁 coordinator/
 │       ├── 📁 lgu-admin/
 │       └── 📁 citizen/
+├── 📁 docs/                      # Documentation & audit reports
+│   └── 📁 performance/           # Benchmark reports
 ├── 📁 database/                  # Migration scripts
-├── 📁 scripts/                   # Utility scripts
-└── 📁 tests/                     # Test suites
+│   ├── 📁 migrations/            # Schema migrations (18 files)
+│   └── 📁 seeds/                 # Sample data
+├── 📁 scripts/                   # Utility & diagnostic scripts
+├── 📁 storage/
+│   └── 📁 ai_cache/              # TF model & anchor embedding cache
+└── 📁 tests/                     # Test suites (25 suites, 206 tests)
 ```
 
 ### Architectural Pattern
 
-CitizenLink follows a **layered MVC + Service architecture** with intelligent processing layers:
+DRIMS follows a **layered MVC + Service architecture** with intelligent processing layers:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -171,7 +188,7 @@ CitizenLink follows a **layered MVC + Service architecture** with intelligent pr
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────────┐
 │                       DATABASE LAYER                                     │
-│  PostgreSQL/Supabase with PostGIS Extension                              │
+│  PostgreSQL/Supabase                                                     │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -181,35 +198,36 @@ CitizenLink follows a **layered MVC + Service architecture** with intelligent pr
 
 ### Overview
 
-CitizenLink implements **Adaptive DBSCAN** (Density-Based Spatial Clustering of Applications with Noise) with category-specific parameters derived from the **Sorted K-Distance (Elbow) Method**.
+DRIMS implements **Adaptive DBSCAN** (Density-Based Spatial Clustering of Applications with Noise) with thesis-validated, category-specific parameters derived from the **Sorted K-Distance (Elbow) Method**. Parameters are synchronized with the DRIMS_Simulated_System.
 
 ### Why Adaptive DBSCAN?
 
 | Comparison | Standard DBSCAN | Adaptive DBSCAN (Ours) |
 |------------|-----------------|------------------------|
-| **Epsilon (ε)** | Fixed for all data | Per-category tuning |
-| **MinPts** | Fixed threshold | Life-threat aware (Fire=1, Trash=4) |
+| **Epsilon (ε)** | Fixed for all data | 3-tier adaptive (Infrastructure/Public Safety/Sanitation) |
+| **MinPts** | Fixed threshold | Life-threat aware (Fire=2, Crime=3, Trash=4, Infrastructure=5) |
 | **Semantic Awareness** | None | Relationship matrix validation |
 | **Use Case** | Generic clustering | Domain-optimized complaint analysis |
+| **Distance** | Euclidean | Haversine (geospatial) |
 
-### Category-Specific Parameters
+### Category-Specific Parameters (v5.0 — Thesis-Validated)
 
-These parameters were derived using the **Sorted K-Distance Graph (Elbow Method)** on field-collected complaint data:
+These parameters were derived using the **Sorted K-Distance Graph (Elbow Method)** on field-collected complaint data and are organized into 3 adaptive tiers:
 
-| Category | Epsilon (ε) | MinPts | Rationale |
-|----------|-------------|--------|-----------|
-| **Fire** | 25m (0.000225°) | 1 | Single fire report = immediate attention |
-| **Accident** | 25m | 1 | Traffic accidents are localized |
-| **Crime** | 25m | 1 | Single crime = valid cluster |
-| **Pothole** | 50m (0.00045°) | 3 | Infrastructure issues cluster at intersections |
-| **Trash/Garbage** | 16m (0.000144°) | 4 | Sanitation issues are hyper-local |
-| **Infrastructure** | 125m (0.001125°) | 3 | Large-scale road damage patterns |
-| **Flooding** | 200m (0.0018°) | 5 | Area-wide water events |
-| **Utilities** | 200m | 5 | Power/water outages affect zones |
+| Tier | Category | Epsilon (ε) | MinPts | Rationale |
+|------|----------|-------------|--------|-----------|
+| **Infrastructure** | Infrastructure | 125m (0.001125°) | 5 | Large-scale road damage patterns |
+| **Public Safety** | Flooding | 50m (0.00045°) | 3 | Emergency events need moderate radius |
+| **Public Safety** | Utilities | 50m (0.00045°) | 4 | Localized outage reports |
+| **Public Safety** | Fire | 50m (0.00045°) | 2 | Critical — even 2 reports demand attention |
+| **Public Safety** | Accident | 50m (0.00045°) | 3 | Traffic accidents are localized |
+| **Public Safety** | Crime | 50m (0.00045°) | 3 | Public safety concern |
+| **Infrastructure** | Pothole | 125m (0.001125°) | 5 | Road issues span larger stretches |
+| **Sanitation** | Trash/Garbage | 16m (0.000144°) | 4 | Sanitation issues are hyper-local |
 
 **Implementation Files:**
-- `src/server/utils/similarityUtils.js` - Centralized parameter definitions
-- `src/server/services/ClusteringService.js` - Backend DBSCAN implementation
+- `src/server/utils/similarityUtils.js` - Centralized parameter definitions (v5.0)
+- `src/server/services/brain/ClusteringService.js` - Backend DBSCAN++ with Haversine distance, 45-minute temporal window, and "Lone Wolf" critical-incident handling
 - `public/brain-dashboard/simulation-engine.js` - Frontend visualization engine
 
 ### Mathematical Foundation
@@ -232,8 +250,8 @@ Where:
 ```javascript
 // Convert meters to degrees for GPS coordinates
 // At Digos City latitude (~7°N), this is approximately:
-// 1 degree ≈ 111,320 meters
-epsilonDegrees = epsilonMeters / 111320;
+// 1 degree ≈ 111,000 meters
+epsilonDegrees = epsilonMeters / 111000;
 ```
 
 #### 3. Semantic Relationship Validation
@@ -242,9 +260,11 @@ Before clustering, points are validated against the **Relationship Matrix**:
 
 ```javascript
 const RELATIONSHIP_MATRIX = {
-    "Flooding": ["Traffic", "Clogged Drainage", "Road Damage", "Stranded"],
-    "Fire": ["Smoke", "Evacuation", "Traffic", "Power Outage"],
-    "Pothole": ["Road Damage", "Accident", "Traffic"],
+    "Flooding": ["Pipe Leak", "Road Damage", "Trash", "Traffic", "Environment", "Flood", 
+                 "Accident", "Stranded", "Evacuation", "Heavy Rain", "Clogged Drainage", "Clogged Canal"],
+    "Fire": ["Traffic", "Public Safety", "Smoke", "Evacuation", "Road Obstruction", 
+             "Blackout", "Explosion", "Gas Leak", "Burning Trash"],
+    "Pothole": ["Road Damage", "Infrastructure", "Accident", "Traffic"],
     // ... 30+ defined relationships
 };
 ```
@@ -259,39 +279,42 @@ Two complaints can only cluster if:
 
 ### Architecture Overview
 
-The NLP Processor uses a **5-layer classification pipeline** that prioritizes speed while maintaining accuracy:
+The NLP Processor uses a **5-layer classification pipeline** that prioritizes speed while maintaining accuracy. The system supports a **bilingual keyword registry** (Filipino/English) with negation detection, false-positive filtering (e.g., "baha" vs "bahay"), and hierarchy/synonym matching.
+
+> **Note:** NLP subtypes/subcategories have been removed from the taxonomy. The system now classifies into top-level categories only.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  LAYER 1: BISLISH TYPO CORRECTION                                       │
-│  - Pre-processes input using dialect map                                │
-│  - "basora" → "basura", "lubang" → "lubak"                              │
+│  LAYER 1: TOKENIZATION + CLAUSE SEGMENTATION                            │
+│  - Pre-processes input using Bislish dialect map                        │
+│  - "basora" → "basura", "lubac" → "lubak"                               │
 │  - Levenshtein distance for fuzzy matching                              │
 └─────────────────────────────┬───────────────────────────────────────────┘
-                              │ Cleaned Text
+                              │ Cleaned Tokens
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  LAYER 2: DICTIONARY MATCHING (FAST PATH) ~1-5ms                        │
 │  - Single token + N-gram matching                                       │
 │  - Hierarchy mapping (specific → parent category)                       │
-│  - Returns if confidence > 75%                                          │
+│  - Returns if confidence ≥ 60% (AI_CONFIDENCE_THRESHOLD)                │
 └─────────────────────────────┬───────────────────────────────────────────┘
                               │ No match or low confidence
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  LAYER 3: DATABASE KEYWORDS                                             │
-│  - Dynamically loaded from nlp_keywords table                           │
-│  - Supports HITL-trained entries                                        │
-└─────────────────────────────┬───────────────────────────────────────────┘
-                              │ No match
-                              ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│  LAYER 4: TensorFlow.js AI FALLBACK ~50-100ms                           │
+│  LAYER 3: TensorFlow.js AI FALLBACK ~50-100ms                           │
 │  - Universal Sentence Encoder embeddings                                │
 │  - Cosine similarity against category anchors                           │
+│  - Accepted if similarity ≥ 0.75 (AI_SIMILARITY_THRESHOLD)              │
 │  - GPU-accelerated with WebGL shaders                                   │
 └─────────────────────────────┬───────────────────────────────────────────┘
                               │ Classification result
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  LAYER 4: CLAUSE-BASED MODIFIER DETECTION                               │
+│  - Negation detection and false-positive filtering                      │
+│  - Context-aware clause analysis                                        │
+└─────────────────────────────┬───────────────────────────────────────────┘
+                              │ Refined result
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  LAYER 5: MULTI-LABEL RESOLUTION                                        │
@@ -307,17 +330,21 @@ Common misspellings from Digos City's Bisaya-English dialect are automatically c
 
 ```javascript
 const BISLISH_TYPO_MAP = {
-    // Water issues
-    "walay tubig": "walang tubig",
+    // Water/Drainage
+    "tubog": "tubig",
+    "bahag": "baha",
+    
+    // Utilities
     "way kuryente": "brownout",
+    "walay kuryente": "brownout",
     
     // Sanitation
     "basora": "basura",
     "mabao": "mabaho",
     
     // Infrastructure
-    "lubang": "lubak",
-    "butas sa daan": "pothole"
+    "lubac": "lubak",
+    "lubaq": "lubak"
 };
 ```
 
@@ -327,11 +354,14 @@ To ensure safety hazards mathematically outrank aesthetic issues:
 
 | Category | Multiplier | Rationale |
 |----------|------------|-----------|
-| Fire | 1.30 | Immediate life threat |
-| Accident | 1.25 | Medical emergency |
-| Crime | 1.20 | Public safety |
-| Flooding | 1.15 | Displacement risk |
-| Noise Complaint | 0.80 | Quality of life |
+| Public Safety / Emergency / Fire | 1.30 | Immediate life threat |
+| Environment / Flood / Flooding / Landslide | 1.20 | Environmental hazard |
+| Utilities | 1.10 | Service disruption |
+| Infrastructure | 1.05 | Structural concern |
+| Sanitation / Health Hazard / Pest Infestation | 1.00 | Baseline |
+| Traffic / Traffic Congestion | 0.90 | Moderate impact |
+| Stray Animals | 0.85 | Animal control |
+| Noise Complaint / Noise | 0.80 | Quality of life |
 | Others | 0.70 | Lowest priority |
 
 ### Performance Optimizations
@@ -343,69 +373,13 @@ To ensure safety hazards mathematically outrank aesthetic issues:
 
 **Files:**
 - `public/brain-dashboard/nlp-processor.js` - Client-side NLP engine
+- `src/server/services/brain/NLPService.js` - Server-side bilingual NLP with false-positive filtering
 - `src/server/services/AdvancedDecisionEngine.js` - Server-side with HITL
-- `src/server/services/TensorFlowService.js` - Model management
+- `src/server/services/TensorFlowService.js` - Model management (cached)
 
 ---
 
-## 🔗 Core Feature 3: Causality Manager
-
-### Overview
-
-The Causality Manager implements **physics-based disaster chain detection** to identify causal relationships between complaint clusters.
-
-### Causal Matrix
-
-Defines which categories can cause other categories (direction matters):
-
-```javascript
-const CAUSAL_MATRIX = {
-    // FLOOD CHAIN
-    "Flooding": ["Traffic", "Stranded", "Blackout", "Road Damage", 
-                 "Accident", "Evacuation", "Health Hazard"],
-    "Heavy Rain": ["Flooding", "Landslide", "Traffic"],
-    "Clogged Drainage": ["Flooding", "Bad Odor"],
-    
-    // FIRE CHAIN
-    "Fire": ["Smoke", "Panic", "Evacuation", "Traffic", "Power Outage"],
-    
-    // ACCIDENT CHAIN
-    "Accident": ["Traffic", "Injury", "Fight"],
-    
-    // INFRASTRUCTURE CHAIN
-    "Landslide": ["Road Obstruction", "Traffic", "Stranded", "Evacuation"],
-    
-    // IMPORTANT: Traffic CANNOT cause Flooding (physics constraint)
-    "Traffic": ["Noise", "Air Pollution"],  // Limited downstream effects
-};
-```
-
-### Validation Checks
-
-For a causal link to be valid, it must pass **4 checks**:
-
-1. **DIRECTION CHECK**: Does physics allow A to cause B?
-   - ✅ Flood → Traffic
-   - ❌ Traffic → Flood
-
-2. **TEMPORAL CHECK**: Is cause earlier than effect?
-   - Effect must occur within 24 hours of cause
-
-3. **SPATIAL CHECK**: Within propagation distance?
-   - Distances vary by category (Flood=500m, Fire=300m, Earthquake=1000m)
-
-4. **STRENGTH SCORING**: How strong is the causal link?
-   - Flood→Traffic: 0.85
-   - Fire→Smoke: 0.95
-   - Blackout→Crime: 0.65
-
-**Files:**
-- `public/brain-dashboard/causality-manager.js` - Core causal reasoning
-- `public/brain-dashboard/simulation-engine.js` - Integration point
-
----
-
-## 🔍 Core Feature 4: Duplication Detection
+##  Core Feature 3: Duplication Detection
 
 ### Multi-Modal Similarity Scoring
 
@@ -414,26 +388,26 @@ The system detects duplicate complaints using three dimensions:
 | Dimension | Algorithm | Weight |
 |-----------|-----------|--------|
 | **Text Similarity** | Levenshtein distance + Keyword overlap | 40% |
-| **Location Similarity** | Haversine distance within radius | 35% |
-| **Temporal Similarity** | Time window matching | 25% |
+| **Location Similarity** | Haversine distance within radius | 40% |
+| **Temporal Similarity** | Time window matching | 20% |
 
 ### Algorithm Details
 
 ```javascript
 // Final duplication score
-finalScore = (textScore * 0.4) + (locationScore * 0.35) + (temporalScore * 0.25);
+finalScore = (textScore * 0.4) + (locationScore * 0.4) + (temporalScore * 0.2);
 
 // Thresholds
-if (finalScore > 0.80) → "High Confidence Duplicate"
-if (finalScore > 0.60) → "Probable Duplicate"
-if (finalScore > 0.40) → "Similar Complaint"
+if (finalScore > 0.85) → "Very High Confidence Duplicate"
+if (finalScore > 0.75) → "High Confidence Duplicate"
+if (finalScore > 0.60) → "Medium Confidence Duplicate"
 ```
 
 **File:** `src/server/services/DuplicationDetectionService.js`
 
 ---
 
-## 🎓 Core Feature 5: Human-in-the-Loop (HITL) Learning
+## 🎓 Core Feature 4: Human-in-the-Loop (HITL) Learning
 
 ### Overview
 
@@ -475,19 +449,11 @@ The AdvancedDecisionEngine implements supervised learning through human feedback
 
 ---
 
-## 📊 Core Feature 6: Statistical Analysis
+## 📊 Core Feature 5: Statistical Analysis
 
 ### Integration
 
-The system includes a Python-powered statistical analysis server for thesis-ready reporting:
-
-```javascript
-// Statistical Analysis Server
-const STAT_CONFIG = {
-    serverUrl: 'http://localhost:3456',
-    timeout: 60000
-};
-```
+The system includes a client-side statistical analysis module that communicates with a local statistical server (part of the DRIMS_Simulated_System, running on the same host at port 3456). The analysis computes thesis-ready metrics from the dashboard data.
 
 ### Generated Metrics
 
@@ -523,10 +489,22 @@ One-click generation of:
 | `COMPLAINT_SUBMITTED` | 📝 | Normal | Citizen confirmation |
 | `COMPLAINT_STATUS_CHANGED` | 🔄 | Normal | Status updates |
 | `COMPLAINT_UPDATE` | 💬 | Normal | Notes/comments added |
+| `COMPLAINT_DUPLICATE` | 🔗 | Normal | Duplicate detected |
+| `COMPLAINT_ASSIGNED` | 👤 | Normal | Assigned to staff |
+| `COMPLAINT_RESOLVED` | ✅ | Normal | Resolution confirmed |
 | `TASK_ASSIGNED` | 📋 | High | Officer assignment |
-| `DEADLINE_APPROACHING` | ⏰ | High | 24h warning |
-| `TASK_OVERDUE` | 🚨 | Critical | Missed deadline |
-| `SYSTEM_ALERT` | ⚠️ | Critical | System-wide issues |
+| `TASK_COMPLETED` | ✅ | Normal | Task finished |
+| `TASK_DEADLINE_APPROACHING` | ⚠️ | High | 24h warning |
+| `TASK_OVERDUE` | ⏰ | Critical | Missed deadline |
+| `ASSIGNMENT_COMPLETED` | 🎯 | Normal | Assignment done |
+| `NEW_COMPLAINT_REVIEW` | 👀 | High | New review needed |
+| `APPROVAL_REQUIRED` | 👍 | High | Needs approval |
+| `OFFICER_REMINDER` | 🔔 | Normal | Officer nudge |
+| `ADMIN_REMINDER` | 📢 | High | Admin nudge |
+| `PENDING_TASK_REMINDER` | ⏳ | Normal | Pending task alert |
+| `WORKFLOW_STEP_COMPLETED` | ➡️ | Normal | Step advanced |
+| `LGU_WORK_COMPLETED` | 🏗️ | Normal | LGU work done |
+| `RESOLUTION_REVIEW_NEEDED` | 👁️ | High | Review resolution |
 
 ### Features
 
@@ -535,7 +513,7 @@ One-click generation of:
 - **Bulk Notifications**: Efficient batch creation
 - **Real-time**: Instant delivery via Supabase Realtime
 
-**File:** `src/server/services/NotificationService.js` (786 lines)
+**File:** `src/server/services/NotificationService.js`
 
 ---
 
@@ -547,40 +525,38 @@ One-click generation of:
 |-------|---------|
 | **complaints** | Main complaint records with geospatial coordinates |
 | **complaint_clusters** | DBSCAN clustering results |
-| **complaint_similarity** | Duplication detection results |
+| **complaint_similarities** | Duplication detection results |
 | **categories** | Top-level complaint categories |
 | **subcategories** | Specific complaint types |
 | **departments** | Government departments |
+| **department_subcategory_mapping** | Many-to-many dept↔subcategory mapping with response priority |
 | **nlp_keywords** | HITL-trained keyword mappings |
-| **pending_reviews** | Low-confidence classifications queue |
-| **notifications** | User notification inbox |
+| **nlp_pending_reviews** | Low-confidence classifications queue |
+| **notification** | User notification inbox |
 | **audit_logs** | System-wide action logging |
+| **settings** | System configuration key-value store with categories |
 
-### Geospatial Schema
+### Complaints Schema
 
 ```sql
--- Complaints table with geospatial data
-CREATE TABLE complaints (
-  id UUID PRIMARY KEY,
-  latitude DECIMAL(10, 8) NOT NULL,
-  longitude DECIMAL(11, 8) NOT NULL,
-  location_point GEOGRAPHY(POINT, 4326),
-  description TEXT,
-  category_id UUID REFERENCES categories(id),
-  subcategory_id UUID REFERENCES subcategories(id),
-  status VARCHAR(50) DEFAULT 'submitted',
-  created_at TIMESTAMP DEFAULT NOW(),
-  
-  -- Geospatial constraint for Digos City bounds
-  CONSTRAINT valid_coordinates CHECK (
-    latitude BETWEEN 6.65 AND 7.20 AND
-    longitude BETWEEN 125.25 AND 125.80
-  )
+CREATE TABLE public.complaints (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  submitted_by UUID NOT NULL REFERENCES auth.users(id),
+  descriptive_su TEXT NOT NULL,
+  location_text TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  category TEXT,
+  department_r TEXT[] DEFAULT '{}',
+  workflow_status TEXT DEFAULT 'new'
+    CHECK (workflow_status IN ('new', 'assigned', 'in_progress', 'pending_approval', 'completed', 'cancelled')),
+  priority TEXT DEFAULT 'low'
+    CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  assigned_coordinator_id UUID,
+  phase_comments JSONB DEFAULT '{}',  -- Structured comments per workflow phase
+  submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
--- Spatial index for performance
-CREATE INDEX idx_complaints_location 
-ON complaints USING GIST(location_point);
 ```
 
 ---
@@ -591,12 +567,25 @@ ON complaints USING GIST(location_point);
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/complaints/geospatial` | Get complaints with coordinates |
-| GET | `/api/complaints/clusters` | Get DBSCAN cluster results |
-| POST | `/api/nlp/classify` | Classify text using hybrid engine |
+| GET | `/api/brain/complaints` | Get complaints with coordinates for brain dashboard |
+| GET | `/api/superadmin/clustering/status` | Get DBSCAN clustering scheduler status |
+| POST | `/api/superadmin/clustering/trigger` | Manually trigger DBSCAN clustering |
 | GET | `/api/nlp/pending-reviews` | Get HITL pending queue |
-| POST | `/api/nlp/train-keyword` | Train new keyword |
-| GET | `/api/analytics/heatmap` | Get heatmap visualization data |
+| POST | `/api/nlp/pending-reviews/:id/resolve` | Resolve a pending review (train keyword) |
+| GET | `/api/nlp/dictionary` | Get complete NLP dictionary |
+| GET | `/api/nlp/keywords` | Get all trained keywords |
+| POST | `/api/nlp/keywords` | Add a new keyword |
+
+### Settings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/settings` | Get all settings (authenticated) |
+| GET | `/api/settings/public` | Get public-scoped settings |
+| GET | `/api/settings/category/:cat` | Get settings by category |
+| POST | `/api/settings` | Create setting (lgu/super-admin) |
+| PUT | `/api/settings/:key` | Update setting (lgu/super-admin) |
+| DELETE | `/api/settings/:key` | Delete setting (super-admin only) |
 
 ### Complaints
 
@@ -606,28 +595,36 @@ ON complaints USING GIST(location_point);
 | GET | `/api/complaints/my` | Get user's complaints |
 | GET | `/api/complaints/:id` | Get complaint details |
 | PATCH | `/api/complaints/:id/status` | Update status |
-| POST | `/api/complaints/:id/reminder` | Send follow-up reminder |
+| POST | `/api/complaints/:id/remind` | Send follow-up reminder |
+| POST | `/api/complaints/:id/confirm-resolution` | Citizen confirms resolution |
+| POST | `/api/complaints/:id/mark-complete` | Officer marks assignment complete |
+| PATCH | `/api/complaints/:id/transition` | Human confirmation workflow transition |
+| GET | `/api/complaints/check-duplicates` | Check for duplicate complaints |
 
 ### Notifications
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/notifications` | Get user notifications |
-| GET | `/api/notifications/unread-count` | Get unread count |
-| PATCH | `/api/notifications/:id/read` | Mark as read |
-| PATCH | `/api/notifications/mark-all-read` | Mark all as read |
+| GET | `/api/notifications` | Get all notifications |
+| GET | `/api/notifications/unread` | Get unread notifications |
+| GET | `/api/notifications/count` | Get notification count |
+| POST | `/api/notifications/:id/mark-read` | Mark as read |
+| POST | `/api/notifications/mark-all-read` | Mark all as read |
+| GET | `/api/notifications/stream` | SSE notification stream |
 
 ---
 
 ## 👥 User Roles & RBAC
 
+DRIMS operates in **Simple Workflow Mode** with 3 core roles. Legacy sub-roles (`lgu-admin`, `lgu-hr`, `lgu-officer`, `complaint-coordinator`) are automatically normalized to `lgu` by the auth middleware.
+
 | Role | Key Permissions |
 |------|-----------------|
-| **Citizen** | Submit complaints, track status, send reminders |
-| **LGU Coordinator** | Review submissions, verify complaints, forward to departments |
-| **LGU Officer** | Process assigned complaints, add updates |
-| **LGU Admin** | Access heatmap, analytics, manage department |
-| **Super Admin** | Full system access, HITL training, user management |
+| **Citizen** | Submit complaints, track status, send reminders, confirm resolution |
+| **LGU** | Review/verify complaints, manage assignments, access heatmap & analytics, NLP training, department management |
+| **Super Admin** | Full system access, HITL training, user management, system settings, clustering triggers |
+
+> **Note:** LGU staff can switch to citizen mode to file complaints. Legacy role-specific controllers and routes are preserved in the `legacy/` directory for reference.
 
 ---
 
@@ -635,22 +632,25 @@ ON complaints USING GIST(location_point);
 
 ```bash
 # Development
-npm run dev          # Start with auto-reload (nodemon)
-npm run check        # Run comprehensive health checks
+npm run dev              # Start with auto-reload (nodemon)
 
 # Production
-npm start            # Start production server
-
-# Database
-npm run migrate      # Run database migrations
-npm run seed         # Seed with sample data
+npm start                # Start production server
 
 # Code Quality
-npm run lint         # Run ESLint
-npm run lint:fix     # Auto-fix linting issues
+npm run lint:fix         # Auto-fix linting issues with ESLint
 
 # Testing
-npm test             # Run test suite
+npm test                 # Run test suite
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage report
+npm run test:security    # Run security-focused tests
+npm run test:functional  # Run functional tests
+
+# Security
+npm run security-audit   # Run npm audit
+npm run security-fix     # Run npm audit fix
+npm run security-scan    # Run custom 3-phase security scanner
 ```
 
 ---
@@ -661,15 +661,61 @@ npm test             # Run test suite
 |---------|----------------|
 | **Input Validation** | Joi schemas for all API payloads |
 | **GPS Bounds Validation** | Reject coordinates outside Digos City |
-| **SQL Injection Protection** | Parameterized queries |
-| **XSS Prevention** | Helmet CSP, output sanitization |
+| **SQL Injection Protection** | Parameterized queries via Supabase client |
+| **XSS Prevention** | Helmet CSP, `xss` + `isomorphic-dompurify` sanitization |
 | **Rate Limiting** | Per-route request throttling |
-| **RBAC** | Row Level Security policies |
+| **RBAC** | Row Level Security policies with SECURITY DEFINER functions |
 | **Session Management** | Secure cookie handling |
+| **RLS Recursion Protection** | `check_is_admin_safe()` and `check_is_lgu_staff()` SECURITY DEFINER functions to prevent infinite RLS policy loops |
+| **Automated Security Scanning** | 3-phase pipeline: `npm audit`, ESLint security plugins (`eslint-plugin-security`, `eslint-plugin-no-unsanitized`), pattern-based secret scanning |
+| **Secret Scanning** | Regex-based detection of API keys, AWS keys, and hardcoded credentials in source |
+| **Dependency Auditing** | 0 npm vulnerabilities enforced; `tar` override for transitive tfjs-node dependency |
+
+### Security Audit (2026-02-28)
+
+| Metric | Result |
+|--------|--------|
+| Test suites | 25 passing |
+| Tests | 206 passing, 0 failures |
+| npm vulnerabilities | 0 |
+| ESLint errors | 0 (538 non-blocking warnings) |
+| Secret scan findings | 0 |
+| CodeQL alerts | 0 |
+
+Full report: [docs/AUDIT_REPORT_2026-02-28.md](docs/AUDIT_REPORT_2026-02-28.md)
 
 ---
 
 ## 📈 Performance Optimizations
+
+### TensorFlow Inference (Server-Side)
+
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Model loading | ~5,000 ms | 300–500 ms | **~93%** |
+| Anchor embedding | ~3,000 ms | 1–2 ms | **~99.9%** |
+
+- **Local model caching**: Model weights saved to `storage/ai_cache/tf_model_cache/` on first download, then loaded from disk
+- **Anchor embedding caching**: Pre-computed anchor vectors saved to `storage/ai_cache/tf_anchor_cache.json` with SHA-256 fingerprinting — recomputed only when config changes
+- **Vectorized classification**: Matrix multiplication (`anchorMatrix.matMul()`) for single-pass cosine similarity instead of per-category loops
+- **Native backend**: Prefers `@tensorflow/tfjs-node` (C++ bindings) with graceful fallback to vanilla `@tensorflow/tfjs`
+- **Server pre-loading**: AI engine pre-initialized at startup to prevent first-request delay
+
+### Heatmap Rendering (~93% Reduction)
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Render cycle | ~7.1 ms | ~0.5 ms |
+
+Key optimizations:
+1. **Singleton Supabase client** — Eliminated per-request `createClient()` calls (−99.0%)
+2. **Layer reuse** — `setLatLngs()` instead of full canvas recreation on filter changes
+3. **AABB bounding-box pre-check** — 4-comparison rejection before ray-casting (−99.2% for out-of-bounds points)
+4. **Loop over spread** — Replaced `Math.max(...spread)` with manual loop (−93.5%, eliminates stack overflow at n=1000+)
+5. **O(n) marker updates** — Pre-built Map + requestAnimationFrame gating instead of O(n²) scans
+6. **CSS visibility toggle** — DOM class toggling instead of element insertion/removal
+
+Full report: [docs/performance/heatmap-optimization-report.md](docs/performance/heatmap-optimization-report.md)
 
 ### Client-Side
 - **Shader Warmup**: Pre-compile WebGL on page load
@@ -677,16 +723,16 @@ npm test             # Run test suite
 - **GPU Acceleration**: `tf.matMul` for vectorized operations
 
 ### Server-Side
-- **Model Caching**: 100MB USE model stored in `storage/ai_cache/`
-- **Anchor Caching**: Hash-based category embedding cache
-- **Connection Pooling**: Supabase connection management
-- **Spatial Indexes**: GIST indexes for geospatial queries
+- **Model Caching**: USE model stored in `storage/ai_cache/`
+- **Anchor Caching**: SHA-256 hash-based category embedding cache
+- **Connection Pooling**: Supabase singleton client management
+- **HTTP Compression**: `compression` middleware for response payloads
 
 ---
 
 ## 👨‍💻 Development Team
 
-> **Note**: For a chronological history of changes, see [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md).
+> **Note**: For a chronological history of changes, see [docs/IMPLEMENTATION_LOG.md](docs/IMPLEMENTATION_LOG.md).
 
 **Pyrrhus Go** - _Backend Developer_
 - Server architecture and API design
@@ -719,9 +765,9 @@ npm test             # Run test suite
 
 ### Implementation Resources
 
-- **PostGIS Documentation** - Geospatial data types and functions
 - **TensorFlow.js** - Client/Server-side ML inference
 - **Leaflet.js** - Interactive maps library
+- **Supabase** - PostgreSQL database with real-time and auth
 
 ---
 
@@ -731,4 +777,37 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ---
 
-**CitizenLink** - Intelligent Complaint Management with Geospatial Analytics & AI 🗺️🧠
+## 🗄️ Database Migrations
+
+Recent schema changes (`database/migrations/`):
+
+| Migration | Description |
+|-----------|-------------|
+| `20260205_add_phase_comments` | Added `phase_comments` JSONB column for structured per-phase comments |
+| `20260205_create_department_mapping` | Department↔subcategory many-to-many junction table with response priority |
+| `20260205_update_workflow_constraint` | Migration script to transition from 6-status to 5-phase workflow (`submitted` → `verified` → `under_review` → `action_taken` → `resolved`). Application constants still reference original statuses. |
+| `20260212_secure_unrestricted_tables` | Enabled RLS on 6 previously unprotected NLP/mapping tables |
+| `20260214_remove_nlp_subtypes` | Dropped subcategory columns from NLP tables (taxonomy simplification) |
+| `20260214_remove_subtype_column` | Dropped `subcategory` column from `complaints` table |
+| `20260219_emergency_fix_recursion` | Created `check_is_admin_safe()` SECURITY DEFINER to fix infinite RLS recursion on `user_profiles` |
+| `20260224_fix_complaints_recursion` | Created `check_is_lgu_staff()` SECURITY DEFINER to fix infinite RLS recursion on `complaints` |
+
+---
+
+## 🔧 Utility Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `security-scan.js` | Automated 3-phase security scanning (npm audit, ESLint, secret detection) |
+| `benchmark_heatmap.js` / `benchmark_tf.js` | Performance benchmarks for heatmap and TensorFlow |
+| `check_legacy_roles.js` / `cleanup_legacy_accounts.js` | Legacy account auditing and cleanup |
+| `check_nlp_data.js` / `nlp_supabase_diagnostics.js` | NLP data validation and diagnostics |
+| `recalculate_priority.js` | Recalculate complaint priorities |
+| `validate_taxonomy_alignment.js` | Verify brain config ↔ database taxonomy alignment |
+| `seed_runner.js` / `generate_remaining_seeds.js` | Database seeding utilities |
+| `debug_rls.js` / `print_rls_fix.js` | RLS policy debugging and fix generation |
+| `export_brain_config.js` | Export brain configuration to JSON |
+
+---
+
+**DRIMS** - Intelligent Complaint Management with Geospatial Analytics & AI 🗺️🧠
