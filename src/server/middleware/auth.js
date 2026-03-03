@@ -19,10 +19,10 @@ const authenticateUser = async (req, res, next) => {
     const cookieToken = req.cookies?.sb_access_token;
 
     // Prioritize Authorization header as it contains the most recent token from the client
+    // SEC-05 FIX: Removed sb_access_token_debug fallback
     const token =
       authHeader?.replace("Bearer ", "") ||
-      cookieToken ||
-      req.cookies?.sb_access_token_debug;
+      cookieToken;
 
     if (!token) {
       if (req.originalUrl.startsWith("/api/") || req.path.startsWith("/api/")) {
@@ -111,6 +111,9 @@ const authenticateUser = async (req, res, next) => {
     const combinedMetadata = extractUserMetadata(tokenUser);
 
     // Check for Citizen Mode override
+    // SEC-21 FIX: Validate app_mode strictly — only allow exact "citizen_mode" value
+    // and only for roles that are in SWITCHABLE_ROLES (lgu, super-admin).
+    // This is a privilege DOWNGRADE (admin→citizen), not an escalation.
     const appMode = req.cookies?.app_mode;
     const realRole = combinedMetadata.role || "citizen";
 
@@ -119,6 +122,9 @@ const authenticateUser = async (req, res, next) => {
       combinedMetadata.base_role = realRole;
       combinedMetadata.role = "citizen";
       combinedMetadata.normalized_role = "citizen";
+    } else if (appMode && appMode !== "citizen_mode") {
+      // Invalid app_mode value — clear it
+      res.clearCookie("app_mode");
     }
 
     // Validate user role and department code

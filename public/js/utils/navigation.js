@@ -1,6 +1,7 @@
 // Navigation utilities for clearing OAuth context on explicit navigation
 import { getOAuthContext, clearOAuthContext } from "../auth/authChecker.js";
 import { supabase } from "../config/config.js";
+import { getCsrfToken } from "./csrf.js";
 
 /**
  * Clears incomplete OAuth signup context when user explicitly navigates
@@ -34,6 +35,7 @@ export const clearOAuthOnNavigation = async () => {
             const token = session.access_token;
             const headers = { "Content-Type": "application/json" };
             headers["Authorization"] = `Bearer ${token}`;
+            try { const csrf = await getCsrfToken(); if (csrf) headers["X-CSRF-Token"] = csrf; } catch (_e) { /* proceed */ }
 
             const deleteResponse = await fetch("/api/compliance/delete", {
               method: "DELETE",
@@ -77,6 +79,7 @@ export const clearOAuthOnNavigation = async () => {
               const token = retrySession.access_token;
               const headers = { "Content-Type": "application/json" };
               headers["Authorization"] = `Bearer ${token}`;
+              try { const csrf = await getCsrfToken(); if (csrf) headers["X-CSRF-Token"] = csrf; } catch (_e) { /* proceed */ }
 
               const retryResponse = await fetch("/api/compliance/delete", {
                 method: "DELETE",

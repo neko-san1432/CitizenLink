@@ -1,4 +1,5 @@
 import { supabase } from "../config/config.js";
+import { getCsrfToken } from "../utils/csrf.js";
 
 // ID Verification: upload/camera capture and OCR for identity verification
 // Expected OCR API response shape (example):
@@ -638,6 +639,7 @@ import { supabase } from "../config/config.js";
 
         const headers = { "Content-Type": "application/json" };
         headers["Authorization"] = `Bearer ${token}`;
+        try { const csrf = await getCsrfToken(); if (csrf) headers["X-CSRF-Token"] = csrf; } catch (_e) { /* proceed */ }
 
         // Normalize ID number for backend (server expects idNumber)
         if (!extractedIdData.idNumber) {

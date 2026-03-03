@@ -131,23 +131,12 @@ window.isInitialLoad = false;
     //   isSuperAdmin: heatmapViz.userRole === "super-admin",
     // });
 
-    // LGU Admins are always scoped to their assigned office
-    // Coordinators and super-admins should NOT have department filters applied
-    if (heatmapViz.userRole === "lgu-admin" && heatmapViz.userDepartment) {
+    // LGU staff are scoped to their assigned office
+    // Super-admins see everything (no department filter)
+    if (heatmapViz.userRole === "lgu" && heatmapViz.userDepartment) {
       currentFilters.department = heatmapViz.userDepartment;
-      // console.log(
-      //   "[HEATMAP] LGU Admin detected - applying department filter:",
-      //   heatmapViz.userDepartment
-      // );
-    } else if (
-      heatmapViz.userRole === "complaint-coordinator" ||
-      heatmapViz.userRole === "super-admin"
-    ) {
-      // Ensure coordinators and super-admins have NO department filter
+    } else if (heatmapViz.userRole === "super-admin") {
       currentFilters.department = "";
-      // console.log(
-      //   "[HEATMAP] Coordinator/Super-admin detected - NO department filter applied"
-      // );
     }
 
     // Store globally for boundaryGenerator to access
@@ -637,17 +626,15 @@ function setupControlPanel() {
   function applyFiltersAndUpdate() {
     const statusValues = getCheckedValues("status-checkbox");
     const categoryValues = getCheckedValues("category-checkbox");
-    // Only apply department filter for LGU admins, NOT for coordinators or super-admins
+    // Only apply department filter for LGU staff, NOT for super-admins
     const userRestrictedDepartment =
-      heatmapViz?.userRole === "lgu-admin" && heatmapViz.userDepartment
+      heatmapViz?.userRole === "lgu" && heatmapViz.userDepartment
         ? heatmapViz.userDepartment
         : null;
 
-    // Coordinators and super-admins should see all complaints (no department filter)
-    const isCoordinatorOrSuperAdmin =
-      heatmapViz?.userRole === "complaint-coordinator" ||
-      heatmapViz?.userRole === "super-admin";
-    const departmentValues = isCoordinatorOrSuperAdmin
+    // Super-admins see all complaints (no department filter)
+    const isSuperAdmin = heatmapViz?.userRole === "super-admin";
+    const departmentValues = isSuperAdmin
       ? null
       : userRestrictedDepartment || getCheckedValues("department-checkbox");
 
@@ -873,7 +860,7 @@ function setupControlPanel() {
         status: "",
         category: "",
         department:
-          heatmapViz?.userRole === "lgu-admin" && heatmapViz.userDepartment
+          heatmapViz?.userRole === "lgu" && heatmapViz.userDepartment
             ? heatmapViz.userDepartment
             : "",
         includeResolved: true,
@@ -1010,9 +997,9 @@ async function loadCategories() {
       // Prioritization Logic for LGU Admins
       let sortedData = [...data];
       const userDepartmentCode = await getUserDepartment();
-      const isLguAdmin = heatmapViz?.userRole === "lgu-admin";
+      const isLguStaff = heatmapViz?.userRole === "lgu";
 
-      if (isLguAdmin && userDepartmentCode) {
+      if (isLguStaff && userDepartmentCode) {
         // Mark categories as relevant if they map to the user's department
         sortedData = sortedData.map((category) => {
           const isRelevant = category.subcategories?.some((sub) =>
@@ -1156,11 +1143,11 @@ async function loadDepartments() {
     const loading = document.getElementById("department-loading");
     if (loading) loading.remove();
 
-    const isLguAdmin = heatmapViz?.userRole === "lgu-admin";
+    const isLguStaff = heatmapViz?.userRole === "lgu";
     const userDepartmentCode =
       heatmapViz?.userDepartment || (await getUserDepartment());
 
-    if (isLguAdmin && userDepartmentCode) {
+    if (isLguStaff && userDepartmentCode) {
       const notice = document.createElement("div");
       notice.style.cssText =
         "padding: 12px; background: #f9fafb; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; color: #374151;";

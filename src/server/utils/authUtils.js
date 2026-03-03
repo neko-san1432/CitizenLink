@@ -124,8 +124,8 @@ function getCookieOptions(remember = false) {
   };
 
   if (remember) {
-    // Persistent cookie for "Trusted Device" - 10 years
-    options.maxAge = 10 * 365 * 24 * 60 * 60 * 1000;
+    // SEC-14 FIX: Reduced from 10 years to 30 days max
+    options.maxAge = 30 * 24 * 60 * 60 * 1000;
   }
   // If remember is false, do not set maxAge or expires.
   // This makes it a session cookie that expires when the browser is closed.

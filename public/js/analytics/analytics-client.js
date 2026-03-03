@@ -2,6 +2,7 @@
  * DRIMS Analytics Client v2.0
  * Connects to Node.js Backend API
  */
+import showMessage from "../components/toast.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[Analytics] Initializing Client...");
@@ -12,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     hideLoading();
   } catch (error) {
     console.error("[Analytics] Init Error:", error);
-    alert(`Failed to load analytics: ${  error.message}`);
+    showMessage("error", `Failed to load analytics: ${error.message}`);
     hideLoading();
   }
 });
@@ -34,7 +35,8 @@ async function loadAnalyticsData() {
 
 function renderDashboard(data) {
   // 1. Narrative
-  document.getElementById("narrativeText").innerHTML = data.narrative || "No analysis available.";
+  // UI-02 FIX: Use textContent for narrative to prevent XSS
+  document.getElementById("narrativeText").textContent = data.narrative || "No analysis available.";
 
   // 2. Metrics
   const {stats} = data;
@@ -139,13 +141,15 @@ function renderClustersTable(clusters) {
     return;
   }
 
+  // UI-02 FIX: Escape cluster data before innerHTML insertion
+  const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   clusters.forEach(c => {
     const row = `
             <tr>
-                <td>${c.id}</td>
-                <td><strong>${c.category}</strong></td>
-                <td>${c.size} reports</td>
-                <td>${c.urgency_avg}/100</td>
+                <td>${esc(c.id)}</td>
+                <td><strong>${esc(c.category)}</strong></td>
+                <td>${esc(c.size)} reports</td>
+                <td>${esc(c.urgency_avg)}/100</td>
                 <td>${c.center.lat.toFixed(4)}, ${c.center.lng.toFixed(4)}</td>
             </tr>
         `;

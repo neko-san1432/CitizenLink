@@ -273,7 +273,10 @@ class ReminderService {
       // Get coordinator users
       const { data: coordinators } = await supabase.auth.admin.listUsers();
       const coordinatorIds = coordinators?.users
-        ?.filter(user => user.raw_user_meta_data?.role === "complaint-coordinator")
+        ?.filter(user => {
+          const role = user.raw_user_meta_data?.role || "";
+          return role === "lgu" || role === "complaint-coordinator" || role.startsWith("lgu-");
+        })
         ?.map(user => user.id) || [];
       if (coordinatorIds.length > 0) {
 
@@ -308,7 +311,11 @@ class ReminderService {
         // Get department admin users
         const { data: allUsers } = await supabase.auth.admin.listUsers();
         const admins = allUsers?.users
-          ?.filter(user => user.raw_user_meta_data?.role === "lgu-admin" && user.raw_user_meta_data?.dpt === department.code)
+          ?.filter(user => {
+            const role = user.raw_user_meta_data?.role || "";
+            const isLgu = role === "lgu" || role === "lgu-admin" || role.startsWith("lgu-");
+            return isLgu && user.raw_user_meta_data?.dpt === department.code;
+          })
           ?.map(user => user.id) || [];
         if (admins.length > 0) {
 
@@ -320,7 +327,7 @@ class ReminderService {
               reminder.message,
               {
                 priority: reminder.priority,
-                link: `/lgu-admin/department-queue`,
+                link: `/assignments`,
                 metadata: {
                   complaint_id: complaint.id,
                   department: department.name,

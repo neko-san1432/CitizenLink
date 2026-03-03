@@ -29,6 +29,10 @@ const SWITCHABLE_ROLES = [
   "lgu", // Unified LGU role
   "super-admin"
 ];
+// FC-11 NOTE: These COMPLAINT_STATUS and WORKFLOW_STATUS constants are defined
+// for reference but are NOT currently used by ComplaintService (which uses its
+// own inline validStatuses array). Align these with the VALID_TRANSITIONS map
+// in ComplaintService.js when refactoring.
 // Complaint Statuses
 const COMPLAINT_STATUS = {
   PENDING_REVIEW: "pending review",

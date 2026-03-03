@@ -3,7 +3,7 @@ const NotificationService = require("./NotificationService");
 
 class OfficeConfirmationService {
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
     this.notificationService = new NotificationService();
   }

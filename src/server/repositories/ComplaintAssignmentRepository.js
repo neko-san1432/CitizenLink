@@ -3,7 +3,7 @@ const Database = require("../config/database");
 class ComplaintAssignmentRepository {
 
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
     this.table = "complaint_assignments";
   }

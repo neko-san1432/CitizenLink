@@ -14,7 +14,7 @@ const AdvancedDecisionEngine = require("./AdvancedDecisionEngine");
 const database = require("../config/database");
 
 // Roles that trigger full analytics initialization
-const ANALYTICS_ROLES = ["super-admin", "lgu-admin", "complaint-coordinator"];
+const ANALYTICS_ROLES = ["super-admin", "lgu"];
 
 // Throttle initialization - only run once per hour per server instance
 let lastInitTime = 0;

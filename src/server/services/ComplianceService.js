@@ -3,7 +3,7 @@ const AuditLogRepository = require("../repositories/AuditLogRepository");
 
 class ComplianceService {
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
     this.auditLog = new AuditLogRepository();
   }

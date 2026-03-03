@@ -339,6 +339,10 @@ function validateComplaintConsistency(complaint) {
  * @param {string} workflowStatus
  * @returns {string|null}
  */
+// FC-12 NOTE: This function intentionally collapses multiple workflow statuses
+// into timeline phases for the 5-step progress display. "assigned", "verified",
+// and "under_review" all map to the "verified" phase. If distinct status display
+// is needed, use the raw workflow_status instead of this mapping.
 function getTimelineStepKey(workflowStatus) {
   if (!workflowStatus) return null;
   const ws = workflowStatus.toLowerCase();

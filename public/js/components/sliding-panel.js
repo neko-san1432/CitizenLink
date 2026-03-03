@@ -259,7 +259,12 @@ class SlidingPanel {
 
     } catch (error) {
       console.error("Failed to load complaint in panel:", error);
-      container.innerHTML = `<div style="padding: 20px; color: #ef4444;">Error loading details: ${error.message}</div>`;
+      // UI-01 FIX: Use textContent to prevent XSS via error messages
+      const errorDiv = document.createElement("div");
+      errorDiv.style.cssText = "padding: 20px; color: #ef4444;";
+      errorDiv.textContent = `Error loading details: ${error.message}`;
+      container.innerHTML = "";
+      container.appendChild(errorDiv);
     } finally {
       loader.style.display = "none";
     }

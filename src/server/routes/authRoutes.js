@@ -61,7 +61,7 @@ router.get("/login", (req, res) => {
   console.warn("[DEBUG] Query:", req.query);
 
   // Check if this might be a redirect loop or cached 301
-  const isBrowser = req.accepts("html");
+  // BE-14 FIX: isBrowser was assigned but never used, removed
 
   res.status(405).json({
     success: false,
@@ -195,10 +195,10 @@ router.post(
           error: "Passwords do not match",
         });
       }
-      if (password.length < 4) {
+      if (password.length < 8) {
         return res.status(400).json({
           success: false,
-          error: "Password must be at least 4 characters",
+          error: "Password must be at least 8 characters",
         });
       }
       // Verify reset token

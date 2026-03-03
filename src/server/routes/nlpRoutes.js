@@ -4,6 +4,10 @@ const NlpProposalController = require("../controllers/NlpProposalController");
 const NlpManagementController = require("../controllers/NlpManagementController");
 const NlpPendingReviewsController = require("../controllers/NlpPendingReviewsController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
+const { csrfProtection } = require("../middleware/csrf");
+
+// SEC-16 FIX: CSRF protection on all state-changing routes
+router.use(csrfProtection);
 
 // ============ HITL PENDING REVIEWS (Auto-Queue) ============
 
@@ -100,9 +104,11 @@ router.post(
 
 // ============ SUPER ADMIN DIRECT MANAGEMENT ROUTES ============
 
-// Complete Dictionary (for simulation engine)
+// Complete Dictionary (for simulation engine) — SEC-07 FIX: require auth
 router.get(
   "/dictionary",
+  authenticateUser,
+  requireRole(["lgu", "super-admin"]),
   NlpManagementController.getCompleteDictionary
 );
 

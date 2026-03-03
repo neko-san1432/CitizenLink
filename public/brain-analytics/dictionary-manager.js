@@ -36,7 +36,7 @@ function canEditModifiers() {
 }
 
 function canAddKeyword() {
-  return currentRole === "super-admin" || currentRole === "complaint-coordinator" || currentRole === "lgu-admin" || currentRole === "lgu-coordinator";
+  return currentRole === "super-admin" || currentRole === "lgu";
 }
 
 async function fetchAllKeywords() {

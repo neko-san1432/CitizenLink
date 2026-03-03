@@ -24,17 +24,31 @@ const setupMiddleware = (app) => {
   app.use(enforceHTTPS);
 
   // Enhanced security headers (applied first)
-  if (!config.isDevelopment) {
-    app.use(securityHeaders);
-    app.use(customSecurityHeaders);
-  } else {
-    // console.log("⚠️  Security headers disabled in development mode");
-  }
+  // SEC-24 FIX: Apply security headers in ALL environments
+  app.use(securityHeaders);
+  app.use(customSecurityHeaders);
 
   // Body parsing middleware (before rate limiting to allow proper request inspection)
-  app.use(cors());
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+  // SEC-10 FIX: Restrict CORS to known origins
+  const allowedOrigins = [
+    `http://localhost:${config.port}`,
+    `http://127.0.0.1:${config.port}`,
+    process.env.PRODUCTION_URL
+  ].filter(Boolean);
+  app.use(cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (server-to-server, Postman, same-origin)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  }));
+  // SEC-23 FIX: Reduce default body limit to 1MB (upload routes override per-route)
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
   app.use(cookieParser());
 
   // Rate limiting (applied early to protect against abuse)
@@ -99,19 +113,11 @@ const setupMiddleware = (app) => {
     "/assets",
     express.static(path.join(config.rootDir, "public", "assets"))
   );
-  app.use("/uploads", express.static(path.join(config.rootDir, "uploads")));
+  // SEC-18 FIX: uploads served through authenticated route instead of public static
+  // app.use("/uploads", express.static(path.join(config.rootDir, "uploads")));
   app.use("/public", express.static(path.join(config.rootDir, "public")));
 
-  // Fallback to src/client for legacy paths
-  app.use("/js", express.static(path.join(config.rootDir, "src", "client")));
-  app.use(
-    "/css",
-    express.static(path.join(config.rootDir, "src", "client", "styles"))
-  );
-  app.use(
-    "/assets",
-    express.static(path.join(config.rootDir, "src", "client", "assets"))
-  );
+  // Legacy src/client fallback mounts removed — all files consolidated into public/
 
   // Additional static file serving for coordinator review system
   app.use(
@@ -123,11 +129,9 @@ const setupMiddleware = (app) => {
     express.static(path.join(config.rootDir, "public", "styles"))
   );
 
-  // Serve node_modules for browser imports (ESM modules)
-  app.use(
-    "/node_modules",
-    express.static(path.join(config.rootDir, "node_modules"))
-  );
+  // SEC-03 FIX: node_modules static mount REMOVED for security.
+  // Bundle required client-side libraries into public/ instead.
+  // app.use("/node_modules", express.static(path.join(config.rootDir, "node_modules")));
 };
 
 /**

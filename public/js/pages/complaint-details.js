@@ -151,19 +151,15 @@ export class ComplaintDetails {
     });
 
     switch (this.userRole) {
-      case "complaint-coordinator":
+      case "lgu":
+        // LGU staff can approve/reject if status is submitted/new
         if (this.complaint.workflow_status === "submitted" || this.complaint.workflow_status === "new") {
           actions.push(
             { text: "Approve", class: "btn btn-success", action: "approve" },
             { text: "Reject", class: "btn btn-danger", action: "reject" }
           );
         }
-        break;
-      case "lgu":
-      case "lgu-officer":
-      case "lgu-admin":
-        // Unified LGU Actions
-        // 1. Mark as Resolved (if verified/active)
+        // LGU Actions: Mark as Resolved (if verified/active)
         if (
           this.complaint.workflow_status === "verified" ||
           this.complaint.workflow_status === "under_review" ||
@@ -528,13 +524,10 @@ export class ComplaintDetails {
     // Load and display confirmation message
     await this.loadConfirmationMessage();
 
-    // Check for duplicates (Admin Only)
-    // Runs for: complaint-coordinator, lgu-admin, super-admin, lgu-officer
+    // Check for duplicates (LGU and super-admin only)
     const adminRoles = [
-      "complaint-coordinator",
-      "lgu-admin",
+      "lgu",
       "super-admin",
-      "lgu-officer",
     ];
     if (adminRoles.includes(this.userRole)) {
       this.checkDuplicateAlert();
@@ -710,7 +703,7 @@ export class ComplaintDetails {
         ).map((cb) => cb.value);
 
         if (selected.length === 0) {
-          alert("Please select at least one complaint to merge.");
+          showToast("warning", "Please select at least one complaint to merge.");
           return;
         }
 
@@ -836,14 +829,10 @@ export class ComplaintDetails {
     const complainantSection = this.getElement("complainant-section");
     const complainantInfo = this.getElement("complainant-info");
     if (!complainantSection || !complainantInfo) return;
-    // Show complainant info only for admin, officers, and complaint coordinator
+    // Show complainant info only for LGU staff and super-admin
     const rolesThatCanSeeComplainant = [
-      "complaint-coordinator",
-      "lgu-admin",
       "lgu",
-      "lgu-officer",
       "super-admin",
-      "hr",
     ];
     const canSeeComplainant = rolesThatCanSeeComplainant.includes(
       this.userRole
@@ -1242,9 +1231,7 @@ export class ComplaintDetails {
   canUseBoundaryToggle() {
     const allowedRoles = new Set([
       "lgu",
-      "lgu-admin",
-      "lgu-officer",
-      "complaint-coordinator",
+      "super-admin",
     ]);
     return allowedRoles.has(this.userRole);
   }
@@ -1380,7 +1367,7 @@ export class ComplaintDetails {
 
   showMapModal() {
     if (!this.complaint.latitude || !this.complaint.longitude) {
-      alert("No coordinates available for this complaint");
+      showToast("warning", "No coordinates available for this complaint");
       return;
     }
 
@@ -1641,7 +1628,8 @@ export class ComplaintDetails {
       console.error("[COMPLAINT_DETAILS] Error initializing map:", error);
       const mapContainer = document.getElementById("complaint-map");
       if (mapContainer) {
-        mapContainer.innerHTML = `<p>Unable to load map. Error: ${error.message}</p>`;
+        // UI-01 FIX: Use textContent to prevent XSS
+        mapContainer.textContent = `Unable to load map. Error: ${error.message}`;
       }
     }
   }
@@ -1677,7 +1665,7 @@ export class ComplaintDetails {
 
   addRouteControls(map) {
     // Only show route controls for LGU users
-    if (this.userRole !== "lgu" && this.userRole !== "lgu-admin") {
+    if (this.userRole !== "lgu") {
       return;
     }
     // Check if geolocation is supported
@@ -2158,30 +2146,23 @@ export class ComplaintDetails {
 
     // Otherwise use role-based navigation
     switch (this.userRole) {
-      case "complaint-coordinator":
+      case "lgu":
         returnLink.href = isFromReviewQueue
           ? "/review-queue"
-          : "/dashboard";
+          : isFromAssignments
+            ? "/assignments"
+            : "/dashboard";
         if (returnText) {
           returnText.textContent = isFromReviewQueue
             ? "Return to Review Queue"
-            : "Return to Dashboard";
+            : isFromAssignments
+              ? "Return to Assigned Complaints"
+              : "Return to Dashboard";
         }
         break;
-      case "lgu-admin":
-        returnLink.href = isFromAssignments
-          ? "/assignments"
-          : "/dashboard";
-        if (returnText) {
-          returnText.textContent = isFromAssignments
-            ? "Return to Assigned Complaints"
-            : "Return to Dashboard";
-        }
-        break;
-      case "lgu":
-      case "lgu-officer":
-        returnLink.href = "/task-assigned";
-        if (returnText) returnText.textContent = "Return to Assigned Tasks";
+      case "super-admin":
+        returnLink.href = "/dashboard";
+        if (returnText) returnText.textContent = "Return to Dashboard";
         break;
       case "citizen":
       default:
@@ -2205,33 +2186,19 @@ export class ComplaintDetails {
     });
 
     switch (this.userRole) {
-      case "complaint-coordinator":
+      case "lgu":
+        // LGU staff: approve/reject pending, assign, and resolve
         if (this.complaint.status === "pending review") {
           actions.push(
             { text: "Approve", class: "btn btn-success", action: "approve" },
             { text: "Reject", class: "btn btn-danger", action: "reject" }
           );
         }
-        break;
-      case "lgu-admin":
-        // Only show Assign if legacy roles/dispatching is enabled
-        if (this.systemConfig.legacyRolesEnabled && (
-          this.complaint.status === "approved" ||
-          this.complaint.status === "assigned"
-        )) {
-          actions.push({
-            text: "Assign to Officer",
-            class: "btn btn-primary",
-            action: "assign-officer",
-          });
-        }
-        // If legacy roles disabled, lgu-admin should also be able to resolve direct complaints?
-        // Assuming lgu-admin acts like lgu-officer in simplified mode
-        if (!this.systemConfig.legacyRolesEnabled && (
+        if (
           this.complaint.status === "assigned" ||
           this.complaint.status === "in progress" ||
-          this.complaint.status === "approved" // Allow resolving approved complaints directly
-        )) {
+          this.complaint.status === "approved"
+        ) {
           actions.push({
             text: "Mark as Resolved",
             class: "btn btn-success",
@@ -2239,8 +2206,6 @@ export class ComplaintDetails {
           });
         }
         break;
-      case "lgu":
-      case "lgu-officer":
         if (
           this.complaint.status === "assigned" ||
           this.complaint.status === "in progress" ||
@@ -2480,7 +2445,7 @@ export class ComplaintDetails {
     status = status.replace(" ", "_"); // handle 'under review' -> 'under_review'
 
     if (!validStatuses.includes(status)) {
-      alert("Invalid status. Please use one of the allowed statuses.");
+      showToast("warning", "Invalid status. Please use one of the allowed statuses.");
       return;
     }
 

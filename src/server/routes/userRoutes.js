@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateUser } = require("../middleware/auth");
+const { csrfProtection } = require("../middleware/csrf");
+
+// SEC-16 FIX: CSRF protection on all state-changing routes
+router.use(csrfProtection);
 
 /**
  * @route   GET /api/user/role

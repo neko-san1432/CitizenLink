@@ -1,9 +1,14 @@
 const express = require("express");
 const SuperAdminController = require("../controllers/SuperAdminController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
+const { validate, schemas } = require("../middleware/validation");
+const { csrfProtection } = require("../middleware/csrf");
 
 const router = express.Router();
 const superAdminController = new SuperAdminController();
+
+// SEC-16 FIX: CSRF protection on all state-changing routes
+router.use(csrfProtection);
 // All routes require Super Admin role
 const requireSuperAdmin = requireRole(["super-admin"]);
 /**
@@ -13,18 +18,18 @@ router.get("/dashboard", authenticateUser, requireSuperAdmin, (req, res) =>
   superAdminController.getDashboard(req, res)
 );
 /**
- * User Management
+ * User Management — SEC-19: Added Joi validation
  */
-router.post("/role-swap", authenticateUser, requireSuperAdmin, (req, res) =>
+router.post("/role-swap", authenticateUser, requireSuperAdmin, validate(schemas.roleSwap), (req, res) =>
   superAdminController.roleSwap(req, res)
 );
 /**
- * Ban/Unban Users
+ * Ban/Unban Users — SEC-19: Added Joi validation
  */
-router.post("/ban-user", authenticateUser, requireSuperAdmin, (req, res) =>
+router.post("/ban-user", authenticateUser, requireSuperAdmin, validate(schemas.banUser), (req, res) =>
   superAdminController.banUser(req, res)
 );
-router.post("/unban-user", authenticateUser, requireSuperAdmin, (req, res) =>
+router.post("/unban-user", authenticateUser, requireSuperAdmin, validate(schemas.unbanUser), (req, res) =>
   superAdminController.unbanUser(req, res)
 );
 // User listing and details for Super Admin
@@ -119,21 +124,23 @@ router.get(
   }
 );
 /**
- * Department Transfers
+ * Department Transfers — SEC-19: Added Joi validation
  */
 router.post(
   "/transfer-department",
   authenticateUser,
   requireSuperAdmin,
+  validate(schemas.transferDepartment),
   (req, res) => superAdminController.transferDepartment(req, res)
 );
 /**
- * Citizen Assignment
+ * Citizen Assignment — SEC-19: Added Joi validation
  */
 router.post(
   "/assign-citizen",
   authenticateUser,
   requireSuperAdmin,
+  validate(schemas.assignCitizen),
   (req, res) => superAdminController.assignCitizen(req, res)
 );
 /**

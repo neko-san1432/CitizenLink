@@ -45,10 +45,13 @@ router.get("/status", (req, res) => {
   }
 });
 /**
- * Reset rate limit (for testing)
+ * Reset rate limit — SEC-02 FIX: requires super-admin auth
  * POST /api/rate-limit/reset
  */
-router.post("/reset", (req, res) => {
+const { authenticateUser, requireRole } = require("../middleware/auth");
+const { csrfProtection } = require("../middleware/csrf");
+// SEC-16 FIX: CSRF protection on rate-limit reset
+router.post("/reset", authenticateUser, requireRole(["super-admin"]), csrfProtection, (req, res) => {
   try {
     rateLimitData = {
       requests: 0,

@@ -161,7 +161,6 @@ router.post(
   "/:id/remind",
   authenticateUser,
   requireRole(["citizen"]),
-  requireRole(["citizen"]),
   validate(schemas.sendReminder),
   wrap(complaintController.sendReminder)
 );
@@ -169,7 +168,6 @@ router.post(
 router.post(
   "/:id/confirm-resolution",
   authenticateUser,
-  requireRole(["citizen"]),
   requireRole(["citizen"]),
   validate(schemas.confirmResolution),
   wrap(complaintController.confirmResolution)
@@ -223,17 +221,19 @@ router.post(
   wrap(complaintController.markAsFalseComplaint)
 );
 
-// Admin Tool: Check for duplicates for a specific ticket
+// SEC-20 FIX: Add role check to potential-duplicates
 router.get(
   "/:id/potential-duplicates",
   authenticateUser,
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.getPotentialDuplicatesForId)
 );
 
-// Admin Tool: Bulk Merge
+// SEC-20 FIX: Add role check to bulk-merge
 router.post(
   "/:id/bulk-merge",
   authenticateUser,
+  requireRole(["lgu", "super-admin"]),
   wrap(complaintController.bulkMergeComplaints)
 );
 

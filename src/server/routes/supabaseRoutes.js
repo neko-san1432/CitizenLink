@@ -1,6 +1,6 @@
 const express = require("express");
 const config = require("../../../config/app");
-const _Database = require("../config/database");
+// BE-14 FIX: Removed unused _Database import
 
 const router = express.Router();
 // GET /api/supabase/config - expose only safe client config

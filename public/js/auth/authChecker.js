@@ -650,30 +650,14 @@ function formatRoleNameForDisplay(role) {
 
   const roleNames = {
     citizen: "Citizen",
-    lgu: "LGU Officer",
-    "lgu-admin": "LGU Admin",
-    "complaint-coordinator": "LGU Officer",
+    lgu: "LGU Staff",
     "super-admin": "Super Admin",
-    hr: "HR",
-    "lgu-hr": "LGU HR",
   };
 
-  // Handle LGU officer roles with department codes
-  if (/^lgu-(?!admin|hr)/.test(role)) {
-    const dept = role.replace(/^lgu-/, "").toUpperCase();
-    return `LGU Officer (${dept})`;
-  }
-
-  // Handle LGU admin roles with department codes
-  if (/^lgu-admin-/.test(role)) {
-    const dept = role.replace(/^lgu-admin-/, "").toUpperCase();
-    return `LGU Admin (${dept})`;
-  }
-
-  // Handle LGU HR roles with department codes
-  if (/^lgu-hr-/.test(role)) {
-    const dept = role.replace(/^lgu-hr-/, "").toUpperCase();
-    return `HR (${dept})`;
+  // Handle legacy LGU sub-roles with department codes (backward compat)
+  if (role.startsWith("lgu-") || role === "complaint-coordinator") {
+    const dept = role.replace(/^lgu-(?:admin-|hr-|)/, "").replace("complaint-coordinator", "").toUpperCase();
+    return dept ? `LGU Staff (${dept})` : "LGU Staff";
   }
 
   return roleNames[role] || role;

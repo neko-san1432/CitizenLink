@@ -344,8 +344,8 @@ class ComplaintController {
     const userRole = req.user?.role || "citizen";
     const userDepartment = req.user?.department;
 
-    // LGU Admins and Officers can ONLY see their own department's data
-    if (["lgu-admin", "lgu-officer"].includes(userRole) && userDepartment) {
+    // LGU staff can ONLY see their own department's data
+    if (userRole === "lgu" && userDepartment) {
       departmentArray = [userDepartment];
     }
 

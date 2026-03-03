@@ -10,7 +10,7 @@ const wrap = (fn) => (req, res, next) =>
 
 // All coordinator endpoints require a valid session and an appropriate role
 router.use(authenticateUser);
-router.use(requireRole(["complaint-coordinator", "super-admin", "lgu-admin", "lgu"]));
+router.use(requireRole(["lgu", "super-admin"]));
 
 // GET /api/coordinator/barangay-insights
 router.get("/barangay-insights", wrap(complaintController.getBarangayInsights.bind(complaintController)));

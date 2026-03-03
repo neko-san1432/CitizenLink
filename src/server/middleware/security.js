@@ -13,13 +13,13 @@ const cspConfig = {
     ],
     scriptSrc: [
       "'self'",
-      "'unsafe-inline'", // Allowed for onclick handlers
-      "'unsafe-eval'", // Required for some reCAPTCHA implementations
+      "'unsafe-inline'", // SEC-11: Keep until inline onclick handlers are migrated to addEventListener
+      // "'unsafe-eval'" REMOVED — SEC-11 FIX: reCAPTCHA v3 does not require eval
       "https://www.google.com",
       "https://www.gstatic.com",
       "https://unpkg.com",
       "https://esm.sh",
-      "https://cdn.jsdelivr.net", // Ensure this is explicitly allowed
+      "https://cdn.jsdelivr.net",
       "https://cdn.tailwindcss.com",
       "https://cdnjs.cloudflare.com",
     ],

@@ -17,7 +17,7 @@ function loadBarangayBoundaries() {
   }
 
   try {
-    const boundariesPath = path.join(__dirname, "../../client/assets/brgy_boundaries_location.json");
+    const boundariesPath = path.join(__dirname, "../../../public/assets/json/brgy_boundaries_location.json");
     const boundariesData = fs.readFileSync(boundariesPath, "utf8");
     const boundaries = JSON.parse(boundariesData);
     barangayBoundariesCache = boundaries;

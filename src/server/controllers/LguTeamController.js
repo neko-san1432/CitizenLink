@@ -5,7 +5,7 @@
 const Database = require("../config/database");
 const CoordinatorService = require("../services/CoordinatorService");
 
-const db = new Database();
+const db = Database.getInstance();
 const supabase = db.getClient();
 const coordinatorService = new CoordinatorService();
 
@@ -66,23 +66,15 @@ class LguTeamController {
           const rawMetadata = user.raw_user_meta_data || {};
           const role = metadata.role || rawMetadata.role || "";
 
-          const isLguOfficer = role === "lgu" || role === "lgu-officer" || role === "lgu-admin";
+          // Normalize: any lgu-* or complaint-coordinator role is treated as 'lgu'
+          const isLguUser = role === "lgu" || role === "complaint-coordinator" || role.startsWith("lgu-");
           const hasCorrectDepartment =
                         metadata.dpt === departmentCode ||
                         rawMetadata.dpt === departmentCode ||
                         metadata.department === departmentCode ||
                         rawMetadata.department === departmentCode;
 
-          const isLegacyOfficer = /^lgu-(?!hr)/.test(role);
-          const roleContainsDepartment = role.includes(`-${departmentCode}`);
-          const hasLegacyDepartment = metadata.department === departmentCode || rawMetadata.department === departmentCode;
-
-          const isMatch = (isLguOfficer && hasCorrectDepartment) || (isLegacyOfficer && (roleContainsDepartment || hasLegacyDepartment));
-
-          // TEMPORARY: Allow any LGU user for testing
-          const isAnyLguUser = role === "lgu" || role === "lgu-officer" || role === "lgu-admin" || /^lgu-(?!hr)/.test(role);
-
-          return isMatch || isAnyLguUser;
+          return isLguUser && (hasCorrectDepartment || !departmentCode);
         })
         .map((user) => ({
           id: user.id,

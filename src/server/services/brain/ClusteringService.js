@@ -4,14 +4,23 @@
  * Ported from simulation-engine.js
  * Implements DBSCAN++ (Density-Based Spatial Clustering of Applications with Noise)
  * Optimized for Geospatial Incident Clustering
+ *
+ * [FC-04] Now uses thesis-validated adaptive parameters from similarityUtils.js
+ * instead of fixed 300m radius / minPts=2 constants.
  */
+
+const {
+  getEpsilonForCategory,
+  getMinPtsForCategory,
+  epsilonToMeters,
+} = require("../../utils/similarityUtils");
 
 class ClusteringService {
   constructor() {
-    // System Constants
-    this.EPSILON_METERS = 300;     // Max distance for neighborhood
-    this.MIN_PTS = 2;              // Min points to form a cluster
-    this.TIME_WINDOW_MINUTES = 45; // Max time difference for clustering
+    // Fallback constants (used only when category is missing)
+    this.EPSILON_METERS_FALLBACK = 33;  // ~0.00030 degrees default from thesis
+    this.MIN_PTS_FALLBACK = 3;          // Default minPts from thesis
+    this.TIME_WINDOW_MINUTES = 45;      // Max time difference for clustering
     this.CLUSTER_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour expiration
 
     // Severity Weights
@@ -82,7 +91,9 @@ class ClusteringService {
 
       // Special handling for "Lone Wolf" high-priority incidents (Fire, Accident, Crime)
       const isLoneWolf = this.isLoneWolfCategory(point.category);
-      const effectiveMinPts = isLoneWolf ? 1 : this.MIN_PTS;
+      // [FC-04] Use thesis-validated adaptive minPts per category
+      const categoryMinPts = getMinPtsForCategory(point.category);
+      const effectiveMinPts = isLoneWolf ? 1 : categoryMinPts;
 
       if (neighbors.length < effectiveMinPts) {
         noise.add(point.id);
@@ -99,6 +110,10 @@ class ClusteringService {
   }
 
   regionQuery(corePoint, allPoints) {
+    // [FC-04] Use thesis-validated adaptive epsilon for this category
+    const epsilonDeg = getEpsilonForCategory(corePoint.category);
+    const epsilonMeters = epsilonToMeters(epsilonDeg);
+
     return allPoints.filter(otherPoint => {
       // 1. Self Check
       if (corePoint.id === otherPoint.id) return true;
@@ -111,13 +126,13 @@ class ClusteringService {
       const minutesDiff = timeDiff / (1000 * 60);
       if (minutesDiff > this.TIME_WINDOW_MINUTES) return false;
 
-      // 4. Spatial Check (Distance)
+      // 4. Spatial Check (Distance) — adaptive per category
       const distance = this.getDistance(
         corePoint.latitude, corePoint.longitude,
         otherPoint.latitude, otherPoint.longitude
       );
 
-      return distance <= this.EPSILON_METERS;
+      return distance <= epsilonMeters;
     });
   }
 
@@ -135,7 +150,9 @@ class ClusteringService {
         visited.add(point.id);
 
         const pointNeighbors = this.regionQuery(point, allPoints);
-        if (pointNeighbors.length >= this.MIN_PTS) {
+        // [FC-04] Use adaptive minPts for cluster expansion too
+        const ptMinPts = getMinPtsForCategory(point.category);
+        if (pointNeighbors.length >= ptMinPts) {
           // Add new neighbors to queue if they aren't already there or visited
           for (const n of pointNeighbors) {
             if (!visited.has(n.id)) {
@@ -185,13 +202,24 @@ class ClusteringService {
     };
   }
 
+  // FC-13 FIX: Calculate actual cluster radius from centroid using Haversine
   calculateRadius(points) {
-    if (points.length <= 1) return 50; // Minimum radius
-    // Find max distance from centroid
-    // Simplified: just max distance between any two points / 2
-    // Or actual radius from centroid
-    // Let's do max distance from first point for speed
-    return 100; // placeholder for visualization
+    if (points.length <= 1) return 50; // Minimum radius in meters
+    // Calculate centroid
+    const centLat = points.reduce((s, p) => s + p.latitude, 0) / points.length;
+    const centLng = points.reduce((s, p) => s + p.longitude, 0) / points.length;
+    // Find max distance from centroid (Haversine approximation)
+    let maxDist = 0;
+    for (const p of points) {
+      const dLat = (p.latitude - centLat) * Math.PI / 180;
+      const dLng = (p.longitude - centLng) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(centLat * Math.PI / 180) * Math.cos(p.latitude * Math.PI / 180) *
+        Math.sin(dLng / 2) ** 2;
+      const dist = 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // meters
+      if (dist > maxDist) maxDist = dist;
+    }
+    return Math.max(50, Math.round(maxDist)); // Minimum 50m
   }
 
   isLoneWolfCategory(category) {

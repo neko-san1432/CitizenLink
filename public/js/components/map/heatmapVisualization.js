@@ -332,10 +332,10 @@ class HeatmapVisualization {
       const { getUserRole } = await import("../../auth/authChecker.js");
       this.userRole = await getUserRole();
 
-      // Get department for LGU admins
+      // Get department for LGU staff
       if (
         this.userRole &&
-        ["lgu", "lgu-admin", "lgu-hr"].includes(this.userRole)
+        this.userRole === "lgu"
       ) {
         try {
           const { supabase } = await import("../../config/config.js");
@@ -384,16 +384,15 @@ class HeatmapVisualization {
       return complaints; // All complaints for heatmap, but markers won't be shown
     }
 
-    // Complaint coordinators: See all complaints
+    // Complaint coordinators / super-admin: See all complaints
     if (
-      this.userRole === "complaint-coordinator" ||
       this.userRole === "super-admin"
     ) {
       return complaints; // All complaints
     }
 
-    // LGU Admins: See only complaints assigned to their department
-    if (this.userRole === "lgu-admin" && this.userDepartment) {
+    // LGU Staff: See complaints assigned to their department (if dept is set)
+    if (this.userRole === "lgu" && this.userDepartment) {
       const targetDept = String(this.userDepartment || "")
         .toUpperCase()
         .trim();
@@ -423,19 +422,18 @@ class HeatmapVisualization {
       // - LGU Admins: Add department filter if not present (see only their office)
       const sanitizedFilters = { ...filters };
       if (
-        this.userRole === "complaint-coordinator" ||
         this.userRole === "super-admin"
       ) {
         delete sanitizedFilters.department;
         console.log(
-          "[HEATMAP] Coordinator/Super-admin detected - removing department filter from API request"
+          "[HEATMAP] Super-admin detected - removing department filter from API request"
         );
       } else if (
-        this.userRole === "lgu-admin" &&
+        this.userRole === "lgu" &&
         this.userDepartment &&
         !sanitizedFilters.department
       ) {
-        // Automatically add department filter for LGU admins if not already present
+        // Automatically add department filter for LGU staff if not already present
         sanitizedFilters.department = this.userDepartment;
         console.log(
           "[HEATMAP] LGU Admin detected - adding department filter to API request:",
@@ -962,7 +960,7 @@ class HeatmapVisualization {
     }
 
     const effectiveFilters = { ...filters };
-    if (this.userRole === "lgu-admin" && this.userDepartment) {
+    if (this.userRole === "lgu" && this.userDepartment) {
       effectiveFilters.department = this.userDepartment;
     }
 
@@ -1163,19 +1161,18 @@ class HeatmapVisualization {
     //   return this.markerLayer;
     // }
 
-    // Complaint coordinators and super-admin: All markers
+    // Super-admin: All markers
     if (
-      this.userRole === "complaint-coordinator" ||
       this.userRole === "super-admin"
     ) {
       complaintsForMarkers = this.allComplaintData;
-      console.log("[HEATMAP] Coordinator/Super-admin: Showing all markers");
+      console.log("[HEATMAP] Super-admin: Showing all markers");
     }
-    // LGU Admins: Only complaints assigned to their office/department
-    else if (this.userRole === "lgu-admin" && this.userDepartment) {
+    // LGU Staff: Only complaints assigned to their office/department
+    else if (this.userRole === "lgu" && this.userDepartment) {
       complaintsForMarkers = this.getRoleScopedComplaints();
       console.log(
-        `[HEATMAP] LGU Admin (${this.userDepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`
+        `[HEATMAP] LGU Staff (${this.userDepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`
       );
     }
     // Default: No markers
@@ -1718,15 +1715,12 @@ class HeatmapVisualization {
         return true;
       }
 
-      // Complaint coordinator has access to everything
-      if (userRole === "complaint-coordinator") {
-        // console.log removed for security
-        return true;
-      }
+      // LGU staff with coordinator role has access to everything
+      // (complaint-coordinator is normalized to 'lgu' by auth middleware)
 
       // With simplified roles, department is stored separately in metadata
       let userDepartment = null;
-      if (userRole && ["lgu", "lgu-admin", "lgu-hr"].includes(userRole)) {
+      if (userRole && userRole === "lgu") {
         // Get department from user metadata
         try {
           const { supabase } = await import("../../config/config.js");

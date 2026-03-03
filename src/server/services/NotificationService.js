@@ -16,24 +16,24 @@ class NotificationService {
     this.supabase = this.db.getClient();
   }
   /**
-  * Notify all admins of a department (lgu-admin variants) about a new complaint assignment
-  * Department matching by code suffix in role (e.g., lgu-admin-{dept}) and/or profile metadata
+  * Notify all LGU staff of a department about a new complaint assignment
+  * Department matching by code suffix in role or profile metadata
   */
   async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     try {
       // Use RPC for efficient lookup (O(1) instead of O(N))
       const { data: admins, error } = await this.supabase.rpc("get_users_by_role", {
-        p_role: "lgu-admin",
+        p_role: "lgu",
         p_department: departmentCode
       });
 
       if (error) {
-        console.warn("[NOTIFICATION] Failed to fetch admins via RPC:", error.message);
+        console.warn("[NOTIFICATION] Failed to fetch LGU staff via RPC:", error.message);
         return { success: false, error: error.message };
       }
       // console.log removed for security
       if (admins.length === 0) {
-        console.warn(`[NOTIFICATION] No LGU admins found for department ${departmentCode}`);
+        console.warn(`[NOTIFICATION] No LGU staff found for department ${departmentCode}`);
         return { success: true, count: 0 };
       }
       const notifications = admins.map((admin) => ({
@@ -42,7 +42,7 @@ class NotificationService {
         title: "New Complaint Assigned to Your Department",
         message: `"${complaintTitle}" has been assigned to ${departmentCode}. Please review and assign to an officer.`,
         priority: NOTIFICATION_PRIORITY.INFO,
-        link: `/lgu-admin/assignments`,
+        link: `/assignments`,
         metadata: {
           complaint_id: complaintId,
           department: departmentCode,
@@ -476,10 +476,20 @@ class NotificationService {
   * Notify citizen about status change
   */
   async notifyComplaintStatusChanged(citizenId, complaintId, complaintTitle, newStatus, oldStatus) {
+    // FC-09 FIX: Map all workflow statuses to human-readable messages
     const statusMessages = {
+      "submitted": "has been submitted and is awaiting review",
+      "verified": "has been verified by a coordinator",
+      "assigned": "has been assigned to a department officer",
+      "under_review": "is now under review",
+      "in_progress": "is now being worked on",
       "in progress": "is now being worked on",
+      "action_taken": "has had action taken",
+      "pending_approval": "is pending approval",
+      "completed": "work has been completed, awaiting your confirmation",
       "resolved": "has been resolved",
       "rejected": "has been rejected",
+      "cancelled": "has been cancelled",
       "closed": "has been closed"
     };
     const priority = newStatus === "resolved" ? NOTIFICATION_PRIORITY.INFO :
@@ -678,7 +688,7 @@ class NotificationService {
       reminderMessages[reminderType] || `Action needed from ${officerName}`,
       {
         priority: NOTIFICATION_PRIORITY.WARNING,
-        link: `/lgu-admin/assignments`,
+        link: `/assignments`,
         metadata: {
           complaint_id: complaintId,
           officer_name: officerName,
@@ -724,13 +734,13 @@ class NotificationService {
   }
   /**
    * Find all complaint coordinators and notify them about new complaint
-   * Scans auth.users for users with base_role = complaint-coordinator
+   * FC-08 FIX: Query 'lgu' role (the 3-role system normalizes all LGU staff to 'lgu')
    */
   async notifyAllCoordinators(complaintId, complaintTitle) {
     try {
-      // Use RPC for efficient lookup
+      // FC-08 FIX: Use 'lgu' instead of legacy 'complaint-coordinator'
       const { data: coordinators, error } = await this.supabase.rpc("get_users_by_role", {
-        p_role: "complaint-coordinator"
+        p_role: "lgu"
       });
 
       if (error) {

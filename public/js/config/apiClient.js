@@ -1,4 +1,5 @@
 import { supabase } from "./config.js";
+import { getCsrfToken } from "../utils/csrf.js";
 
 // API client with automatic JWT token handling
 class ApiClient {
@@ -10,6 +11,21 @@ class ApiClient {
     const headers = { "Content-Type": "application/json" };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
+  // SEC-16 FIX: Get auth headers with CSRF token for state-changing requests
+  async getMutatingHeaders() {
+    const headers = await this.getAuthHeaders();
+    try {
+      const csrfToken = await getCsrfToken();
+      if (csrfToken) {
+        headers["X-CSRF-Token"] = csrfToken;
+      }
+    } catch (_e) {
+      // CSRF fetch failed — proceed without it; server will reject if required
+      console.warn("[API_CLIENT] CSRF token fetch failed, proceeding without it");
     }
     return headers;
   }
@@ -92,7 +108,7 @@ class ApiClient {
   }
   async post(url, data) {
     try {
-      let headers = await this.getAuthHeaders();
+      let headers = await this.getMutatingHeaders();
       let response = await fetch(url, {
         method: "POST",
         headers,
@@ -114,7 +130,7 @@ class ApiClient {
             console.error("Failed to update server cookie:", cookieError);
           }
           // Retry with new token
-          headers = await this.getAuthHeaders();
+          headers = await this.getMutatingHeaders();
           response = await fetch(url, {
             method: "POST",
             headers,
@@ -139,7 +155,7 @@ class ApiClient {
   }
   async put(url, data) {
     try {
-      const headers = await this.getAuthHeaders();
+      const headers = await this.getMutatingHeaders();
       const response = await fetch(url, {
         method: "PUT",
         headers,
@@ -167,7 +183,7 @@ class ApiClient {
           });
           // Retry the original request with new token
           // console.log removed for security
-          const newHeaders = await this.getAuthHeaders();
+          const newHeaders = await this.getMutatingHeaders();
           const retryResponse = await fetch(url, {
             method: "PUT",
             headers: newHeaders,
@@ -204,7 +220,7 @@ class ApiClient {
   }
   async delete(url) {
     try {
-      const headers = await this.getAuthHeaders();
+      const headers = await this.getMutatingHeaders();
       const response = await fetch(url, {
         method: "DELETE",
         headers
@@ -231,7 +247,7 @@ class ApiClient {
           });
           // Retry the original request with new token
           // console.log removed for security
-          const newHeaders = await this.getAuthHeaders();
+          const newHeaders = await this.getMutatingHeaders();
           const retryResponse = await fetch(url, {
             method: "DELETE",
             headers: newHeaders

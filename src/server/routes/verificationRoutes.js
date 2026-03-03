@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const IDVerificationService = require("../services/IDVerificationService");
 const { authenticateUser } = require("../middleware/auth");
+const { csrfProtection } = require("../middleware/csrf");
+
+// SEC-16 FIX: CSRF protection on all state-changing routes
+router.use(csrfProtection);
 
 /**
  * Store ID verification data after OCR processing
@@ -128,7 +132,7 @@ router.get("/status", authenticateUser, async (req, res) => {
  * POST /api/verification/check-id
  * Body: { idNumber }
  */
-router.post("/check-id", async (req, res) => {
+router.post("/check-id", authenticateUser, async (req, res) => {
   try {
     const { idNumber } = req.body;
 

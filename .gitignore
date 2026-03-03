@@ -12,3 +12,4 @@ storage/ai_cache/
 .brain_logic
 # Application logs
 log.txt
+secrets-found.txt

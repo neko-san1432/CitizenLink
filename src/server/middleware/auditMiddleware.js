@@ -3,7 +3,7 @@
  * Logs all important actions to the audit_logs table
  */
 
-const Database = require("../../config/database");
+const Database = require("../config/database");
 const supabase = Database.getClient();
 
 const auditMiddleware = async (req, res, next) => {

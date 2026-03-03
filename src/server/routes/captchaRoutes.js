@@ -56,53 +56,32 @@ router.post("/verify", async (req, res) => {
         error: "CAPTCHA token is required"
       });
     }
-    // For development/testing purposes, we'll accept the token as valid
-    // In production, you would verify with the CAPTCHA service (reCAPTCHA, hCaptcha, etc.)
-    if (config.isDevelopment) {
-      return res.json({
-        success: true,
-        message: "CAPTCHA verification successful (development mode)"
-      });
-    }
-    // In production, implement actual CAPTCHA verification here
-    // Example for Google reCAPTCHA:
-    /*
+    // SEC-12 FIX: Always verify with CAPTCHA service in production
     const secretKey = config.captcha?.secretKey;
-    if (!secretKey) {
-      return res.status(500).json({
-        success: false,
-        error: 'CAPTCHA not properly configured'
+    if (secretKey) {
+      const response = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ secret: secretKey, response: token }),
       });
+      const result = await response.json();
+      if (result.success) {
+        return res.json({ success: true, message: "CAPTCHA verification successful" });
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: "CAPTCHA verification failed",
+          details: result["error-codes"]
+        });
+      }
     }
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        secret: secretKey,
-        response: token,
-      }),
-    });
-    const result = await response.json();
-    if (result.success) {
-      res.json({
-        success: true,
-        message: 'CAPTCHA verification successful'
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        error: 'CAPTCHA verification failed',
-        details: result['error-codes']
-      });
+
+    // Fallback: accept in development if no secret key configured
+    if (config.isDevelopment) {
+      return res.json({ success: true, message: "CAPTCHA verification successful (dev mode, no secret)" });
     }
-    */
-    // For now, return success (this should be replaced with actual verification)
-    res.json({
-      success: true,
-      message: "CAPTCHA verification successful"
-    });
+
+    return res.status(500).json({ success: false, error: "CAPTCHA not properly configured" });
   } catch (error) {
     console.error("CAPTCHA verification error:", error);
     res.status(500).json({

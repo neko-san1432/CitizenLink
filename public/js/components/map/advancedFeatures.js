@@ -4,6 +4,7 @@
  * Shared library for LGU Admin and Coordinator dashboards.
  * Ports features from simulated dashboard: Emergency Panel, Geocoding, Insights.
  */
+import showMessage from "../toast.js";
 
 // Global State for these features
 let mapInstance = null;
@@ -548,7 +549,7 @@ window.panToEmergency = (lat, lng) => {
 };
 
 function dispatchEmergency(idx) {
-  alert("Dispatch Simulated: Unit notified.");
+  showMessage("info", "Dispatch Simulated: Unit notified.");
 }
 
 function initEmergencyPanelListeners() {

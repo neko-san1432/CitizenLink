@@ -3,17 +3,20 @@
  * Allows staff members to switch between their staff role and citizen view
  */
 import showMessage from "../components/toast.js";
+import { getCsrfToken } from "../utils/csrf.js";
+
+// SEC-16 FIX: Helper for POST headers with CSRF
+async function getMutatingHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  try { const csrf = await getCsrfToken(); if (csrf) headers["X-CSRF-Token"] = csrf; } catch (_e) { /* proceed */ }
+  return headers;
+}
 
 // Role toggle script loaded
-// Simple role detection - all roles except citizen
+// Simple role detection - all non-citizen roles
 const _STAFF_ROLES = [
   "lgu",
-  "lgu-admin",
-  "lgu-hr",
-  "coordinator",
-  "hr",
   "super-admin",
-  "admin",
 ];
 // Cache for role info
 let roleInfoCache = null;
@@ -106,7 +109,7 @@ async function switchRole(targetRole) {
     const response = await fetch("/api/user/switch-role", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: await getMutatingHeaders(),
       body: JSON.stringify({
         targetRole,
         previousRole: currentRole,
@@ -297,7 +300,7 @@ export async function switchToCitizenMode() {
     const response = await fetch("/api/user/switch-role", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: await getMutatingHeaders(),
       body: JSON.stringify({
         targetRole: "citizen",
       }),
@@ -329,7 +332,7 @@ export async function switchToActualRole() {
     const response = await fetch("/api/user/switch-role", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: await getMutatingHeaders(),
       body: JSON.stringify({
         targetRole: actualRole,
       }),

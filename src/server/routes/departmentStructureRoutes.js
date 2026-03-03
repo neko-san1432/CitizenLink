@@ -4,9 +4,13 @@ const router = express.Router();
 const Database = require("../config/database");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const DepartmentService = require("../services/DepartmentService");
+const { csrfProtection } = require("../middleware/csrf");
 
-// Get all categories with their subcategories and departments
-router.get("/categories", async (req, res) => {
+// SEC-16 FIX: CSRF protection on all state-changing routes
+router.use(csrfProtection);
+
+// Get all categories with their subcategories and departments — SEC-08 FIX: require auth
+router.get("/categories", authenticateUser, async (req, res) => {
   try {
     const supabase = Database.getClient();
 
@@ -95,8 +99,8 @@ router.get("/categories", async (req, res) => {
   }
 });
 
-// Get subcategories for a specific category
-router.get("/categories/:categoryId/subcategories", async (req, res) => {
+// Get subcategories for a specific category — SEC-08 FIX
+router.get("/categories/:categoryId/subcategories", authenticateUser, async (req, res) => {
   try {
     const { categoryId } = req.params;
     const { data: subcategories, error } = await Database.getClient()
@@ -154,8 +158,8 @@ router.get("/categories/:categoryId/subcategories", async (req, res) => {
   }
 });
 
-// Get departments for a specific subcategory
-router.get("/subcategories/:subcategoryId/departments", async (req, res) => {
+// Get departments for a specific subcategory — SEC-08 FIX
+router.get("/subcategories/:subcategoryId/departments", authenticateUser, async (req, res) => {
   try {
     const { subcategoryId } = req.params;
     // console.log removed for security
@@ -202,8 +206,8 @@ router.get("/subcategories/:subcategoryId/departments", async (req, res) => {
   }
 });
 
-// Get ALL departments (for showing all departments regardless of category)
-router.get("/departments/all", async (req, res) => {
+// Get ALL departments — SEC-08 FIX
+router.get("/departments/all", authenticateUser, async (req, res) => {
   try {
     // console.log removed for security
     const supabase = Database.getClient();
@@ -231,8 +235,8 @@ router.get("/departments/all", async (req, res) => {
   }
 });
 
-// Get ALL departments (alias for /departments/all)
-router.get("/departments", async (req, res) => {
+// Get ALL departments (alias) — SEC-08 FIX
+router.get("/departments", authenticateUser, async (req, res) => {
   try {
     const supabase = Database.getClient();
     // Get ALL active departments
@@ -258,8 +262,8 @@ router.get("/departments", async (req, res) => {
   }
 });
 
-// Get department structure for complaint form (simplified)
-router.get("/complaint-form", async (req, res) => {
+// Get department structure for complaint form — SEC-08 FIX
+router.get("/complaint-form", authenticateUser, async (req, res) => {
   try {
     const { data: categories, error } = await Database.getClient()
       .from("categories")

@@ -3,6 +3,7 @@ import { supabase } from "../config/config.js";
 import showMessage from "../components/toast.js";
 import { renderPrivacyNotice } from "../utils/privacyContent.js";
 import { getOAuthContext, setOAuthContext, clearOAuthContext, suppressAuthErrorNotifications } from "../auth/authChecker.js";
+import { getCsrfToken } from "../utils/csrf.js";
 import { shouldSkipAuthCheck } from "../utils/oauth-cleanup.js";
 
 // Check if user is already logged in and redirect to dashboard
@@ -443,6 +444,7 @@ async function cleanupPendingOAuth(message = "OAuth signup was cancelled. Please
         const token = session.access_token;
         const headers = { "Content-Type": "application/json" };
         headers["Authorization"] = `Bearer ${token}`;
+        try { const csrf = await getCsrfToken(); if (csrf) headers["X-CSRF-Token"] = csrf; } catch (_e) { /* proceed */ }
 
         // Delete user data (this will also delete from auth.users)
         // If this fails, we'll still proceed with sign out and context clearing

@@ -4,7 +4,7 @@ const Setting = require("../models/Setting");
 class SettingRepository {
 
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
   async findAll() {

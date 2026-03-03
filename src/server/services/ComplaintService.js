@@ -15,6 +15,7 @@ const {
 const { isPotentialDuplicate } = require("../utils/similarityUtils");
 
 const AdvancedDecisionEngine = require("./AdvancedDecisionEngine");
+const DepartmentService = require("./DepartmentService");
 
 // ... (existing imports)
 
@@ -176,6 +177,24 @@ class ComplaintService {
       console.warn("[COMPLAINT] Failed to create user snapshot:", snapshotError.message);
     }
 
+    // [FC-07] Auto-assign departments from subcategory mapping when user hasn't selected any
+    if (preferredDepartments.length === 0 && (complaintData.subcategory || mappedData.subcategory)) {
+      try {
+        const subcategoryId = complaintData.subcategory || mappedData.subcategory;
+        const deptService = new DepartmentService();
+        const mappedDepts = await deptService.getDepartmentsBySubcategory(subcategoryId);
+
+        if (mappedDepts && mappedDepts.length > 0) {
+          // Use department codes sorted by response_priority (already sorted from query)
+          preferredDepartments = mappedDepts.map(d => d.department_code);
+          mappedData.department_r = preferredDepartments;
+          mappedData.preferred_departments = preferredDepartments;
+          console.log(`[COMPLAINT] Auto-assigned departments from subcategory mapping: ${preferredDepartments.join(", ")}`);
+        }
+      } catch (autoAssignError) {
+        console.warn("[COMPLAINT] Department auto-assignment failed:", autoAssignError.message);
+      }
+    }
 
     // Prepare data for insertion using utility functions
     const preparedData = prepareComplaintForInsert(mappedData);
@@ -926,6 +945,31 @@ class ComplaintService {
       if (!validStatuses.includes(workflowStatus)) {
         throw new Error("Invalid workflow status");
       }
+
+      // FC-01 FIX: Enforce valid workflow transitions
+      const VALID_TRANSITIONS = {
+        new:          ["submitted", "cancelled", "rejected"],
+        submitted:    ["verified", "rejected", "cancelled"],
+        verified:     ["assigned", "under_review", "rejected", "cancelled"],
+        assigned:     ["under_review", "in_progress", "rejected", "cancelled"],
+        under_review: ["in_progress", "action_taken", "rejected", "cancelled"],
+        in_progress:  ["action_taken", "completed", "rejected", "cancelled"],
+        action_taken: ["completed", "resolved", "in_progress", "rejected", "cancelled"],
+        completed:    ["resolved", "closed"],
+        resolved:     ["closed"],
+        closed:       [],
+        cancelled:    ["submitted"],   // Allow re-opening
+        rejected:     ["submitted"],   // Allow re-opening
+      };
+      const currentStatus = complaint.workflow_status || "new";
+      const allowed = VALID_TRANSITIONS[currentStatus];
+      if (allowed && !allowed.includes(workflowStatus) && currentStatus !== workflowStatus) {
+        throw new Error(
+          `Invalid status transition: cannot move from "${currentStatus}" to "${workflowStatus}". ` +
+          `Allowed transitions: ${allowed.join(", ") || "none"}`
+        );
+      }
+
       dataToUpdate.workflow_status = workflowStatus;
     }
 
@@ -1666,7 +1710,7 @@ class ComplaintService {
               `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || "Your assigned complaint"}"`,
               {
                 priority: "warning",
-                link: `/lgu-officer/tasks/${complaintId}`,
+                link: `/complaint/${complaintId}`,
                 metadata: { complaint_id: complaintId },
               }
             );
@@ -1680,7 +1724,7 @@ class ComplaintService {
               `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}"`,
               {
                 priority: "warning",
-                link: `/lgu-admin/department-queue`,
+                link: `/assignments`,
                 metadata: { complaint_id: complaintId },
               }
             );
@@ -1926,8 +1970,8 @@ class ComplaintService {
         officerIds,
         assignedBy
       );
-      // Update complaint status
-      await this.updateComplaintStatus(complaintId, "assigned to officer");
+      // BE-01/FC-02 FIX: Use valid status from validStatuses array
+      await this.updateComplaintStatus(complaintId, "assigned");
       return assignments;
     } catch (error) {
       console.error("[COMPLAINT-SERVICE] Error creating assignment:", error);

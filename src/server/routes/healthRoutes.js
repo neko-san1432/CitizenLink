@@ -7,13 +7,11 @@ const router = express.Router();
  */
 router.get("/", (req, res) => {
   try {
+    // SEC-26 FIX: Only expose status + timestamp; no uptime/memory/version info
     res.json({
       success: true,
       status: "healthy",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      version: process.env.npm_package_version || "1.0.0"
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({

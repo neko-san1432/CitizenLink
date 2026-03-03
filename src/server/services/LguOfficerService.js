@@ -256,7 +256,7 @@ class LguOfficerService {
         `Officer updated task status to "${status}" for complaint ${assignment.complaint_id}`,
         {
           priority: "info",
-          link: "/lgu-admin/assignments",
+          link: "/assignments",
           metadata: {
             assignment_id: assignmentId,
             complaint_id: assignment.complaint_id,

@@ -382,12 +382,14 @@ class ComplaintRepository {
         console.warn("[COMPLAINT_REPO] No users found in auth system");
         return null;
       }
-      // Find users with base_role = complaint-coordinator
+      // Find LGU staff users (covers legacy complaint-coordinator, lgu-admin, etc.)
       const coordinators = authUsers.users.filter((user) => {
         const metadata = user.user_metadata || {};
         const rawMetadata = user.raw_user_meta_data || {};
         const baseRole = metadata.base_role || rawMetadata.base_role;
-        const isCoordinator = baseRole === "complaint-coordinator";
+        const role = metadata.role || rawMetadata.role || "";
+        const isLguStaff = baseRole === "lgu" || baseRole === "complaint-coordinator" ||
+          role === "lgu" || role === "complaint-coordinator" || role.startsWith("lgu-");
         // Optional: filter by department if specified
         if (department && department !== "GENERAL") {
           const userDept =
@@ -395,12 +397,12 @@ class ComplaintRepository {
             rawMetadata.department ||
             metadata.dpt ||
             rawMetadata.dpt;
-          return isCoordinator && userDept === department;
+          return isLguStaff && userDept === department;
         }
-        return isCoordinator;
+        return isLguStaff;
       });
       if (coordinators.length === 0) {
-        console.warn("[COMPLAINT_REPO] No complaint coordinators found");
+        console.warn("[COMPLAINT_REPO] No LGU staff found");
         return null;
       }
       // Return the first available coordinator

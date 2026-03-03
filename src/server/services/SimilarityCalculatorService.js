@@ -12,7 +12,7 @@ const { getDynamicMinPts, getDynamicEpsilon } = require("../utils/similarityUtil
  */
 class SimilarityCalculatorService {
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
   /**

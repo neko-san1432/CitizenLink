@@ -1,6 +1,6 @@
 // Password validation utilities
 const PASSWORD_REQUIREMENTS = {
-  minLength: 4,
+  minLength: 8,
   maxLength: 128,
   requireUppercase: true,
   requireLowercase: true,

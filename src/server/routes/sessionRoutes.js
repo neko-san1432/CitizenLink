@@ -6,8 +6,8 @@ const { getCookieOptions, extractUserMetadata } = require("../utils/authUtils");
 const router = express.Router();
 const supabase = Database.getClient();
 
-// Session cookie helpers for client
-router.post("/session", authLimiter, (req, res) => {
+// Session cookie helpers for client — SEC-06 FIX: validate token before storing
+router.post("/session", authLimiter, async (req, res) => {
   try {
     const token = req.body?.access_token;
     const remember = Boolean(req.body?.remember);
@@ -16,13 +16,18 @@ router.post("/session", authLimiter, (req, res) => {
       return res.status(400).json({ success: false, error: "access_token is required" });
     }
 
+    // SEC-06 FIX: Validate the token with Supabase before setting cookie
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return res.status(401).json({ success: false, error: "Invalid access token" });
+    }
+
     const cookieOptions = getCookieOptions(remember);
     res.cookie("sb_access_token", token, cookieOptions);
 
     return res.json({ success: true });
   } catch (e) {
-    console.error("[SERVER SESSION] 💥 Error setting session cookie:", e);
-    console.error("[SERVER SESSION] Error stack:", e.stack);
+    console.error("[SERVER SESSION] Error setting session cookie:", e.message);
     return res.status(500).json({ success: false, error: "Failed to set session" });
   }
 });
@@ -75,67 +80,41 @@ router.get("/session/token", authLimiter, async (req, res) => {
   }
 });
 
-// Session health endpoint for monitoring (public - no auth required)
+// SEC-22 FIX: Session health endpoint — reduced PII output
 router.get("/session/health", async (req, res) => {
   try {
-    // Check if user has valid session cookie
     const token = req.cookies?.sb_access_token;
-
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: "No session token found",
-        data: {
-          authenticated: false,
-          timestamp: new Date().toISOString()
-        }
+        data: { authenticated: false, timestamp: new Date().toISOString() }
       });
     }
-
-    // Try to validate token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token);
-
     if (error || !user) {
       return res.status(401).json({
         success: false,
-        error: "Invalid session token",
-        data: {
-          authenticated: false,
-          timestamp: new Date().toISOString()
-        }
+        data: { authenticated: false, timestamp: new Date().toISOString() }
       });
     }
-
-    // Extract role from user metadata
-    const combinedMetadata = extractUserMetadata(user);
-    const role = combinedMetadata.role || "citizen";
-    const name = combinedMetadata.name || user.email?.split("@")[0] || "Unknown";
-
+    // SEC-22 FIX: Only return authenticated status — no PII
     res.json({
       success: true,
       data: {
         authenticated: true,
-        userId: user.id,
-        email: user.email,
-        role,
-        name,
         timestamp: new Date().toISOString()
       }
     });
   } catch (error) {
-    console.error("[SESSION HEALTH] Error:", error);
     res.status(500).json({
       success: false,
-      error: "Session health check failed",
-      data: {
-        authenticated: false,
-        timestamp: new Date().toISOString()
-      }
+      data: { authenticated: false, timestamp: new Date().toISOString() }
     });
   }
 });
 
 // Session refresh endpoint (public - no auth required)
+// BE-13 FIX: Use getUser(token) instead of getSession() which has no server-side context
 router.post("/session/refresh", async (req, res) => {
   try {
     // Check if user has existing session cookie
@@ -152,32 +131,23 @@ router.post("/session/refresh", async (req, res) => {
       });
     }
 
-    // Try to get fresh session from Supabase
-    // Note: This might fail if the server doesn't have the refresh token context
-    // Usually refresh is done via client sending refresh token
-    // But here we try to get session from current context?
-    // The original code used supabase.auth.getSession() which relies on the client (if configured)
-    // or global state. Since we are on server, getSession() might return nothing unless setSession was called.
-    // However, we are just porting existing logic.
-    const { data: { session }, error } = await supabase.auth.getSession();
+    // Validate the existing token against Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(existingToken);
 
-    if (error || !session) {
+    if (error || !user) {
+      // Token expired or invalid — clear the cookie
+      res.clearCookie("sb_access_token");
       return res.status(401).json({
         success: false,
-        error: "No valid Supabase session found",
-        debug: {
-          error: error?.message,
-          hasSession: Boolean(session)
-        }
+        error: "Session expired or invalid. Please log in again."
       });
     }
 
-    // Update server cookie with fresh session
-    const cookieOptions = getCookieOptions(false); // Regular session, not "remember me"
-    res.cookie("sb_access_token", session.access_token, cookieOptions);
+    // Token is still valid — refresh the cookie expiry
+    const cookieOptions = getCookieOptions(false);
+    res.cookie("sb_access_token", existingToken, cookieOptions);
 
-    // Extract user info from session
-    const { user } = session;
+    // Extract user info
     const combinedMetadata = extractUserMetadata(user);
     const role = combinedMetadata.role || "citizen";
     const name = combinedMetadata.name || user.email?.split("@")[0] || "Unknown";
@@ -185,10 +155,6 @@ router.post("/session/refresh", async (req, res) => {
     res.json({
       success: true,
       data: {
-        userId: user.id,
-        email: user.email,
-        role,
-        name,
         refreshed: true,
         timestamp: new Date().toISOString()
       }
@@ -197,10 +163,7 @@ router.post("/session/refresh", async (req, res) => {
     console.error("[SESSION REFRESH] Error:", error);
     res.status(500).json({
       success: false,
-      error: "Session refresh failed",
-      debug: {
-        error: error.message
-      }
+      error: "Session refresh failed"
     });
   }
 });

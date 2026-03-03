@@ -8,7 +8,6 @@
 /* Viewport Height Optimization - Natural Flow */
 .citizen-dashboard,
 .coordinator-dashboard,
-.hr-dashboard,
 .lgu-admin-dashboard,
 .superadmin-dashboard {
   min-height: auto;
@@ -23,7 +22,6 @@
 
 /* Reduce top padding for role dashboards that appeared too spaced */
 .lgu-dashboard .dashboard-header,
-.lgu-officer-dashboard .dashboard-header,
 .superadmin-dashboard .dashboard-header {
   padding-top: 1rem;
   margin-top: 0.5rem;
@@ -56,10 +54,8 @@
 /* Dark Mode Overrides for Dashboards */
 html.dark .citizen-dashboard .bg-white,
 html.dark .coordinator-dashboard .bg-white,
-html.dark .hr-dashboard .bg-white,
 html.dark .lgu-admin-dashboard .bg-white,
 html.dark .superadmin-dashboard .bg-white,
-html.dark .lgu-officer-dashboard .bg-white,
 html.dark .dashboard-content .bg-white,
 html.dark .stat-card.bg-white {
   background-color: var(--gray-100) !important;
@@ -128,7 +124,6 @@ html.dark .complaint-item {
 #app.citizen-dashboard,
 #app.coordinator-dashboard,
 #app.superadmin-dashboard,
-#app.hr-dashboard,
 #app {
   flex: 1;
   overflow: hidden;
@@ -141,7 +136,6 @@ html.dark .complaint-item {
 #app.citizen-dashboard .header-container,
 #app.coordinator-dashboard .header-container,
 #app.superadmin-dashboard .header-container,
-#app.hr-dashboard .header-container,
 #app .header-container {
   position: relative;
   flex-shrink: 0;
@@ -151,7 +145,6 @@ html.dark .complaint-item {
 #app.citizen-dashboard .dashboard-main-wrapper,
 #app.coordinator-dashboard .dashboard-main-wrapper,
 #app.superadmin-dashboard .dashboard-main-wrapper,
-#app.hr-dashboard .dashboard-main-wrapper,
 #app .dashboard-main-wrapper {
   flex: 1;
   overflow-y: auto;

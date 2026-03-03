@@ -48,7 +48,10 @@ function verifyVerificationToken(token) {
       .update(payloadStr)
       .digest("hex");
 
-    if (signature !== expectedSignature) return false;
+    // SEC-13 FIX: Use timing-safe comparison to prevent timing attacks
+    const sigBuf = Buffer.from(signature, "utf8");
+    const expectedBuf = Buffer.from(expectedSignature, "utf8");
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return false;
 
     // Check expiration (1 hour window)
     const payload = JSON.parse(payloadStr);

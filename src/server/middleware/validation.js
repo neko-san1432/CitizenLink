@@ -125,6 +125,38 @@ const schemas = {
   paramsId: Joi.object({
     id: idSchema,
   }),
+
+  // SEC-19: Super Admin schemas
+  roleSwap: Joi.object({
+    user_id: idSchema,
+    new_role: Joi.string().valid("citizen", "lgu", "super-admin").required(),
+    reason: reasonSchema,
+  }),
+
+  banUser: Joi.object({
+    user_id: idSchema,
+    type: Joi.string().valid("temporary", "permanent").default("permanent"),
+    duration: Joi.number().integer().min(1).max(365).optional(),
+    reason: reasonSchema,
+  }),
+
+  unbanUser: Joi.object({
+    user_id: idSchema,
+  }),
+
+  transferDepartment: Joi.object({
+    user_id: idSchema,
+    from_department: Joi.string().trim().required(),
+    to_department: Joi.string().trim().required(),
+    reason: reasonSchema,
+  }),
+
+  assignCitizen: Joi.object({
+    user_id: idSchema,
+    role: Joi.string().valid("citizen", "lgu", "super-admin").required(),
+    department_id: Joi.string().trim().allow("", null).optional(),
+    reason: reasonSchema,
+  }),
 };
 
 module.exports = {

@@ -207,17 +207,16 @@ class AuthController {
       Logger.log("LOGIN_DEBUG", `User: ${email}, Role: ${combinedMetadata.role}, SimpleMode: ${process.env.SIMPLE_WORKFLOW_MODE}`);
 
       // RESTRICT ROLES based on Workflow Mode
-      let allowedRoles = ["citizen", "super-admin", "lgu", "complaint-coordinator", "lgu-officer", "lgu-admin", "lgu-hr"];
+      // 3-role system: citizen, lgu, super-admin
+      // Legacy roles (lgu-admin, lgu-hr, lgu-officer, complaint-coordinator) are
+      // normalized to 'lgu' by the auth middleware, so they still work for existing users.
+      const allowedRoles = ["citizen", "super-admin", "lgu"];
 
-      if (process.env.SIMPLE_WORKFLOW_MODE === "true") {
-        allowedRoles = ["citizen", "super-admin", "lgu"];
-      } else if (process.env.ENABLE_LEGACY_ROLES === "true") {
-        // Ensure legacy roles are definitely included if explicit flag is on (though they are in default above)
-        // This block is kept for backward compatibility if ENABLE_LEGACY_ROLES was used previously
-      }
-
-      const userRole = combinedMetadata.role || "citizen";
-      Logger.log("LOGIN_DEBUG", `Checking role '${userRole}' against allowed:`, allowedRoles);
+      // Normalize legacy roles before checking (DB may still have old role values)
+      const rawRole = combinedMetadata.role || "citizen";
+      const legacyLguRoles = ["lgu-admin", "lgu-hr", "lgu-officer", "complaint-coordinator"];
+      const userRole = legacyLguRoles.includes(rawRole) || rawRole.startsWith("lgu-") ? "lgu" : rawRole;
+      Logger.log("LOGIN_DEBUG", `Checking role '${userRole}' (raw: ${rawRole}) against allowed:`, allowedRoles);
 
       if (!allowedRoles.includes(userRole)) {
         Logger.log("LOGIN", `Blocked login attempt for restricted role: ${userRole} (${email})`);

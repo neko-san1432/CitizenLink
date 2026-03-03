@@ -70,14 +70,14 @@ class DuplicationDetectionService {
     }
     return candidates
       .map((candidate) => {
-        // Use descriptive_su as the primary text field for comparison
+        // FC-06 FIX: textScore1 compares description text, textScore2 compares location text
         const textScore1 = this.calculateTextSimilarity(
           (complaint.descriptive_su || "").toLowerCase(),
           (candidate.descriptive_su || "").toLowerCase()
         );
         const textScore2 = this.calculateTextSimilarity(
-          (complaint.descriptive_su || "").toLowerCase(),
-          (candidate.descriptive_su || "").toLowerCase()
+          (complaint.location_text || complaint.location || "").toLowerCase(),
+          (candidate.location_text || candidate.location || "").toLowerCase()
         );
         const keywordScore = this.calculateKeywordOverlap(
           `${complaint.descriptive_su || ""}`,

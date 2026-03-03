@@ -3,7 +3,7 @@ const Database = require("../config/database");
 class ComplaintHistoryRepository {
 
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
     this.table = "complaint_history";
   }

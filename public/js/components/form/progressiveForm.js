@@ -2,6 +2,7 @@
  * Progressive Form Controller
  * Handles the multi-step wizard logic for the complaint form
  */
+import showMessage from "../toast.js";
 
 export function initProgressiveForm() {
   const form = document.getElementById("complaintForm");
@@ -151,7 +152,7 @@ export function initProgressiveForm() {
       if (!location.value) {
         isValid = false;
         // Toast
-        alert("Please pin a location on the map."); // Replace with toast later
+        showMessage("warning", "Please pin a location on the map.");
       }
     }
 

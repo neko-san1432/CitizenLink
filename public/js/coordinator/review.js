@@ -1,5 +1,6 @@
 // Basic initialization
 // import { initMap, addMarker } from '../components/complaint/complaintMap.js';
+import showMessage from "../components/toast.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Wait for Sidebar/Auth
@@ -77,14 +78,14 @@ async function initPage() {
           if (res.success) {
             setText("complaint-status", formatStatus(newStatus));
             document.getElementById("status-notes").value = ""; // Clear notes
-            alert("Status updated successfully");
-            window.location.reload(); // Reload to show update in timeline/history
+            showMessage("success", "Status updated successfully");
+            setTimeout(() => window.location.reload(), 1500);
           } else {
-            alert(res.message || "Failed to update status");
+            showMessage("error", res.message || "Failed to update status");
           }
         } catch (err) {
           console.error(err);
-          alert("Error updating status");
+          showMessage("error", "Error updating status");
         } finally {
           updateStatusBtn.textContent = btnOriginal;
           updateStatusBtn.disabled = false;
@@ -131,7 +132,8 @@ async function initPage() {
         const falseReason = rejectFalseReason.value;
 
         if (type === "false" && !falseReason) {
-          return alert("Please select a reason for marking as false");
+          showMessage("warning", "Please select a reason for marking as false");
+          return;
         }
 
         try {
@@ -160,14 +162,14 @@ async function initPage() {
 
           const res = await response.json();
           if (res.success) {
-            alert(type === "false" ? "Complaint marked as false successfully" : "Complaint rejected successfully");
-            window.location.reload();
+            showMessage("success", type === "false" ? "Complaint marked as false successfully" : "Complaint rejected successfully");
+            setTimeout(() => window.location.reload(), 1500);
           } else {
-            alert(res.message || "Failed to process request");
+            showMessage("error", res.message || "Failed to process request");
           }
         } catch (err) {
           console.error(err);
-          alert("Error processing request");
+          showMessage("error", "Error processing request");
         }
       });
     }
@@ -237,6 +239,8 @@ function renderComplaint(complaint) {
   }
 
   // Complainant Info Panel
+  // UI-02 FIX: Escape user data before innerHTML insertion
+  const esc = (s) => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   const complainantInfo = document.getElementById("complainant-info-content");
   if (complainantInfo) {
     if (complaint.user) {
@@ -244,20 +248,20 @@ function renderComplaint(complaint) {
                 <div class="complainant-details">
                     <div class="detail-row">
                         <span style="font-weight: 600; font-size: 0.9rem;">Name:</span>
-                        <span>${complaint.user.first_name} ${complaint.user.last_name}</span>
+                        <span>${esc(complaint.user.first_name)} ${esc(complaint.user.last_name)}</span>
                     </div>
                     <div class="detail-row">
                         <span style="font-weight: 600; font-size: 0.9rem;">Email:</span>
-                        <span>${complaint.user.email}</span>
+                        <span>${esc(complaint.user.email)}</span>
                     </div>
                     <div class="detail-row">
                         <span style="font-weight: 600; font-size: 0.9rem;">Phone:</span>
-                        <span>${complaint.user.mobile_number || "N/A"}</span>
+                        <span>${esc(complaint.user.mobile_number || "N/A")}</span>
                     </div>
                 </div>
             `;
     } else {
-      complainantInfo.innerHTML = '<p class="text-gray-500 italic">Submitter information not available</p>';
+      complainantInfo.innerHTML = '<p class=\"text-gray-500 italic\">Submitter information not available</p>';
     }
   }
 

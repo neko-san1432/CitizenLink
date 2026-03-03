@@ -1,12 +1,13 @@
 import showMessage from "../components/toast.js";
 import { supabase } from "../config/config.js";
+import { getCsrfToken } from "../utils/csrf.js";
 
 const departmentsCache = [];
 let selectedUser = null;
 let currentUserRole = null;
 let currentUserId = null;
 
-// Helper function to get auth headers
+// Helper function to get auth headers (SEC-16 FIX: includes CSRF token)
 async function getAuthHeaders() {
   const {
     data: { session },
@@ -16,6 +17,10 @@ async function getAuthHeaders() {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
+  try {
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+  } catch (_e) { /* proceed without CSRF */ }
   return headers;
 }
 

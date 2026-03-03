@@ -1,3 +1,5 @@
+import showMessage from "./components/toast.js";
+
 document.addEventListener("click", (e) => {
   console.log("Click detected on:", e.target.tagName, e.target.className, e.target.getAttribute("data-open-terms"), e.target.getAttribute("data-open-privacy"));
   // Check for terms link first
@@ -46,7 +48,7 @@ document.addEventListener("click", (e) => {
     document.getElementById("terms-checkbox").checked = true;
     const modalId = e.target.getAttribute("data-accept") === "terms" ? "termsModal" : "privacyModal";
     document.getElementById(modalId).style.display = "none";
-    alert("Accepted!");
+    showMessage("success", "Accepted!");
   }
 });
 // Close on outside click

@@ -6,7 +6,7 @@ let categoryChart, statusChart, trendChart;
 document.addEventListener("DOMContentLoaded", async () => {
   // Auth Check
   const role = await getUserRole();
-  if (!["lgu-admin", "super-admin", "complaint-coordinator"].includes(role)) {
+  if (!["lgu", "super-admin"].includes(role)) {
     window.location.href = "/login";
     return;
   }

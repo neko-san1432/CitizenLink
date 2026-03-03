@@ -117,7 +117,11 @@ async function loadAutoQueueItems() {
     items.forEach(item => renderAutoQueueItem(item, list));
 
   } catch (err) {
-    list.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${err.message}</div>`;
+    const errDiv = document.createElement("div");
+    errDiv.className = "text-center py-8 text-red-500";
+    errDiv.textContent = `Error: ${err.message}`;
+    list.innerHTML = "";
+    list.appendChild(errDiv);
   }
 }
 
@@ -319,7 +323,11 @@ window.loadProposals = async function (status) {
     proposals.forEach(p => renderProposalCard(p, list));
 
   } catch (err) {
-    list.innerHTML = `<div class="text-center py-8 text-red-500">Error loading proposals: ${err.message}</div>`;
+    const errDiv = document.createElement("div");
+    errDiv.className = "text-center py-8 text-red-500";
+    errDiv.textContent = `Error loading proposals: ${err.message}`;
+    list.innerHTML = "";
+    list.appendChild(errDiv);
   }
 };
 
@@ -583,7 +591,11 @@ async function loadManagementData(tab, categoryFilter = "") {
       renderAnchorsTable(res.data, container);
     }
   } catch (err) {
-    container.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${err.message}</div>`;
+    const errDiv = document.createElement("div");
+    errDiv.className = "text-center py-8 text-red-500";
+    errDiv.textContent = `Error: ${err.message}`;
+    container.innerHTML = "";
+    container.appendChild(errDiv);
   }
 }
 

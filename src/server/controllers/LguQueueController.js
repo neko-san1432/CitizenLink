@@ -6,7 +6,7 @@ const Database = require("../config/database");
 const NotificationService = require("../services/NotificationService");
 const crypto = require("crypto");
 
-const db = new Database();
+const db = Database.getInstance();
 const supabase = db.getClient();
 const notificationService = new NotificationService();
 

@@ -2,6 +2,10 @@ const crypto = require("crypto");
 const _cookieParser = require("cookie-parser");
 
 // CSRF secret key (should be in environment variable in production)
+// SEC-25 FIX: Warn if CSRF_SECRET is not set (tokens invalidate on restart)
+if (!process.env.CSRF_SECRET) {
+  console.warn("[CSRF] WARNING: CSRF_SECRET env var not set. Tokens will be invalidated on server restart. Set CSRF_SECRET in .env for persistence.");
+}
 const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString("hex");
 
 // Generate a secure CSRF token

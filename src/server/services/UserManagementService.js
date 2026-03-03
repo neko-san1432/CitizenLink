@@ -7,7 +7,7 @@ const { _USER_ROLES, _ROLE_HIERARCHY, _SWITCHABLE_ROLES } = require("../../share
  */
 class UserManagementService {
   constructor() {
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
   }
 

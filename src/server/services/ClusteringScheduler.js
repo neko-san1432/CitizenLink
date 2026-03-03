@@ -10,7 +10,7 @@ const Database = require("../config/database");
 class ClusteringScheduler {
   constructor() {
     this.similarityService = new SimilarityCalculatorService();
-    this.db = new Database();
+    this.db = Database.getInstance();
     this.supabase = this.db.getClient();
     this.intervalId = null;
     this.isRunning = false;

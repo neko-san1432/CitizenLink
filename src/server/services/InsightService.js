@@ -14,8 +14,8 @@ class InsightService {
 
   /**
      * Get aggregated insights for a specific role.
-     * @param {string} role - 'coordinator' | 'lgu-admin'
-     * @param {string} [deptId] - Required for lgu-admin
+     * @param {string} role - 'lgu' | 'super-admin'
+     * @param {string} [deptId] - Required for lgu staff
      * @returns {Object} Dashboard data payload
      */
   async getDashboardInsights(role, deptId = null) {
@@ -62,7 +62,7 @@ class InsightService {
       .select("*")
       .neq("workflow_status", "cancelled"); // Exclude cancelled
 
-    if (role === "lgu-admin" && deptId) {
+    if (role === "lgu" && deptId) {
       // Join with assignments to filter by department
       // This assumes a relationship or we filter by assigned dept
       // For now, let's assume we filter by assignments table

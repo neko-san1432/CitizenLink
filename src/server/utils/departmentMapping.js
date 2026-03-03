@@ -5,7 +5,7 @@
  */
 const Database = require("../config/database");
 
-const db = new Database();
+const db = Database.getInstance();
 const supabase = db.getClient();
 // Cache for department data
 let departmentCache = null;

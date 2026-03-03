@@ -170,8 +170,12 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
     next();
   };
 }
-// Check if rate limiting should be disabled entirely (only via explicit env var)
-const DISABLE_RATE_LIMITING = process.env.DISABLE_RATE_LIMITING === "true";
+// SEC-17 FIX: Only allow rate limit disable in development, never in production
+const isDev = process.env.NODE_ENV !== "production";
+const DISABLE_RATE_LIMITING = isDev && process.env.DISABLE_RATE_LIMITING === "true";
+if (DISABLE_RATE_LIMITING) {
+  console.warn("[SECURITY] Rate limiting is DISABLED via DISABLE_RATE_LIMITING env var (dev only)");
+}
 // Create a no-op rate limiter for when rate limiting is explicitly disabled
 const noOpLimiter = (req, res, next) => {
   next();

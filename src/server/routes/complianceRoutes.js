@@ -4,6 +4,10 @@ const complianceController = require("../controllers/ComplianceController");
 const { authenticateUser } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiting");
 const { ErrorHandler } = require("../middleware/errorHandler");
+const { csrfProtection } = require("../middleware/csrf");
+
+// SEC-16 FIX: CSRF protection on all state-changing routes
+router.use(csrfProtection);
 
 /**
  * @route   GET /api/compliance/export

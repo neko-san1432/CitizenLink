@@ -8,7 +8,7 @@ const Database = require("../config/database");
 let supabaseInstance = null;
 function getSupabase() {
   if (!supabaseInstance) {
-    const db = new Database();
+    const db = Database.getInstance();
     supabaseInstance = db.getClient();
   }
   return supabaseInstance;

@@ -34,7 +34,7 @@ class NlpProposalService {
       status: "pending_coordinator"
     };
 
-    if (userRole === "complaint-coordinator") {
+    if (userRole === "lgu") {
       payload.status = "pending_super_admin";
       payload.coordinator_approved_by = userId;
     } else if (userRole === "super-admin") {
