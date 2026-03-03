@@ -130,17 +130,16 @@ This document serves as a chronological record of changes, implementations, and 
 
 ## [2026-02-07] Simulated System Integration (Brain Logic)
 
-**Goal**: Port the advanced logic from `CitizenLink_Simulated_System` (NLP, Clustering, Causal Analysis) into the main `src/server` architecture to enhance the system's intelligence.
+**Goal**: Port the advanced logic from `CitizenLink_Simulated_System` (NLP, Clustering) into the main `src/server` architecture to enhance the system's intelligence.
 
 ### Changes Implemented
 
 1.  **New "Brain" Services** (`src/server/services/brain/`)
     -   **`NLPService.js`**: Ported from `nlp-processor.js`. Handles text analysis using keywords and TensorFlow Universal Sentence Encoder fallback.
     -   **`ClusteringService.js`**: Ported from `simulation-engine.js`. Implements DBSCAN++ with category-specific thresholds (e.g., Fire vs. Trash).
-    -   **`CausalityService.js`**: Ported from `causality-manager.js`. Detects spatio-temporal causal links (e.g., Fire causing Smoke).
 
 2.  **Service Orchestration**
-    -   Created **`BrainService.js`** as the main entry point to coordinate NLP, Clustering, and Causality services.
+    -   Created **`BrainService.js`** as the main entry point to coordinate NLP and Clustering services.
 
 3.  **Integration Points**
     -   **`ClusteringScheduler.js`**: Updated to use `BrainService.runIntelligenceCycle()` instead of the legacy `SimilarityCalculatorService`.
@@ -153,6 +152,5 @@ This document serves as a chronological record of changes, implementations, and 
 ### Verification status
 -   **NLP**: Verified correct classification of Tagalog/English inputs ("sunog", "garbage").
 -   **Clustering**: Verified correct grouping of nearby incidents.
--   **Causality**: Verified detection of logical chains (Fire -> Smoke).
 
 ---

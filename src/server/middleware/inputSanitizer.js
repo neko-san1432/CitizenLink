@@ -389,19 +389,47 @@ class InputSanitizer {
   }
   // Enhanced SQL injection prevention
   static preventSQLInjection(req, res, next) {
+    // Skip SQL injection checks for routes that process user-generated complaint
+    // text. These contain natural language (English/Filipino) with common words
+    // like "select", "update", "delete" that trigger false positives.
+    const exemptPaths = [
+      "/api/nlp/pending-reviews/batch",
+      "/api/nlp/proposals",
+      "/api/complaints",
+      "/api/coordinator/complaints",
+      "/api/lgu/complaints",
+    ];
+    if (exemptPaths.some((p) => req.originalUrl.startsWith(p))) {
+      return next();
+    }
+
     const sqlPatterns = [
-      /(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)/gi,
+      // Multi-keyword injection patterns (more specific than single-word matches)
+      /\b(union\s+(all\s+)?select)\b/gi,
+      /\b(insert\s+into)\b/gi,
+      /\b(update\s+\w+\s+set)\b/gi,
+      /\b(delete\s+from)\b/gi,
+      /\b(drop\s+(table|database|index))\b/gi,
+      /\b(create\s+(table|database|index))\b/gi,
+      /\b(alter\s+table)\b/gi,
+      /\b(exec(ute)?\s*\()\b/gi,
+      // Comment / terminator injection
       /(--|#|\/\*|\*\/)/g,
+      // Tautology patterns
       /(\bor\b\s+\d+\s*=\s*\d+)/gi,
       /(\band\b\s+\d+\s*=\s*\d+)/gi,
+      // Dangerous functions
       /(\b(load_file|into\s+outfile|into\s+dumpfile)\b)/gi,
-      /(\b(concat|group_concat|char|ascii|ord|hex|unhex)\b)/gi,
+      /(\b(group_concat|char\s*\(|ascii\s*\(|unhex\s*\())/gi,
       /(\b(benchmark|sleep|waitfor\s+delay)\b)/gi,
     ];
 
     const checkForSQLInjection = (obj, path = "") => {
       if (typeof obj === "string") {
-        const hasThreat = sqlPatterns.some((pattern) => pattern.test(obj));
+        const hasThreat = sqlPatterns.some((pattern) => {
+          pattern.lastIndex = 0; // Reset regex state for global patterns
+          return pattern.test(obj);
+        });
         if (hasThreat) {
           console.warn(
             `[SECURITY] SQL injection attempt detected in ${path}: ${obj.substring(

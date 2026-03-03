@@ -6,10 +6,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data } = await response.json();
 
     if (data) {
-      document.getElementById("stat-incoming").textContent = data.incoming || 0;
-      document.getElementById("stat-unverified").textContent = data.unverified || 0;
-      document.getElementById("stat-assigned").textContent = data.assigned || 0;
-      document.getElementById("stat-escalated").textContent = data.escalated || 0;
+      const setStatText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+      setStatText("stat-incoming", data.incoming || 0);
+      setStatText("stat-unverified", data.unverified || 0);
+      setStatText("stat-assigned", data.assigned || 0);
+      setStatText("stat-escalated", data.escalated || 0);
     }
 
     // Initialize Charts (Mock data for now to prevent errors if API lacks chart data)

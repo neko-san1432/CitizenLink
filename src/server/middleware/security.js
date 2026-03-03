@@ -14,7 +14,7 @@ const cspConfig = {
     scriptSrc: [
       "'self'",
       "'unsafe-inline'", // SEC-11: Keep until inline onclick handlers are migrated to addEventListener
-      // "'unsafe-eval'" REMOVED — SEC-11 FIX: reCAPTCHA v3 does not require eval
+      "'unsafe-eval'", // Required by Turf.js (new Function for spatial ops) and TF.js WASM backend
       "https://www.google.com",
       "https://www.gstatic.com",
       "https://unpkg.com",
@@ -48,6 +48,9 @@ const cspConfig = {
       "https://esm.sh",
       "https://cdn.jsdelivr.net",
       "https://unpkg.com",
+      "https://tfhub.dev",
+      "https://www.kaggle.com",
+      "https://storage.googleapis.com",
       "http://localhost:*",
       "ws://localhost:*",
     ],

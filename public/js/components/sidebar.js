@@ -381,13 +381,6 @@ function getMenuItemsForRole(role) {
 
   // Return menu items for the role
   const items = menuItems[role] || menuItems["citizen"];
-  console.log(
-    "[SIDEBAR] Menu items for role:",
-    role,
-    "found",
-    items.length,
-    "items"
-  );
   return items;
 }
 // Sidebar search removed per requirements

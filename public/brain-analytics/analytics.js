@@ -1363,7 +1363,8 @@ async function fetchComplaints() {
  * Filter criteria aligned with train-system.js for consistency.
  */
 async function queueLowConfidenceForReview(complaints) {
-  console.log(`[HITL] Starting scan of ${complaints.length} complaints...`);
+  // HITL scan - verbose logs gated behind debug flag
+  const _HITL_DEBUG = false;
 
   const CONFIDENCE_THRESHOLD = 0.6; // Aligned with train-system.js
   const lowConfidenceItems = complaints.filter(c => {
@@ -1395,21 +1396,20 @@ async function queueLowConfidenceForReview(complaints) {
     ) && !wasReclassified;
 
     // Debug first few
-    if (complaints.indexOf(c) < 3) {
+    if (_HITL_DEBUG && complaints.indexOf(c) < 3) {
       console.log(`[HITL] Sample ${c.id?.substring(0, 8)}: conf=${conf.toFixed(2)}, cat=${c.category}, others=${isOthers}, hasKw=${hasKeywords}, spec=${isSpeculative}, meta=${isMetaphorical}, queue=${needsTraining}`);
     }
 
     return needsTraining;
   });
 
-  console.log(`[HITL] Filter result: ${lowConfidenceItems.length} low-confidence out of ${complaints.length} total`);
+  _HITL_DEBUG && console.log(`[HITL] Filter result: ${lowConfidenceItems.length} low-confidence out of ${complaints.length} total`);
 
   if (lowConfidenceItems.length === 0) {
-    console.log("[HITL] No low-confidence items to queue");
     return { queued: 0 };
   }
 
-  console.log(`[HITL] Found ${lowConfidenceItems.length} items for potential review`);
+  _HITL_DEBUG && console.log(`[HITL] Found ${lowConfidenceItems.length} items for potential review`);
 
   // Log what we're sending - include all intelligence fields
   const payload = lowConfidenceItems.slice(0, 100).map(c => {
@@ -1425,31 +1425,33 @@ async function queueLowConfidenceForReview(complaints) {
     };
   });
 
-  console.log(`[HITL] Payload sample:`, payload[0]);
-  console.log(`[HITL] Payload is array:`, Array.isArray(payload));
-  console.log(`[HITL] Payload length:`, payload.length);
-
   // Create the body explicitly - ensure clean serialization
   const bodyData = { items: payload };
   const jsonBody = JSON.stringify(bodyData);
-  console.log(`[HITL] JSON body type:`, typeof jsonBody);
-  console.log(`[HITL] JSON body first 200 chars:`, jsonBody.substring(0, 200));
 
   // Use the API to queue items (handles deduplication server-side)
   try {
+    // Fetch CSRF token from server endpoint
+    let csrfToken = "";
+    try {
+      const csrfResp = await fetch("/api/auth/csrf-token");
+      const csrfData = await csrfResp.json();
+      if (csrfData.success) csrfToken = csrfData.csrfToken;
+    } catch (_e) { /* proceed without token */ }
     const response = await fetch("/api/nlp/pending-reviews/batch", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken
+      },
       credentials: "include",
       body: jsonBody
     });
 
-    console.log(`[HITL] Response status: ${response.status}`);
     const result = await response.json();
-    console.log(`[HITL] Full response:`, result);
 
     if (response.ok) {
-      console.log(`[HITL] ✅ Queued ${result.queued || 0} items for review (${result.skipped || 0} duplicates skipped)`);
+      _HITL_DEBUG && console.log(`[HITL] ✅ Queued ${result.queued || 0} items for review (${result.skipped || 0} duplicates skipped)`);
       return result;
     }
     console.warn("[HITL] Batch queue failed:", response.status, result);
@@ -1529,7 +1531,7 @@ async function init() {
 
       try {
         await window.loadNLPDictionaries();
-        console.log("[ANALYTICS] NLP Dictionaries loaded successfully");
+        // NLP Dictionaries loaded
         sessionStorage.setItem("brain_initialized", "true");
       } catch (err) {
         console.error("[ANALYTICS] Failed to load NLP Dictionaries:", err);

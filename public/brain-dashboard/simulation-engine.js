@@ -82,6 +82,9 @@
  * Validates GPS coordinates are within Digos City bounds.
  * Rejects reports from San Francisco or other invalid locations.
  */
+/** Set to true for verbose NLP pipeline logging (NEGATION/METAPHOR/AUTO-CAT/BOOST/SPEC/ENGINE) */
+const _NLP_DEBUG = false;
+
 const DIGOS_CITY_BOUNDS = {
   lat_min: 6.65,   // Southern boundary
   lat_max: 7.20,   // Northern boundary
@@ -125,8 +128,8 @@ function validateGPSBounds(lat, lng) {
 
   if (lat < bounds.lat_min || lat > bounds.lat_max ||
         lng < bounds.lng_min || lng > bounds.lng_max) {
-    console.log(`[GPS v3.9] ⛔ OUT OF BOUNDS: (${lat}, ${lng}) is outside Digos City`);
-    console.log(`  └─ Valid range: Lat ${bounds.lat_min}-${bounds.lat_max}, Lng ${bounds.lng_min}-${bounds.lng_max}`);
+    _NLP_DEBUG && console.log(`[GPS v3.9] ⛔ OUT OF BOUNDS: (${lat}, ${lng}) is outside Digos City`);
+    _NLP_DEBUG && console.log(`  └─ Valid range: Lat ${bounds.lat_min}-${bounds.lat_max}, Lng ${bounds.lng_min}-${bounds.lng_max}`);
     return {
       isValid: false,
       reason: `Coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)}) are outside ${bounds.name}`,
@@ -171,8 +174,8 @@ function validateSpatialPlausibility(category, lat, lng) {
           50;                              // Lowland/coastal
 
   if (constraint.max_elevation && estimatedElevation > constraint.max_elevation) {
-    console.log(`[SPATIAL v3.9] ⚠️ IMPLAUSIBLE: ${category} at estimated ${estimatedElevation}m elevation`);
-    console.log(`  └─ Constraint: ${constraint.reason}`);
+    _NLP_DEBUG && console.log(`[SPATIAL v3.9] ⚠️ IMPLAUSIBLE: ${category} at estimated ${estimatedElevation}m elevation`);
+    _NLP_DEBUG && console.log(`  └─ Constraint: ${constraint.reason}`);
     return {
       isPlausible: false,
       warning: `${category} reported at high elevation (~${estimatedElevation}m). ${constraint.reason}`,
@@ -181,7 +184,7 @@ function validateSpatialPlausibility(category, lat, lng) {
   }
 
   if (constraint.min_elevation && estimatedElevation < constraint.min_elevation) {
-    console.log(`[SPATIAL v3.9] ⚠️ IMPLAUSIBLE: ${category} at estimated ${estimatedElevation}m elevation`);
+    _NLP_DEBUG && console.log(`[SPATIAL v3.9] ⚠️ IMPLAUSIBLE: ${category} at estimated ${estimatedElevation}m elevation`);
     return {
       isPlausible: false,
       warning: `${category} reported at low elevation (~${estimatedElevation}m). ${constraint.reason}`,
@@ -370,7 +373,7 @@ const ADAPTIVE_MINPTS = {
  * RELATIONSHIP_MATRIX v3.7.3 - Comprehensive Category Relationship Database
  *
  * This matrix defines which categories can be clustered together based on
- * real-world causal relationships. Used by Layer 2 (Semantic) of DBSCAN++.
+ * real-world relationships. Used by Layer 2 (Semantic) of DBSCAN++.
  *
  * @thesis This implements domain knowledge-based clustering constraints.
  * Categories A and B can cluster if B is in RELATIONSHIP_MATRIX[A] or vice versa.
@@ -1569,8 +1572,8 @@ function checkNegation(description, keyword) {
     );
 
     if (pattern.test(descLower)) {
-      console.log(`[NEGATION v3.9] ⛔ DETECTED: "${negation}" negates "${keyword}"`);
-      console.log(`  └─ Description: "${descLower.substring(0, 60)}..."`);
+      _NLP_DEBUG && console.log(`[NEGATION v3.9] ⛔ DETECTED: "${negation}" negates "${keyword}"`);
+      _NLP_DEBUG && console.log(`  └─ Description: "${descLower.substring(0, 60)}..."`);
       return { isNegated: true, negationWord: negation };
     }
   }
@@ -1586,7 +1589,7 @@ function checkNegation(description, keyword) {
 
   for (const marker of RESOLUTION_MARKERS) {
     if (descLower.includes(keywordLower) && descLower.includes(marker)) {
-      console.log(`[NEGATION v3.9] ⛔ RESOLUTION DETECTED: "${marker}" indicates resolved incident`);
+      _NLP_DEBUG && console.log(`[NEGATION v3.9] ⛔ RESOLUTION DETECTED: "${marker}" indicates resolved incident`);
       return { isNegated: true, negationWord: marker };
     }
   }
@@ -2363,7 +2366,7 @@ function isMetaphoricalUsage(text, keyword) {
       result.reason = `Idiomatic expression: "${idiom}"`;
       result.matchedPattern = idiom;
       result.confidence = 0.95;
-      console.log(`[METAPHOR v3.5] IDIOM DETECTED: "${idiom}" in "${lowerText.substring(0, 50)}..."`);
+      _NLP_DEBUG && console.log(`[METAPHOR v3.5] IDIOM DETECTED: "${idiom}" in "${lowerText.substring(0, 50)}..."`);
       return result;
     }
   }
@@ -2394,7 +2397,7 @@ function isMetaphoricalUsage(text, keyword) {
           result.reason = `Pattern: "${pattern}" + group noun`;
           result.matchedPattern = `${pattern} ${nextWords.join(" ")}`;
           result.confidence = 0.9;
-          console.log(`[METAPHOR v3.5] PATTERN + GROUP: "${pattern}" followed by "${nextWords.join(" ")}"`);
+          _NLP_DEBUG && console.log(`[METAPHOR v3.5] PATTERN + GROUP: "${pattern}" followed by "${nextWords.join(" ")}"`);
           return result;
         }
       } else {
@@ -2403,7 +2406,7 @@ function isMetaphoricalUsage(text, keyword) {
         result.reason = `Metaphor pattern: "${pattern}"`;
         result.matchedPattern = pattern;
         result.confidence = 0.9;
-        console.log(`[METAPHOR v3.5] PATTERN MATCH: "${pattern}" in "${lowerText.substring(0, 50)}..."`);
+        _NLP_DEBUG && console.log(`[METAPHOR v3.5] PATTERN MATCH: "${pattern}" in "${lowerText.substring(0, 50)}..."`);
         return result;
       }
     }
@@ -2442,7 +2445,7 @@ function isMetaphoricalUsage(text, keyword) {
         result.reason = `Inanimate subject (before): "${inanimate}"`;
         result.matchedPattern = `${inanimate} + ${lowerKeyword}`;
         result.confidence = 0.85;
-        console.log(`[METAPHOR v3.5] INANIMATE BEFORE: "${inanimate}" + "${lowerKeyword}"`);
+        _NLP_DEBUG && console.log(`[METAPHOR v3.5] INANIMATE BEFORE: "${inanimate}" + "${lowerKeyword}"`);
         return result;
       }
 
@@ -2458,7 +2461,7 @@ function isMetaphoricalUsage(text, keyword) {
           result.reason = `Inanimate subject (after): "${inanimate}"`;
           result.matchedPattern = `${lowerKeyword} + ${inanimate}`;
           result.confidence = 0.85;
-          console.log(`[METAPHOR v3.5] INANIMATE AFTER: "${lowerKeyword}" + "${inanimate}"`);
+          _NLP_DEBUG && console.log(`[METAPHOR v3.5] INANIMATE AFTER: "${lowerKeyword}" + "${inanimate}"`);
           return result;
         }
       }
@@ -2483,7 +2486,7 @@ function isMetaphoricalUsage(text, keyword) {
         result.reason = `Hyperbolic qualifier: "${qualifier}" (self-referential)`;
         result.matchedPattern = `${qualifier} + ${lowerKeyword}`;
         result.confidence = 0.8;
-        console.log(`[METAPHOR v3.5] HYPERBOLE: "${qualifier}" + "${lowerKeyword}"`);
+        _NLP_DEBUG && console.log(`[METAPHOR v3.5] HYPERBOLE: "${qualifier}" + "${lowerKeyword}"`);
         return result;
       }
     }
@@ -2517,7 +2520,7 @@ function isMetaphoricalUsage(text, keyword) {
       result.reason = reason;
       result.matchedPattern = pattern.toString();
       result.confidence = 0.85;
-      console.log(`[METAPHOR v3.5] SLANG: ${reason}`);
+      _NLP_DEBUG && console.log(`[METAPHOR v3.5] SLANG: ${reason}`);
       return result;
     }
   }
@@ -2525,7 +2528,7 @@ function isMetaphoricalUsage(text, keyword) {
   // ========================================================
   // STEP 6: No metaphor detected - return false (literal usage)
   // ========================================================
-  console.log(`[METAPHOR v3.5] LITERAL: "${lowerKeyword}" in "${lowerText.substring(0, 50)}..." - POTENTIAL EMERGENCY`);
+  _NLP_DEBUG && console.log(`[METAPHOR v3.5] LITERAL: "${lowerKeyword}" in "${lowerText.substring(0, 50)}..." - POTENTIAL EMERGENCY`);
   return result;
 }
 
@@ -2553,9 +2556,9 @@ if (typeof window !== "undefined") {
   // Run in browser console: window.testMetaphorFilter()
   // ================================================================
   window.testMetaphorFilter = function () {
-    console.log(`\n${  "=".repeat(70)}`);
-    console.log("🧪 METAPHOR FILTER v3.5 - QA TORTURE TEST");
-    console.log("=".repeat(70));
+    _NLP_DEBUG && console.log(`\n${  "=".repeat(70)}`);
+    _NLP_DEBUG && console.log("🧪 METAPHOR FILTER v3.5 - QA TORTURE TEST");
+    _NLP_DEBUG && console.log("=".repeat(70));
 
     const testCases = [
       // ============ SCENARIO A: "FALSE PANIC" TESTS ============
@@ -2595,7 +2598,7 @@ if (typeof window !== "undefined") {
     let passed = 0;
     let failed = 0;
 
-    console.log("\nRunning", testCases.length, "test cases...\n");
+    _NLP_DEBUG && console.log("\nRunning", testCases.length, "test cases...\n");
 
     testCases.forEach((tc, i) => {
       const result = isMetaphoricalUsage(tc.text, tc.keyword);
@@ -2603,23 +2606,23 @@ if (typeof window !== "undefined") {
 
       if (testPassed) {
         passed++;
-        console.log(`✅ PASS [${tc.name}]`);
+        _NLP_DEBUG && console.log(`✅ PASS [${tc.name}]`);
       } else {
         failed++;
-        console.log(`❌ FAIL [${tc.name}]`);
-        console.log(`   Text: "${tc.text}"`);
-        console.log(`   Keyword: "${tc.keyword}"`);
-        console.log(`   Expected: ${tc.expected ? "METAPHORICAL" : "LITERAL"}`);
-        console.log(`   Got: ${result.isMetaphorical ? "METAPHORICAL" : "LITERAL"}`);
+        _NLP_DEBUG && console.log(`❌ FAIL [${tc.name}]`);
+        _NLP_DEBUG && console.log(`   Text: "${tc.text}"`);
+        _NLP_DEBUG && console.log(`   Keyword: "${tc.keyword}"`);
+        _NLP_DEBUG && console.log(`   Expected: ${tc.expected ? "METAPHORICAL" : "LITERAL"}`);
+        _NLP_DEBUG && console.log(`   Got: ${result.isMetaphorical ? "METAPHORICAL" : "LITERAL"}`);
         if (result.isMetaphorical) {
-          console.log(`   Reason: ${result.reason}`);
+          _NLP_DEBUG && console.log(`   Reason: ${result.reason}`);
         }
       }
     });
 
-    console.log(`\n${  "=".repeat(70)}`);
-    console.log(`RESULTS: ${passed}/${testCases.length} PASSED (${(passed / testCases.length * 100).toFixed(1)}%)`);
-    console.log(`${"=".repeat(70)  }\n`);
+    _NLP_DEBUG && console.log(`\n${  "=".repeat(70)}`);
+    _NLP_DEBUG && console.log(`RESULTS: ${passed}/${testCases.length} PASSED (${(passed / testCases.length * 100).toFixed(1)}%)`);
+    _NLP_DEBUG && console.log(`${"=".repeat(70)  }\n`);
 
     return { passed, failed, total: testCases.length };
   };
@@ -2627,11 +2630,11 @@ if (typeof window !== "undefined") {
   // Quick single test function
   window.testMetaphor = function (text, keyword) {
     const result = isMetaphoricalUsage(text, keyword);
-    console.log(`\n🔍 Testing: "${text}" [keyword: ${keyword}]`);
-    console.log(`   Result: ${result.isMetaphorical ? "🎭 METAPHORICAL" : "⚠️ LITERAL EMERGENCY"}`);
-    console.log(`   Reason: ${result.reason}`);
-    console.log(`   Pattern: ${result.matchedPattern || "N/A"}`);
-    console.log(`   Confidence: ${(result.confidence * 100).toFixed(0)}%`);
+    _NLP_DEBUG && console.log(`\n🔍 Testing: "${text}" [keyword: ${keyword}]`);
+    _NLP_DEBUG && console.log(`   Result: ${result.isMetaphorical ? "🎭 METAPHORICAL" : "⚠️ LITERAL EMERGENCY"}`);
+    _NLP_DEBUG && console.log(`   Reason: ${result.reason}`);
+    _NLP_DEBUG && console.log(`   Pattern: ${result.matchedPattern || "N/A"}`);
+    _NLP_DEBUG && console.log(`   Confidence: ${(result.confidence * 100).toFixed(0)}%`);
     return result;
   };
 
@@ -2640,9 +2643,9 @@ if (typeof window !== "undefined") {
   // Run in browser console: window.testAutoCategory()
   // ================================================================
   window.testAutoCategory = function () {
-    console.log(`\n${  "=".repeat(70)}`);
-    console.log("🧪 AUTO-CATEGORIZATION v3.6 - SMART OVERRIDE TEST");
-    console.log("=".repeat(70));
+    _NLP_DEBUG && console.log(`\n${  "=".repeat(70)}`);
+    _NLP_DEBUG && console.log("🧪 AUTO-CATEGORIZATION v3.6 - SMART OVERRIDE TEST");
+    _NLP_DEBUG && console.log("=".repeat(70));
 
     const testCases = [
       // Should AUTO-SWITCH from Others to correct category
@@ -2686,18 +2689,18 @@ if (typeof window !== "undefined") {
 
       if (testPassed) {
         passed++;
-        console.log(`✅ PASS: "${tc.cat}" → "${finalCategory}" | Desc: "${tc.desc.substring(0, 40)}..."`);
+        _NLP_DEBUG && console.log(`✅ PASS: "${tc.cat}" → "${finalCategory}" | Desc: "${tc.desc.substring(0, 40)}..."`);
       } else {
         failed++;
-        console.log(`❌ FAIL: "${tc.cat}" → "${finalCategory}" (expected: ${tc.expected})`);
-        console.log(`   Desc: "${tc.desc}"`);
-        console.log(`   NLP: ${nlpResult.category} (priority: ${nlpResult.priority})`);
+        _NLP_DEBUG && console.log(`❌ FAIL: "${tc.cat}" → "${finalCategory}" (expected: ${tc.expected})`);
+        _NLP_DEBUG && console.log(`   Desc: "${tc.desc}"`);
+        _NLP_DEBUG && console.log(`   NLP: ${nlpResult.category} (priority: ${nlpResult.priority})`);
       }
     });
 
-    console.log(`\n${  "=".repeat(70)}`);
-    console.log(`RESULTS: ${passed}/${testCases.length} PASSED (${(passed / testCases.length * 100).toFixed(1)}%)`);
-    console.log(`${"=".repeat(70)  }\n`);
+    _NLP_DEBUG && console.log(`\n${  "=".repeat(70)}`);
+    _NLP_DEBUG && console.log(`RESULTS: ${passed}/${testCases.length} PASSED (${(passed / testCases.length * 100).toFixed(1)}%)`);
+    _NLP_DEBUG && console.log(`${"=".repeat(70)  }\n`);
 
     return { passed, failed, total: testCases.length };
   };
@@ -2906,20 +2909,20 @@ function analyzeComplaintIntelligence(point) {
           : { isSpeculative: false };
 
         if (specCheck.isSpeculative) {
-          console.log(`[AUTO-CAT v3.9] ⛔ BLOCKED: "${keyword}" is speculative (trigger: "${specCheck.trigger}")`);
+          _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] ⛔ BLOCKED: "${keyword}" is speculative (trigger: "${specCheck.trigger}")`);
           continue; // Try next keyword
         }
 
         // v3.9: Also check negation
         const negationCheck = checkNegation(descLower, keyword);
         if (negationCheck.isNegated) {
-          console.log(`[AUTO-CAT v3.9] ⛔ BLOCKED: "${keyword}" is negated by "${negationCheck.negationWord}"`);
+          _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] ⛔ BLOCKED: "${keyword}" is negated by "${negationCheck.negationWord}"`);
           continue;
         }
 
         // This keyword is NON-SPECULATIVE and NON-NEGATED - allow auto-switch
         shouldAutoSwitch = true;
-        console.log(`[AUTO-CAT v3.9] ✅ NON-SPECULATIVE keyword: "${keyword}"`);
+        _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] ✅ NON-SPECULATIVE keyword: "${keyword}"`);
         break;
       }
     }
@@ -2935,7 +2938,7 @@ function analyzeComplaintIntelligence(point) {
     // Check if user's category is much HIGHER than what NLP detected
     if (currentPriority > nlpPriority + 40) {
       // High-priority category with low-priority description - potential gaming
-      console.log(`[AUTO-CAT v3.9] ⚠️ DOWNGRADE CHECK: User "${effectiveCategory}" (${currentPriority}) vs NLP "${nlpResult.category}" (${nlpPriority})`);
+      _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] ⚠️ DOWNGRADE CHECK: User "${effectiveCategory}" (${currentPriority}) vs NLP "${nlpResult.category}" (${nlpPriority})`);
 
       // Verify the NLP result is valid (non-speculative, non-negated)
       let validNlpKeyword = false;
@@ -2953,16 +2956,16 @@ function analyzeComplaintIntelligence(point) {
 
       if (validNlpKeyword) {
         shouldDowngrade = true;
-        console.log(`[AUTO-CAT v3.9] ⬇️ DOWNGRADING: "${effectiveCategory}" → "${nlpResult.category}"`);
-        console.log(`  └─ Reason: Description matches "${nlpResult.category}" (priority ${nlpPriority}), not "${effectiveCategory}" (priority ${currentPriority})`);
+        _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] ⬇️ DOWNGRADING: "${effectiveCategory}" → "${nlpResult.category}"`);
+        _NLP_DEBUG && console.log(`  └─ Reason: Description matches "${nlpResult.category}" (priority ${nlpPriority}), not "${effectiveCategory}" (priority ${currentPriority})`);
       }
     }
   }
 
   if (shouldAutoSwitch) {
-    console.log(`[AUTO-CAT v3.9] 🔄 SWITCHING: "${effectiveCategory}" → "${nlpResult.category}"`);
-    console.log(`  └─ Reason: NLP detected priority ${nlpPriority} vs current ${currentPriority}`);
-    console.log(`  └─ Keywords: [${nlpResult.matchedKeywords.join(", ")}]`);
+    _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] 🔄 SWITCHING: "${effectiveCategory}" → "${nlpResult.category}"`);
+    _NLP_DEBUG && console.log(`  └─ Reason: NLP detected priority ${nlpPriority} vs current ${currentPriority}`);
+    _NLP_DEBUG && console.log(`  └─ Keywords: [${nlpResult.matchedKeywords.join(", ")}]`);
 
     // Save original for transparency
     point.original_category = effectiveCategory;
@@ -2978,7 +2981,7 @@ function analyzeComplaintIntelligence(point) {
     effectiveCategory = nlpResult.category;
   } else if (shouldDowngrade) {
     // v3.9 AUDIT FIX: Downgrade gaming attempts
-    console.log(`[AUTO-CAT v3.9] ⬇️ DOWNGRADE APPLIED: "${effectiveCategory}" → "${nlpResult.category}"`);
+    _NLP_DEBUG && console.log(`[AUTO-CAT v3.9] ⬇️ DOWNGRADE APPLIED: "${effectiveCategory}" → "${nlpResult.category}"`);
 
     // Save original for transparency
     point.original_category = effectiveCategory;
@@ -3118,7 +3121,7 @@ function analyzeComplaintIntelligence(point) {
     if (uniqueCategories.size >= 3) {
       const complexityBoost = 10;
       urgencyScore = Math.min(100, urgencyScore + complexityBoost);
-      console.log(`[TRIAGE v3.9.5] 🧩 COMPLEXITY BOOST: +${complexityBoost} (${uniqueCategories.size} distinct categories detected)`);
+      _NLP_DEBUG && console.log(`[TRIAGE v3.9.5] 🧩 COMPLEXITY BOOST: +${complexityBoost} (${uniqueCategories.size} distinct categories detected)`);
 
       // Log for breakdown
       if (point.intelligence) {
@@ -3175,7 +3178,7 @@ function analyzeComplaintIntelligence(point) {
       matched: streetName || fullAddress,
       reason: "Pothole on major road - higher traffic impact"
     };
-    console.log(`[GEOSPATIAL v3.7] 🛣️ +${highwayBoost} HIGHWAY PRIORITY: "${streetName || fullAddress}"`);
+    _NLP_DEBUG && console.log(`[GEOSPATIAL v3.7] 🛣️ +${highwayBoost} HIGHWAY PRIORITY: "${streetName || fullAddress}"`);
   }
 
   // B0.2: HYDROLOGICAL VALIDATION (+10 for Flood near water features)
@@ -3195,7 +3198,7 @@ function analyzeComplaintIntelligence(point) {
     };
     veracityScore += 5; // Extra confidence for validated location
     veracityLabel = "GEO-VERIFIED";
-    console.log(`[GEOSPATIAL v3.7] 🌊 +${hydroBoost} HYDRO VALIDATION: "${streetName || fullAddress}"`);
+    _NLP_DEBUG && console.log(`[GEOSPATIAL v3.7] 🌊 +${hydroBoost} HYDRO VALIDATION: "${streetName || fullAddress}"`);
   }
 
   // Check for Inanimate Stranded (treat as traffic)
@@ -3326,7 +3329,7 @@ function analyzeComplaintIntelligence(point) {
         type: literalEmergencyFound.emergencyType
       };
 
-      console.log(`[BOOST v3.6.1] 🚀 +${boostAmount} points for literal "${literalEmergencyFound.keyword}" → Score: ${urgencyScore}`);
+      _NLP_DEBUG && console.log(`[BOOST v3.6.1] 🚀 +${boostAmount} points for literal "${literalEmergencyFound.keyword}" → Score: ${urgencyScore}`);
     }
   }
 
@@ -3343,7 +3346,7 @@ function analyzeComplaintIntelligence(point) {
     isCapped = true;
     overrideType = "NEGATION_OVERRIDE";
     suggestedAction = `🚫 NEGATED: "${primaryNegation.negationWord} ${category}"`;
-    console.log(`[NEGATION v3.9.5] 🛑 SCORE ZEROED: "${primaryNegation.negationWord}" negates "${category}"`);
+    _NLP_DEBUG && console.log(`[NEGATION v3.9.5] 🛑 SCORE ZEROED: "${primaryNegation.negationWord}" negates "${category}"`);
   }
 
   const baseRisk = Math.max(0, Math.min(10, Math.round(getCategoryPriority(category) / 10)));
@@ -3454,7 +3457,7 @@ function checkSpeculativeContext(text, keyword) {
   // ================================================================
   for (const entry of NON_EMERGENCY_PHRASES) {
     if (lowerText.includes(entry.phrase)) {
-      console.log(`[SPEC v3.7] Non-emergency phrase: "${entry.phrase}" (${entry.category})`);
+      _NLP_DEBUG && console.log(`[SPEC v3.7] Non-emergency phrase: "${entry.phrase}" (${entry.category})`);
       return {
         isSpeculative: true,
         trigger: entry.phrase,
@@ -3471,7 +3474,7 @@ function checkSpeculativeContext(text, keyword) {
   // ================================================================
   for (const entry of PAST_EVENT_PATTERNS) {
     if (lowerText.includes(entry.pattern)) {
-      console.log(`[SPEC v3.7] Past event detected: "${entry.pattern}" (${entry.type})`);
+      _NLP_DEBUG && console.log(`[SPEC v3.7] Past event detected: "${entry.pattern}" (${entry.type})`);
       return {
         isSpeculative: true,
         trigger: entry.pattern,
@@ -3494,7 +3497,7 @@ function checkSpeculativeContext(text, keyword) {
     for (const root of FLOOD_ROOTS) {
       const habitualForm = prefix + root;
       if (lowerText.includes(habitualForm)) {
-        console.log(`[SPEC v3.8] Bisaya habitual verb: "${habitualForm}" (${prefix}- + ${root})`);
+        _NLP_DEBUG && console.log(`[SPEC v3.8] Bisaya habitual verb: "${habitualForm}" (${prefix}- + ${root})`);
         return {
           isSpeculative: true,
           trigger: habitualForm,
@@ -3533,7 +3536,7 @@ function checkSpeculativeContext(text, keyword) {
 
   for (const trigger of POST_KEYWORD_SPECULATIVE) {
     if (postContext.includes(trigger)) {
-      console.log(`[SPEC v3.7] Post-keyword trigger: "${trigger}" after "${keyword}"`);
+      _NLP_DEBUG && console.log(`[SPEC v3.7] Post-keyword trigger: "${trigger}" after "${keyword}"`);
       return { isSpeculative: true, trigger, position: "after", type: "conditional" };
     }
   }
@@ -3646,13 +3649,13 @@ function checkCriticality(point) {
 
           if (specCheck.isSpeculative) {
             blockReason = `Speculative: "${keyword}" preceded by "${specCheck.trigger}"`;
-            console.log(`[AUTO-CAT v3.6.3] ⛔ BLOCKED: ${blockReason}`);
+            _NLP_DEBUG && console.log(`[AUTO-CAT v3.6.3] ⛔ BLOCKED: ${blockReason}`);
             continue; // Try next keyword
           }
 
           // This keyword is NON-SPECULATIVE - allow auto-switch
           hasNonSpeculativeKeyword = true;
-          console.log(`[AUTO-CAT v3.6.3] ✅ NON-SPECULATIVE keyword: "${keyword}"`);
+          _NLP_DEBUG && console.log(`[AUTO-CAT v3.6.3] ✅ NON-SPECULATIVE keyword: "${keyword}"`);
           break;
         }
 
@@ -3662,7 +3665,7 @@ function checkCriticality(point) {
 
     // Only switch if we have a verified non-speculative keyword
     if (shouldAutoSwitch) {
-      console.log(`[AUTO-CAT v3.6.3] 🔄 SWITCHING: "${effectiveCategory}" → "${nlpResult.category}"`);
+      _NLP_DEBUG && console.log(`[AUTO-CAT v3.6.3] 🔄 SWITCHING: "${effectiveCategory}" → "${nlpResult.category}"`);
 
       // Update the point object so it persists
       if (!point.ai_reclassified) {
@@ -3677,7 +3680,7 @@ function checkCriticality(point) {
       }
       effectiveCategory = nlpResult.category;
     } else if (blockReason) {
-      console.log(`[AUTO-CAT v3.6.3] ❌ NOT SWITCHING: ${blockReason}`);
+      _NLP_DEBUG && console.log(`[AUTO-CAT v3.6.3] ❌ NOT SWITCHING: ${blockReason}`);
     }
   }
 
@@ -3748,7 +3751,7 @@ function checkCriticality(point) {
 
     result.isContextSuppressed = true;
     result.suppressionContext = suppressionType;
-    console.log(`[TRIAGE v3.6.2] CONTEXT SUPPRESSION: "${description.substring(0, 50)}..." → ${suppressionType} (matched: "${matchedKeyword}")`);
+    _NLP_DEBUG && console.log(`[TRIAGE v3.6.2] CONTEXT SUPPRESSION: "${description.substring(0, 50)}..." → ${suppressionType} (matched: "${matchedKeyword}")`);
     // Return early - do NOT flag as critical
     return result;
   }
@@ -3767,10 +3770,10 @@ function checkCriticality(point) {
       // This catches infrastructure complaints like "walay proper sewage system dria"
       for (const entry of NON_EMERGENCY_PHRASES) {
         if (description.includes(entry.phrase)) {
-          console.log(`[TRIAGE v3.8.1] ⚠️ FLOOD CATEGORY but NON-EMERGENCY phrase detected`);
-          console.log(`  └─ Category: ${category}`);
-          console.log(`  └─ Phrase: "${entry.phrase}" (${entry.category})`);
-          console.log(`  └─ Description: "${description.substring(0, 60)}..."`);
+          _NLP_DEBUG && console.log(`[TRIAGE v3.8.1] ⚠️ FLOOD CATEGORY but NON-EMERGENCY phrase detected`);
+          _NLP_DEBUG && console.log(`  └─ Category: ${category}`);
+          _NLP_DEBUG && console.log(`  └─ Phrase: "${entry.phrase}" (${entry.category})`);
+          _NLP_DEBUG && console.log(`  └─ Description: "${description.substring(0, 60)}..."`);
 
           result.isSpeculative = true;
           result.speculativeTrigger = entry.phrase;
@@ -3790,11 +3793,11 @@ function checkCriticality(point) {
 
           if (speculationCheck.isSpeculative) {
             // This is a habitual/conditional flood complaint, NOT an active emergency
-            console.log(`[TRIAGE v3.8] ⚠️ FLOOD CATEGORY but HABITUAL/CONDITIONAL description`);
-            console.log(`  └─ Category: ${category}`);
-            console.log(`  └─ Keyword: "${keyword}" triggered by "${speculationCheck.trigger}"`);
-            console.log(`  └─ Type: ${speculationCheck.type}`);
-            console.log(`  └─ Description: "${description.substring(0, 60)}..."`);
+            _NLP_DEBUG && console.log(`[TRIAGE v3.8] ⚠️ FLOOD CATEGORY but HABITUAL/CONDITIONAL description`);
+            _NLP_DEBUG && console.log(`  └─ Category: ${category}`);
+            _NLP_DEBUG && console.log(`  └─ Keyword: "${keyword}" triggered by "${speculationCheck.trigger}"`);
+            _NLP_DEBUG && console.log(`  └─ Type: ${speculationCheck.type}`);
+            _NLP_DEBUG && console.log(`  └─ Description: "${description.substring(0, 60)}..."`);
 
             result.isSpeculative = true;
             result.speculativeTrigger = speculationCheck.trigger;
@@ -3838,8 +3841,8 @@ function checkCriticality(point) {
       const negationCheck = checkNegation(description, keyword);
 
       if (negationCheck.isNegated) {
-        console.log(`[NEGATION v3.9] ⛔ BLOCKED: '${keyword}' is negated by '${negationCheck.negationWord}'`);
-        console.log(`  └─ Description: "${description.substring(0, 60)}..."`);
+        _NLP_DEBUG && console.log(`[NEGATION v3.9] ⛔ BLOCKED: '${keyword}' is negated by '${negationCheck.negationWord}'`);
+        _NLP_DEBUG && console.log(`  └─ Description: "${description.substring(0, 60)}..."`);
 
         // Track this for debugging (but don't mark as critical)
         result.isNegated = true;
@@ -3864,10 +3867,10 @@ function checkCriticality(point) {
 
       if (metaphorCheck.isMetaphorical) {
         // FILTER OUT: This is figurative language, NOT a real emergency
-        console.log(`[METAPHOR v3.5] 🎭 FILTERED: '${keyword}' is figurative in: "${description.substring(0, 60)}..."`);
-        console.log(`  └─ Reason: ${metaphorCheck.reason}`);
-        console.log(`  └─ Pattern: "${metaphorCheck.matchedPattern || "N/A"}"`);
-        console.log(`  └─ Confidence: ${(metaphorCheck.confidence * 100).toFixed(0)}%`);
+        _NLP_DEBUG && console.log(`[METAPHOR v3.5] 🎭 FILTERED: '${keyword}' is figurative in: "${description.substring(0, 60)}..."`);
+        _NLP_DEBUG && console.log(`  └─ Reason: ${metaphorCheck.reason}`);
+        _NLP_DEBUG && console.log(`  └─ Pattern: "${metaphorCheck.matchedPattern || "N/A"}"`);
+        _NLP_DEBUG && console.log(`  └─ Confidence: ${(metaphorCheck.confidence * 100).toFixed(0)}%`);
 
         // Track this for debugging (but don't mark as critical)
         result.isMetaphorical = true;
@@ -3885,7 +3888,7 @@ function checkCriticality(point) {
 
       if (speculationCheck.isSpeculative) {
         // DOWNGRADE: This is a speculative mention, not an active emergency
-        console.log(`[SPECULATION] Ignoring '${keyword}' - preceded by '${speculationCheck.trigger}' in: "${description.substring(0, 60)}..."`);
+        _NLP_DEBUG && console.log(`[SPECULATION] Ignoring '${keyword}' - preceded by '${speculationCheck.trigger}' in: "${description.substring(0, 60)}..."`);
         result.isSpeculative = true;
         result.speculativeTrigger = speculationCheck.trigger;
         result.matchedKeyword = keyword;
@@ -3908,16 +3911,16 @@ function checkCriticality(point) {
   if (result.isSpeculative) {
     result.source = "keyword-speculative";
     result.confidence = 0.3;  // Low confidence - it's just a mention
-    console.log(`[SPECULATION] Final verdict: NOT CRITICAL (speculative context)`);
+    _NLP_DEBUG && console.log(`[SPECULATION] Final verdict: NOT CRITICAL (speculative context)`);
   }
 
   // v3.5: If we found keywords but ALL were metaphorical, return the metaphor info
   if (result.isMetaphorical && !result.isSpeculative) {
     result.source = "keyword-metaphorical";
     result.confidence = 0.1;  // Very low - it's figurative language
-    console.log(`[METAPHOR v3.5] Final verdict: NOT CRITICAL (figurative usage)`);
-    console.log(`  └─ Matched keyword: "${result.matchedKeyword}"`);
-    console.log(`  └─ Reason: ${result.metaphorReason}`);
+    _NLP_DEBUG && console.log(`[METAPHOR v3.5] Final verdict: NOT CRITICAL (figurative usage)`);
+    _NLP_DEBUG && console.log(`  └─ Matched keyword: "${result.matchedKeyword}"`);
+    _NLP_DEBUG && console.log(`  └─ Reason: ${result.metaphorReason}`);
   }
 
   return result;
@@ -3991,7 +3994,7 @@ function extractCriticalPoints(data) {
   // Sort critical points by urgency (highest first)
   criticalPoints.sort((a, b) => b._criticality.urgencyLevel - a._criticality.urgencyLevel);
 
-  console.log(`[TRIAGE] Extracted ${criticalPoints.length} CRITICAL points, ${standardPoints.length} standard points`);
+  _NLP_DEBUG && console.log(`[TRIAGE] Extracted ${criticalPoints.length} CRITICAL points, ${standardPoints.length} standard points`);
 
   return { criticalPoints, standardPoints };
 }
@@ -4174,14 +4177,6 @@ const SCENARIO_CONFIG = {
   },
   // GROUP B: SEMANTIC LOGIC
   6: {
-    name: "S-02: Causal Chain",
-    prefix: "S02_causal",
-    description: "Pipe Leak + Flood 10m apart (cause-effect)",
-    expectedResult: "MERGE",
-    color: "#10b981",
-    group: "B"
-  },
-  7: {
     name: "S-05: False Correlation",
     prefix: "S05_false_correl",
     description: "Stray Dog + Pothole 1m apart (unrelated)",
@@ -4189,7 +4184,7 @@ const SCENARIO_CONFIG = {
     color: "#ef4444",
     group: "B"
   },
-  8: {
+  7: {
     name: "S-06: Domino Chain",
     prefix: "S06_domino",
     description: "Pipe → Flood → Traffic cascade effect",
@@ -4197,7 +4192,7 @@ const SCENARIO_CONFIG = {
     color: "#06b6d4",
     group: "B"
   },
-  9: {
+  8: {
     name: "S-10: Conflict",
     prefix: "S10_conflict",
     description: "Fire + Pothole at EXACT same location",
@@ -4205,7 +4200,7 @@ const SCENARIO_CONFIG = {
     color: "#ef4444",
     group: "B"
   },
-  10: {
+  9: {
     name: "S-11: Synonyms",
     prefix: "S11_synonym",
     description: "'Baha' vs 'Rising Water' 5m apart (same meaning)",
@@ -4214,7 +4209,7 @@ const SCENARIO_CONFIG = {
     group: "B"
   },
   // GROUP C: DATA INTEGRITY
-  11: {
+  10: {
     name: "S-04: Time Decay (90 days)",
     prefix: "S04_decay",
     description: "2x Trash at same loc, today vs 90 days ago",
@@ -4222,7 +4217,7 @@ const SCENARIO_CONFIG = {
     color: "#f59e0b",
     group: "C"
   },
-  12: {
+  11: {
     name: "S-08: Mass Panic",
     prefix: "S08_mass_panic",
     description: "20x Fire in 10m radius within 60 seconds",
@@ -4230,7 +4225,7 @@ const SCENARIO_CONFIG = {
     color: "#dc2626",
     group: "C"
   },
-  13: {
+  12: {
     name: "S-12: Spam Bot",
     prefix: "S12_spam_bot",
     description: "50 complaints with identical timestamp (to ms)",
@@ -4238,7 +4233,7 @@ const SCENARIO_CONFIG = {
     color: "#7c3aed",
     group: "C"
   },
-  14: {
+  13: {
     name: "S-14: Default Pin",
     prefix: "S14_default_pin",
     description: "10 complaints at map center (default location)",
@@ -4246,7 +4241,7 @@ const SCENARIO_CONFIG = {
     color: "#f97316",
     group: "C"
   },
-  15: {
+  14: {
     name: "S-15: Null Data",
     prefix: "S15_null",
     description: "Records with null lat or null category",
@@ -4255,7 +4250,7 @@ const SCENARIO_CONFIG = {
     group: "C"
   },
   // GROUP D: STRESS TEST
-  16: {
+  15: {
     name: "S-16: Triple Pothole Road Merge",
     prefix: "S16_triple",
     description: "10 Potholes in 3 groups with 8m gaps (ε=10m) → Expect 1 MERGED cluster",
@@ -4300,7 +4295,7 @@ function getAdaptiveParameters(totalVolume, dominantCategory, dominantRatio = 0)
     mode = "FLOOD_MODE";
     modeReason = `${Math.round(dominantRatio * 100)}% flood reports → neighborhood-scale clustering (ε=150m)`;
 
-    console.log(`[ADAPTIVE] FLOOD MODE activated: ${modeReason}`);
+    _NLP_DEBUG && console.log(`[ADAPTIVE] FLOOD MODE activated: ${modeReason}`);
 
     return {
       epsilon,
@@ -4325,7 +4320,7 @@ function getAdaptiveParameters(totalVolume, dominantCategory, dominantRatio = 0)
     mode = "SURGE_MODE";
     modeReason = `${totalVolume} complaints exceeds threshold (50) → ε increased by 25%`;
 
-    console.log(`[ADAPTIVE] SURGE MODE activated: ${modeReason}`);
+    _NLP_DEBUG && console.log(`[ADAPTIVE] SURGE MODE activated: ${modeReason}`);
 
     return {
       epsilon,
@@ -4540,46 +4535,24 @@ function checkSemanticRelation(categoryA, categoryB) {
   const parentB = getCanonicalParent(categoryB);
   const sameParent = parentA && parentB && parentA === parentB;
 
-  // v3.9.1: Check if Phase 2 (Causal Analysis) has been triggered
-  // Cross-category causal clustering only happens after user enables it
-  const causalAnalysisEnabled = (typeof window !== "undefined" && window.causalAnalysisEnabled === true);
-
-  // Check if A relates to B via RELATIONSHIP_MATRIX (causal link)
-  const relatedFromA = RELATIONSHIP_MATRIX[categoryA] || [];
-  const isRelatedAtoB = relatedFromA.includes(categoryB);
-
-  // Check if B relates to A (bidirectional check)
-  const relatedFromB = RELATIONSHIP_MATRIX[categoryB] || [];
-  const isRelatedBtoA = relatedFromB.includes(categoryA);
-
-  // Determine if causal relationship exists
-  const hasCausalRelation = isRelatedAtoB || isRelatedBtoA;
-
-  // v3.9.1: Only allow causal cross-category clustering if Phase 2 is triggered
-  // Same-parent subcategories always cluster together (they're the same type of issue)
-  const isRelated = sameParent || (hasCausalRelation && causalAnalysisEnabled);
+  // Check if categories share a parent (subcategory matching)
+  const isRelated = sameParent;
 
   // Get correlation score (check both directions)
   const keyAB = `${categoryA}->${categoryB}`;
   const keyBA = `${categoryB}->${categoryA}`;
   let score = CORRELATION_SCORES[keyAB] || CORRELATION_SCORES[keyBA] || 0.0;
 
-  // If categories are related but no explicit score, give a default moderate score
+  // If categories share a parent but no explicit score, give a default score
   if (isRelated && score === 0.0) {
-    score = sameParent ? 0.85 : 0.55;  // Higher score for same parent category
+    score = 0.85;
   }
 
   let relationship = "NONE";
   if (isRelated && score >= CORRELATION_THRESHOLD) {
-    relationship = sameParent ? "SIBLING" : "CAUSAL";
+    relationship = "SIBLING";
   } else if (isRelated) {
     relationship = "WEAK";
-  }
-
-  // v3.9.1: Log when causal link is blocked due to Phase 2 not being triggered
-  if (hasCausalRelation && !causalAnalysisEnabled && !sameParent) {
-    // This is a potential causal link that's being blocked
-    // console.log(`[SEMANTIC] Causal link ${categoryA} ↔ ${categoryB} blocked - Phase 2 not triggered`);
   }
 
   return {
@@ -4689,13 +4662,13 @@ function checkLogic(pointA, pointB) {
 
 /**
  * ============================================================================
- * TRANSITIVE CAUSAL CHAIN CLUSTERING SYSTEM
+ * TRANSITIVE CHAIN CLUSTERING SYSTEM
  * ============================================================================
  *
  * PROBLEM SOLVED:
  * ---------------
  * Standard DBSCAN only considers direct neighbors (1-hop). This implementation
- * automatically discovers multi-hop causal chains like:
+ * automatically discovers multi-hop transitive chains like:
  *
  *   Pipe Leak → Flooding → Traffic
  *
@@ -4777,7 +4750,7 @@ const RecursiveCalibrator = {
      * @param {number} step - Step size (default 0.05)
      */
   runOptimization(data, startK = 0.8, endK = 1.2, step = 0.05) {
-    console.log(`[CALIBRATOR] Starting Recursive Optimization Loop (k: ${startK} → ${endK})...`);
+    _NLP_DEBUG && console.log(`[CALIBRATOR] Starting Recursive Optimization Loop (k: ${startK} → ${endK})...`);
     this.history = [];
     let bestK = 1.0;
     let maxS = -1.0;
@@ -4809,12 +4782,12 @@ const RecursiveCalibrator = {
         bestK = k;
       }
 
-      console.log(`[CALIBRATOR] Iteration ${iteration.iteration}: k=${k.toFixed(2)}, s=${silhouetteAvg.toFixed(4)}`);
+      _NLP_DEBUG && console.log(`[CALIBRATOR] Iteration ${iteration.iteration}: k=${k.toFixed(2)}, s=${silhouetteAvg.toFixed(4)}`);
     }
 
     // Apply the best factor globally
     DBSCAN_CONFIG.CALIBRATION_FACTOR = bestK;
-    console.log(`[CALIBRATOR] Optimization Finished. Optimal k = ${bestK.toFixed(2)} (s=${maxS.toFixed(4)})`);
+    _NLP_DEBUG && console.log(`[CALIBRATOR] Optimization Finished. Optimal k = ${bestK.toFixed(2)} (s=${maxS.toFixed(4)})`);
 
     return {
       bestK,
@@ -4879,7 +4852,7 @@ const RecursiveCalibrator = {
      * @returns {Object} Optimization result with baseline and final configuration
      */
   runOptimizationWithElbow(data, targetSilhouette = 0.55, maxIterations = 20) {
-    console.log(`[CALIBRATOR] Starting Elbow + Silhouette optimization (target s=${targetSilhouette})...`);
+    _NLP_DEBUG && console.log(`[CALIBRATOR] Starting Elbow + Silhouette optimization (target s=${targetSilhouette})...`);
 
     // Phase A: Get baseline from Elbow Method
     const elbow = ElbowMethod.findOptimalEpsilon(data, 4);
@@ -4916,10 +4889,10 @@ const RecursiveCalibrator = {
         bestK = k;
       }
 
-      console.log(`[CALIBRATOR] Iter ${iteration}: k=${k.toFixed(2)}, ε_base=${baselineEpsilon.toFixed(0)}m, s=${silhouetteAvg.toFixed(4)}`);
+      _NLP_DEBUG && console.log(`[CALIBRATOR] Iter ${iteration}: k=${k.toFixed(2)}, ε_base=${baselineEpsilon.toFixed(0)}m, s=${silhouetteAvg.toFixed(4)}`);
 
       if (silhouetteAvg >= targetSilhouette) {
-        console.log(`[CALIBRATOR] ✅ Target Silhouette (${targetSilhouette}) reached!`);
+        _NLP_DEBUG && console.log(`[CALIBRATOR] ✅ Target Silhouette (${targetSilhouette}) reached!`);
         break;
       }
     }
@@ -4940,7 +4913,7 @@ const RecursiveCalibrator = {
  */
 const ElbowMethod = {
   findOptimalEpsilon(data, k = 4) {
-    console.log(`[ELBOW] Finding optimal ε using ${k}-distance graph...`);
+    _NLP_DEBUG && console.log(`[ELBOW] Finding optimal ε using ${k}-distance graph...`);
     const startTime = performance.now();
 
     const validData = data.filter(p => p.latitude != null && p.longitude != null);
@@ -4966,7 +4939,7 @@ const ElbowMethod = {
     const kneeIndex = this.findKneePoint(kDistances);
     const optimalEpsilon = kDistances[kneeIndex] || 40;
 
-    console.log(`[ELBOW] ✅ Optimal ε = ${optimalEpsilon.toFixed(2)}m (${Math.round(performance.now() - startTime)}ms)`);
+    _NLP_DEBUG && console.log(`[ELBOW] ✅ Optimal ε = ${optimalEpsilon.toFixed(2)}m (${Math.round(performance.now() - startTime)}ms)`);
     return { optimalEpsilon, kDistances, kneeIndex };
   },
 
@@ -5001,7 +4974,7 @@ const ElbowMethod = {
     for (const [cat, mult] of Object.entries(multipliers)) {
       ADAPTIVE_EPSILON[cat] = Math.round(baseline * mult);
     }
-    console.log(`[ELBOW] Applied baseline ε=${Math.round(baseline)}m to ADAPTIVE_EPSILON`);
+    _NLP_DEBUG && console.log(`[ELBOW] Applied baseline ε=${Math.round(baseline)}m to ADAPTIVE_EPSILON`);
     return ADAPTIVE_EPSILON;
   },
 
@@ -5148,7 +5121,7 @@ window.RoadValidator = RoadValidator;
  *
  * KEY FEATURES:
  * 1. Neighboring Cluster Detection - finds clusters within proximity threshold
- * 2. Cross-Cluster Causal Analysis - detects causal links between cluster types
+ * 2. Cross-Cluster Correlation Analysis - detects relationships between cluster types
  * 3. Adaptive Epsilon Expansion - increases epsilon when correlation is strong
  * 4. Outlier Absorption - noise points that fit cluster patterns get absorbed
  *
@@ -5165,20 +5138,7 @@ window.RoadValidator = RoadValidator;
 
 const CLUSTER_CORRELATION_CONFIG = {
   // Enable/disable the correlation system
-  // v3.9.1: Now controlled by window.causalAnalysisEnabled (Phase 2 trigger)
   ENABLE_CORRELATION_ANALYSIS: true,
-
-  // NEW: Check if Phase 2 has been triggered before doing cross-category merging
-  // This allows the correlation system to be ready but only active after user trigger
-  shouldRunCorrelation () {
-    // If the dashboard has set causalAnalysisEnabled, respect it
-    if (typeof window !== "undefined" && typeof window.causalAnalysisEnabled !== "undefined") {
-      return window.causalAnalysisEnabled;
-    }
-    // Default: allow correlation (for backwards compatibility in non-dashboard contexts)
-    return this.ENABLE_CORRELATION_ANALYSIS;
-  },
-
   // Maximum distance (meters) to consider clusters as "neighboring"
   // This is the search radius for potential correlations
   NEIGHBOR_DISTANCE_THRESHOLD: 300,  // meters
@@ -5197,8 +5157,6 @@ const CLUSTER_CORRELATION_CONFIG = {
   // Temporal threshold - clusters must be within this time window
   TEMPORAL_THRESHOLD: 14 * 24 * 60 * 60 * 1000,  // 14 days
 
-  // Minimum causal link strength to count as correlation
-  MIN_CAUSAL_LINK_STRENGTH: 0.55,
 
   // Location similarity threshold (0-1) - higher = stricter location matching
   LOCATION_SIMILARITY_THRESHOLD: 0.7,
@@ -5207,46 +5165,6 @@ const CLUSTER_CORRELATION_CONFIG = {
   ENABLE_LOGGING: true
 };
 
-/**
- * CROSS-CLUSTER CAUSAL LINK DATABASE
- * Defines causal relationships between cluster types (not just individual categories)
- * Higher scores = stronger correlation = more likely to merge
- */
-const CLUSTER_CAUSAL_LINKS = {
-  // Sanitation Chain (the Zone III case)
-  "Illegal Dumping->Bad Odor": 0.75,
-  "Illegal Dumping->Overflowing Trash": 0.70,
-  "Illegal Dumping->Garbage Collection": 0.80,
-  "Overflowing Trash->Bad Odor": 0.85,
-  "Overflowing Trash->Garbage Collection": 0.75,
-  "Garbage Collection->Bad Odor": 0.70,
-  "Garbage Collection->Pest Infestation": 0.65,
-  "Trash->Clogged Drain": 0.60,
-  "Trash->Clogged Drainage": 0.60,
-
-  // Flooding Chain
-  "Flooding->Road Damage": 0.70,
-  "Flooding->Traffic": 0.85,
-  "Flooding->Accident": 0.60,
-  "Clogged Drainage->Flooding": 0.88,
-  "Pipe Leak->Flooding": 0.92,
-  "Pipe Leak->No Water": 0.85,
-
-  // Infrastructure Chain
-  "Pothole->Road Damage": 0.75,
-  "Pothole->Accident": 0.65,
-  "Road Damage->Traffic": 0.70,
-
-  // Utilities Chain
-  "Blackout->Crime": 0.55,
-  "Blackout->Traffic": 0.60,
-  "Power Line Down->Blackout": 0.90,
-
-  // Fire Chain
-  "Fire->Smoke": 0.95,
-  "Fire->Evacuation": 0.85,
-  "Fire->Traffic": 0.70
-};
 
 /**
  * Find all clusters that are within proximity of a target cluster.
@@ -5302,7 +5220,7 @@ function findNeighboringClusters(targetCluster, allClusters, targetIndex, distan
 
 /**
  * Analyze the correlation between two clusters.
- * Checks causal links, location similarity, temporal proximity, and category overlap.
+ * Checks location similarity, temporal proximity, and category overlap.
  *
  * @param {Array} clusterA - First cluster
  * @param {Array} clusterB - Second cluster
@@ -5312,7 +5230,6 @@ function analyzeClusterCorrelation(clusterA, clusterB) {
   const result = {
     isCorrelated: false,
     correlationScore: 0,
-    causalLinks: [],
     sharedLocation: null,
     locationSimilarity: 0,
     temporalProximity: 0,
@@ -5330,35 +5247,6 @@ function analyzeClusterCorrelation(clusterA, clusterB) {
   const categoriesA = [...new Set(clusterA.map(p => p.subcategory || p.category))];
   const categoriesB = [...new Set(clusterB.map(p => p.subcategory || p.category))];
 
-  // 2. CHECK CAUSAL LINKS (bidirectional)
-  const causalLinks = [];
-
-  for (const catX of categoriesA) {
-    for (const catY of categoriesB) {
-      const keyAB = `${catX}->${catY}`;
-      const keyBA = `${catY}->${catX}`;
-
-      // Check direct causal link database
-      if (CLUSTER_CAUSAL_LINKS[keyAB]) {
-        causalLinks.push({ cause: catX, effect: catY, strength: CLUSTER_CAUSAL_LINKS[keyAB] });
-      } else if (CLUSTER_CAUSAL_LINKS[keyBA]) {
-        causalLinks.push({ cause: catY, effect: catX, strength: CLUSTER_CAUSAL_LINKS[keyBA] });
-      }
-
-      // Also check RELATIONSHIP_MATRIX for semantic relationships
-      if (RELATIONSHIP_MATRIX[catX] && RELATIONSHIP_MATRIX[catX].includes(catY)) {
-        const existing = causalLinks.find(l =>
-          (l.cause === catX && l.effect === catY) ||
-                    (l.cause === catY && l.effect === catX)
-        );
-        if (!existing) {
-          causalLinks.push({ cause: catX, effect: catY, strength: 0.55, source: "relationship_matrix" });
-        }
-      }
-    }
-  }
-
-  result.causalLinks = causalLinks;
 
   // 3. CHECK CATEGORY OVERLAP (same categories in both clusters)
   const overlap = categoriesA.filter(c => categoriesB.includes(c));
@@ -5407,28 +5295,22 @@ function analyzeClusterCorrelation(clusterA, clusterB) {
   // 6. CALCULATE COMPOSITE CORRELATION SCORE
   let score = 0;
 
-  // Causal links (strongest factor) - up to 0.4
-  if (causalLinks.length > 0) {
-    const avgCausalStrength = causalLinks.reduce((sum, l) => sum + l.strength, 0) / causalLinks.length;
-    score += avgCausalStrength * 0.4;
-    result.reasoning.push(`${causalLinks.length} causal link(s) found (avg strength: ${(avgCausalStrength * 100).toFixed(0)}%)`);
-  }
 
-  // Category overlap - up to 0.35 (v4.0.1: increased from 0.2 to prioritize same-type clusters)
+  // Category overlap - up to 0.45 (v4.0.1: increased from 0.2 to prioritize same-type clusters)
   if (overlap.length > 0) {
     const overlapRatio = overlap.length / Math.max(categoriesA.length, categoriesB.length);
-    score += overlapRatio * 0.35;
+    score += overlapRatio * 0.45;
     result.reasoning.push(`Category overlap: ${overlap.join(", ")} (${(overlapRatio * 100).toFixed(0)}% match)`);
   }
 
-  // Location similarity - up to 0.25
-  score += result.locationSimilarity * 0.25;
+  // Location similarity - up to 0.35
+  score += result.locationSimilarity * 0.35;
   if (result.locationSimilarity >= 0.4) {
     result.reasoning.push(`Same location: ${dominantLocA.street || dominantLocA.barangay || dominantLocA.zone}`);
   }
 
-  // Temporal proximity - up to 0.15
-  score += result.temporalProximity * 0.15;
+  // Temporal proximity - up to 0.20
+  score += result.temporalProximity * 0.20;
 
   result.correlationScore = Math.min(1, score);
 
@@ -5498,7 +5380,7 @@ function getMostCommonLocation(locations) {
 
 /**
  * Analyze noise points (outliers) to see if they fit into existing clusters.
- * Points that have causal relationships with cluster categories get absorbed.
+ * Points that share a category or parent category with existing clusters get absorbed.
  *
  * @param {Array} noisePoints - Points marked as noise by DBSCAN
  * @param {Array} clusters - Existing clusters
@@ -5534,29 +5416,28 @@ function analyzeOutliersForAbsorption(noisePoints, clusters) {
 
       if (minDist > expandedEpsilon) continue;
 
-      // Check causal relationship
-      let causalScore = 0;
+      // Check category match (same category or same parent category)
+      let categoryScore = 0;
       for (const clusterCat of clusterCategories) {
-        const keyAB = `${pointCategory}->${clusterCat}`;
-        const keyBA = `${clusterCat}->${pointCategory}`;
-
-        if (CLUSTER_CAUSAL_LINKS[keyAB]) {
-          causalScore = Math.max(causalScore, CLUSTER_CAUSAL_LINKS[keyAB]);
-        } else if (CLUSTER_CAUSAL_LINKS[keyBA]) {
-          causalScore = Math.max(causalScore, CLUSTER_CAUSAL_LINKS[keyBA]);
-        } else if (RELATIONSHIP_MATRIX[pointCategory]?.includes(clusterCat) ||
-                    RELATIONSHIP_MATRIX[clusterCat]?.includes(pointCategory)) {
-          causalScore = Math.max(causalScore, 0.50);
+        if (pointCategory === clusterCat) {
+          categoryScore = 1.0;
+          break;
+        }
+        // Check parent category match
+        const pointParent = getCanonicalParent(pointCategory);
+        const clusterParent = getCanonicalParent(clusterCat);
+        if (pointParent && clusterParent && pointParent === clusterParent) {
+          categoryScore = Math.max(categoryScore, 0.75);
         }
       }
 
-      // Composite score: 60% causal, 40% proximity
+      // Composite score: 50% category match, 50% proximity
       const proximityScore = 1 - (minDist / expandedEpsilon);
-      const compositeScore = (causalScore * 0.6) + (proximityScore * 0.4);
+      const compositeScore = (categoryScore * 0.5) + (proximityScore * 0.5);
 
-      if (compositeScore > bestScore && causalScore >= CLUSTER_CORRELATION_CONFIG.MIN_CAUSAL_LINK_STRENGTH) {
+      if (compositeScore > bestScore && categoryScore >= 0.5) {
         bestScore = compositeScore;
-        bestMatch = { clusterIndex: i, score: compositeScore, distance: minDist, causalScore };
+        bestMatch = { clusterIndex: i, score: compositeScore, distance: minDist, categoryScore };
       }
     }
 
@@ -5585,14 +5466,6 @@ function analyzeOutliersForAbsorption(noisePoints, clusters) {
  * @returns {Object} { clusters, noise, correlationAnalysis, mergeLog }
  */
 function mergeCorrelatedClusters(clusters, noise) {
-  // v3.9.1: Check Phase 2 trigger status
-  if (!CLUSTER_CORRELATION_CONFIG.shouldRunCorrelation()) {
-    if (CLUSTER_CORRELATION_CONFIG.ENABLE_LOGGING) {
-      console.log("[CORRELATION] Skipped - Phase 2 (Causal Analysis) not triggered yet");
-    }
-    return { clusters, noise, correlationAnalysis: [], mergeLog: [] };
-  }
-
   if (!CLUSTER_CORRELATION_CONFIG.ENABLE_CORRELATION_ANALYSIS) {
     return { clusters, noise, correlationAnalysis: [], mergeLog: [] };
   }
@@ -5602,7 +5475,7 @@ function mergeCorrelatedClusters(clusters, noise) {
   const correlationAnalysis = [];
 
   if (CLUSTER_CORRELATION_CONFIG.ENABLE_LOGGING) {
-    console.log(`[CORRELATION] Starting correlation analysis on ${clusters.length} clusters`);
+    _NLP_DEBUG && console.log(`[CORRELATION] Starting correlation analysis on ${clusters.length} clusters`);
   }
 
   // Phase 1: Analyze all cluster pairs for correlation
@@ -5625,7 +5498,6 @@ function mergeCorrelatedClusters(clusters, noise) {
         correlationAnalysis.push({
           clusters: [i, neighbor.index],
           score: correlation.correlationScore,
-          causalLinks: correlation.causalLinks,
           sharedLocation: correlation.sharedLocation,
           suggestMerge: correlation.suggestMerge,
           reasoning: correlation.reasoning
@@ -5667,7 +5539,7 @@ function mergeCorrelatedClusters(clusters, noise) {
     });
 
     if (CLUSTER_CORRELATION_CONFIG.ENABLE_LOGGING) {
-      console.log(`[CORRELATION] Merged Cluster #${idxA} (${catA}) + #${idxB} (${catB}) | Score: ${(corr.score * 100).toFixed(0)}%`);
+      _NLP_DEBUG && console.log(`[CORRELATION] Merged Cluster #${idxA} (${catA}) + #${idxB} (${catB}) | Score: ${(corr.score * 100).toFixed(0)}%`);
     }
   }
 
@@ -5686,7 +5558,7 @@ function mergeCorrelatedClusters(clusters, noise) {
         cluster: clusterIdx,
         pointId: point.id,
         pointCategory: point.subcategory || point.category,
-        causalScore: matchDetails.causalScore,
+        categoryScore: matchDetails.categoryScore,
         distance: matchDetails.distance
       });
     }
@@ -5695,7 +5567,7 @@ function mergeCorrelatedClusters(clusters, noise) {
   const endTime = performance.now();
 
   if (CLUSTER_CORRELATION_CONFIG.ENABLE_LOGGING) {
-    console.log(`[CORRELATION] Complete: ${clusters.length} → ${mergedClusters.length} clusters, ${noise.length - absorptionResult.remaining.length} outliers absorbed (${(endTime - startTime).toFixed(0)}ms)`);
+    _NLP_DEBUG && console.log(`[CORRELATION] Complete: ${clusters.length} → ${mergedClusters.length} clusters, ${noise.length - absorptionResult.remaining.length} outliers absorbed (${(endTime - startTime).toFixed(0)}ms)`);
   }
 
   return {
@@ -5738,7 +5610,6 @@ function getClusterCorrelationInfo(targetCluster, targetIndex, allClusters) {
         category: neighborDominantCat,
         distance: Math.round(neighbor.distance),
         correlationScore: correlation.correlationScore,
-        causalLinks: correlation.causalLinks.slice(0, 3), // Top 3 links
         sharedLocation: correlation.sharedLocation,
         suggestMerge: correlation.suggestMerge,
         reasoning: correlation.reasoning,
@@ -5865,7 +5736,7 @@ function getSemanticallyRelatedNeighbors(point, allPoints, visited = new Set()) 
  * @param {Set} visited - Set of visited point IDs
  * @param {Array} cluster - The cluster array being built
  * @param {number} depth - Current recursion depth (for safety)
- * @param {Array} chainLog - Log of the causal chain (for visualization)
+ * @param {Array} chainLog - Log of the chain (for visualization)
  * @returns {Object} Expansion result with cluster and chain information
  */
 function expandCluster(point, neighbors, clusterId, allPoints, visited, cluster, depth = 0, chainLog = []) {
@@ -5903,13 +5774,13 @@ function expandCluster(point, neighbors, clusterId, allPoints, visited, cluster,
   // Border points are added to cluster but don't propagate further
   if (neighbors.length < DBSCAN_CONFIG.MIN_PTS) {
     if (DBSCAN_CONFIG.ENABLE_LOGGING) {
-      console.log(`[DBSCAN++] Point ${point.id} is BORDER (${neighbors.length} < ${DBSCAN_CONFIG.MIN_PTS} neighbors) - no expansion`);
+      _NLP_DEBUG && console.log(`[DBSCAN++] Point ${point.id} is BORDER (${neighbors.length} < ${DBSCAN_CONFIG.MIN_PTS} neighbors) - no expansion`);
     }
     return { cluster, chainLog };
   }
 
   if (DBSCAN_CONFIG.ENABLE_LOGGING && depth === 0) {
-    console.log(`[DBSCAN++] Starting expansion from CORE point ${point.id} [${point.category}]`);
+    _NLP_DEBUG && console.log(`[DBSCAN++] Starting expansion from CORE point ${point.id} [${point.category}]`);
   }
 
   // RECURSIVE EXPANSION: For each neighbor, explore their connections
@@ -5918,7 +5789,7 @@ function expandCluster(point, neighbors, clusterId, allPoints, visited, cluster,
     if (visited.has(neighbor.id)) continue;
 
     if (DBSCAN_CONFIG.ENABLE_LOGGING) {
-      console.log(`[DBSCAN++] Chain: ${point.category} → ${neighbor.category} (${logicResult.distance.toFixed(1)}m, score: ${(logicResult.semantic.score * 100).toFixed(0)}%)`);
+      _NLP_DEBUG && console.log(`[DBSCAN++] Chain: ${point.category} → ${neighbor.category} (${logicResult.distance.toFixed(1)}m, score: ${(logicResult.semantic.score * 100).toFixed(0)}%)`);
     }
 
     // Find neighbors of THIS neighbor (the transitive step!)
@@ -5982,7 +5853,7 @@ function clusterComplaints(data, options = {}) {
     const gpsValidation = validateGPSBounds(p.latitude, p.longitude);
     if (!gpsValidation.isValid) {
       gpsRejectedCount++;
-      console.log(`[GPS v3.9] ⛔ REJECTED: Point ${p.id} - ${gpsValidation.reason}`);
+      _NLP_DEBUG && console.log(`[GPS v3.9] ⛔ REJECTED: Point ${p.id} - ${gpsValidation.reason}`);
       p.gps_rejected = true;
       p.gps_rejection_reason = gpsValidation.reason;
       return false;
@@ -5995,7 +5866,7 @@ function clusterComplaints(data, options = {}) {
       spatialWarningCount++;
       p.spatial_warning = spatialCheck.warning;
       p.estimated_elevation = spatialCheck.estimatedElevation;
-      console.log(`[SPATIAL v3.9] ⚠️ WARNING: ${spatialCheck.warning}`);
+      _NLP_DEBUG && console.log(`[SPATIAL v3.9] ⚠️ WARNING: ${spatialCheck.warning}`);
     }
 
     // v4.0: Road-Proximity Validation (Nominatim)
@@ -6026,20 +5897,20 @@ function clusterComplaints(data, options = {}) {
   });
 
   if (DBSCAN_CONFIG.ENABLE_LOGGING) {
-    console.log(`[DBSCAN++] Starting clustering on ${validData.length} valid points (${data.length - validData.length} invalid filtered)`);
+    _NLP_DEBUG && console.log(`[DBSCAN++] Starting clustering on ${validData.length} valid points (${data.length - validData.length} invalid filtered)`);
     if (gpsRejectedCount > 0) {
-      console.log(`[GPS v3.9] ${gpsRejectedCount} points rejected (outside Digos City bounds)`);
+      _NLP_DEBUG && console.log(`[GPS v3.9] ${gpsRejectedCount} points rejected (outside Digos City bounds)`);
     }
     if (spatialWarningCount > 0) {
-      console.log(`[SPATIAL v3.9] ${spatialWarningCount} points have spatial warnings (category vs elevation mismatch)`);
+      _NLP_DEBUG && console.log(`[SPATIAL v3.9] ${spatialWarningCount} points have spatial warnings (category vs elevation mismatch)`);
     }
-    console.log(`[DBSCAN++] Adaptive DBSCAN v2.0 - Tier-based epsilon/minPts`);
+    _NLP_DEBUG && console.log(`[DBSCAN++] Adaptive DBSCAN v2.0 - Tier-based epsilon/minPts`);
   }
 
   // Core data structures
   const visited = new Set();      // O(1) lookup for visited points
   const clusters = [];            // Array of cluster arrays
-  const clusterChains = [];       // Causal chain logs for each cluster
+  const clusterChains = [];       // Chain logs for each cluster
   let clusterId = 0;
 
   // Main DBSCAN loop
@@ -6057,7 +5928,7 @@ function clusterComplaints(data, options = {}) {
 
     if (DBSCAN_CONFIG.ENABLE_LOGGING) {
       const category = point.subcategory || point.category;
-      console.log(`[DBSCAN++] Point ${point.id} [${category}]: ${neighbors.length} neighbors (minPts=${adaptiveMinPts}, ε=${getAdaptiveEpsilon(point)}m)`);
+      _NLP_DEBUG && console.log(`[DBSCAN++] Point ${point.id} [${category}]: ${neighbors.length} neighbors (minPts=${adaptiveMinPts}, ε=${getAdaptiveEpsilon(point)}m)`);
     }
 
     // Check if this is a core point (has enough neighbors to form cluster)
@@ -6086,7 +5957,7 @@ function clusterComplaints(data, options = {}) {
 
         if (DBSCAN_CONFIG.ENABLE_LOGGING) {
           const categories = [...new Set(cluster.map(p => p.category))];
-          console.log(`[DBSCAN++] Cluster ${clusterId} formed: ${cluster.length} points, categories: [${categories.join(" → ")}]`);
+          _NLP_DEBUG && console.log(`[DBSCAN++] Cluster ${clusterId} formed: ${cluster.length} points, categories: [${categories.join(" → ")}]`);
         }
 
         clusterId++;
@@ -6126,7 +5997,7 @@ function clusterComplaints(data, options = {}) {
     finalNoise = correlationResult.noise;
 
     if (DBSCAN_CONFIG.ENABLE_LOGGING && correlationResult.metadata) {
-      console.log(`[DBSCAN++] Correlation analysis: ${correlationResult.metadata.originalClusters} → ${correlationResult.metadata.finalClusters} clusters, ${correlationResult.metadata.absorbedOutliers} outliers absorbed`);
+      _NLP_DEBUG && console.log(`[DBSCAN++] Correlation analysis: ${correlationResult.metadata.originalClusters} → ${correlationResult.metadata.finalClusters} clusters, ${correlationResult.metadata.absorbedOutliers} outliers absorbed`);
     }
   }
 
@@ -6152,7 +6023,7 @@ function clusterComplaints(data, options = {}) {
   };
 
   if (DBSCAN_CONFIG.ENABLE_LOGGING) {
-    console.log(`[DBSCAN++] Clustering complete:`, metadata);
+    _NLP_DEBUG && console.log(`[DBSCAN++] Clustering complete:`, metadata);
   }
 
   return {
@@ -6164,50 +6035,6 @@ function clusterComplaints(data, options = {}) {
   };
 }
 
-/**
- * Analyze causal chains in clustering results.
- * Identifies the dominant causal patterns discovered.
- *
- * @param {Object} clusteringResult - Result from clusterComplaints()
- * @returns {Array} Array of chain analysis objects
- */
-function analyzeCausalChains(clusteringResult) {
-  const chainAnalysis = [];
-
-  clusteringResult.clusters.forEach((cluster, idx) => {
-    const categories = cluster.map(p => p.category);
-    const uniqueCategories = [...new Set(categories)];
-    const chainLog = clusteringResult.clusterChains[idx] || [];
-
-    // Determine chain type
-    let chainType = "SINGLE";
-    let chainDescription = uniqueCategories[0];
-
-    if (uniqueCategories.length === 1 && cluster.length > 1) {
-      chainType = "REDUNDANCY";
-      chainDescription = `${cluster.length}x ${uniqueCategories[0]} (same category)`;
-    } else if (uniqueCategories.length === 2) {
-      chainType = "DIRECT_CAUSAL";
-      chainDescription = `${uniqueCategories[0]} → ${uniqueCategories[1]}`;
-    } else if (uniqueCategories.length >= 3) {
-      chainType = "TRANSITIVE_CHAIN";
-      // Build chain from the log
-      chainDescription = chainLog.map(c => c.category).join(" → ");
-    }
-
-    chainAnalysis.push({
-      clusterId: idx,
-      clusterSize: cluster.length,
-      chainType,
-      chainDescription,
-      categories: uniqueCategories,
-      maxDepth: Math.max(...cluster.map(p => p._chainDepth || 0)),
-      points: cluster.map(p => ({ id: p.id, category: p.category, role: p._clusterRole }))
-    });
-  });
-
-  return chainAnalysis;
-}
 
 /**
  * Visualize clustering results (for integration with SimulationEngine).
@@ -6454,7 +6281,7 @@ function mergeRelatedClusters(clusters, options = {}) {
   }
 
   if (config.ENABLE_LOGGING) {
-    console.log(`[STITCH] Starting cluster stitching on ${clusters.length} clusters`);
+    _NLP_DEBUG && console.log(`[STITCH] Starting cluster stitching on ${clusters.length} clusters`);
   }
 
   let merged = clusters.map(c => [...c]); // Deep copy
@@ -6498,7 +6325,7 @@ function mergeRelatedClusters(clusters, options = {}) {
         if (timeDiff > config.TEMPORAL_THRESHOLD) {
           if (config.ENABLE_LOGGING) {
             const daysDiff = Math.round(timeDiff / (24 * 60 * 60 * 1000));
-            console.log(`[STITCH] Skipping merge: ${cat1} clusters are ${daysDiff} days apart (threshold: ${config.TEMPORAL_THRESHOLD / (24 * 60 * 60 * 1000)} days)`);
+            _NLP_DEBUG && console.log(`[STITCH] Skipping merge: ${cat1} clusters are ${daysDiff} days apart (threshold: ${config.TEMPORAL_THRESHOLD / (24 * 60 * 60 * 1000)} days)`);
           }
           continue; // Too far apart in time - DO NOT MERGE
         }
@@ -6514,7 +6341,7 @@ function mergeRelatedClusters(clusters, options = {}) {
         // ALL CHECKS PASSED → MERGE CLUSTERS
         if (config.ENABLE_LOGGING) {
           const daysDiff = Math.round(timeDiff / (24 * 60 * 60 * 1000) * 10) / 10;
-          console.log(`[STITCH] Merging ${cat1} clusters: ${currentCluster.length} + ${neighborCluster.length} points (${distance.toFixed(0)}m apart, ${daysDiff} days diff)`);
+          _NLP_DEBUG && console.log(`[STITCH] Merging ${cat1} clusters: ${currentCluster.length} + ${neighborCluster.length} points (${distance.toFixed(0)}m apart, ${daysDiff} days diff)`);
         }
 
         currentCluster = currentCluster.concat(neighborCluster);
@@ -6529,7 +6356,7 @@ function mergeRelatedClusters(clusters, options = {}) {
   }
 
   if (config.ENABLE_LOGGING) {
-    console.log(`[STITCH] Complete: ${clusters.length} → ${merged.length} clusters (${iterations} iterations)`);
+    _NLP_DEBUG && console.log(`[STITCH] Complete: ${clusters.length} → ${merged.length} clusters (${iterations} iterations)`);
   }
 
   return merged;
@@ -6751,7 +6578,7 @@ class SimulationEngine {
           const response = await fetch(path);
           if (response.ok) {
             barangays = await response.json();
-            console.log(`[MAP] Loaded boundaries from: ${path}`);
+            _NLP_DEBUG && console.log(`[MAP] Loaded boundaries from: ${path}`);
             break;
           }
         } catch (e) { /* try next */ }
@@ -6834,11 +6661,11 @@ class SimulationEngine {
 
     const clusters = Array.from(locationMap.values());
 
-    console.log("[clusterComplaintsByProximity] Created", clusters.length, "unique locations from", this.complaints.length, "complaints");
+    _NLP_DEBUG && console.log("[clusterComplaintsByProximity] Created", clusters.length, "unique locations from", this.complaints.length, "complaints");
     const stacked = clusters.filter(c => c.complaints.length > 1).length;
-    console.log("[clusterComplaintsByProximity] Stacked locations (same coordinates):", stacked);
+    _NLP_DEBUG && console.log("[clusterComplaintsByProximity] Stacked locations (same coordinates):", stacked);
     if (stacked > 0) {
-      console.log("[clusterComplaintsByProximity] Largest stack:", Math.max(...clusters.map(c => c.complaints.length)), "complaints");
+      _NLP_DEBUG && console.log("[clusterComplaintsByProximity] Largest stack:", Math.max(...clusters.map(c => c.complaints.length)), "complaints");
     }
 
     return clusters;
@@ -6858,7 +6685,7 @@ class SimulationEngine {
      * CRITICAL: This is called ONCE on initialize(). Markers are NEVER destroyed.
      */
   renderAllPoints() {
-    console.log("[renderAllPoints] Starting render...", this.complaints.length, "complaints");
+    _NLP_DEBUG && console.log("[renderAllPoints] Starting render...", this.complaints.length, "complaints");
     this.addLog("[RENDER] Creating background layer with stacking detection...", "info");
 
     const clusters = this.clusterComplaintsByProximity();
@@ -6976,9 +6803,9 @@ class SimulationEngine {
       rendered++;
     });
 
-    console.log("[renderAllPoints] Render complete:", rendered, "markers created");
-    console.log("[renderAllPoints] Stacked locations:", stackedCount);
-    console.log("[renderAllPoints] Background markers Map size:", this.backgroundMarkers.size);
+    _NLP_DEBUG && console.log("[renderAllPoints] Render complete:", rendered, "markers created");
+    _NLP_DEBUG && console.log("[renderAllPoints] Stacked locations:", stackedCount);
+    _NLP_DEBUG && console.log("[renderAllPoints] Background markers Map size:", this.backgroundMarkers.size);
     this.addLog(`[RENDER] ${rendered} markers created (${stackedCount} stacked locations)`, "success");
   }
 
@@ -7060,8 +6887,8 @@ class SimulationEngine {
      * @param {string} category - Category to show, or 'all' to show everything
      */
   filterBackgroundMarkersByCategory(category) {
-    console.log(`[FILTER] Starting filter - category: "${category}"`);
-    console.log(`[FILTER] Total complaints: ${this.complaints.length}`);
+    _NLP_DEBUG && console.log(`[FILTER] Starting filter - category: "${category}"`);
+    _NLP_DEBUG && console.log(`[FILTER] Total complaints: ${this.complaints.length}`);
 
     // APPROACH: Completely clear and re-render markers based on filter
     // This ensures a clean state with no stale markers
@@ -7084,7 +6911,7 @@ class SimulationEngine {
       );
     }
 
-    console.log(`[FILTER] Complaints to show: ${complaintsToShow.length}`);
+    _NLP_DEBUG && console.log(`[FILTER] Complaints to show: ${complaintsToShow.length}`);
 
     // Step 3: Render filtered complaints as markers
     complaintsToShow.forEach(complaint => {
@@ -7110,8 +6937,8 @@ class SimulationEngine {
       this.backgroundMarkers.set(complaint.id, marker);
     });
 
-    console.log(`[FILTER] Created ${this.backgroundMarkers.size} markers`);
-    console.log(`[FILTER] Filter complete`);
+    _NLP_DEBUG && console.log(`[FILTER] Created ${this.backgroundMarkers.size} markers`);
+    _NLP_DEBUG && console.log(`[FILTER] Filter complete`);
   }
 
   /**
@@ -7535,17 +7362,16 @@ class SimulationEngine {
       case 3: await this.runScenarioGeneric(scenarioData, config, "precision"); break;
       case 4: await this.runScenarioGeneric(scenarioData, config, "gps_drift"); break;
       case 5: await this.runScenarioGeneric(scenarioData, config, "moving_hazard"); break;
-      case 6: await this.runScenarioGeneric(scenarioData, config, "causal"); break;
-      case 7: await this.runScenarioGeneric(scenarioData, config, "false_correl"); break;
-      case 8: await this.runScenarioDomino(scenarioData, config); break;
-      case 9: await this.runScenarioGeneric(scenarioData, config, "conflict"); break;
-      case 10: await this.runScenarioGeneric(scenarioData, config, "synonyms"); break;
-      case 11: await this.runScenarioGeneric(scenarioData, config, "time_decay"); break;
-      case 12: await this.runScenarioMassPanic(scenarioData, config); break;
-      case 13: await this.runScenarioSpamBot(scenarioData, config); break;
-      case 14: await this.runScenarioDefaultPin(scenarioData, config); break;
-      case 15: await this.runScenarioNullData(scenarioData, config); break;
-      case 16: await this.runScenarioTriplePotholeSeparation(scenarioData, config); break;
+      case 6: await this.runScenarioGeneric(scenarioData, config, "false_correl"); break;
+      case 7: await this.runScenarioDomino(scenarioData, config); break;
+      case 8: await this.runScenarioGeneric(scenarioData, config, "conflict"); break;
+      case 9: await this.runScenarioGeneric(scenarioData, config, "synonyms"); break;
+      case 10: await this.runScenarioGeneric(scenarioData, config, "time_decay"); break;
+      case 11: await this.runScenarioMassPanic(scenarioData, config); break;
+      case 12: await this.runScenarioSpamBot(scenarioData, config); break;
+      case 13: await this.runScenarioDefaultPin(scenarioData, config); break;
+      case 14: await this.runScenarioNullData(scenarioData, config); break;
+      case 15: await this.runScenarioTriplePotholeSeparation(scenarioData, config); break;
     }
 
     // END METRICS TIMING & CALCULATE
@@ -7573,7 +7399,7 @@ class SimulationEngine {
 
   /**
      * Generic Scenario Runner - Handles most comparison scenarios
-     * Used for: redundancy, discrete, causal, false_correl, conflict, synonyms, time_decay, gps_drift, precision, moving_hazard
+     * Used for: redundancy, discrete, false_correl, conflict, synonyms, time_decay, gps_drift, precision, moving_hazard
      */
   async runScenarioGeneric(data, config, scenarioType) {
     if (data.length < 2) {
@@ -7707,7 +7533,7 @@ class SimulationEngine {
      * NOW USES AUTOMATED TRANSITIVE CLUSTERING!
      *
      * This scenario demonstrates the expandCluster() function automatically
-     * discovering the causal chain without hardcoded sequence.
+     * discovering the chain without hardcoded sequence.
      */
   async runScenarioDomino(data, config) {
     this.addLog(`[DBSCAN++] Initiating Automated Transitive Clustering...`, "system");
@@ -7718,25 +7544,12 @@ class SimulationEngine {
     // AUTOMATED CLUSTERING - Let the algorithm discover the chain!
     // ============================================================
     const clusteringResult = clusterComplaints(data, { MIN_PTS: 1 });
-    const chainAnalysis = analyzeCausalChains(clusteringResult);
-
-    this.addLog(`[DBSCAN++] Clustering complete: ${clusteringResult.metadata.totalClusters} cluster(s) found`, "success");
-    this.addLog(`[DBSCAN++] Processing time: ${clusteringResult.metadata.processingTime}ms`, "info");
-
-    // Check if we found a transitive chain
-    const transitiveChains = chainAnalysis.filter(c => c.chainType === "TRANSITIVE_CHAIN");
-
-    if (transitiveChains.length > 0) {
-      this.addLog(`[DISCOVERY] ✅ Transitive chain detected automatically!`, "success");
-
-      for (const chain of transitiveChains) {
-        this.addLog(`[CHAIN] ${chain.chainDescription}`, "success");
-        this.addLog(`[CHAIN] Depth: ${chain.maxDepth + 1} hops, Size: ${chain.clusterSize} points`, "info");
-      }
-    } else if (clusteringResult.clusters.length > 0) {
-      // Even if not "transitive", show what was found
-      for (const analysis of chainAnalysis) {
-        this.addLog(`[CLUSTER] ${analysis.chainDescription} (${analysis.chainType})`, "info");
+    // Display cluster analysis
+    if (clusteringResult.clusters.length > 0) {
+      for (let i = 0; i < clusteringResult.clusters.length; i++) {
+        const cluster = clusteringResult.clusters[i];
+        const cats = [...new Set(cluster.map(p => p.category))];
+        this.addLog(`[CLUSTER ${i}] ${cats.join(" + ")} (${cluster.length} points)`, "info");
       }
     }
 
@@ -7834,14 +7647,14 @@ class SimulationEngine {
     this.addLog(`[DBSCAN++] Running automated transitive clustering...`, "system");
 
     const result = clusterComplaints(data, options);
-    const analysis = analyzeCausalChains(result);
+    const analysis = result.clusters.map((cluster, idx) => ({ clusterId: idx, clusterSize: cluster.length, categories: [...new Set(cluster.map(p => p.category))] }));
     const visualData = prepareClusterVisualization(result);
 
     // Log summary
     this.addLog(`[RESULT] Found ${result.clusters.length} cluster(s), ${result.noise.length} noise points`, "success");
 
     analysis.forEach((chain, idx) => {
-      this.addLog(`[CLUSTER ${idx}] ${chain.chainDescription} (${chain.chainType})`, "info");
+      this.addLog(`[CLUSTER ${idx}] ${chain.categories.join(" + ")} (${chain.clusterSize} points)`, "info");
     });
 
     return {
@@ -8260,50 +8073,45 @@ class MetricsCalculator {
         clusterCount = 2; // Could be separate or linked
         break;
 
-      case 6: // S-02 Causal - Pipe+Flood should MERGE
-        mergeCount = 1;
-        clusterCount = 1;
-        break;
-
-      case 7: // S-05 False Correlation - unrelated, SEPARATE
+      case 6: // S-05 False Correlation - unrelated, SEPARATE
         separateCount = 2;
         clusterCount = 2;
         break;
 
-      case 8: // S-06 Domino Chain - all linked, MERGE
+      case 7: // S-06 Domino Chain - all linked, MERGE
         mergeCount = 2;
         clusterCount = 1;
         break;
 
-      case 9: // S-10 Conflict - same location diff category, SEPARATE
+      case 8: // S-10 Conflict - same location diff category, SEPARATE
         separateCount = 2;
         clusterCount = 2;
         break;
 
-      case 10: // S-11 Synonyms - same meaning, MERGE
+      case 9: // S-11 Synonyms - same meaning, MERGE
         mergeCount = 1;
         clusterCount = 1;
         break;
 
-      case 11: // S-04 Time Decay - 90 days old, SEPARATE
+      case 10: // S-04 Time Decay - 90 days old, SEPARATE
         separateCount = 2;
         clusterCount = 2;
         break;
 
-      case 12: // S-08 Mass Panic - 20 fire reports, MERGE all
+      case 11: // S-08 Mass Panic - 20 fire reports, MERGE all
         mergeCount = scenarioData.length - 1;
         clusterCount = 1;
         break;
 
-      case 13: // S-12 Spam Bot - 50 identical timestamp, FLAG
+      case 12: // S-12 Spam Bot - 50 identical timestamp, FLAG
         clusterCount = 1; // Flagged as suspicious
         break;
 
-      case 14: // S-14 Default Pin - all at center, FLAG
+      case 13: // S-14 Default Pin - all at center, FLAG
         clusterCount = 1; // Flagged
         break;
 
-      case 15: // S-15 Null Data - HANDLE gracefully
+      case 14: // S-15 Null Data - HANDLE gracefully
         clusterCount = scenarioData.length; // Each handled separately
         break;
 
@@ -8391,7 +8199,7 @@ class MetricsCalculator {
         : "complex analysis";
 
     // Log metrics to console for thesis documentation
-    console.log("📊 Validation Metrics:", {
+    _NLP_DEBUG && console.log("📊 Validation Metrics:", {
       scenario: metrics.scenarioName,
       redundancyReduced: `${metrics.redundancyReduced}%`,
       accuracy: `${metrics.accuracyScore}%`,
@@ -8477,13 +8285,13 @@ let NLP_DICTIONARY_LOADED = false;
  */
 async function loadNLPDictionaries(forceReload = false) {
   if (!forceReload && NLP_DICTIONARY_LOADED && NLP_DICTIONARIES) {
-    console.log("[NLP] Dictionaries already loaded (use forceReload=true to refresh)");
+    _NLP_DEBUG && console.log("[NLP] Dictionaries already loaded (use forceReload=true to refresh)");
     return NLP_DICTIONARIES;
   }
 
   // Reset cache if forcing reload
   if (forceReload) {
-    console.log("[NLP] Force reloading dictionaries from server...");
+    _NLP_DEBUG && console.log("[NLP] Force reloading dictionaries from server...");
     NLP_DICTIONARY_LOADED = false;
     NLP_DICTIONARIES = null;
     NLP_KEYWORD_INDEX = new Map();
@@ -8499,7 +8307,7 @@ async function loadNLPDictionaries(forceReload = false) {
           const parsed = JSON.parse(cached);
           // Simple version check (optional, can be expanded)
           if (parsed && parsed._metadata) {
-            console.log("[NLP] Loaded dictionaries from LocalStorage cache");
+            _NLP_DEBUG && console.log("[NLP] Loaded dictionaries from LocalStorage cache");
             NLP_DICTIONARIES = parsed;
             NLP_DICTIONARY_LOADED = true;
             buildDictionaryIndices();
@@ -8526,7 +8334,7 @@ async function loadNLPDictionaries(forceReload = false) {
       return NLP_DICTIONARIES;
     }
 
-    console.log("[NLP] Loading nlp_dictionaries.json...");
+    _NLP_DEBUG && console.log("[NLP] Loading nlp_dictionaries.json...");
 
     // Try multiple paths to find the dictionary file
     const possiblePaths = [
@@ -8558,7 +8366,7 @@ async function loadNLPDictionaries(forceReload = false) {
       throw new Error(`Could not find nlp_dictionaries.json in any expected location`);
     }
 
-    console.log(`[NLP] Found dictionary at: ${successPath}`);
+    _NLP_DEBUG && console.log(`[NLP] Found dictionary at: ${successPath}`);
 
     NLP_DICTIONARIES = await response.json();
 
@@ -8573,9 +8381,9 @@ async function loadNLPDictionaries(forceReload = false) {
 
     // Log metadata
     const meta = NLP_DICTIONARIES._metadata || {};
-    console.log(`[NLP] Dictionary v${meta.version || "?"} loaded successfully`);
-    console.log(`[NLP] Languages: ${(meta.languages || []).join(", ")}`);
-    console.log(`[NLP] Last updated: ${meta.last_updated || "unknown"}`);
+    _NLP_DEBUG && console.log(`[NLP] Dictionary v${meta.version || "?"} loaded successfully`);
+    _NLP_DEBUG && console.log(`[NLP] Languages: ${(meta.languages || []).join(", ")}`);
+    _NLP_DEBUG && console.log(`[NLP] Last updated: ${meta.last_updated || "unknown"}`);
 
     // Build lookup indices for fast matching
     buildDictionaryIndices();
@@ -8608,7 +8416,7 @@ let NLP_TEMPORAL_FUTURE = [];
 function buildDictionaryIndices() {
   if (!NLP_DICTIONARIES) return;
 
-  console.log("[NLP] Building lookup indices...");
+  _NLP_DEBUG && console.log("[NLP] Building lookup indices...");
 
   // Clear existing indices
   NLP_KEYWORD_INDEX.clear();
@@ -8766,7 +8574,7 @@ function buildDictionaryIndices() {
   NLP_TEMPORAL_PAST = normalizeTemporalList(NLP_DICTIONARIES.temporal_past);
   NLP_TEMPORAL_FUTURE = normalizeTemporalList(NLP_DICTIONARIES.temporal_future);
 
-  console.log(`[NLP] Indices built: ${NLP_KEYWORD_INDEX.size} keywords, ${NLP_METAPHOR_PATTERNS.length} metaphors, ${NLP_SPECULATION_PATTERNS.length} speculation patterns`);
+  _NLP_DEBUG && console.log(`[NLP] Indices built: ${NLP_KEYWORD_INDEX.size} keywords, ${NLP_METAPHOR_PATTERNS.length} metaphors, ${NLP_SPECULATION_PATTERNS.length} speculation patterns`);
 }
 
 /**
@@ -9073,12 +8881,11 @@ function analyzeComplaintText(text) {
  * Module Delegation Pattern for Brain Engines
  * ===========================================
  *
- * This section delegates NLP and Causality functions to external modules
- * (nlp-processor.js and causality-manager.js) when they are loaded.
+ * This section delegates NLP functions to external modules
+ * (nlp-processor.js) when they are loaded.
  *
  * LOAD ORDER (in HTML):
  * 1. nlp-processor.js       → Provides NLPProcessor global
- * 2. causality-manager.js   → Provides CausalityManager global
  * 3. simulation-engine.js   → This file (delegates to modules)
  *
  * If modules aren't loaded, the global exports will be undefined,
@@ -9092,17 +8899,11 @@ function analyzeComplaintText(text) {
 // Check if NLP Processor module is loaded
 const _nlpModuleLoaded = typeof NLPProcessor !== "undefined";
 if (_nlpModuleLoaded) {
-  console.log(`[ENGINE] ✅ NLPProcessor module detected (v${  NLPProcessor.version  })`);
+  _NLP_DEBUG && console.log(`[ENGINE] ✅ NLPProcessor module detected (v${  NLPProcessor.version  })`);
 } else {
   console.warn("[ENGINE] ⚠️ NLPProcessor module not loaded - NLP functions unavailable");
 }
 
-// Check if Causality Manager module is loaded
-const _causalityModuleLoaded = typeof CausalityManager !== "undefined";
-if (_causalityModuleLoaded) {
-  console.log(`[ENGINE] ✅ CausalityManager module detected (v${  CausalityManager.version  })`);
-} else {
-  console.warn("[ENGINE] ⚠️ CausalityManager module not loaded - Causality functions unavailable");
 }
 
 // ==================== NLP MODULE DELEGATION ====================
@@ -9211,60 +9012,9 @@ const MULTI_LABEL_URGENCY_THRESHOLD = _nlpModuleLoaded && NLPProcessor.config.MU
   ? NLPProcessor.config.MULTI_LABEL_URGENCY_THRESHOLD
   : 50;
 
-// ==================== CAUSALITY MODULE DELEGATION ====================
-// Delegate to CausalityManager if loaded, otherwise provide stub functions
-
-const verifyCausality = _causalityModuleLoaded
-  ? CausalityManager.verifyCausality
-  : function (clusterA, clusterB) {
-    console.error("[ENGINE] verifyCausality called but CausalityManager not loaded. Include causality-manager.js before simulation-engine.js");
-    return { isLinked: false, reason: "CausalityManager not loaded", checks: { direction: false, temporal: false, spatial: false } };
-  };
-
-const findAllCausalLinks = _causalityModuleLoaded
-  ? CausalityManager.findAllCausalLinks
-  : function () { return []; };
-
-const buildCausalGraph = _causalityModuleLoaded
-  ? CausalityManager.buildCausalGraph
-  : function () { return { nodes: [], edges: new Map() }; };
-
-const getClusterTimestamp = _causalityModuleLoaded
-  ? CausalityManager.getClusterTimestamp
-  : function (cluster) { return cluster?.timestamp ? new Date(cluster.timestamp) : null; };
-
-const getClusterCenter = _causalityModuleLoaded
-  ? CausalityManager.getClusterCenter
-  : function (cluster) {
-    if (!cluster) return null;
-    return { lat: cluster.latitude, lng: cluster.longitude };
-  };
-
-const getClusterCategory = _causalityModuleLoaded
-  ? CausalityManager.getClusterCategory
-  : function (cluster) { return cluster?.category || "Others"; };
-
-// Causality Constants from module or defaults
-const CAUSAL_MATRIX = _causalityModuleLoaded
-  ? CausalityManager.config.CAUSAL_MATRIX
-  : {};
-
-const CAUSAL_MAX_TIME_HOURS = _causalityModuleLoaded
-  ? CausalityManager.config.CAUSAL_MAX_TIME_HOURS
-  : 24;
-
-const CAUSAL_MAX_DISTANCE_METERS = _causalityModuleLoaded
-  ? CausalityManager.config.CAUSAL_MAX_DISTANCE_METERS
-  : 500;
-
-const CAUSAL_DISTANCE_OVERRIDE = _causalityModuleLoaded
-  ? CausalityManager.config.CAUSAL_DISTANCE_OVERRIDE
-  : {};
-
 // Log module integration status
-console.log("[ENGINE] Brain Engines Integration:", {
+_NLP_DEBUG && console.log("[ENGINE] Brain Engines Integration:", {
   nlp: _nlpModuleLoaded ? "ACTIVE" : "STUB",
-  causality: _causalityModuleLoaded ? "ACTIVE" : "STUB"
 });
 
 
@@ -9315,17 +9065,6 @@ window.AI_CONFIDENCE_THRESHOLD = typeof AI_CONFIDENCE_THRESHOLD !== "undefined" 
 window.AI_SIMILARITY_THRESHOLD = typeof AI_SIMILARITY_THRESHOLD !== "undefined" ? AI_SIMILARITY_THRESHOLD : 0.75;
 window.MULTI_LABEL_URGENCY_THRESHOLD = typeof MULTI_LABEL_URGENCY_THRESHOLD !== "undefined" ? MULTI_LABEL_URGENCY_THRESHOLD : 50;
 
-// === CAUSAL REASONING ENGINE EXPORTS ===
-window.verifyCausality = verifyCausality;
-window.findAllCausalLinks = findAllCausalLinks;
-window.buildCausalGraph = buildCausalGraph;
-window.getClusterTimestamp = getClusterTimestamp;
-window.getClusterCenter = getClusterCenter;
-window.getClusterCategory = typeof getClusterCategory !== "undefined" ? getClusterCategory : (window.CausalityManager?.getClusterCategory || (() => "Others"));
-window.CAUSAL_MATRIX = typeof CAUSAL_MATRIX !== "undefined" ? CAUSAL_MATRIX : (window.CausalityManager?.CAUSAL_MATRIX || {});
-window.CAUSAL_MAX_TIME_HOURS = typeof CAUSAL_MAX_TIME_HOURS !== "undefined" ? CAUSAL_MAX_TIME_HOURS : (window.CausalityManager?.CAUSAL_MAX_TIME_HOURS || 24);
-window.CAUSAL_MAX_DISTANCE_METERS = typeof CAUSAL_MAX_DISTANCE_METERS !== "undefined" ? CAUSAL_MAX_DISTANCE_METERS : (window.CausalityManager?.CAUSAL_MAX_DISTANCE_METERS || 500);
-window.CAUSAL_DISTANCE_OVERRIDE = typeof CAUSAL_DISTANCE_OVERRIDE !== "undefined" ? CAUSAL_DISTANCE_OVERRIDE : (window.CausalityManager?.CAUSAL_DISTANCE_OVERRIDE || {});
 window.checkLogic = checkLogic;
 window.checkKeywordSimilarity = checkKeywordSimilarity;
 window.MetricsCalculator = MetricsCalculator;
@@ -9406,5 +9145,5 @@ window.analyzeComplaintText = analyzeComplaintText;
 window.NLP_KEYWORD_INDEX = NLP_KEYWORD_INDEX;
 
 // ==================== ENGINE READY ====================
-console.log("[ENGINE] SimulationEngine v4.0.0 loaded with Hybrid Edge-AI architecture.");
-console.log("[ENGINE] v4.0 Features: Multi-label detection, Clause-based modifiers, TF.js AI fallback");
+_NLP_DEBUG && console.log("[ENGINE] SimulationEngine v4.0.0 loaded with Hybrid Edge-AI architecture.");
+_NLP_DEBUG && console.log("[ENGINE] v4.0 Features: Multi-label detection, Clause-based modifiers, TF.js AI fallback");

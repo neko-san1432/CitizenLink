@@ -450,7 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // setupClickOutside();
       // setupThemeToggle();
 
-      console.log("Header initialized with components");
+      // Header initialized
 
       /* =========================================================================
          Dynamic Dashboard Layout Wrapper

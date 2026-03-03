@@ -1,10 +1,8 @@
 // Load Supabase using UMD bundle (more compatible than ESM)
-console.log("[Supabase-Boot] Starting initialization...");
 
 (function () {
   // Check if already loaded
   if (window.supabase && window.supabase.createClient) {
-    console.log("[Supabase-Boot] ✅ Already loaded");
     return;
   }
 
@@ -17,11 +15,8 @@ console.log("[Supabase-Boot] Starting initialization...");
   script.crossOrigin = "anonymous";
 
   script.onload = function () {
-    console.log("[Supabase-Boot] ✅ Local UMD bundle loaded");
-
     // The UMD bundle exposes window.supabase directly
     if (window.supabase && window.supabase.createClient) {
-      console.log("[Supabase-Boot] ✅ window.supabase available");
 
       // Also set capitalized version for compatibility
       window.Supabase = window.supabase;
@@ -32,8 +27,6 @@ console.log("[Supabase-Boot] Starting initialization...");
           detail: window.supabase,
         })
       );
-
-      console.log("[Supabase-Boot] ✅ Ready!");
     } else {
       console.error(
         "[Supabase-Boot] ❌ UMD loaded but window.supabase not found"
@@ -52,7 +45,6 @@ console.log("[Supabase-Boot] Starting initialization...");
     fallback.crossOrigin = "anonymous";
 
     fallback.onload = function () {
-      console.log("[Supabase-Boot] ✅ Loaded from fallback CDN");
       if (window.supabase) {
         window.Supabase = window.supabase;
         window.dispatchEvent(
@@ -72,7 +64,6 @@ console.log("[Supabase-Boot] Starting initialization...");
   };
 
   document.head.appendChild(script);
-  console.log("[Supabase-Boot] Script tag injected, waiting for load...");
 })();
 
 // Export a promise for module consumers

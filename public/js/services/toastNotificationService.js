@@ -52,11 +52,6 @@ class ToastNotificationService {
         this.isConnected = false;
         this.handleReconnect();
       };
-      this.eventSource.addEventListener("error", (error) => {
-        console.error("[TOAST_NOTIFICATION] EventSource error event:", error);
-        this.isConnected = false;
-        this.handleReconnect();
-      });
     } catch (error) {
       console.error("[TOAST_NOTIFICATION] Failed to start notification stream:", error);
       this.handleReconnect();
@@ -91,7 +86,8 @@ class ToastNotificationService {
   handleReconnect() {
 
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error("[TOAST_NOTIFICATION] Max reconnection attempts reached");
+      console.error("[TOAST_NOTIFICATION] Max reconnection attempts reached. Closing connection.");
+      this.stopListening();
       return;
     }
     this.reconnectAttempts++;

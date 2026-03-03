@@ -926,57 +926,57 @@
 
     aiLoadingPromise = (async () => {
       try {
-        console.log("[NLP-AI] 🚀 Starting TensorFlow.js initialization...");
+        debugModeEnabled && console.log("[NLP-AI] 🚀 Starting TensorFlow.js initialization...");
 
         // Check if TensorFlow.js is available
         if (typeof tf === "undefined") {
           // Try to load from CDN
           await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js");
-          console.log("[NLP-AI] ✅ TensorFlow.js loaded from CDN");
+          debugModeEnabled && console.log("[NLP-AI] ✅ TensorFlow.js loaded from CDN");
         }
 
         // Ensure TF backend is ready before proceeding
         if (typeof tf !== "undefined") {
           await tf.ready();
-          console.log(`[NLP-AI] Backend ready: ${tf.getBackend()}`);
+          debugModeEnabled && console.log(`[NLP-AI] Backend ready: ${tf.getBackend()}`);
         }
 
         // Enable IndexedDB storage backend for TensorFlow.js model caching
         if (tf && tf.io && tf.io.browserFiles) {
-          console.log("[NLP-AI] 📦 TensorFlow.js will use IndexedDB for model caching");
+          debugModeEnabled && console.log("[NLP-AI] 📦 TensorFlow.js will use IndexedDB for model caching");
         }
 
         // Check if USE is available
         if (typeof use === "undefined") {
           await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.3/dist/universal-sentence-encoder.min.js");
-          console.log("[NLP-AI] ✅ Universal Sentence Encoder loaded from CDN");
+          debugModeEnabled && console.log("[NLP-AI] ✅ Universal Sentence Encoder loaded from CDN");
         }
 
         // Load the USE model - TensorFlow.js automatically caches in IndexedDB
-        console.log("[NLP-AI] 📦 Loading USE model (cached after first load)...");
+        debugModeEnabled && console.log("[NLP-AI] 📦 Loading USE model (cached after first load)...");
         const modelLoadStart = performance.now();
         useModel = await use.load();
         const modelLoadTime = performance.now() - modelLoadStart;
-        console.log(`[NLP-AI] ✅ USE model loaded in ${modelLoadTime.toFixed(0)}ms ${modelLoadTime < 1000 ? "(from cache!)" : ""}`);
+        debugModeEnabled && console.log(`[NLP-AI] ✅ USE model loaded in ${modelLoadTime.toFixed(0)}ms ${modelLoadTime < 1000 ? "(from cache!)" : ""}`);
 
         // Try to load cached anchor embeddings first
-        console.log("[NLP-AI] 🔍 Checking IndexedDB for cached anchor embeddings...");
+        debugModeEnabled && console.log("[NLP-AI] 🔍 Checking IndexedDB for cached anchor embeddings...");
         const cachedAnchors = await getFromCache(ANCHOR_CACHE_KEY);
 
         if (cachedAnchors) {
           anchorEmbeddings = cachedAnchors;
-          console.log("[NLP-AI] ✅ Anchor embeddings loaded from IndexedDB cache (instant)");
+          debugModeEnabled && console.log("[NLP-AI] ✅ Anchor embeddings loaded from IndexedDB cache (instant)");
         } else {
           // Pre-compute anchor embeddings for faster inference
-          console.log("[NLP-AI] 🧮 Pre-computing category anchor embeddings (first time only)...");
+          debugModeEnabled && console.log("[NLP-AI] 🧮 Pre-computing category anchor embeddings (first time only)...");
           const anchorStart = performance.now();
           anchorEmbeddings = await precomputeAnchorEmbeddings();
           const anchorTime = performance.now() - anchorStart;
-          console.log(`[NLP-AI] ✅ Anchor embeddings computed in ${anchorTime.toFixed(0)}ms`);
+          debugModeEnabled && console.log(`[NLP-AI] ✅ Anchor embeddings computed in ${anchorTime.toFixed(0)}ms`);
 
           // Cache for future use
           await saveToCache(ANCHOR_CACHE_KEY, anchorEmbeddings);
-          console.log("[NLP-AI] 💾 Anchor embeddings saved to IndexedDB for future sessions");
+          debugModeEnabled && console.log("[NLP-AI] 💾 Anchor embeddings saved to IndexedDB for future sessions");
         }
 
         // v4.4: OPTIMIZATION - HYDRATE GPU TENSORS
@@ -996,7 +996,7 @@
               if (anchorMatrix) anchorMatrix.dispose();
               anchorMatrix = tf.tensor2d(vectors); // [C, 512]
               anchorCategories = categories;
-              console.log(`[NLP-AI] ⚡ GPU Tensor Hydrated: [${vectors.length}, 512]`);
+              debugModeEnabled && console.log(`[NLP-AI] ⚡ GPU Tensor Hydrated: [${vectors.length}, 512]`);
             } catch (e) {
               console.error("[NLP-AI] Failed to create GPU tensor:", e);
             }
@@ -1016,14 +1016,14 @@
             dummyTensor.dispose();
           }
 
-          console.log(`[NLP-AI] 🔥 Shader Warmup complete in ${(performance.now() - warmupStart).toFixed(0)}ms`);
+          debugModeEnabled && console.log(`[NLP-AI] 🔥 Shader Warmup complete in ${(performance.now() - warmupStart).toFixed(0)}ms`);
         } catch (e) {
           console.warn("[NLP-AI] Warmup failed (non-fatal):", e);
         }
 
         tfReady = true;
         const totalTime = performance.now() - modelLoadStart;
-        console.log(`[NLP-AI] 🎉 AI Fallback fully initialized in ${totalTime.toFixed(0)}ms - Ready for inference`);
+        debugModeEnabled && console.log(`[NLP-AI] 🎉 AI Fallback fully initialized in ${totalTime.toFixed(0)}ms - Ready for inference`);
 
         return true;
       } catch (error) {
@@ -2227,15 +2227,6 @@
     }
   }
 
-  console.log("╔════════════════════════════════════════════════════════════════════╗");
-  console.log("║  🧠 NLP PROCESSOR v4.1 - HYBRID EDGE-AI ARCHITECTURE               ║");
-  console.log("╠════════════════════════════════════════════════════════════════════╣");
-  console.log("║  ✅ Rule-based engine loaded (immediate)                           ║");
-  console.log("║  ✅ Expanded dictionaries: Utilities, Sanitation, Infrastructure   ║");
-  console.log("║  ✅ Clause-based context analysis enabled                          ║");
-  console.log("║  ✅ Multi-label detection enabled (urgency > 50)                   ║");
-  console.log("║  ✅ Debug/Thesis mode available: setDebugMode(true)                ║");
-  console.log("║  ⏳ TensorFlow.js + USE loading in background (IndexedDB cached)...║");
-  console.log("╚════════════════════════════════════════════════════════════════════╝");
+  // NLP Processor v4.1 loaded (set debugModeEnabled = true for verbose output);
 
 })(typeof window !== "undefined" ? window : global);
