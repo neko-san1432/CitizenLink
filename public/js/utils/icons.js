@@ -361,6 +361,7 @@ export function getMenuIcon(iconName, options = {}) {
     shield: "shield",
     briefcase: "briefcase",
     user: "user",
+    publication: "megaphone",
   };
 
   const mappedName = iconMap[iconName] || "file";

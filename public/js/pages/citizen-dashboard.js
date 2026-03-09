@@ -27,9 +27,9 @@ async function loadDashboardData() {
     const result = await response.json();
     if (result.success) {
       const complaints = result.data || [];
-      updateStats(complaints, result.pagination?.total || complaints.length);
       updateActivity(complaints);
     }
+    await loadPublicationWidgets();
   } catch (error) {
     console.error("[CITIZEN] Load dashboard error:", error);
     updateStats([], 0);
@@ -55,40 +55,69 @@ function hideDashboardLoader() {
   }
 }
 
-function updateStats(complaints, total) {
-  let pending = 0;
-  let inProgress = 0;
-  let resolved = 0;
+async function loadPublicationWidgets() {
+  try {
+    const [newsRes, noticesRes, eventsRes] = await Promise.all([
+      fetch("/api/content/news?limit=5&status=published"),
+      fetch("/api/content/notices?limit=5&status=active"),
+      fetch("/api/content/events?limit=5&status=upcoming")
+    ]);
 
-  // We only have the last 5 complaints in 'complaints' array usually if limit is applied,
-  // but for accurate stats we might need a stats endpoint.
-  // Assuming the API might return stats or we calculate from what we have.
-  // If we only fetch 5, our stats will be wrong.
-  // Ideally, there should be a /api/citizen/stats endpoint.
-  // For now, we'll try to use what we have or just simple counters if we can't get full totals.
+    const [newsData, noticesData, eventsData] = await Promise.all([
+      newsRes.json(),
+      noticesRes.json(),
+      eventsRes.json()
+    ]);
 
-  // If the API returns full counts in metadata, use that.
-  // Otherwise, we might have to fetch all or use a separate endpoint.
-  // Let's assume we can only accurately count what we have or rely on a separate stats call if available.
-  // To avoid complex changes, I'll calculate from the fetched batch but this is a limitation.
+    renderWidgetList("widget-news-list", newsData.success ? newsData.data : [], "news");
+    renderWidgetList("widget-notices-list", noticesData.success ? noticesData.data : [], "notices");
+    renderWidgetList("widget-events-list", eventsData.success ? eventsData.data : [], "events");
+  } catch (err) {
+    console.error("[CITIZEN] Failed to load publication widgets:", err);
+  }
+}
 
-  complaints.forEach((c) => {
-    const status = (c.workflow_status || c.status || "").toLowerCase();
-    if (["submitted", "pending", "new"].includes(status)) pending++;
-    else if (["in_progress", "assigned", "on_hold"].includes(status))
-      inProgress++;
-    else if (["resolved", "closed", "completed", "rejected"].includes(status))
-      resolved++;
-  });
+function renderWidgetList(containerId, items, type) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-  // If we have total count from pagination, use it for total submitted
-  setText("stat-total-submitted", total);
+  if (!items || items.length === 0) {
+    const bgClass = type === 'notices' ? 'bg-orange-50' : (type === 'events' ? 'bg-green-50' : 'bg-gray-50');
+    const borderClass = type === 'notices' ? 'border-orange-200' : (type === 'events' ? 'border-green-200' : 'border-gray-200');
+    container.innerHTML = `<div class="text-center py-8 text-gray-500 ${bgClass} rounded-lg border border-dashed ${borderClass}"><p>No recent ${type}</p></div>`;
+    return;
+  }
 
-  // Note: These will only reflect the recent batch if we don't have full stats.
-  // Ideally we would fetch /api/citizen/stats.
-  setText("stat-in-progress", inProgress);
-  setText("stat-resolved", resolved);
-  setText("stat-feedback", pending);
+  container.innerHTML = items.map(item => {
+    let title = item.title || "Untitled";
+    let dateStr = item.published_at || item.created_at || item.event_date;
+    let date = dateStr ? new Date(dateStr).toLocaleDateString() : "";
+    let meta = "";
+
+    if (type === 'events') {
+      meta = `<span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">Event</span>`;
+    } else if (type === 'notices') {
+      let colorClass = item.priority === 'urgent' ? 'text-red-600 bg-red-50 border-red-200' : 'text-orange-600 bg-orange-50 border-orange-200';
+      meta = `<span class="text-xs font-semibold px-2 py-0.5 rounded border ${colorClass} capitalize">${item.priority || 'Normal'}</span>`;
+    }
+
+    return `
+      <a href="/publication#${type}" class="block p-3 rounded-lg border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors">
+        <h4 class="font-semibold text-gray-800 text-sm mb-1 leading-tight">${escapeHtml(title)}</h4>
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs text-gray-500">${date}</span>
+          ${meta}
+        </div>
+      </a>
+    `;
+  }).join("");
+}
+
+function escapeHtml(text) {
+  if (!text) return "";
+  const div = document.createElement("div");
+  div.textContent = String(text);
+  return div.innerHTML;
 }
 
 function updateActivity(complaints) {

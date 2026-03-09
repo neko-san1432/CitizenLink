@@ -466,8 +466,8 @@
 .notification-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 10px 16px;
   border-bottom: 1px solid #f1f5f9;
   position: relative;
   cursor: pointer;
@@ -486,10 +486,10 @@
 
 .notification-mark-read {
   position: absolute;
-  top: 16px;
-  right: 20px;
-  width: 24px;
-  height: 24px;
+  top: 10px;
+  right: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #3b82f6;
   color: white;
@@ -533,15 +533,15 @@
 
 .notification-icon {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #64748b;
-  font-size: 18px;
+  font-size: 16px;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 2px 4px rgba(0, 0, 0, 0.05);
   transition: all var(--transition-sm, 150ms);
 }

@@ -63,12 +63,29 @@
                 </div>
               </div>
             </div>
-            <!-- Stats Row Skeleton -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
-              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
-              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
-              <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+            <!-- Content Widgets Skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div class="glass-panel" style="padding: 1rem; border-radius: 12px; height: 350px;">
+                <div class="skeleton" style="height: 24px; width: 120px; border-radius: 4px; margin-bottom: 1rem;">
+                </div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px; margin-bottom: 0.75rem;"></div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px; margin-bottom: 0.75rem;"></div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px;"></div>
+              </div>
+              <div class="glass-panel" style="padding: 1rem; border-radius: 12px; height: 350px;">
+                <div class="skeleton" style="height: 24px; width: 140px; border-radius: 4px; margin-bottom: 1rem;">
+                </div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px; margin-bottom: 0.75rem;"></div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px; margin-bottom: 0.75rem;"></div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px;"></div>
+              </div>
+              <div class="glass-panel" style="padding: 1rem; border-radius: 12px; height: 350px;">
+                <div class="skeleton" style="height: 24px; width: 160px; border-radius: 4px; margin-bottom: 1rem;">
+                </div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px; margin-bottom: 0.75rem;"></div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px; margin-bottom: 0.75rem;"></div>
+                <div class="skeleton" style="height: 80px; border-radius: 8px;"></div>
+              </div>
             </div>
             <!-- Charts Row Skeleton -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -132,69 +149,52 @@
                 </div>
               </div>
             </div>
-            <!-- Stats Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <!-- Total Reports -->
-              <div
-                class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-500 font-medium">Total Submitted</p>
-                  <h3 class="text-2xl font-bold text-gray-800" id="stat-total-submitted">-</h3>
+            <!-- Content Widgets Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <!-- Recent News -->
+              <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col"
+                style="min-height: 350px;">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800">Recent News</h3>
+                  <a href="/publication#news" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</a>
                 </div>
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-              </div>
-
-              <!-- In Progress -->
-              <div
-                class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-500 font-medium">In Progress</p>
-                  <h3 class="text-2xl font-bold text-orange-600" id="stat-in-progress">-</h3>
-                </div>
-                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div id="widget-news-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                  <div
+                    class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <p>Loading news...</p>
+                  </div>
                 </div>
               </div>
 
-              <!-- Resolved -->
-              <div
-                class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-500 font-medium">Resolved</p>
-                  <h3 class="text-2xl font-bold text-green-600" id="stat-resolved">-</h3>
+              <!-- Active Notices -->
+              <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100 flex flex-col"
+                style="min-height: 350px;">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800">Active Notices</h3>
+                  <a href="/publication#notices" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View
+                    All</a>
                 </div>
-                <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div id="widget-notices-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                  <div
+                    class="text-center py-8 text-gray-500 bg-orange-50 rounded-lg border border-dashed border-orange-200">
+                    <p>Loading notices...</p>
+                  </div>
                 </div>
               </div>
 
-              <!-- Pending Feedback -->
-              <div
-                class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-500 font-medium">Pending Feedback</p>
-                  <h3 class="text-2xl font-bold text-purple-600" id="stat-feedback">-</h3>
+              <!-- Upcoming Events -->
+              <div class="bg-white p-4 rounded-xl shadow-sm border border-green-100 flex flex-col"
+                style="min-height: 350px;">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-semibold text-gray-800">Upcoming Events</h3>
+                  <a href="/publication#events" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View
+                    All</a>
                 </div>
-                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                  </svg>
+                <div id="widget-events-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                  <div
+                    class="text-center py-8 text-gray-500 bg-green-50 rounded-lg border border-dashed border-green-200">
+                    <p>Loading events...</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -226,8 +226,8 @@
     </div> <!-- End dashboard-main-wrapper -->
   </div>
   <div id="toast-container" class="toast-container"></div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"
-    integrity="sha256-SERKgtTty1vsDxll+qzd4Y2cF9swY9BCq62i9wXJ9Uo=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" integrity="sha256-SERKgtTty1vsDxll+qzd4Y2cF9swY9BCq62i9wXJ9Uo="
+    crossorigin="anonymous"></script>
   <script type="module" src="/js/lib/supabase-boot.js"></script>
   <script type="module" src="../../js/components/toast.js"></script>
   <script type="module" src="../../js/components/header.js"></script>

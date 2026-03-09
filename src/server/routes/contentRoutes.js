@@ -92,7 +92,8 @@ router.post("/news", authenticateUser, requireRole(["lgu"]), async (req, res) =>
       author_id: req.user?.id
     };
     // console.log removed for security
-    const dbClient = Database.getClient();
+    // Use service client to bypass RLS for admin-generated content
+    const dbClient = Database.getServiceClient();
     const { data, error } = await dbClient
       .from("news")
       .insert([newsData])
@@ -235,7 +236,8 @@ router.post("/events", authenticateUser, requireRole(["lgu"]), async (req, res) 
       created_by: req.user?.id
     };
     // console.log removed for security
-    const dbClient = Database.getClient();
+    // Use service client to bypass RLS for admin-generated content
+    const dbClient = Database.getServiceClient();
     const { data, error } = await dbClient
       .from("events")
       .insert([eventData])
@@ -364,7 +366,8 @@ router.post("/notices", authenticateUser, requireRole(["lgu"]), async (req, res)
       created_by: req.user?.id
     };
     // console.log removed for security
-    const dbClient = Database.getClient();
+    // Use service client to bypass RLS for admin-generated content
+    const dbClient = Database.getServiceClient();
     const { data, error } = await dbClient
       .from("notices")
       .insert([noticeData])
@@ -390,7 +393,7 @@ router.post("/notices", authenticateUser, requireRole(["lgu"]), async (req, res)
       return res.status(500).json({
         success: false,
         error: "Failed to create notice",
-        details: `Insert operation returned no data. Verification query: ${  verifyError ? verifyError.message : "No matching record found"}`
+        details: `Insert operation returned no data. Verification query: ${verifyError ? verifyError.message : "No matching record found"}`
       });
     }
     const insertedNotice = data[0];
