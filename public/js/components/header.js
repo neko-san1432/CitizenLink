@@ -502,6 +502,13 @@ document.addEventListener("DOMContentLoaded", () => {
       initializeHeaderScroll();
       initializeDropdowns();
       initializeGlobalClickHandler();
+
+      // Setup global handler for data-href (CSP compliance for quick actions)
+      document.querySelectorAll('[data-href]').forEach(el => {
+        el.addEventListener('click', function() {
+          window.location.href = this.getAttribute('data-href');
+        });
+      });
     }, 50);
   }, 100); // Close setTimeout
 }); // Close DOMContentLoaded

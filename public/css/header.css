@@ -26,8 +26,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
-  /* Reduced from 70px */
+  height: 100%;
+  min-height: 56px;
   padding: 0 var(--space-4);
   width: 100%;
   position: relative;
@@ -748,7 +748,8 @@
   }
 
   .header-content {
-    height: 70px;
+    height: 100%;
+    min-height: 70px;
     padding: 0 var(--space-2);
   }
 

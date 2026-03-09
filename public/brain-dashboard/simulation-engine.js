@@ -8904,8 +8904,6 @@ if (_nlpModuleLoaded) {
   console.warn("[ENGINE] ⚠️ NLPProcessor module not loaded - NLP functions unavailable");
 }
 
-}
-
 // ==================== NLP MODULE DELEGATION ====================
 // Delegate to NLPProcessor if loaded, otherwise provide stub functions
 

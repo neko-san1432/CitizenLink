@@ -1,4 +1,4 @@
-﻿/* Common Dashboard Styles - Viewport Optimized */
+/* Common Dashboard Styles - Viewport Optimized */
 
 /* 
  * CLEANED: Widget styles removed. 
@@ -16,8 +16,8 @@
   padding: 0 3%;
   margin: 0;
   padding-bottom: 2rem;
-  padding-top: 2rem !important;
-  /* Increase top padding inside container */
+  padding-top: 0 !important;
+  /* Removed top padding to prevent gap above fixed header */
 }
 
 /* Reduce top padding for role dashboards that appeared too spaced */

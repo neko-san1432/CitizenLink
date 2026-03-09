@@ -82,9 +82,14 @@ class LguQueueController {
         });
       }
 
+      // Resolve Category UUIDs to Names
+      const ComplaintRepository = require("../repositories/ComplaintRepository");
+      const complaintRepo = new ComplaintRepository();
+      const resolvedComplaints = await complaintRepo._resolveCategoryNames(complaints || []);
+
       // Get assignment details for each complaint
       const complaintsWithAssignments = await Promise.all(
-        complaints.map(async (complaint) => {
+        resolvedComplaints.map(async (complaint) => {
           // Get all assignments for this complaint
           const { data: assignments } = await supabase
             .from("complaint_assignments")
@@ -395,9 +400,14 @@ class LguQueueController {
         return res.status(500).json({ success: false, error: "Failed to fetch assignments" });
       }
 
+      // Resolve category UUIDs to text
+      const ComplaintRepository = require("../repositories/ComplaintRepository");
+      const complaintRepo = new ComplaintRepository();
+      const resolvedData = await complaintRepo._resolveCategoryNames(data || []);
+
       res.json({
         success: true,
-        data: data || [],
+        data: resolvedData,
         meta: {
           total: count,
           page: pageNum,

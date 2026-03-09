@@ -96,7 +96,9 @@ class ComplaintRepository {
       .select(fields)
       .in("id", ids);
     if (error) throw error;
-    return data || [];
+    
+    // Resolve UUID-based category/subcategory values to names
+    return await this._resolveCategoryNames(data || []);
   }
   async findByUserId(userId, options = {}) {
     try {
@@ -155,14 +157,17 @@ class ComplaintRepository {
           // Silent catch for diagnostic query
         });
       // Then get the paginated data
-      // Use range for pagination (Supabase uses 0-based indexing for range)
       const { data, error } = await query.range(offset, offset + limit - 1);
       if (error) {
         console.error("[COMPLAINT_REPO] Database query error:", error);
         throw error;
       }
+      
+      // Resolve UUID-based category/subcategory values to names
+      const resolvedData = await this._resolveCategoryNames(data || []);
+      
       return {
-        complaints: data || [],
+        complaints: resolvedData,
         total: totalCount || 0,
         page: parseInt(page),
         limit: parseInt(limit),
@@ -575,8 +580,11 @@ class ComplaintRepository {
         });
       }
 
+      // Resolve UUID-based category/subcategory values to names
+      const resolvedResults = await this._resolveCategoryNames(results);
+
       // Remap to lat/lng fields for consistency with existing frontend contract
-      return results.map(c => ({
+      return resolvedResults.map(c => ({
         id: c.id,
         lat: parseFloat(c.latitude),
         lng: parseFloat(c.longitude),

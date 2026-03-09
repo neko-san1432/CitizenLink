@@ -125,7 +125,16 @@ function renderActivityList(activities) {
   }
 
   activities.forEach(item => {
-    const title = item.title || item.complaints?.title || "Untitled Activity";
+    const category = item.category || item.complaints?.category || "General";
+    const subcategory = item.subcategory || item.complaints?.subcategory || "";
+    
+    // Format: Category - Subcategory (e.g. Infrastructure - Road Repair)
+    const categoryText = subcategory 
+      ? `${category.charAt(0).toUpperCase() + category.slice(1)} - ${subcategory.charAt(0).toUpperCase() + subcategory.slice(1)}` 
+      : category.charAt(0).toUpperCase() + category.slice(1);
+      
+    // Use the category and subcategory instead of "Untitled Activity"
+    const title = item.title || item.complaints?.title || categoryText;
     const date = new Date(item.submitted_at || item.created_at || Date.now()).toLocaleDateString();
     const status = (item.status || item.workflow_status || "Pending").replace(/_/g, " ");
     const id = item.complaint_id || item.id;

@@ -173,7 +173,7 @@ async function setSidebarRole() {
             if (item.children) {
               return `
               <div class="menu-group">
-                <div class="menu-header" onclick="this.parentElement.classList.toggle('expanded')">
+                <div class="menu-header">
                   <div class="menu-header-content">
                     <span class="menu-icon">${getMenuIcon(item.icon, {
                 size: 20,
@@ -238,6 +238,16 @@ async function setSidebarRole() {
       initializeLogout();
       // Update active menu items with aria-current
       setActiveMenuItem();
+
+      // Attach event listeners to expandable menus to replace inline onclick
+      const menuHeaders = _sidebarEl.querySelectorAll(".menu-header");
+      menuHeaders.forEach(header => {
+        header.addEventListener("click", function() {
+          if (this.parentElement) {
+            this.parentElement.classList.toggle('expanded');
+          }
+        });
+      });
 
       // console.log removed for security
     }

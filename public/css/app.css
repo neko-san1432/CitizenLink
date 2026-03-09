@@ -16,13 +16,13 @@ body {
 /* Mobile adjustments for body padding */
 @media (max-width: 768px) {
   body {
-    padding-top: 70px;
+    padding-top: 0;
   }
 }
 
 @media (max-width: 480px) {
   body {
-    padding-top: 60px;
+    padding-top: 0;
   }
 }
 
