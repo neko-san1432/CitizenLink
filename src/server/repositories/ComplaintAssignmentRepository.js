@@ -34,7 +34,7 @@ class ComplaintAssignmentRepository {
     if (error) throw error;
     return data;
   }
-  async listByComplaint(complaintId) {
+  async listBycomplaint(complaintId) {
     const { data, error } = await this.supabase
       .from(this.table)
       .select("*")
@@ -86,7 +86,7 @@ class ComplaintAssignmentRepository {
     if (error) throw error;
     return data;
   }
-  async findByComplaintIds(complaintIds) {
+  async findBycomplaintIds(complaintIds) {
     const { data, error } = await this.supabase
       .from(this.table)
       .select("assigned_to, status, assigned_at, assigned_by, department_id")

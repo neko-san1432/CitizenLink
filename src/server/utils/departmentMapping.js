@@ -1,5 +1,5 @@
 /**
- * Server-side Department Mapping Utilities
+ * Server-side department Mapping Utilities
  * Provides dynamic department mapping for server-side services
  * // Touched to force restart
  */
@@ -14,7 +14,7 @@ const CACHE_DURATION = 0; // Disable cache to ensure fresh data
 /**
  * Get all departments with their codes and names
  */
-async function getDepartments() {
+async function getdepartments() {
   const now = Date.now();
   // Return cached data if still valid
   if (departmentCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
@@ -61,16 +61,16 @@ async function getDepartments() {
 /**
  * Get department name by code
  */
-async function getDepartmentNameByCode(code) {
-  const departments = await getDepartments();
+async function getdepartmentNameByCode(code) {
+  const departments = await getdepartments();
   const dept = departments.find(d => d.code === code);
   return dept ? dept.name : code;
 }
 /**
  * Get department code by name (case insensitive)
  */
-async function getDepartmentCodeByName(name) {
-  const departments = await getDepartments();
+async function getdepartmentCodeByName(name) {
+  const departments = await getdepartments();
   const dept = departments.find(d =>
     d.name.toLowerCase() === name.toLowerCase() ||
     d.code.toLowerCase() === name.toLowerCase()
@@ -80,22 +80,22 @@ async function getDepartmentCodeByName(name) {
 /**
  * Get departments by category
  */
-async function getDepartmentsByCategory(categoryName) {
-  const departments = await getDepartments();
+async function getdepartmentsByCategory(categoryName) {
+  const departments = await getdepartments();
   return departments.filter(d => d.category === categoryName);
 }
 /**
  * Get departments by subcategory
  */
-async function getDepartmentsBySubcategory(subcategoryName) {
-  const departments = await getDepartments();
+async function getdepartmentsBySubcategory(subcategoryName) {
+  const departments = await getdepartments();
   return departments.filter(d => d.subcategory === subcategoryName);
 }
 /**
  * Get legacy department name mapping (for backward compatibility)
  */
-async function getLegacyDepartmentMapping() {
-  const departments = await getDepartments();
+async function getLegacydepartmentMapping() {
+  const departments = await getdepartments();
   const mapping = {};
   departments.forEach(dept => {
     // Map common legacy codes to new names
@@ -136,8 +136,8 @@ async function getLegacyDepartmentMapping() {
 /**
  * Get dynamic category to department mapping
  */
-async function getCategoryToDepartmentMapping() {
-  const departments = await getDepartments();
+async function getCategoryTodepartmentMapping() {
+  const departments = await getdepartments();
   const mapping = {};
   // Group departments by category
   departments.forEach(dept => {
@@ -152,7 +152,7 @@ async function getCategoryToDepartmentMapping() {
  * Get dynamic keyword-based department suggestions
  */
 async function getKeywordBasedSuggestions() {
-  const departments = await getDepartments();
+  const departments = await getdepartments();
   const suggestions = [];
   // Create keyword rules based on actual department names and codes
   departments.forEach(dept => {
@@ -193,29 +193,29 @@ async function getKeywordBasedSuggestions() {
 /**
  * Clear the department cache (useful for testing or when data changes)
  */
-function clearDepartmentCache() {
+function cleardepartmentCache() {
   departmentCache = null;
   cacheTimestamp = null;
 }
 
 module.exports = {
-  getDepartments,
-  getDepartmentNameByCode,
-  getDepartmentCodeByName,
-  getDepartmentsByCategory,
-  getDepartmentsBySubcategory,
-  getLegacyDepartmentMapping,
-  getCategoryToDepartmentMapping,
+  getdepartments,
+  getdepartmentNameByCode,
+  getdepartmentCodeByName,
+  getdepartmentsByCategory,
+  getdepartmentsBySubcategory,
+  getLegacydepartmentMapping,
+  getCategoryTodepartmentMapping,
   getKeywordBasedSuggestions,
-  clearDepartmentCache,
+  cleardepartmentCache,
   /**
    * Check if a single department code exists (case-sensitive by code)
    * @param {string} code
    * @returns {Promise<boolean>}
    */
-  async isValidDepartmentCode(code) {
+  async isValiddepartmentCode(code) {
     if (!code) return false;
-    const departments = await getDepartments();
+    const departments = await getdepartments();
     return departments.some(d => d.code === code);
   },
   /**
@@ -223,10 +223,10 @@ module.exports = {
    * @param {string[]} codes
    * @returns {Promise<{validCodes: string[], invalidCodes: string[]}>}
    */
-  async validateDepartmentCodes(codes) {
+  async validatedepartmentCodes(codes) {
     const input = Array.from(new Set((codes || []).filter(Boolean)));
     if (input.length === 0) return { validCodes: [], invalidCodes: [] };
-    const departments = await getDepartments();
+    const departments = await getdepartments();
     // Debug logging
     // console.log removed for security
     // console.log removed for security

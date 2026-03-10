@@ -2,7 +2,7 @@ const Database = require("../config/database");
 const { getDynamicMinPts, getDynamicEpsilon } = require("../utils/similarityUtils");
 
 /**
- * SimilarityCalculatorService
+ * similarityCalculatorService
  * Advanced similarity calculations and pattern detection
  *
  * Enhanced with Adaptive DBSCAN Parameters:
@@ -123,7 +123,7 @@ class SimilarityCalculatorService {
   async detectClusters(options = {}) {
     const {
       radiusKm = 0.1,
-      minComplaintsPerCluster = 5,
+      mincomplaintsPerCluster = 5,
       type = null,
       dateFrom = null,
       dateTo = null,
@@ -133,7 +133,7 @@ class SimilarityCalculatorService {
       if (radiusKm <= 0) {
         throw new Error("Radius must be greater than 0");
       }
-      if (minComplaintsPerCluster < 2) {
+      if (mincomplaintsPerCluster < 2) {
         throw new Error("Minimum complaints per cluster must be at least 2");
       }
 
@@ -214,18 +214,18 @@ class SimilarityCalculatorService {
         return [];
       }
 
-      if (complaints.length < minComplaintsPerCluster) {
+      if (complaints.length < mincomplaintsPerCluster) {
         console.log(
-          `[SIMILARITY] Not enough complaints (${complaints.length}) for clustering (min: ${minComplaintsPerCluster})`
+          `[SIMILARITY] Not enough complaints (${complaints.length}) for clustering (min: ${mincomplaintsPerCluster})`
         );
         await this.saveClusters([]);
         return [];
       }
 
-      const clusters = this.clusterComplaints(
+      const clusters = this.clustercomplaints(
         complaints,
         radiusKm,
-        minComplaintsPerCluster
+        mincomplaintsPerCluster
       );
 
       // Save clusters to database
@@ -268,7 +268,7 @@ class SimilarityCalculatorService {
    * @param {number} radiusKm - Base radius for neighbor search
    * @param {number} defaultMinPoints - Fallback minPts if category not found
    */
-  clusterComplaints(complaints, radiusKm, defaultMinPoints) {
+  clustercomplaints(complaints, radiusKm, defaultMinPoints) {
     const clusters = [];
     const visited = new Set();
     const clustered = new Set();
@@ -358,8 +358,8 @@ class SimilarityCalculatorService {
   /**
    * Find neighboring complaints within radius
    */
-  findNeighbors(complaint, allComplaints, radiusKm) {
-    return allComplaints.filter((other) => {
+  findNeighbors(complaint, allcomplaints, radiusKm) {
+    return allcomplaints.filter((other) => {
       if (other.id === complaint.id) return false;
       const distance = this.calculateDistance(
         complaint.latitude,
@@ -517,12 +517,12 @@ class SimilarityCalculatorService {
         `[SIMILARITY] Successfully saved ${clusters.length} cluster(s) to database`
       );
       if (data && data.length > 0) {
-        const totalComplaints = clusters.reduce(
+        const totalcomplaints = clusters.reduce(
           (sum, cluster) => sum + (cluster.complaint_ids?.length || 0),
           0
         );
         console.log(
-          `[SIMILARITY] Total complaints in clusters: ${totalComplaints}`
+          `[SIMILARITY] Total complaints in clusters: ${totalcomplaints}`
         );
       }
       return { success: true, saved: clusters.length, data };
@@ -536,8 +536,8 @@ class SimilarityCalculatorService {
    */
   async getNearestSimilar(complaintId, limit = 10) {
     try {
-      const complaint = await this.getComplaint(complaintId);
-      if (!complaint) throw new Error("Complaint not found");
+      const complaint = await this.getcomplaint(complaintId);
+      if (!complaint) throw new Error("complaint not found");
       // Get pre-calculated similarities
       const { data: similarities, error } = await this.supabase
         .from("complaint_similarities")
@@ -614,7 +614,7 @@ class SimilarityCalculatorService {
   /**
    * Get complaint by ID
    */
-  async getComplaint(complaintId) {
+  async getcomplaint(complaintId) {
     const { data, error } = await this.supabase
       .from("complaints")
       .select("*")
@@ -635,7 +635,7 @@ class SimilarityCalculatorService {
           {
             message: errorMessage,
             complaintId,
-            operation: "getComplaint",
+            operation: "getcomplaint",
           }
         );
         throw new Error(

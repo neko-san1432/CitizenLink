@@ -15,7 +15,7 @@ async function initPage() {
   const errorText = document.getElementById("error-text");
 
   if (!complaintId) {
-    showError("Invalid Complaint ID");
+    showError("Invalid complaint ID");
     return;
   }
 
@@ -28,7 +28,7 @@ async function initPage() {
     }
 
     const complaint = data.data;
-    renderComplaint(complaint);
+    rendercomplaint(complaint);
 
     // Hide loading, show content
     if (loadingEl) loadingEl.style.display = "none";
@@ -38,18 +38,18 @@ async function initPage() {
     if (complaint.latitude && complaint.longitude) {
       setTimeout(() => {
         // Ensure Leaflet is loaded via the class if not already
-        if (window.ComplaintMap) {
-          const map = new window.ComplaintMap("location-map", {
+        if (window.complaintMap) {
+          const map = new window.complaintMap("location-map", {
             center: [complaint.latitude, complaint.longitude],
             zoom: 16
           });
           map.setLocation(
             complaint.latitude,
             complaint.longitude,
-            complaint.location_text || "Complaint Location"
+            complaint.location_text || "complaint Location"
           );
         } else {
-          console.error("ComplaintMap class not found");
+          console.error("complaintMap class not found");
         }
       }, 500);
     }
@@ -162,7 +162,7 @@ async function initPage() {
 
           const res = await response.json();
           if (res.success) {
-            showMessage("success", type === "false" ? "Complaint marked as false successfully" : "Complaint rejected successfully");
+            showMessage("success", type === "false" ? "complaint marked as false successfully" : "complaint rejected successfully");
             setTimeout(() => window.location.reload(), 1500);
           } else {
             showMessage("error", res.message || "Failed to process request");
@@ -181,13 +181,13 @@ async function initPage() {
 }
 
 const WORKFLOW_STEPS = [
-  { status: "submitted", label: "Submitted", description: "Complaint received" },
+  { status: "submitted", label: "Submitted", description: "complaint received" },
   { status: "verified", label: "Verified", description: "Being assessed/Verified" },
   { status: "action_taken", label: "Action Taken", description: "Action being taken" },
   { status: "resolved", label: "Resolved", description: "Resolution provided" }
 ];
 
-function renderComplaint(complaint) {
+function rendercomplaint(complaint) {
   // Header Info
   setText("complaint-id-header", `#${complaint.id}`);
 

@@ -21,7 +21,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 /**
  * Get all valid department codes from database
  */
-async function getValidDepartmentCodes() {
+async function getValiddepartmentCodes() {
   const now = Date.now();
   // Return cached data if still valid
   if (departmentCodesCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
@@ -47,12 +47,12 @@ async function getValidDepartmentCodes() {
 }
 /**
  * Validate if a department code exists and is active
- * @param {string} code - Department code to validate
+ * @param {string} code - department code to validate
  * @returns {Promise<boolean>} True if valid
  */
-async function isValidDepartmentCode(code) {
+async function isValiddepartmentCode(code) {
   if (!code || typeof code !== "string") return false;
-  const validCodes = await getValidDepartmentCodes();
+  const validCodes = await getValiddepartmentCodes();
   return validCodes.includes(code.toUpperCase());
 }
 /**
@@ -114,16 +114,16 @@ async function validateUserRole(role) {
   // Simplified LGU roles
   if (roleLower === "lgu-admin") {
     roleType = "lgu-admin";
-    departmentCode = null; // Department stored separately in metadata
+    departmentCode = null; // department stored separately in metadata
   }
   else if (roleLower === "lgu-hr") {
     roleType = "lgu-hr";
-    departmentCode = null; // Department stored separately in metadata
+    departmentCode = null; // department stored separately in metadata
   }
   else if (roleLower === "lgu" || roleLower === "lgu-officer") {
     // Accept both 'lgu' and 'lgu-officer' for backward compatibility
     roleType = "lgu-officer";
-    departmentCode = null; // Department stored separately in metadata
+    departmentCode = null; // department stored separately in metadata
   }
   // Other valid roles (citizen, complaint-coordinator, super-admin)
   else if (["citizen", "complaint-coordinator", "super-admin"].includes(roleLower)) {
@@ -144,7 +144,7 @@ async function validateUserRole(role) {
   }
   // Validate department code for LGU roles
   if (departmentCode) {
-    const isValidDept = await isValidDepartmentCode(departmentCode);
+    const isValidDept = await isValiddepartmentCode(departmentCode);
     if (!isValidDept) {
       return {
         isValid: false,
@@ -210,9 +210,9 @@ function normalizeRole(role) {
 /**
  * Extract department code from role
  * @param {string} role - User role
- * @returns {string|null} Department code or null
+ * @returns {string|null} department code or null
  */
-function extractDepartmentCode(role) {
+function extractdepartmentCode(role) {
   if (!role || typeof role !== "string") return null;
   // With simplified roles, department is stored separately in metadata
   // This function now returns null as department is not extracted from role
@@ -220,10 +220,10 @@ function extractDepartmentCode(role) {
 }
 /**
  * Get department info by code
- * @param {string} code - Department code
- * @returns {Promise<Object|null>} Department info or null
+ * @param {string} code - department code
+ * @returns {Promise<Object|null>} department info or null
  */
-async function getDepartmentByCode(code) {
+async function getdepartmentByCode(code) {
   if (!code) return null;
   try {
     const supabase = getSupabase();
@@ -243,7 +243,7 @@ async function getDepartmentByCode(code) {
 /**
  * Clear the department codes cache
  */
-function clearDepartmentCodesCache() {
+function cleardepartmentCodesCache() {
   departmentCodesCache = null;
   cacheTimestamp = null;
 }
@@ -251,7 +251,7 @@ function clearDepartmentCodesCache() {
  * Get all valid department codes with names
  * @returns {Promise<Array>} Array of {code, name} objects
  */
-async function getValidDepartments() {
+async function getValiddepartments() {
   try {
     const supabase = getSupabase();
     const { data, error } = await supabase
@@ -268,12 +268,12 @@ async function getValidDepartments() {
 }
 
 module.exports = {
-  getValidDepartmentCodes,
-  isValidDepartmentCode,
+  getValiddepartmentCodes,
+  isValiddepartmentCode,
   validateUserRole,
   normalizeRole,
-  extractDepartmentCode,
-  getDepartmentByCode,
-  clearDepartmentCodesCache,
-  getValidDepartments
+  extractdepartmentCode,
+  getdepartmentByCode,
+  cleardepartmentCodesCache,
+  getValiddepartments
 };

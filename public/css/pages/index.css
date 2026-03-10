@@ -83,7 +83,7 @@ body,
   height: 100%;
   background:
     linear-gradient(to bottom, var(--bg-overlay-start), var(--bg-overlay-end)),
-    url('/assets/images/bg-digos.jpg');
+    url('/assets/images/bgDigos.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -904,7 +904,7 @@ body,
     /* Light overlay on the photo */
     background:
       linear-gradient(to bottom, rgba(248, 250, 252, 0.85), rgba(248, 250, 252, 0.95)),
-      url('/assets/images/bg-digos.jpg');
+      url('/assets/images/bgDigos.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

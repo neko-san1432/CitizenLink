@@ -35,8 +35,8 @@ const idSchema = Joi.string()
 const reasonSchema = Joi.string().trim().min(5).max(500).required();
 
 const schemas = {
-  // Complaint Creation
-  createComplaint: Joi.object({
+  // complaint Creation
+  createcomplaint: Joi.object({
     title: Joi.string().trim().min(5).max(100).required(),
     description: Joi.string().trim().min(10).max(2000).required(),
     // type: Joi.string().trim().required(), // REMOVED: Obsolete
@@ -89,8 +89,8 @@ const schemas = {
     master_complaint_id: idSchema,
   }),
 
-  // Cancel Complaint
-  cancelComplaint: Joi.object({
+  // Cancel complaint
+  cancelcomplaint: Joi.object({
     reason: reasonSchema,
   }),
 
@@ -105,8 +105,8 @@ const schemas = {
     feedback: Joi.string().trim().max(1000).allow("", null).optional(),
   }),
 
-  // Transfer Complaint
-  transferComplaint: Joi.object({
+  // Transfer complaint
+  transfercomplaint: Joi.object({
     to_dept: Joi.string().required(),
     reason: reasonSchema,
   }),
@@ -144,7 +144,7 @@ const schemas = {
     user_id: idSchema,
   }),
 
-  transferDepartment: Joi.object({
+  transferdepartment: Joi.object({
     user_id: idSchema,
     from_department: Joi.string().trim().required(),
     to_department: Joi.string().trim().required(),

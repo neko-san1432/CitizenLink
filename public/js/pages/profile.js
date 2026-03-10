@@ -19,7 +19,7 @@ async function checkAuthentication() {
   }
 }
 
-async function fetchProfile() {
+async function fetchprofile() {
   const res = await fetch("/api/auth/profile");
   if (!res.ok) throw new Error("Failed to load profile");
   const json = await res.json();
@@ -47,7 +47,7 @@ async function fetchActivity(role) {
   }
 }
 
-function renderProfile(profile) {
+function renderprofile(profile) {
   // Name Calculation
   const firstName = profile?.firstName || profile?.first_name || "";
   const lastName = profile?.lastName || profile?.last_name || "";
@@ -177,15 +177,15 @@ function renderActivityList(activities) {
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await checkAuthentication())) return;
   try {
-    const profile = await fetchProfile();
-    renderProfile(profile);
+    const profile = await fetchprofile();
+    renderprofile(profile);
 
     const role = profile?.role || "citizen";
     const activities = await fetchActivity(role);
     renderStats(activities);
     renderActivityList(activities);
   } catch (error) {
-    console.error("Profile load error:", error);
+    console.error("profile load error:", error);
     showMessage("error", "Failed to load profile");
   }
 });

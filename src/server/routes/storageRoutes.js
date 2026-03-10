@@ -30,7 +30,7 @@ router.get("/signed-url", authenticateUser, async (req, res) => {
           .single();
 
         if (ownerError || !complaint) {
-          return res.status(404).json({ error: "Complaint not found" });
+          return res.status(404).json({ error: "complaint not found" });
         }
 
         if (complaint.user_id !== userId) {

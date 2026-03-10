@@ -1,7 +1,7 @@
 {
   "name": "DRIMS",
   "version": "2.0.0",
-  "description": "Modern Citizen Complaint Management System with Clean Architecture Specifically for Digos City",
+  "description": "Modern Citizen complaint Management System with Clean Architecture Specifically for Digos City",
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "test:functional": "jest --config tests/setup/jest.config.js tests/functional",
     "security-audit": "npm audit",
     "security-fix": "npm audit fix",
-    "security-scan": "node scripts/security-scan.js",
+    "security-scan": "node scripts/securityScan.js",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {

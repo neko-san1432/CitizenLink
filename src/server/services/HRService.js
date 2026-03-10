@@ -1,9 +1,9 @@
-const RoleManagementService = require("./RoleManagementService");
+const RoleManagementService = require("./roleManagementService");
 const { USER_ROLES } = require("../../shared/constants");
-const { _validateUserRole, isValidDepartmentCode } = require("../utils/roleValidation");
+const { _validateUserRole, isValiddepartmentCode } = require("../utils/roleValidation");
 
 /**
-* HRService
+* hRService
 * Handles HR-specific operations: manage LGU officers and admins
 */
 class HRService {
@@ -184,7 +184,7 @@ class HRService {
   /**
   * Assign LGU officer to department
   */
-  async assignOfficerToDepartment(userId, departmentId, hrId) {
+  async assignOfficerTodepartment(userId, departmentId, hrId) {
     try {
       // Validate permission
       const hrRole = await this.roleService.getUserRole(hrId);
@@ -204,7 +204,7 @@ class HRService {
         const dept = hrRole.split("-")[2];
         if (dept) targetDept = dept.toUpperCase();
       }
-      const result = await this.roleService.assignDepartment(userId, targetDept, hrId);
+      const result = await this.roleService.assigndepartment(userId, targetDept, hrId);
       return {
         success: true,
         message: `User assigned to department ${targetDept}`,
@@ -269,16 +269,16 @@ class HRService {
       }
 
       const hrMetadata = hrUser.user.raw_user_meta_data || hrUser.user.user_metadata || {};
-      const hrDepartment = hrMetadata.department || hrMetadata.dpt;
+      const hrdepartment = hrMetadata.department || hrMetadata.dpt;
 
       // If super admin, they can see all, but for HR we filter by their department
-      const userService = require("./UserService");
+      const userService = require("./userService");
       const result = await userService.getUsers({ includeInactive: false }, { page: 1, limit: 10000 });
       const allUsers = result.users || [];
 
       // Filter users by HR's department (if HR has a department)
       let officeUsers = allUsers;
-      if (hrDepartment && !isSuperAdmin) {
+      if (hrdepartment && !isSuperAdmin) {
         officeUsers = allUsers.filter(user => {
           const userDept = user.department ||
                           user.dpt ||
@@ -286,7 +286,7 @@ class HRService {
                           user?.raw_user_meta_data?.dpt ||
                           user?.user_metadata?.department ||
                           user?.user_metadata?.dpt;
-          return userDept === hrDepartment;
+          return userDept === hrdepartment;
         });
       }
 
@@ -320,7 +320,7 @@ class HRService {
           officers,
           admins
         },
-        department: hrDepartment || "All"
+        department: hrdepartment || "All"
       };
     } catch (error) {
       console.error("[HR] Get role distribution error:", error);
@@ -369,21 +369,21 @@ class HRService {
         throw new Error("Failed to get HR user information");
       }
       // With simplified roles, department is stored separately in metadata
-      let hrDepartment = null;
+      let hrdepartment = null;
       if (hrRole === "lgu-hr") {
         // Fallback to metadata if role is just 'lgu-hr'
         const hrMetadata = hrUser.user.raw_user_meta_data || hrUser.user.user_metadata || {};
-        hrDepartment = hrMetadata.department;
+        hrdepartment = hrMetadata.department;
       }
       // Role-based restrictions
       if (isHR && !isCoordinator) {
       // LGU-HR can only create links for their own department
-        if (hrDepartment && hrDepartment !== departmentCode) {
-          throw new Error(`You can only create signup links for your own department (${hrDepartment})`);
+        if (hrdepartment && hrdepartment !== departmentCode) {
+          throw new Error(`You can only create signup links for your own department (${hrdepartment})`);
         }
         // For LGU-HR, automatically use their department if not specified
-        if (isHR && !departmentCode && hrDepartment) {
-          departmentCode = hrDepartment;
+        if (isHR && !departmentCode && hrdepartment) {
+          departmentCode = hrdepartment;
           // console.log removed for security
         }
         // console.log removed for security
@@ -399,7 +399,7 @@ class HRService {
       }
       // Validate department code if provided
       if (departmentCode) {
-        const isValidDept = await isValidDepartmentCode(departmentCode);
+        const isValidDept = await isValiddepartmentCode(departmentCode);
         if (!isValidDept) {
           throw new Error(`Invalid department code: ${departmentCode}. Must be one of the active departments.`);
         }
@@ -490,7 +490,7 @@ class HRService {
 
       // Get HR department from metadata
       const hrMetadata = hrUser.user.raw_user_meta_data || hrUser.user.user_metadata || {};
-      const hrDepartment = hrMetadata.department || hrMetadata.dpt;
+      const hrdepartment = hrMetadata.department || hrMetadata.dpt;
 
       const Database = require("../config/database");
       const db = Database.getInstance();
@@ -507,8 +507,8 @@ class HRService {
       }
 
       // HR may optionally be restricted to their office; if so, apply department filter by default
-      if (hrRole !== "super-admin" && hrDepartment) {
-        query = query.eq("department_code", hrDepartment);
+      if (hrRole !== "super-admin" && hrdepartment) {
+        query = query.eq("department_code", hrdepartment);
       }
 
       query = query.order("created_at", { ascending: false });

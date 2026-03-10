@@ -1,6 +1,6 @@
 const { _createClient } = require("@supabase/supabase-js");
 const Database = require("../config/database");
-const Complaint = require("../models/Complaint");
+const Complaint = require("../models/complaint");
 const crypto = require("crypto");
 
 class ComplaintRepository {
@@ -51,7 +51,7 @@ class ComplaintRepository {
       if (error) {
         // PGRST116 = no rows returned (expected when complaint doesn't exist)
         if (error.code === "PGRST116") {
-          console.log(`[COMPLAINT_REPO] Complaint ${id} not found (PGRST116)`);
+          console.log(`[COMPLAINT_REPO] complaint ${id} not found (PGRST116)`);
           return null;
         }
         // Log other errors for debugging
@@ -63,7 +63,7 @@ class ComplaintRepository {
       }
 
       if (!data) {
-        console.log(`[COMPLAINT_REPO] Complaint ${id} not found (no data)`);
+        console.log(`[COMPLAINT_REPO] complaint ${id} not found (no data)`);
         return null;
       }
 
@@ -367,7 +367,7 @@ class ComplaintRepository {
     if (error) throw error;
     return new Complaint(data);
   }
-  async autoAssignDepartments(id) {
+  async autoAssigndepartments(id) {
     const { data, error } = await this.supabase.rpc("auto_assign_departments", {
       p_complaint_id: id,
     });

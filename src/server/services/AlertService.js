@@ -1,8 +1,8 @@
 const Database = require("../config/database");
-const ClusteringService = require("./ClusteringService");
+const clusteringService = require("./clusteringService");
 
 /**
- * AlertService
+ * alertService
  * Generates high-level system alerts based on Clusters and Trends.
  */
 class AlertService {
@@ -18,7 +18,7 @@ class AlertService {
   async generateAlerts() {
     try {
       const alerts = [];
-      const result = await ClusteringService.generateClusters();
+      const result = await clusteringService.generateClusters();
       const { clusters } = result;
 
       if (!clusters || clusters.length === 0) return [];
@@ -29,7 +29,7 @@ class AlertService {
         if (alert) alerts.push(alert);
       });
 
-      // 2. Trend-Based Alerts (TODO: Implement with InsightService)
+      // 2. Trend-Based Alerts (TODO: Implement with insightService)
       // e.g. "Sudden spike in Flood reports"
 
       return alerts.sort((a, b) => b.severity - a.severity);

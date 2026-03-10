@@ -89,7 +89,7 @@ const ADAPTIVE_EPSILON = {
   "Obstruction": 0.000144,
   "Stray Dog": 0.000144,
   "Stray Animal": 0.000144,
-  "Noise Complaint": 0.000144,
+  "Noise complaint": 0.000144,
 
   // =====================================================================
   // DEFAULT FALLBACK - ~33 meters
@@ -155,7 +155,7 @@ const ADAPTIVE_MINPTS = {
   // QUALITY OF LIFE: Standard threshold
   "Traffic": 4,
   "Traffic Congestion": 4,
-  "Noise Complaint": 4,
+  "Noise complaint": 4,
   "Stray Dog": 4,
   "Stray Animal": 4,
 
@@ -344,20 +344,20 @@ function checkTemporalProximity(date1, date2) {
  *
  * v5.0: Uses thesis-validated adaptive epsilon (in degrees)
  */
-function isPotentialDuplicate(newComplaint, existingComplaint) {
+function isPotentialDuplicate(newcomplaint, existingcomplaint) {
   // Layer 1: Spatial (v5.0: Adaptive epsilon in degrees)
   const epsilon = getDynamicEpsilon(
-    newComplaint.category,
-    newComplaint.categoryName || newComplaint.category_name || "",
-    newComplaint.subcategoryName || newComplaint.subcategory || ""
+    newcomplaint.category,
+    newcomplaint.categoryName || newcomplaint.category_name || "",
+    newcomplaint.subcategoryName || newcomplaint.subcategory || ""
   );
 
   // Calculate distance using Haversine (returns meters)
   const distanceMeters = calculateDistance(
-    newComplaint.latitude,
-    newComplaint.longitude,
-    existingComplaint.latitude,
-    existingComplaint.longitude
+    newcomplaint.latitude,
+    newcomplaint.longitude,
+    existingcomplaint.latitude,
+    existingcomplaint.longitude
   );
 
   // Convert epsilon from degrees to meters for comparison (1 degree ≈ 111km)
@@ -370,8 +370,8 @@ function isPotentialDuplicate(newComplaint, existingComplaint) {
   // Layer 2: Temporal
   if (
     !checkTemporalProximity(
-      newComplaint.submitted_at || new Date(),
-      existingComplaint.submitted_at
+      newcomplaint.submitted_at || new Date(),
+      existingcomplaint.submitted_at
     )
   ) {
     return { isMatch: false, reason: "temporal" };
@@ -379,7 +379,7 @@ function isPotentialDuplicate(newComplaint, existingComplaint) {
 
   // Layer 3: Semantic
   if (
-    !areCategoriesRelated(newComplaint.category, existingComplaint.category)
+    !areCategoriesRelated(newcomplaint.category, existingcomplaint.category)
   ) {
     return { isMatch: false, reason: "semantic" };
   }

@@ -1,6 +1,6 @@
 # DRIMS 2.0
 
-**Intelligent Citizen Complaint Management System with Advanced Geospatial Analytics & AI-Powered NLP**
+**Intelligent Citizen complaint Management System with Advanced Geospatial Analytics & AI-Powered NLP**
 
 ---
 
@@ -27,8 +27,8 @@ Built for Digos City, Davao del Sur, the system enables data-driven decision-mak
 | **Statistical Analysis** | Client-side statistical validation with local analysis server for thesis-ready reporting |
 | **Real-time Notifications** | Comprehensive notification system with priority levels and deduplication |
 | **Interactive Heatmap** | Live complaint visualization with cluster overlays and filtering |
-| **5-Phase Workflow** | Complaint lifecycle: Submitted → Verified → Under Review → Action Taken → Resolved (migrated from original 6-status; application constants still reference original values) |
-| **Settings Management** | Role-protected system settings with category-based organization and public/private scoping |
+| **5-Phase Workflow** | complaint lifecycle: Submitted → Verified → Under Review → Action Taken → Resolved (migrated from original 6-status; application constants still reference original values) |
+| **settings Management** | Role-protected system settings with category-based organization and public/private scoping |
 | **Security Scanning** | Automated 3-phase pipeline: npm audit, ESLint security plugins, and pattern-based secret scanning |
 
 ---
@@ -109,16 +109,16 @@ DRIMS/
 │   ├── 📁 server/
 │   │   ├── 📁 controllers/       # Request handlers (17 controllers)
 │   │   ├── 📁 services/          # Business logic (34 services)
-│   │   │   ├── AdvancedDecisionEngine.js   # Hybrid AI + HITL
+│   │   │   ├── advancedDecisionEngine.js   # Hybrid AI + HITL
 │   │   │   ├── 📁 brain/                   # Intelligence services
-│   │   │   │   ├── ClusteringService.js    # DBSCAN++ with Haversine
-│   │   │   │   └── NLPService.js           # Bilingual NLP engine
-│   │   │   ├── ClusteringScheduler.js      # Scheduled clustering
-│   │   │   ├── DuplicationDetectionService.js
-│   │   │   ├── NlpManagementService.js     # Dictionary management
-│   │   │   ├── NotificationService.js      # Real-time alerts
-│   │   │   ├── SimilarityCalculatorService.js
-│   │   │   └── TensorFlowService.js        # AI model management (cached)
+│   │   │   │   ├── clusteringService.js    # DBSCAN++ with Haversine
+│   │   │   │   └── nLPService.js           # Bilingual NLP engine
+│   │   │   ├── clusteringScheduler.js      # Scheduled clustering
+│   │   │   ├── duplicationDetectionService.js
+│   │   │   ├── nlpManagementService.js     # Dictionary management
+│   │   │   ├── notificationService.js      # Real-time alerts
+│   │   │   ├── similarityCalculatorService.js
+│   │   │   └── tensorFlowService.js        # AI model management (cached)
 │   │   ├── 📁 repositories/      # Data access layer
 │   │   ├── 📁 models/            # Data models & validation
 │   │   ├── 📁 middleware/        # Express middleware
@@ -151,7 +151,7 @@ DRIMS/
 │   └── 📁 seeds/                 # Sample data
 ├── 📁 scripts/                   # Utility & diagnostic scripts
 ├── 📁 storage/
-│   └── 📁 ai_cache/              # TF model & anchor embedding cache
+│   └── 📁 aiCache/              # TF model & anchor embedding cache
 └── 📁 tests/                     # Test suites (25 suites, 211 tests)
 ```
 
@@ -184,7 +184,7 @@ DRIMS follows a **layered MVC + Service architecture** with intelligent processi
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────────┐
 │                         SERVICE LAYER                                    │
-│  • Complaint workflows • Notifications • User management • Reports       │
+│  • complaint workflows • Notifications • User management • Reports       │
 └───────────────────────────────┬─────────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────────┐
@@ -233,7 +233,7 @@ These parameters were derived using the **Sorted K-Distance Graph (Elbow Method)
 
 **Implementation Files:**
 - `src/server/utils/similarityUtils.js` - Centralized parameter definitions (v5.0)
-- `src/server/services/brain/ClusteringService.js` - Backend DBSCAN++ with Haversine distance, 45-minute temporal window, and "Lone Wolf" critical-incident handling
+- `src/server/services/brain/clusteringService.js` - Backend DBSCAN++ with Haversine distance, 45-minute temporal window, and "Lone Wolf" critical-incident handling
 - `public/brain-dashboard/simulation-engine.js` - Frontend visualization engine
 
 ### Mathematical Foundation
@@ -367,21 +367,21 @@ To ensure safety hazards mathematically outrank aesthetic issues:
 | Sanitation / Health Hazard / Pest Infestation | 1.00 | Baseline |
 | Traffic / Traffic Congestion | 0.90 | Moderate impact |
 | Stray Animals | 0.85 | Animal control |
-| Noise Complaint / Noise | 0.80 | Quality of life |
+| Noise complaint / Noise | 0.80 | Quality of life |
 | Others | 0.70 | Lowest priority |
 
 ### Performance Optimizations
 
 1. **Shader Warmup**: Pre-compiles WebGL shaders on page load to prevent first-click freeze
 2. **Vectorized Classification**: GPU-accelerated `tf.matMul` instead of CPU loops
-3. **Local Model Caching**: 100MB USE model cached in `storage/ai_cache/`
+3. **Local Model Caching**: 100MB USE model cached in `storage/aiCache/`
 4. **Anchor Caching**: SHA-256 hash-based category embedding cache
 
 **Files:**
 - `public/brain-dashboard/nlp-processor.js` - Client-side NLP engine
-- `src/server/services/brain/NLPService.js` - Server-side bilingual NLP with false-positive filtering
-- `src/server/services/AdvancedDecisionEngine.js` - Server-side with HITL
-- `src/server/services/TensorFlowService.js` - Model management (cached)
+- `src/server/services/brain/nLPService.js` - Server-side bilingual NLP with false-positive filtering
+- `src/server/services/advancedDecisionEngine.js` - Server-side with HITL
+- `src/server/services/tensorFlowService.js` - Model management (cached)
 
 ---
 
@@ -409,7 +409,7 @@ if (finalScore >= 0.75) → "High Confidence Duplicate"
 if (finalScore >= 0.60) → "Medium Confidence Duplicate"
 ```
 
-**File:** `src/server/services/DuplicationDetectionService.js`
+**File:** `src/server/services/duplicationDetectionService.js`
 
 ---
 
@@ -417,7 +417,7 @@ if (finalScore >= 0.60) → "Medium Confidence Duplicate"
 
 ### Overview
 
-The AdvancedDecisionEngine implements supervised learning through human feedback:
+The advancedDecisionEngine implements supervised learning through human feedback:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -449,7 +449,7 @@ The AdvancedDecisionEngine implements supervised learning through human feedback
 - **Audit Trail**: All training actions logged with user ID and timestamp
 
 **Files:**
-- `src/server/services/AdvancedDecisionEngine.js`
+- `src/server/services/advancedDecisionEngine.js`
 - `public/brain-analytics/dictionary-manager.js`
 - `public/brain-analytics/train-system.js`
 
@@ -519,7 +519,7 @@ One-click generation of:
 - **Bulk Notifications**: Efficient batch creation
 - **Real-time**: Instant delivery via Supabase Realtime
 
-**File:** `src/server/services/NotificationService.js`
+**File:** `src/server/services/notificationService.js`
 
 ---
 
@@ -542,7 +542,7 @@ One-click generation of:
 | **audit_logs** | System-wide action logging |
 | **settings** | System configuration key-value store with categories |
 
-### Complaints Schema
+### complaints Schema
 
 ```sql
 CREATE TABLE public.complaints (
@@ -556,7 +556,7 @@ CREATE TABLE public.complaints (
   department_r TEXT[] DEFAULT '{}',
   workflow_status TEXT DEFAULT 'submitted'
     CHECK (workflow_status IN ('submitted', 'verified', 'under_review', 'action_taken', 'resolved')),
-  -- Note: Migrated from original 6-status system by 20260205_update_workflow_constraint.
+  -- Note: Migrated from original 6-status system by 20260205UpdateWorkflowConstraint.
   priority TEXT DEFAULT 'low'
     CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
   assigned_coordinator_id UUID,
@@ -583,7 +583,7 @@ CREATE TABLE public.complaints (
 | GET | `/api/nlp/keywords` | Get all trained keywords |
 | POST | `/api/nlp/keywords` | Add a new keyword |
 
-### Settings
+### settings
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -594,11 +594,11 @@ CREATE TABLE public.complaints (
 | PUT | `/api/settings/:key` | Update setting (lgu/super-admin) |
 | DELETE | `/api/settings/:key` | Delete setting (super-admin only) |
 
-### Complaints
+### complaints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/complaints` | Submit new complaint |
+| POST | `/api/complaints` | Submit new Complaint |
 | GET | `/api/complaints/my` | Get user's complaints |
 | GET | `/api/complaints/:id` | Get complaint details |
 | PATCH | `/api/complaints/:id/status` | Update status |
@@ -671,9 +671,9 @@ npm run security-scan    # Run custom 3-phase security scanner
 | **SQL Injection Protection** | Parameterized queries via Supabase client |
 | **XSS Prevention** | Helmet CSP, `xss` + `isomorphic-dompurify` sanitization |
 | **Rate Limiting** | Per-route request throttling |
-| **RBAC** | Row Level Security policies with SECURITY DEFINER functions |
+| **RBAC** | Row Level Security policies with security DEFINER functions |
 | **Session Management** | Secure cookie handling |
-| **RLS Recursion Protection** | `check_is_admin_safe()` and `check_is_lgu_staff()` SECURITY DEFINER functions to prevent infinite RLS policy loops |
+| **RLS Recursion Protection** | `check_is_admin_safe()` and `check_is_lgu_staff()` security DEFINER functions to prevent infinite RLS policy loops |
 | **Automated Security Scanning** | 3-phase pipeline: `npm audit`, ESLint security plugins (`eslint-plugin-security`, `eslint-plugin-no-unsanitized`), pattern-based secret scanning |
 | **Secret Scanning** | Regex-based detection of API keys, AWS keys, and hardcoded credentials in source |
 | **Dependency Auditing** | 0 npm vulnerabilities enforced; `tar` override for transitive tfjs-node dependency |
@@ -702,8 +702,8 @@ Full report: [docs/AUDIT_REPORT_2026-02-28.md](docs/AUDIT_REPORT_2026-02-28.md)
 | Model loading | ~5,000 ms | 300–500 ms | **~93%** |
 | Anchor embedding | ~3,000 ms | 1–2 ms | **~99.9%** |
 
-- **Local model caching**: Model weights saved to `storage/ai_cache/tf_model_cache/` on first download, then loaded from disk
-- **Anchor embedding caching**: Pre-computed anchor vectors saved to `storage/ai_cache/tf_anchor_cache.json` with SHA-256 fingerprinting — recomputed only when config changes
+- **Local model caching**: Model weights saved to `storage/aiCache/tfModelCache/` on first download, then loaded from disk
+- **Anchor embedding caching**: Pre-computed anchor vectors saved to `storage/aiCache/tfAnchorCache.json` with SHA-256 fingerprinting — recomputed only when config changes
 - **Vectorized classification**: Matrix multiplication (`anchorMatrix.matMul()`) for single-pass cosine similarity instead of per-category loops
 - **Native backend**: Prefers `@tensorflow/tfjs-node` (C++ bindings) with graceful fallback to vanilla `@tensorflow/tfjs`
 - **Server pre-loading**: AI engine pre-initialized at startup to prevent first-request delay
@@ -730,7 +730,7 @@ Full report: [docs/performance/heatmap-optimization-report.md](docs/performance/
 - **GPU Acceleration**: `tf.matMul` for vectorized operations
 
 ### Server-Side
-- **Model Caching**: USE model stored in `storage/ai_cache/`
+- **Model Caching**: USE model stored in `storage/aiCache/`
 - **Anchor Caching**: SHA-256 hash-based category embedding cache
 - **Connection Pooling**: Supabase singleton client management
 - **HTTP Compression**: `compression` middleware for response payloads
@@ -739,7 +739,7 @@ Full report: [docs/performance/heatmap-optimization-report.md](docs/performance/
 
 ## 👨‍💻 Development Team
 
-> **Note**: For a chronological history of changes, see [docs/IMPLEMENTATION_LOG.md](docs/IMPLEMENTATION_LOG.md).
+> **Note**: For a chronological history of changes, see [docs/implementationLog.md](docs/implementationLog.md).
 
 **Pyrrhus Go** - _Backend Developer_
 - Server architecture and API design
@@ -790,14 +790,14 @@ Recent schema changes (`database/migrations/`):
 
 | Migration | Description |
 |-----------|-------------|
-| `20260205_add_phase_comments` | Added `phase_comments` JSONB column for structured per-phase comments |
-| `20260205_create_department_mapping` | Department↔subcategory many-to-many junction table with response priority |
-| `20260205_update_workflow_constraint` | Migration script to transition from 6-status to 5-phase workflow (`submitted` → `verified` → `under_review` → `action_taken` → `resolved`). Application constants still reference original statuses. |
-| `20260212_secure_unrestricted_tables` | Enabled RLS on 6 previously unprotected NLP/mapping tables |
-| `20260214_remove_nlp_subtypes` | Dropped subcategory columns from NLP tables (taxonomy simplification) |
-| `20260214_remove_subtype_column` | Dropped `subcategory` column from `complaints` table |
-| `20260219_emergency_fix_recursion` | Created `check_is_admin_safe()` SECURITY DEFINER to fix infinite RLS recursion on `user_profiles` |
-| `20260224_fix_complaints_recursion` | Created `check_is_lgu_staff()` SECURITY DEFINER to fix infinite RLS recursion on `complaints` |
+| `20260205AddPhaseComments` | Added `phase_comments` JSONB column for structured per-phase comments |
+| `20260205CreatedepartmentMapping` | department↔subcategory many-to-many junction table with response priority |
+| `20260205UpdateWorkflowConstraint` | Migration script to transition from 6-status to 5-phase workflow (`submitted` → `verified` → `under_review` → `action_taken` → `resolved`). Application constants still reference original statuses. |
+| `20260212SecureUnrestrictedTables` | Enabled RLS on 6 previously unprotected NLP/mapping tables |
+| `20260214RemoveNlpSubtypes` | Dropped subcategory columns from NLP tables (taxonomy simplification) |
+| `20260214RemoveSubtypeColumn` | Dropped `subcategory` column from `complaints` table |
+| `20260219EmergencyFixRecursion` | Created `check_is_admin_safe()` security DEFINER to fix infinite RLS recursion on `user_profiles` |
+| `20260224FixcomplaintsRecursion` | Created `check_is_lgu_staff()` security DEFINER to fix infinite RLS recursion on `complaints` |
 
 ---
 
@@ -806,15 +806,15 @@ Recent schema changes (`database/migrations/`):
 | Script | Purpose |
 |--------|---------|
 | `security-scan.js` | Automated 3-phase security scanning (npm audit, ESLint, secret detection) |
-| `benchmark_heatmap.js` / `benchmark_tf.js` | Performance benchmarks for heatmap and TensorFlow |
+| `benchmarkHeatmap.js` / `benchmarkTf.js` | Performance benchmarks for heatmap and TensorFlow |
 | `check_legacy_roles.js` / `cleanup_legacy_accounts.js` | Legacy account auditing and cleanup |
-| `check_nlp_data.js` / `nlp_supabase_diagnostics.js` | NLP data validation and diagnostics |
-| `recalculate_priority.js` | Recalculate complaint priorities |
-| `validate_taxonomy_alignment.js` | Verify brain config ↔ database taxonomy alignment |
-| `seed_runner.js` / `generate_remaining_seeds.js` | Database seeding utilities |
+| `checkNlpData.js` / `nlpSupabaseDiagnostics.js` | NLP data validation and diagnostics |
+| `recalculatePriority.js` | Recalculate complaint priorities |
+| `validateTaxonomyAlignment.js` | Verify brain config ↔ database taxonomy alignment |
+| `seedRunner.js` / `generateRemainingSeeds.js` | Database seeding utilities |
 | `debug_rls.js` / `print_rls_fix.js` | RLS policy debugging and fix generation |
-| `export_brain_config.js` | Export brain configuration to JSON |
+| `exportBrainConfig.js` | Export brain configuration to JSON |
 
 ---
 
-**DRIMS** - Intelligent Complaint Management with Geospatial Analytics & AI 🗺️🧠
+**DRIMS** - Intelligent complaint Management with Geospatial Analytics & AI 🗺️🧠

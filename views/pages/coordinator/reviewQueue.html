@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+  <title>Review Queue - DRIMS</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/toast.css" />
+  <link rel="stylesheet" href="/css/components/clock.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/pages/dashboardCommon.css" />
+  <link rel="stylesheet" href="/css/pages/coordinatorDashboard.css" />
+  <link rel="stylesheet" href="/css/viewportFix.css" />
+  <script type="module" src="/js/utils/theme.js"></script>
+  <link rel="stylesheet" href="/css/pages/coordinatorReviewQueue.css" />
+  <link rel="stylesheet" href="/css/components/barangayPrioritization.css" />
+  <link rel="stylesheet" href="/css/components/slidingPanel.css" />
+  <style>
+    /* COMPACT OVERRIDES */
+    .rq-table.table th.rq-th {
+      padding: 8px 12px !important;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .rq-table.table td {
+      padding: 6px 12px !important;
+      font-size: 13px;
+    }
+
+    .rq-panel.panel {
+      padding: 0.75rem !important;
+    }
+
+    .dashboard-content {
+      padding: 1rem !important;
+    }
+
+    .panel {
+      margin-bottom: 0.5rem !important;
+    }
+
+    .form-select,
+    .form-input {
+      font-size: 12px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+
+    <div id="app" class="collapsible coordinator-dashboard">
+      <!-- Dashboard Header -->
+      <div class="dashboard-header-section">
+        <h1 class="text-2xl font-bold text-gray-800">Review Queue</h1>
+        <p class="text-gray-600">
+          Review and prioritize incoming complaints.
+        </p>
+      </div>
+
+      <!-- Main Content -->
+      <div class="dashboard-content p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          <!-- LEFT COLUMN: Filters & Queue (Span 9) -->
+          <div class="lg:col-span-9 space-y-6">
+
+            <!-- Compressed Filters & Tools -->
+            <div class="panel rq-panel p-2 mb-4">
+              <div class="flex flex-col xl:flex-row gap-2 items-center justify-between">
+
+                <!-- Search (Compact) -->
+                <div class="relative w-full xl:w-64">
+                  <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <input type="text" id="search-input"
+                    class="form-input w-full pl-8 py-1 text-xs rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                    placeholder="Search...">
+                </div>
+
+                <!-- Filters Group (Tight) -->
+                <div class="flex flex-wrap gap-1 w-full xl:w-auto items-center">
+
+                  <div class="flex items-center gap-1 bg-white rounded border border-gray-300 px-1 xl:mr-2">
+                    <span class="text-[10px] text-gray-500 font-medium pl-1 hidden xl:inline">Date:</span>
+                    <input type="date" id="filter-start-date"
+                      class="form-input !border-0 bg-transparent py-1 text-xs focus:ring-0 w-[100px]"
+                      title="Start Date">
+                    <span class="text-xs text-gray-400">-</span>
+                    <input type="date" id="filter-end-date"
+                      class="form-input !border-0 bg-transparent py-1 text-xs focus:ring-0 w-[100px]" title="End Date">
+                  </div>
+
+                  <select id="filter-priority"
+                    class="form-select py-1 text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Priority: All</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+
+                  <select id="filter-type"
+                    class="form-select py-1 text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Category: All</option>
+                    <option value="Infrastructure">Infrastructure</option>
+                    <option value="Sanitation">Sanitation</option>
+                    <option value="Community">Community</option>
+                    <option value="Safety">Safety</option>
+                    <option value="Environment">Environment</option>
+                  </select>
+
+                  <select id="filter-similar"
+                    class="form-select py-1 text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Duplicates: All</option>
+                    <option value="yes">Has Similar</option>
+                    <option value="no">Unique</option>
+                  </select>
+
+                  <select id="filter-prioritization"
+                    class="form-select py-1 text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="">Sort: Default</option>
+                    <option value="desc">Highest Priority</option>
+                    <option value="asc">Lowest Priority</option>
+                  </select>
+
+                  <!-- Status Badge -->
+                  <div class="h-4 w-px bg-gray-300 mx-1 hidden xl:block"></div>
+                  <span
+                    class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded whitespace-nowrap"
+                    id="queue-count-badge">Loading...</span>
+                </div>
+              </div>
+            </div>
+
+
+
+            <!-- Loading State -->
+            <div id="loading" class="text-center py-12">
+              <div class="spinner mx-auto mb-3"></div>
+              <p class="text-gray-500">Loading review queue...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden panel rq-panel text-center">
+              <div
+                class="mx-auto h-12 w-12 text-green-100 bg-green-500 rounded-full flex items-center justify-center mb-4">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900">All Caught Up!</h3>
+              <p class="mt-2 text-gray-500">There are no complaints pending review at the moment.</p>
+            </div>
+
+            <!-- complaint List - TABLE VIEW -->
+            <div class="panel rq-panel overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="table table-hover table-sm rq-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="rq-th">Priority
+                      </th>
+                      <th scope="col" class="rq-th">Category
+                      </th>
+                      <th scope="col" class="rq-th">Location
+                      </th>
+                      <th scope="col" class="rq-th w-1/3">
+                        Description</th>
+                      <th scope="col" class="rq-th">Date</th>
+                      <th scope="col" class="rq-th rq-th-actions">Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="complaint-list">
+                    <!-- Rows injected here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination-container"
+              class="hidden panel rq-panel rq-pagination flex items-center justify-between">
+              <div class="text-sm text-gray-700 flex items-center gap-2">
+                <label for="rows-per-page" class="text-xs font-medium text-gray-500">Rows:</label>
+                <select id="rows-per-page"
+                  class="form-select text-xs py-1 pl-2 pr-6 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                </select>
+                <span class="mx-2 text-gray-300">|</span>
+                <span id="page-info">Page 1 of 1</span>
+                <span class="mx-2 text-gray-300">•</span>
+                <span id="items-info">Showing 0 of 0 complaints</span>
+              </div>
+              <div class="flex gap-2">
+                <button id="prev-page" class="btn btn-secondary btn-sm">
+                  Previous
+                </button>
+                <div id="page-numbers" class="flex gap-1"></div>
+                <button id="next-page" class="btn btn-secondary btn-sm">
+                  Next
+                </button>
+              </div>
+            </div>
+
+
+
+          </div>
+
+          <!-- RIGHT COLUMN: Barangay Prioritization (Span 3) -->
+          <div class="lg:col-span-3">
+            <div class="sticky top-24">
+              <div class="panel rq-panel">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-100 pb-2">Barangay
+                  Prioritization</h3>
+                <div id="barangay-prioritization-container">
+                  <!-- Barangay content will be injected here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script type="module" src="../../js/components/header.js"></script>
+    <script type="module" src="../../js/components/sidebar.js"></script>
+    <script type="module" src="../../js/auth/authChecker.js"></script>
+    <script type="module" src="../../js/auth/roleToggle.js"></script>
+    <script type="module" src="../../js/components/toast.js"></script>
+    <script type="module" src="../../js/services/toastnotificationService.js"></script>
+    <script type="module" src="../../js/components/slidingPanel.js?v=20260301"></script>
+    <!-- CACHE BUSTER v7 -->
+    <script type="module" src="../../js/coordinator/reviewQueue.js?v=7"></script>
+
+    <script type="module">
+      import toastnotificationService from "../../js/services/toastnotificationService.js";
+      toastnotificationService.startListening();
+      window.addEventListener("beforeunload", () => {
+        toastnotificationService.stopListening();
+      });
+    </script>
+    <div id="sliding-panel-container"></div>
+</body>
+
+</html>

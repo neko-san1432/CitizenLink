@@ -4,7 +4,7 @@
  */
 import showToast from "../components/toast.js";
 
-class ToastNotificationService {
+class ToastnotificationService {
 
   constructor() {
     this.eventSource = null;
@@ -126,6 +126,6 @@ class ToastNotificationService {
   }
 }
 // Create singleton instance
-const toastNotificationService = new ToastNotificationService();
+const toastnotificationService = new ToastnotificationService();
 
-export default toastNotificationService;
+export default toastnotificationService;

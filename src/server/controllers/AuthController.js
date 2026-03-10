@@ -1,5 +1,5 @@
-const UserService = require("../services/UserService");
-const LoginInitializationService = require("../services/LoginInitializationService");
+const userService = require("../services/userService");
+const loginInitializationService = require("../services/loginInitializationService");
 const {
   ValidationError,
   ConflictError,
@@ -20,7 +20,7 @@ const {
 const supabase = Database.getClient();
 const { validatePasswordStrength } = require("../../shared/passwordValidation");
 const { validateUserRole } = require("../utils/roleValidation");
-const Logger = require("../utils/Logger");
+const logger = require("../utils/logger");
 
 class AuthController {
   /**
@@ -85,7 +85,7 @@ class AuthController {
         if (!department) {
           return res.status(400).json({
             success: false,
-            error: "Department is required for LGU staff",
+            error: "department is required for LGU staff",
           });
         }
         if (!employeeId) {
@@ -110,7 +110,7 @@ class AuthController {
       }
 
       // Create user
-      const user = await UserService.createUser({
+      const user = await userService.createUser({
         email,
         password,
         firstName,
@@ -186,7 +186,7 @@ class AuthController {
         });
       if (authError) {
         // Log detailed error server-side only
-        Logger.log("LOGIN", "Authentication failed:", {
+        logger.log("LOGIN", "Authentication failed:", {
           email: "[REDACTED]",
           error: authError.message,
           code: authError.code
@@ -204,7 +204,7 @@ class AuthController {
       const combinedMetadata = extractUserMetadata(authData.user);
 
 
-      Logger.log("LOGIN_DEBUG", `User: ${email}, Role: ${combinedMetadata.role}, SimpleMode: ${process.env.SIMPLE_WORKFLOW_MODE}`);
+      logger.log("LOGIN_DEBUG", `User: ${email}, Role: ${combinedMetadata.role}, SimpleMode: ${process.env.SIMPLE_WORKFLOW_MODE}`);
 
       // RESTRICT ROLES based on Workflow Mode
       // 3-role system: citizen, lgu, super-admin
@@ -216,10 +216,10 @@ class AuthController {
       const rawRole = combinedMetadata.role || "citizen";
       const legacyLguRoles = ["lgu-admin", "lgu-hr", "lgu-officer", "complaint-coordinator"];
       const userRole = legacyLguRoles.includes(rawRole) || rawRole.startsWith("lgu-") ? "lgu" : rawRole;
-      Logger.log("LOGIN_DEBUG", `Checking role '${userRole}' (raw: ${rawRole}) against allowed:`, allowedRoles);
+      logger.log("LOGIN_DEBUG", `Checking role '${userRole}' (raw: ${rawRole}) against allowed:`, allowedRoles);
 
       if (!allowedRoles.includes(userRole)) {
-        Logger.log("LOGIN", `Blocked login attempt for restricted role: ${userRole} (${email})`);
+        logger.log("LOGIN", `Blocked login attempt for restricted role: ${userRole} (${email})`);
 
         // Return generic error to prevent role enumeration, same as invalid password
         return res.status(401).json({
@@ -253,8 +253,8 @@ class AuthController {
             error: `Access denied. ${banMessage} Reason: ${banReason}`,
           });
         }
-        // Ban has expired, automatically unban (handled by UserManagementService on next check)
-        Logger.log("LOGIN", "Ban expired for user:", userId);
+        // Ban has expired, automatically unban (handled by userManagementService on next check)
+        logger.log("LOGIN", "Ban expired for user:", userId);
       }
 
       // Build user object from metadata
@@ -350,9 +350,9 @@ class AuthController {
       const userAgent = req.get("User-Agent");
 
       try {
-        await UserService.trackLogin(userId, ipAddress, userAgent);
+        await userService.trackLogin(userId, ipAddress, userAgent);
       } catch (trackError) {
-        Logger.log("LOGIN", "⚠️ Login tracking failed:", trackError.message);
+        logger.log("LOGIN", "⚠️ Login tracking failed:", trackError.message);
       }
       // Set session cookie with proper expiration
       const cookieOptions = getCookieOptions(remember);
@@ -363,11 +363,11 @@ class AuthController {
       );
 
       // Trigger post-login initialization (async - doesn't block response)
-      LoginInitializationService.onUserLogin(user).catch(err => {
-        Logger.log("LOGIN", "Post-login initialization warning:", err.message);
+      loginInitializationService.onUserLogin(user).catch(err => {
+        logger.log("LOGIN", "Post-login initialization warning:", err.message);
       });
 
-      // SECURITY: Access token is set in HttpOnly cookie for server-side use
+      // security: Access token is set in HttpOnly cookie for server-side use
       // Return refresh token in response for client-side Supabase session sync (less sensitive than access token)
       res.json({
         success: true,
@@ -380,8 +380,8 @@ class AuthController {
         message: "Login successful",
       });
     } catch (error) {
-      Logger.log("LOGIN", "💥 Login error:", error.message);
-      Logger.log("LOGIN", "Error stack:", error.stack);
+      logger.log("LOGIN", "💥 Login error:", error.message);
+      logger.log("LOGIN", "Error stack:", error.stack);
       res.status(500).json({
         success: false,
         error: "Login failed. Please try again.",
@@ -395,10 +395,10 @@ class AuthController {
   /**
    * Get current user profile
    */
-  async getProfile(req, res) {
+  async getprofile(req, res) {
     try {
       const userId = req.user.id;
-      const user = await UserService.getUserById(userId);
+      const user = await userService.getUserById(userId);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -420,7 +420,7 @@ class AuthController {
   /**
    * Update user profile
    */
-  async updateProfile(req, res) {
+  async updateprofile(req, res) {
     try {
       const userId = req.user.id;
       const updateData = req.body;
@@ -446,12 +446,12 @@ class AuthController {
       // Note: City and province are no longer required since all users are from Digos City
       // Address validation removed - only barangay is needed for Digos City citizens
 
-      const user = await UserService.updateUser(userId, updateData, userId);
+      const user = await userService.updateUser(userId, updateData, userId);
 
       res.json({
         success: true,
         data: user,
-        message: "Profile updated successfully",
+        message: "profile updated successfully",
       });
     } catch (error) {
       console.error("Update profile error:", error);
@@ -1067,7 +1067,7 @@ class AuthController {
         isOAuth = false,
       } = req.body;
       // Validate signup code first
-      const HRService = require("../services/HRService");
+      const HRService = require("../services/hRService");
 
       const hrService = new HRService();
       const codeValidation = await hrService.validateSignupCode(signupCode);
@@ -1104,7 +1104,7 @@ class AuthController {
       // Address validation removed - only barangay is needed for Digos City citizens
 
       // Create user as citizen first with pending approval metadata
-      const pendingUser = await UserService.createUser({
+      const pendingUser = await userService.createUser({
         email,
         password,
         firstName,
@@ -1130,7 +1130,7 @@ class AuthController {
       let lastError = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const _updated = await UserService.updateUser(
+          const _updated = await userService.updateUser(
             pendingUser.id,
             {
               status: "pending_approval",
@@ -1148,7 +1148,7 @@ class AuthController {
             {
               userId: pendingUser.id,
               pendingRole: role,
-              pendingDepartment: department_code,
+              pendingdepartment: department_code,
               attempt: attempt + 1,
             }
           );
@@ -1236,7 +1236,7 @@ class AuthController {
           .json({ success: false, error: "Signup code is required" });
       }
       // Validate signup code and extract intended role/department
-      const HRService = require("../services/HRService");
+      const HRService = require("../services/hRService");
 
       const hrService = new HRService();
       console.log("[OAUTH_SIGNUP_HR] Status: VALIDATING_SIGNUP_CODE", {

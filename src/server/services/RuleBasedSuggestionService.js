@@ -1,9 +1,9 @@
-const DepartmentRepository = require("../repositories/DepartmentRepository");
-const ComplaintRepository = require("../repositories/ComplaintRepository");
-const { getCategoryToDepartmentMapping, getKeywordBasedSuggestions } = require("../utils/departmentMapping");
+const DepartmentRepository = require("../repositories/departmentRepository");
+const ComplaintRepository = require("../repositories/complaintRepository");
+const { getCategoryTodepartmentMapping, getKeywordBasedSuggestions } = require("../utils/departmentMapping");
 
 /**
-* RuleBasedSuggestionService
+* ruleBasedSuggestionService
 * Lightweight, explainable suggestions (no ML) for routing
 */
 class RuleBasedSuggestionService {
@@ -24,7 +24,7 @@ class RuleBasedSuggestionService {
       .join(" ")
       .toLowerCase();
     // Get dynamic department mappings
-    const typeRules = await getCategoryToDepartmentMapping();
+    const typeRules = await getCategoryTodepartmentMapping();
     const keywordRules = await getKeywordBasedSuggestions();
     // Seed scores from type
     const scores = new Map(); // dept -> { score, reasons: [] }

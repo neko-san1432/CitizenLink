@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const Setting = require("../models/Setting");
+const Setting = require("../models/setting");
 
 class SettingRepository {
 

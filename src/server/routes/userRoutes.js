@@ -69,7 +69,7 @@ router.get("/role-info", authenticateUser, (req, res) => {
  */
 router.post("/switch-role", authenticateUser, async (req, res) => {
   try {
-    const RoleManagementService = require("../services/RoleManagementService");
+    const RoleManagementService = require("../services/roleManagementService");
     const roleService = new RoleManagementService();
 
     // Check if user is allowed to switch

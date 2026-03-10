@@ -1,9 +1,9 @@
 /**
- * Complaint Form Submission Handler
+ * complaint Form Submission Handler
  * Handles the actual submission of complaint forms to the API
  */
 import apiClient from "../../config/apiClient.js";
-import { extractComplaintFormData, validateComplaintForm } from "../../utils/validation.js";
+import { extractcomplaintFormData, validatecomplaintForm } from "../../utils/validation.js";
 import showMessage from "../toast.js";
 
 /**
@@ -22,10 +22,10 @@ function getTotalFileSize(files) {
  * @param {Object} fileHandler - File handler instance for progress tracking
  * @returns {Promise<Object>} - Submission result
  */
-export async function handleComplaintSubmit(formElement, selectedFiles = [], fileHandler = null) {
+export async function handlecomplaintSubmit(formElement, selectedFiles = [], fileHandler = null) {
   const submitBtn = formElement.querySelector(".submit-btn");
   const cancelBtn = formElement.querySelector(".cancel-btn") || document.querySelector(".cancel-btn");
-  const originalSubmitText = submitBtn?.textContent || "Submit Complaint";
+  const originalSubmitText = submitBtn?.textContent || "Submit complaint";
 
   try {
     // Disable buttons
@@ -38,16 +38,16 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
     }
 
     // Extract and validate form data
-    const formData = extractComplaintFormData(formElement);
-    const validation = validateComplaintForm(formData);
+    const formData = extractcomplaintFormData(formElement);
+    const validation = validatecomplaintForm(formData);
     if (!validation.valid) {
       throw new Error(validation.errors.join(". "));
     }
 
     // Validate coordinates against Digos boundary (if coordinates are provided)
     if (formData.latitude !== null && formData.longitude !== null) {
-      const { validateComplaintCoordinates } = await import("../../utils/validation.js");
-      const coordValidation = await validateComplaintCoordinates(formData.latitude, formData.longitude);
+      const { validatecomplaintCoordinates } = await import("../../utils/validation.js");
+      const coordValidation = await validatecomplaintCoordinates(formData.latitude, formData.longitude);
       if (!coordValidation.valid) {
         throw new Error(coordValidation.error || "Invalid complaint location");
       }
@@ -251,7 +251,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
     if (!result.success) {
       throw new Error(result.error || "Submission failed");
     }
-    showMessage("success", result.message || "Complaint submitted successfully");
+    showMessage("success", result.message || "complaint submitted successfully");
     return result.data;
   } catch (error) {
     console.error("[COMPLAINT] Submission error:", error);
@@ -298,7 +298,7 @@ export async function handleComplaintSubmit(formElement, selectedFiles = [], fil
  * @param {Function} clearFiles - Function to clear selected files
  */
 
-export function resetComplaintForm(formElement, clearFiles) {
+export function resetcomplaintForm(formElement, clearFiles) {
   if (!formElement) return;
   // Reset form fields
   formElement.reset();

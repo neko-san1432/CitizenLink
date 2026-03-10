@@ -53,7 +53,7 @@ export function createHeader() {
         </div>
 
         <div class="profile-container">
-          <button id="profile-btn" class="header-action profile-btn" title="Profile">
+          <button id="profile-btn" class="header-action profile-btn" title="profile">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
@@ -66,16 +66,16 @@ export function createHeader() {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                Profile
+                profile
               </a>
               <a href="/settings" class="dropdown-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
-                Profile Settings
+                profile settings
               </a>
-              <a href="/fileComplaint" class="dropdown-item">
+              <a href="/filecomplaint" class="dropdown-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14,2 14,8 20,8"></polyline>
@@ -83,7 +83,7 @@ export function createHeader() {
                   <line x1="16" y1="17" x2="8" y2="17"></line>
                   <polyline points="10,9 9,9 8,9"></polyline>
                 </svg>
-                File Complaint
+                File complaint
               </a>
               <button id="logout-btn" class="dropdown-item logout-btn">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -145,18 +145,18 @@ function initializeGlobalClickHandler() {
 // Initialize notification button - using imported function from notification.js
 // Initialize profile button
 // Initialize profile button
-function initializeProfileButton() {
+function initializeprofileButton() {
   const profileBtn = document.getElementById("profile-btn");
   if (!profileBtn) {
-    console.warn("[HEADER] Profile button not found");
+    console.warn("[HEADER] profile button not found");
     return;
   }
 
   // Clone button to remove any existing listeners (prevents duplicates)
-  const newProfileBtn = profileBtn.cloneNode(true);
-  profileBtn.parentNode.replaceChild(newProfileBtn, profileBtn);
+  const newprofileBtn = profileBtn.cloneNode(true);
+  profileBtn.parentNode.replaceChild(newprofileBtn, profileBtn);
 
-  newProfileBtn.addEventListener("click", (e) => {
+  newprofileBtn.addEventListener("click", (e) => {
     e.stopPropagation();
 
     // Close notification panel first
@@ -175,7 +175,7 @@ function initializeProfileButton() {
       }, 300);
     } else {
       // Position the panel
-      const rect = newProfileBtn.getBoundingClientRect();
+      const rect = newprofileBtn.getBoundingClientRect();
       const panelWidth = 280; // Default width
 
       // Calculate position (right-aligned to button)
@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // Test if buttons were created
     const _testNotificationBtn = document.getElementById("notification-btn");
-    const _testProfileBtn = document.getElementById("profile-btn");
+    const _testprofileBtn = document.getElementById("profile-btn");
     // console.log removed for security
     // Fix dropdown positioning by ensuring parent containers have relative positioning
     const notificationContainer = document.querySelector(
@@ -441,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add a small delay to ensure DOM is fully updated
     setTimeout(() => {
       initializeNotificationButton();
-      initializeProfileButton();
+      initializeprofileButton();
       initializeLogoutButton();
       initializeMenuToggle(); // Initialize menu toggle after header HTML
       // The following functions are not defined in the provided context,

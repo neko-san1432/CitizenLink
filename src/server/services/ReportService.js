@@ -3,10 +3,10 @@ const ejs = require("ejs");
 const path = require("path");
 const fs = require("fs");
 const fastCsv = require("fast-csv");
-const InsightService = require("./InsightService");
+const insightService = require("./insightService");
 
 /**
- * ReportService
+ * reportService
  * Handles generation of PDF and CSV reports.
  */
 class ReportService {
@@ -20,7 +20,7 @@ class ReportService {
      * @param {string} role - User role
      * @param {string} dateFrom - Start date
      * @param {string} dateTo - End date
-     * @param {string} deptId - Department ID (optional)
+     * @param {string} deptId - department ID (optional)
      * @returns {Promise<Buffer>} PDF Buffer
      */
   async generatePDF(type, role, dateFrom, dateTo, deptId) {
@@ -28,9 +28,9 @@ class ReportService {
       console.log(`[REPORT] Generating ${type} PDF...`);
 
       // 1. Get Data
-      // We reuse InsightService to get the stats/charts data
+      // We reuse insightService to get the stats/charts data
       // In a real app, we might want specific report data fetchers
-      const data = await InsightService.getDashboardInsights(role, deptId);
+      const data = await insightService.getDashboardInsights(role, deptId);
 
       // Add report metadata
       data.reportDate = new Date().toLocaleDateString();
@@ -84,7 +84,7 @@ class ReportService {
   async generateCSV(res, role, deptId) {
     // Fetch raw data (simplified)
     // In real apps, this should stream from DB cursor
-    const { data: complaints } = await InsightService._fetchComplaints(role, deptId);
+    const { data: complaints } = await insightService._fetchcomplaints(role, deptId);
 
     const csvStream = fastCsv.format({ headers: true });
     csvStream.pipe(res);

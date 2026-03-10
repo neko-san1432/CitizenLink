@@ -114,8 +114,8 @@ module.exports = {
     "security/detect-non-literal-fs-filename": "error", // File system operations with non-literal paths
     "security/detect-non-literal-regexp": "error", // Regular expressions with non-literal patterns
     "security/detect-non-literal-require": "error", // Require calls with non-literal paths
-    "security/detect-object-injection": "off", // Disabled: produces many false positives (see SECURITY_FIXES_SUMMARY.md)
-    "security/detect-possible-timing-attacks": "off", // Disabled: often false positives (see SECURITY_FIXES_SUMMARY.md)
+    "security/detect-object-injection": "off", // Disabled: produces many false positives (see security_FIXES_SUMMARY.md)
+    "security/detect-possible-timing-attacks": "off", // Disabled: often false positives (see security_FIXES_SUMMARY.md)
     "security/detect-unsafe-regex": "error", // Unsafe regular expressions (ReDoS)
     "security/detect-pseudoRandomBytes": "error", // Weak random number generation
     // XSS protection rules - comprehensive sanitization checks
@@ -155,7 +155,7 @@ module.exports = {
         "security/detect-child-process": "off",
         "no-console": "off", // Allow console in browser code
         // Disable security rules that produce false positives in client-side code
-        // These have been reviewed and documented as false positives in SECURITY_FIXES_SUMMARY.md
+        // These have been reviewed and documented as false positives in security_FIXES_SUMMARY.md
         "security/detect-object-injection": "off", // False positives: icon mappings, whitelisted content types
         "security/detect-possible-timing-attacks": "off", // False positives: client-side password validation, not auth
         "no-unsanitized/method": "off", // Content is properly sanitized via escapeHtml()

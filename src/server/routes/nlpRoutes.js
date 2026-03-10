@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const NlpProposalController = require("../controllers/NlpProposalController");
-const NlpManagementController = require("../controllers/NlpManagementController");
-const NlpPendingReviewsController = require("../controllers/NlpPendingReviewsController");
+const nlpProposalController = require("../controllers/nlpProposalController");
+const nlpManagementController = require("../controllers/nlpManagementController");
+const nlpPendingReviewsController = require("../controllers/nlpPendingReviewsController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 
@@ -16,7 +16,7 @@ router.get(
   "/pending-reviews/count",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpPendingReviewsController.getCount
+  nlpPendingReviewsController.getCount
 );
 
 // Get all pending reviews
@@ -24,7 +24,7 @@ router.get(
   "/pending-reviews",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpPendingReviewsController.getAll
+  nlpPendingReviewsController.getAll
 );
 
 // Batch queue multiple items for review (used by analytics scan)
@@ -33,7 +33,7 @@ router.post(
   "/pending-reviews/batch",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpPendingReviewsController.batchQueue
+  nlpPendingReviewsController.batchQueue
 );
 
 // Resolve a pending review (train keyword)
@@ -41,7 +41,7 @@ router.post(
   "/pending-reviews/:id/resolve",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpPendingReviewsController.resolve
+  nlpPendingReviewsController.resolve
 );
 
 // Dismiss a pending review
@@ -49,7 +49,7 @@ router.post(
   "/pending-reviews/:id/dismiss",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpPendingReviewsController.dismiss
+  nlpPendingReviewsController.dismiss
 );
 
 // ============ PROPOSAL WORKFLOW ROUTES ============
@@ -59,7 +59,7 @@ router.get(
   "/proposals",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpProposalController.getProposals
+  nlpProposalController.getProposals
 );
 
 // Get Stats (Counts)
@@ -67,7 +67,7 @@ router.get(
   "/stats",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpProposalController.getStats
+  nlpProposalController.getStats
 );
 
 // Submit Proposal (LGU Admin)
@@ -75,7 +75,7 @@ router.post(
   "/proposals",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  NlpProposalController.createProposal
+  nlpProposalController.createProposal
 );
 
 // Approve by Coordinator
@@ -83,7 +83,7 @@ router.post(
   "/proposals/:id/approve-coordinator",
   authenticateUser,
   requireRole(["lgu"]),
-  NlpProposalController.approveByCoordinator
+  nlpProposalController.approveByCoordinator
 );
 
 // Approve by Super Admin (Final)
@@ -91,7 +91,7 @@ router.post(
   "/proposals/:id/approve-admin",
   authenticateUser,
   requireRole(["super-admin"]),
-  NlpProposalController.approveBySuperAdmin
+  nlpProposalController.approveBySuperAdmin
 );
 
 // Reject Proposal (Both can reject)
@@ -99,7 +99,7 @@ router.post(
   "/proposals/:id/reject",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  NlpProposalController.rejectProposal
+  nlpProposalController.rejectProposal
 );
 
 // ============ SUPER ADMIN DIRECT MANAGEMENT ROUTES ============
@@ -109,7 +109,7 @@ router.get(
   "/dictionary",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  NlpManagementController.getCompleteDictionary
+  nlpManagementController.getCompleteDictionary
 );
 
 // Management Stats
@@ -117,7 +117,7 @@ router.get(
   "/management/stats",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.getManagementStats
+  nlpManagementController.getManagementStats
 );
 
 // Keywords CRUD
@@ -125,28 +125,28 @@ router.get(
   "/keywords",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.getKeywords
+  nlpManagementController.getKeywords
 );
 
 router.post(
   "/keywords",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.addKeyword
+  nlpManagementController.addKeyword
 );
 
 router.put(
   "/keywords/:id",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.updateKeyword
+  nlpManagementController.updateKeyword
 );
 
 router.delete(
   "/keywords/:id",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.deleteKeyword
+  nlpManagementController.deleteKeyword
 );
 
 // Categories CRUD
@@ -154,21 +154,21 @@ router.get(
   "/categories",
   authenticateUser,
   requireRole(["super-admin"]),
-  NlpManagementController.getCategories
+  nlpManagementController.getCategories
 );
 
 router.post(
   "/categories",
   authenticateUser,
   requireRole(["super-admin"]),
-  NlpManagementController.addCategory
+  nlpManagementController.addCategory
 );
 
 router.delete(
   "/categories/:category",
   authenticateUser,
   requireRole(["super-admin"]),
-  NlpManagementController.deleteCategory
+  nlpManagementController.deleteCategory
 );
 
 // Anchors CRUD
@@ -176,21 +176,21 @@ router.get(
   "/anchors",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.getAnchors
+  nlpManagementController.getAnchors
 );
 
 router.post(
   "/anchors",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.addAnchor
+  nlpManagementController.addAnchor
 );
 
 router.delete(
   "/anchors/:id",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.deleteAnchor
+  nlpManagementController.deleteAnchor
 );
 
 // Metaphors CRUD
@@ -198,21 +198,21 @@ router.get(
   "/metaphors",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.getMetaphors
+  nlpManagementController.getMetaphors
 );
 
 router.post(
   "/metaphors",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.addMetaphor
+  nlpManagementController.addMetaphor
 );
 
 router.delete(
   "/metaphors/:id",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.deleteMetaphor
+  nlpManagementController.deleteMetaphor
 );
 
 // Dictionary Rules CRUD
@@ -220,21 +220,21 @@ router.get(
   "/dictionary-rules",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.getDictionaryRules
+  nlpManagementController.getDictionaryRules
 );
 
 router.post(
   "/dictionary-rules",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.addDictionaryRule
+  nlpManagementController.addDictionaryRule
 );
 
 router.delete(
   "/dictionary-rules/:id",
   authenticateUser,
   requireRole(["super-admin", "lgu"]),
-  NlpManagementController.deleteDictionaryRule
+  nlpManagementController.deleteDictionaryRule
 );
 
 module.exports = router;

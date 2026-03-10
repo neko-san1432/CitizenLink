@@ -460,7 +460,7 @@ export function setupDragAndDrop(dropZone, fileHandler, fileInput) {
  * @returns {FileHandler} Configured file handler
  */
 
-export function createComplaintFileHandler(options = {}) {
+export function createcomplaintFileHandler(options = {}) {
   const defaults = {
     maxFiles: 5,
     onFilesChange: (files) => {

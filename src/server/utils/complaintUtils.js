@@ -22,7 +22,7 @@ function _isUuidLike(value) {
 function _getTaxonomyLookup() {
   if (_taxonomyLookup) return _taxonomyLookup;
   try {
-    const filePath = path.join(process.cwd(), "public", "categories_subcategories.json");
+    const filePath = path.join(process.cwd(), "public", "categoriesSubcategories.json");
     const taxonomy = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const parents = Object.keys(taxonomy?.categories || {}).map(_normalizeWhitespace).filter(Boolean);
     const subcats = [];
@@ -50,7 +50,7 @@ function _getTaxonomyLookup() {
  * @param {Array} departmentR - Array of department codes
  * @returns {string|null} Primary department code or null
  */
-function getPrimaryDepartment(departmentR) {
+function getPrimarydepartment(departmentR) {
   if (!Array.isArray(departmentR) || departmentR.length === 0) {
     return null;
   }
@@ -61,7 +61,7 @@ function getPrimaryDepartment(departmentR) {
  * @param {Array} departmentR - Array of department codes
  * @returns {Array} Array of secondary department codes
  */
-function getSecondaryDepartments(departmentR) {
+function getSecondarydepartments(departmentR) {
   if (!Array.isArray(departmentR) || departmentR.length <= 1) {
     return [];
   }
@@ -134,12 +134,12 @@ function getWorkflowFromStatus(status) {
  * @param {Object} complaint - Raw complaint data
  * @returns {Object} Normalized complaint data
  */
-function normalizeComplaintData(complaint) {
+function normalizecomplaintData(complaint) {
   if (!complaint) return null;
   const normalized = { ...complaint };
   // Derive primary and secondary departments from department_r
-  normalized.primary_department = getPrimaryDepartment(complaint.department_r);
-  // normalized.secondary_departments = getSecondaryDepartments(complaint.department_r); // Removed - derived from department_r
+  normalized.primary_department = getPrimarydepartment(complaint.department_r);
+  // normalized.secondary_departments = getSecondarydepartments(complaint.department_r); // Removed - derived from department_r
   // Derive status from workflow_status for frontend compatibility
   normalized.status = getStatusFromWorkflow(complaint.workflow_status);
   // Include confirmation status for proper workflow display
@@ -162,7 +162,7 @@ function normalizeComplaintData(complaint) {
 }
 /**
  * Get assignment progress information for a complaint
- * @param {Object} complaint - Complaint data with assignments
+ * @param {Object} complaint - complaint data with assignments
  * @returns {Object} Progress information
  */
 function getAssignmentProgress(complaint) {
@@ -196,10 +196,10 @@ function getAssignmentProgress(complaint) {
 }
 /**
  * Prepare complaint data for database insertion
- * @param {Object} complaintData - Complaint data from form
+ * @param {Object} complaintData - complaint data from form
  * @returns {Object} Data ready for database insertion
  */
-function prepareComplaintForInsert(complaintData) {
+function preparecomplaintForInsert(complaintData) {
   const prepared = { ...complaintData };
   // Ensure workflow_status is set based on status if provided
   if (complaintData.status && !complaintData.workflow_status) {
@@ -228,17 +228,17 @@ function prepareComplaintForInsert(complaintData) {
  * @param {Array} complaints - Array of complaint objects
  * @returns {Object} Statistics object
  */
-function getComplaintStatistics(complaints) {
+function getcomplaintStatistics(complaints) {
   const stats = {
     total: complaints.length,
     byStatus: {},
     byWorkflowStatus: {},
     byPriority: {},
     byCategory: {}, // Changed from byType to byCategory
-    byDepartment: {}
+    bydepartment: {}
   };
   complaints.forEach(complaint => {
-    const normalized = normalizeComplaintData(complaint);
+    const normalized = normalizecomplaintData(complaint);
     // Count by status - validate input to prevent injection
     const { status } = normalized;
     if (status && typeof status === "string" && status.length < 100) {
@@ -268,17 +268,17 @@ function getComplaintStatistics(complaints) {
     const primaryDept = normalized.primary_department;
     if (primaryDept && typeof primaryDept === "string" && primaryDept.length < 100) {
       // eslint-disable-next-line security/detect-object-injection
-      stats.byDepartment[primaryDept] = (stats.byDepartment[primaryDept] || 0) + 1;
+      stats.bydepartment[primaryDept] = (stats.bydepartment[primaryDept] || 0) + 1;
     }
   });
   return stats;
 }
 /**
  * Validate complaint data consistency
- * @param {Object} complaint - Complaint data to validate
+ * @param {Object} complaint - complaint data to validate
  * @returns {Object} Validation result with errors array
  */
-function validateComplaintConsistency(complaint) {
+function validatecomplaintConsistency(complaint) {
   const errors = [];
   // Check if status and workflow_status are consistent
   if (complaint.status && complaint.workflow_status) {
@@ -359,14 +359,14 @@ function getTimelineStepKey(workflowStatus) {
 }
 
 module.exports = {
-  getPrimaryDepartment,
-  getSecondaryDepartments,
+  getPrimarydepartment,
+  getSecondarydepartments,
   getStatusFromWorkflow,
   getWorkflowFromStatus,
-  normalizeComplaintData,
-  prepareComplaintForInsert,
-  getComplaintStatistics,
-  validateComplaintConsistency,
+  normalizecomplaintData,
+  preparecomplaintForInsert,
+  getcomplaintStatistics,
+  validatecomplaintConsistency,
   getAssignmentProgress,
   getTimelineStepKey,
 };

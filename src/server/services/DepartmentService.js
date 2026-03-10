@@ -1,33 +1,33 @@
-const DepartmentRepository = require("../repositories/DepartmentRepository");
-const { getDepartmentsByCategory } = require("../utils/departmentMapping");
-const Department = require("../models/Department");
+const DepartmentRepository = require("../repositories/departmentRepository");
+const { getdepartmentsByCategory } = require("../utils/departmentMapping");
+const department = require("../models/department");
 
 class DepartmentService {
 
   constructor() {
     this.departmentRepo = new DepartmentRepository();
   }
-  async getAllDepartments() {
+  async getAlldepartments() {
     return this.departmentRepo.findAll();
   }
-  async getActiveDepartments() {
+  async getActivedepartments() {
     return this.departmentRepo.findActive();
   }
-  async getDepartmentById(id) {
+  async getdepartmentById(id) {
     const department = await this.departmentRepo.findById(id);
     if (!department) {
-      throw new Error("Department not found");
+      throw new Error("department not found");
     }
     return department;
   }
-  async createDepartment(departmentData) {
-    const validation = Department.validate(departmentData);
+  async createdepartment(departmentData) {
+    const validation = department.validate(departmentData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const codeExists = await this.departmentRepo.checkCodeExists(departmentData.code);
     if (codeExists) {
-      throw new Error("Department code already exists");
+      throw new Error("department code already exists");
     }
     const sanitizedData = {
       name: departmentData.name.trim(),
@@ -37,16 +37,16 @@ class DepartmentService {
     };
     return this.departmentRepo.create(sanitizedData);
   }
-  async updateDepartment(id, departmentData) {
-    const existingDepartment = await this.getDepartmentById(id);
-    const validation = Department.validate(departmentData);
+  async updatedepartment(id, departmentData) {
+    const existingdepartment = await this.getdepartmentById(id);
+    const validation = department.validate(departmentData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
-    if (departmentData.code && departmentData.code !== existingDepartment.code) {
+    if (departmentData.code && departmentData.code !== existingdepartment.code) {
       const codeExists = await this.departmentRepo.checkCodeExists(departmentData.code, id);
       if (codeExists) {
-        throw new Error("Department code already exists");
+        throw new Error("department code already exists");
       }
     }
     const sanitizedData = {
@@ -57,15 +57,15 @@ class DepartmentService {
     };
     return this.departmentRepo.update(id, sanitizedData);
   }
-  async deleteDepartment(id) {
-    await this.getDepartmentById(id);
+  async deletedepartment(id) {
+    await this.getdepartmentById(id);
     return this.departmentRepo.softDelete(id);
   }
-  async permanentlyDeleteDepartment(id) {
-    await this.getDepartmentById(id);
+  async permanentlyDeletedepartment(id) {
+    await this.getdepartmentById(id);
     return this.departmentRepo.delete(id);
   }
-  async getDepartmentsByType(type) {
+  async getdepartmentsByType(type) {
     try {
       // Map complaint types to department structure categories
       const typeToCategoryMapping = {
@@ -78,10 +78,10 @@ class DepartmentService {
       };
       const categoryName = typeToCategoryMapping[type];
       if (!categoryName) {
-        return await this.getActiveDepartments();
+        return await this.getActivedepartments();
       }
       // Get departments from the new structure
-      const departments = await getDepartmentsByCategory(categoryName);
+      const departments = await getdepartmentsByCategory(categoryName);
       // Convert to the expected format
       return departments.map(dept => ({
         id: dept.id,
@@ -93,14 +93,14 @@ class DepartmentService {
     } catch (error) {
       console.error("Error getting departments by type:", error);
       // Fallback to all departments
-      return await this.getActiveDepartments();
+      return await this.getActivedepartments();
     }
   }
-  async getDepartmentOfficers(departmentId) {
+  async getdepartmentOfficers(departmentId) {
     // First get the department to get its code
-    const department = await this.getDepartmentById(departmentId);
+    const department = await this.getdepartmentById(departmentId);
     if (!department) {
-      throw new Error("Department not found");
+      throw new Error("department not found");
     }
     // Get all users from auth.users
     const { data: allUsers, error } = await this.departmentRepo.supabase.auth.admin.listUsers();
@@ -115,9 +115,9 @@ class DepartmentService {
         // Match lgu-* but exclude lgu-admin-* and lgu-hr-*
         const isOfficer = /^lgu-(?!admin|hr)/.test(role);
         // Check if the role contains the department code (e.g., lgu-wst for wst department)
-        const roleContainsDepartment = role.includes(`-${department.code}`);
-        const hasCorrectDepartment = metadata.department === department.code;
-        return isOfficer && (roleContainsDepartment || hasCorrectDepartment);
+        const roleContainsdepartment = role.includes(`-${department.code}`);
+        const hasCorrectdepartment = metadata.department === department.code;
+        return isOfficer && (roleContainsdepartment || hasCorrectdepartment);
       })
       .map(user => ({
         id: user.id,
@@ -158,7 +158,7 @@ class DepartmentService {
   /**
    * Get all departments with their subcategory mappings
    */
-  async getDepartmentsWithMappings() {
+  async getdepartmentsWithMappings() {
     const Database = require("../config/database");
 
     const supabase = Database.getClient();
@@ -193,7 +193,7 @@ class DepartmentService {
   /**
    * Get departments by subcategory
    */
-  async getDepartmentsBySubcategory(subcategoryId) {
+  async getdepartmentsBySubcategory(subcategoryId) {
     const Database = require("../config/database");
 
     const supabase = Database.getClient();

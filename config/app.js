@@ -22,7 +22,7 @@ class AppConfig {
       siteKey: process.env.CAPTCHA_CLIENT_KEY,
       secretKey: process.env.CAPTCHA_SECRET_KEY,
     };
-    // Application Settings
+    // Application settings
     this.upload = {
       maxFileSize: 10 * 1024 * 1024, // 10MB
       maxFiles: 5,

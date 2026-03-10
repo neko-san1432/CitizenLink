@@ -21,9 +21,9 @@ class HeatmapControls {
     };
     this.isVisible = true;
     this.userRole = null;
-    this.userDepartmentCode = null;
-    this.isDepartmentLocked = false;
-    this.loadDepartmentsPromise = null;
+    this.userdepartmentCode = null;
+    this.isdepartmentLocked = false;
+    this.loaddepartmentsPromise = null;
     this.loadCategoriesPromise = null;
     this.createControls();
     this.initializeUserContext();
@@ -47,7 +47,7 @@ class HeatmapControls {
     this.setupEventListeners();
     this.loadCategoriesPromise = this.loadCategories();
     // Simple Workflow Mode: Skip loading departments - not using office assignments
-    // this.loadDepartmentsPromise = this.loadDepartments();
+    // this.loaddepartmentsPromise = this.loaddepartments();
   }
   /**
    * Get HTML for controls
@@ -103,11 +103,11 @@ class HeatmapControls {
           </select>
         </div>
 
-        <!-- Simple Workflow Mode: Department filter hidden - not using office assignments -->
+        <!-- Simple Workflow Mode: department filter hidden - not using office assignments -->
         <!-- <div class="control-group" id="department-filter-control">
-          <label>Department Filter:</label>
+          <label>department Filter:</label>
           <select id="department-filter">
-            <option value="">All Departments</option>
+            <option value="">All departments</option>
           </select>
         </div> -->
 
@@ -133,7 +133,7 @@ class HeatmapControls {
         <div class="control-group">
           <label>
             <input type="checkbox" id="include-resolved" checked>
-            Include Resolved Complaints
+            Include Resolved complaints
           </label>
         </div>
 
@@ -180,14 +180,14 @@ class HeatmapControls {
         <div class="control-group">
           <button id="apply-filters" class="btn-primary">Apply Filters</button>
           <button id="reset-filters" class="btn-secondary">Reset</button>
-          <button id="fit-to-complaints" class="btn-secondary">Fit to Complaints</button>
+          <button id="fit-to-complaints" class="btn-secondary">Fit to complaints</button>
         </div>
 
         <!-- Statistics -->
         <div class="control-group stats-section">
           <h4>Statistics</h4>
           <div id="stats-display">
-            <p>Total Complaints: <span id="total-complaints">0</span></p>
+            <p>Total complaints: <span id="total-complaints">0</span></p>
             <p>Clusters: <span id="cluster-count">0</span></p>
             <p>Noise Points: <span id="noise-count">0</span></p>
           </div>
@@ -212,7 +212,7 @@ class HeatmapControls {
 
     if (this.userRole === "lgu-admin") {
       try {
-        this.userDepartmentCode = (await this.getUserDepartment()) || null;
+        this.userdepartmentCode = (await this.getUserdepartment()) || null;
       } catch (error) {
         console.warn(
           "[HEATMAP_CONTROLS] Unable to load user department:",
@@ -220,14 +220,14 @@ class HeatmapControls {
         );
       }
 
-      if (this.userDepartmentCode) {
+      if (this.userdepartmentCode) {
         try {
-          await this.loadDepartmentsPromise;
+          await this.loaddepartmentsPromise;
         } catch (_) {
           // Ignore loading errors here; we still lock the UI
         }
-        this.lockDepartmentFilterToUserOffice();
-        this.currentFilters.department = this.userDepartmentCode;
+        this.lockdepartmentFilterToUserOffice();
+        this.currentFilters.department = this.userdepartmentCode;
         this.applyFilters();
       }
     }
@@ -236,11 +236,11 @@ class HeatmapControls {
   /**
    * Hide department filter and show notice for LGU admins
    */
-  lockDepartmentFilterToUserOffice() {
-    this.isDepartmentLocked = true;
+  lockdepartmentFilterToUserOffice() {
+    this.isdepartmentLocked = true;
     const deptSelect = document.getElementById("department-filter");
     if (deptSelect) {
-      deptSelect.value = this.userDepartmentCode || "";
+      deptSelect.value = this.userdepartmentCode || "";
       deptSelect.disabled = true;
     }
 
@@ -257,8 +257,8 @@ class HeatmapControls {
       notice.innerHTML = `
         <label>Office Scope:</label>
         <p style="margin: 0; font-size: 12px; color: #374151;">
-          Complaints are limited to your assigned office
-          <strong class="locked-office-code">${this.userDepartmentCode}</strong>.
+          complaints are limited to your assigned office
+          <strong class="locked-office-code">${this.userdepartmentCode}</strong>.
         </p>
       `;
       const controls = document.querySelector(
@@ -272,7 +272,7 @@ class HeatmapControls {
     } else {
       const codeSpan = notice.querySelector(".locked-office-code");
       if (codeSpan) {
-        codeSpan.textContent = this.userDepartmentCode;
+        codeSpan.textContent = this.userdepartmentCode;
       }
     }
   }
@@ -290,7 +290,7 @@ class HeatmapControls {
     document
       .getElementById("fit-to-complaints")
       ?.addEventListener("click", () => {
-        this.controller.fitToComplaints();
+        this.controller.fitTocomplaints();
       });
     // Clustering controls
     document
@@ -403,8 +403,8 @@ class HeatmapControls {
     if (typeFilter) typeFilter.value = "";
     const departmentFilter = document.getElementById("department-filter");
     if (departmentFilter) {
-      departmentFilter.value = this.isDepartmentLocked
-        ? this.userDepartmentCode || ""
+      departmentFilter.value = this.isdepartmentLocked
+        ? this.userdepartmentCode || ""
         : "";
     }
     const startDate = document.getElementById("start-date");
@@ -420,7 +420,7 @@ class HeatmapControls {
     this.currentFilters = {
       status: "",
       type: "",
-      department: this.isDepartmentLocked ? this.userDepartmentCode || "" : "",
+      department: this.isdepartmentLocked ? this.userdepartmentCode || "" : "",
       startDate: "",
       endDate: "",
       includeResolved: true,
@@ -476,7 +476,7 @@ class HeatmapControls {
    * @returns {Object} Current filters
    */
   getCurrentFilters() {
-    // Simple Workflow Mode: Department filter removed - not using office assignments
+    // Simple Workflow Mode: department filter removed - not using office assignments
     return {
       status: document.getElementById("status-filter")?.value || "",
       category: this.currentFilters.category || "",
@@ -592,11 +592,11 @@ class HeatmapControls {
    * @param {Object} stats - Statistics object
    */
   updateStatistics(stats) {
-    const totalComplaints = document.getElementById("total-complaints");
+    const totalcomplaints = document.getElementById("total-complaints");
     const clusterCount = document.getElementById("cluster-count");
     const noiseCount = document.getElementById("noise-count");
-    if (totalComplaints) {
-      totalComplaints.textContent = stats.totalComplaints || 0;
+    if (totalcomplaints) {
+      totalcomplaints.textContent = stats.totalcomplaints || 0;
     }
     if (stats.clusteringStats) {
       if (clusterCount) {
@@ -720,7 +720,7 @@ class HeatmapControls {
   /**
    * Get user's department code
    */
-  async getUserDepartment() {
+  async getUserdepartment() {
     try {
       const apiClientModule = await import("../../config/apiClient.js");
       const apiClient = apiClientModule.default;
@@ -765,25 +765,25 @@ class HeatmapControls {
   /**
    * Load departments dynamically
    */
-  async loadDepartments() {
+  async loaddepartments() {
     try {
-      const { getDepartments } = await import("../../utils/departmentUtils.js");
-      const departments = await getDepartments();
+      const { getdepartments } = await import("../../utils/departmentUtils.js");
+      const departments = await getdepartments();
 
       // Get user's department and sort departments to put user's office first
-      const userDepartmentCode =
-        this.userDepartmentCode || (await this.getUserDepartment());
-      if (userDepartmentCode && !this.userDepartmentCode) {
-        this.userDepartmentCode = userDepartmentCode;
+      const userdepartmentCode =
+        this.userdepartmentCode || (await this.getUserdepartment());
+      if (userdepartmentCode && !this.userdepartmentCode) {
+        this.userdepartmentCode = userdepartmentCode;
       }
 
-      if (userDepartmentCode && departments && departments.length > 0) {
+      if (userdepartmentCode && departments && departments.length > 0) {
         // Sort: user's department first, then others
         departments.sort((a, b) => {
           const aCode = (a.code || "").toUpperCase();
           const bCode = (b.code || "").toUpperCase();
-          const aIsUserDept = aCode === userDepartmentCode;
-          const bIsUserDept = bCode === userDepartmentCode;
+          const aIsUserDept = aCode === userdepartmentCode;
+          const bIsUserDept = bCode === userdepartmentCode;
 
           if (aIsUserDept && !bIsUserDept) return -1;
           if (!aIsUserDept && bIsUserDept) return 1;
@@ -803,8 +803,8 @@ class HeatmapControls {
           const option = document.createElement("option");
           option.value = dept.code;
           const isUserDept =
-            userDepartmentCode &&
-            (dept.code || "").toUpperCase() === userDepartmentCode;
+            userdepartmentCode &&
+            (dept.code || "").toUpperCase() === userdepartmentCode;
           option.textContent = `${dept.name} (${dept.code})${isUserDept ? " ★" : ""
           }`;
           if (isUserDept) {
@@ -813,8 +813,8 @@ class HeatmapControls {
           departmentSelect.appendChild(option);
         });
 
-        if (this.isDepartmentLocked) {
-          this.lockDepartmentFilterToUserOffice();
+        if (this.isdepartmentLocked) {
+          this.lockdepartmentFilterToUserOffice();
         }
       }
     } catch (error) {

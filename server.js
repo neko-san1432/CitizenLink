@@ -1,6 +1,6 @@
 require("dotenv").config();
 // Initialize console logger early to capture all logs
-require("./src/server/utils/consoleLogger");
+require("./src/server/utils/consolelogger");
 console.log("🚀 Starting DRIMS Server...");
 // Set development mode if not already set
 if (!process.env.NODE_ENV) {
@@ -37,12 +37,12 @@ const app = new DRIMSApp();
 console.log("🔄 Starting server on port", config.port);
 app.start(config.port).then(() => {
   // Start the automated reporting scheduler
-  const SchedulerService = require("./src/server/services/SchedulerService");
-  SchedulerService.start();
+  const schedulerService = require("./src/server/services/schedulerService");
+  schedulerService.start();
 
   // [OPTIMIZATION] Pre-load AI Engine to prevent delay on first complaint submission
-  const AdvancedDecisionEngine = require("./src/server/services/AdvancedDecisionEngine");
-  AdvancedDecisionEngine.initialize().catch(err => {
+  const advancedDecisionEngine = require("./src/server/services/advancedDecisionEngine");
+  advancedDecisionEngine.initialize().catch(err => {
     console.error("⚠️ AI Engine failed to preload (will retry on demand):", err.message);
   });
 }).catch(error => {

@@ -78,26 +78,26 @@ const setupMiddleware = (app) => {
       path.join(config.rootDir, "public", "assets", "json", "digos-city-boundary.json")
     );
   });
-  app.get("/data/geographic/brgy_boundaries_location.json", (req, res) => {
+  app.get("/data/geographic/brgyBoundariesLocation.json", (req, res) => {
     res.sendFile(
       path.join(
         config.rootDir,
         "public",
         "assets",
         "json",
-        "brgy_boundaries_location.json"
+        "brgyBoundariesLocation.json"
       )
     );
   });
   // Fix for root request 404
-  app.get("/brgy_boundaries_location.json", (req, res) => {
+  app.get("/brgyBoundariesLocation.json", (req, res) => {
     res.sendFile(
       path.join(
         config.rootDir,
         "public",
         "assets",
         "json",
-        "brgy_boundaries_location.json"
+        "brgyBoundariesLocation.json"
       )
     );
   });

@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 
 /**
- * EmailService
+ * emailService
  * Handles sending emails via Gmail SMTP (Free Tier).
  */
 class EmailService {

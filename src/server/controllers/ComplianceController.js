@@ -1,4 +1,4 @@
-const ComplianceService = require("../services/ComplianceService");
+const ComplianceService = require("../services/complianceService");
 const { ErrorHandler } = require("../middleware/errorHandler");
 
 class ComplianceController {

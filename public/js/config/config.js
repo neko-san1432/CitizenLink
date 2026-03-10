@@ -1,4 +1,4 @@
-// SECURITY: Environment variables are now handled securely
+// security: Environment variables are now handled securely
 // Auth operations use a limited client, database operations go through server API
 // import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { supabaseReady } from "../lib/supabase-boot.js";

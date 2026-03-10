@@ -9,13 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
     rel="stylesheet" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <title>File Complaint</title>
+  <title>File complaint</title>
   <link rel="stylesheet" href="../../css/style.css" />
   <link rel="stylesheet" href="../../css/toast.css" />
   <link rel="stylesheet" href="../../css/components/sidebar.css" />
   <link rel="stylesheet" href="../../css/app.css" />
   <link rel="stylesheet" href="../../css/header.css" />
-  <link rel="stylesheet" href="../../css/complaint-form.css" />
+  <link rel="stylesheet" href="../../css/complaintForm.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
@@ -35,7 +35,7 @@
       <div class="complaint-wizard-container">
         <!-- Page Header -->
         <div class="page-header">
-          <h1 class="page-title">File a Complaint</h1>
+          <h1 class="page-title">File a complaint</h1>
           <p class="page-subtitle">
             Follow the steps below to submit your report.
           </p>
@@ -241,7 +241,7 @@
 
       <button type="submit" id="btn-submit-final" form="complaintForm" class="btn-submit-premium"
         style="display: none;">
-        <span>Submit Complaint</span>
+        <span>Submit complaint</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
@@ -259,14 +259,14 @@
   <script type="module" src="/js/auth/authChecker.js"></script>
 
   <!-- Citizen-Only Access Check -->
-  <script type="module" src="/js/pages/citizen-file-complaint-access.js"></script>
+  <script type="module" src="/js/pages/citizenFilecomplaintAccess.js"></script>
 
   <!-- Map Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/js/components/map/complaintLocationPicker.js"></script>
 
-  <!-- Complaint Form Scripts (loaded last) -->
+  <!-- complaint Form Scripts (loaded last) -->
   <script type="module" src="/js/components/form/complaintFormHierarchical.js"></script>
 
   <!-- Wizard Controller -->

@@ -291,7 +291,7 @@ if (regFormEl) {
           successMessage
         );
       if (isHttpSuccess && (isApiSuccess || looksLikeSuccess)) {
-        // SECURITY: Tokens are no longer in response, Supabase session is managed server-side
+        // security: Tokens are no longer in response, Supabase session is managed server-side
         // Server sets HttpOnly cookie, client relies on that for authentication
         // No need to manually set session here as server handles it
         showMessage(
@@ -454,7 +454,7 @@ if (loginFormEl) {
       const result = await response.json();
 
       if (result.success) {
-        // SECURITY: Server handles all authentication and sets HttpOnly cookie
+        // security: Server handles all authentication and sets HttpOnly cookie
         // Client syncs Supabase session state using refresh token from server response
         try {
           // Server already authenticated and set cookie, now sync client-side Supabase session
@@ -518,7 +518,7 @@ if (loginFormEl) {
 
         showMessage("success", "Logged in successfully");
 
-        // SECURITY: Use user data from server response (server is source of truth)
+        // security: Use user data from server response (server is source of truth)
         const serverUser = result.data?.user;
         let role = serverUser?.role || serverUser?.normalizedRole || null;
         let name = serverUser?.name || serverUser?.fullName || null;
@@ -556,7 +556,7 @@ if (loginFormEl) {
           showMessage("error", "Please complete your profile first");
           hideLoading(); // Ensure button is reset
           setTimeout(() => {
-            window.location.href = "/OAuthContinuation";
+            window.location.href = "/oAuthContinuation";
           }, 2000);
           return;
         }

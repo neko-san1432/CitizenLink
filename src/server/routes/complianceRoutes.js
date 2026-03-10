@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const complianceController = require("../controllers/ComplianceController");
+const complianceController = require("../controllers/complianceController");
 const { authenticateUser } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiting");
 const { ErrorHandler } = require("../middleware/errorHandler");

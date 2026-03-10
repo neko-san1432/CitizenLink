@@ -3,7 +3,7 @@
  * Handles HITL (Human-in-the-Loop) training queue for low-confidence classifications
  */
 
-const AdvancedDecisionEngine = require("../services/AdvancedDecisionEngine");
+const advancedDecisionEngine = require("../services/advancedDecisionEngine");
 
 class NlpPendingReviewsController {
   /**
@@ -11,7 +11,7 @@ class NlpPendingReviewsController {
      */
   async getCount(req, res) {
     try {
-      const count = await AdvancedDecisionEngine.getPendingReviewsCount();
+      const count = await advancedDecisionEngine.getPendingReviewsCount();
       res.json({ success: true, count });
     } catch (error) {
       console.error("[NLP-HITL] Error getting count:", error);
@@ -25,7 +25,7 @@ class NlpPendingReviewsController {
   async getAll(req, res) {
     try {
       const limit = parseInt(req.query.limit) || 50;
-      const reviews = await AdvancedDecisionEngine.getPendingReviews(limit);
+      const reviews = await advancedDecisionEngine.getPendingReviews(limit);
       res.json({
         success: true,
         count: reviews.length,
@@ -53,7 +53,7 @@ class NlpPendingReviewsController {
         });
       }
 
-      const result = await AdvancedDecisionEngine.resolvePendingReview(
+      const result = await advancedDecisionEngine.resolvePendingReview(
         id,
         keyword,
         category,
@@ -84,7 +84,7 @@ class NlpPendingReviewsController {
       const { id } = req.params;
       const userId = req.user?.id;
 
-      const result = await AdvancedDecisionEngine.dismissPendingReview(id, userId);
+      const result = await advancedDecisionEngine.dismissPendingReview(id, userId);
 
       if (result.success) {
         res.json({ success: true, message: "Review dismissed" });
@@ -102,31 +102,31 @@ class NlpPendingReviewsController {
      */
   async batchQueue(req, res) {
     try {
-      AdvancedDecisionEngine.logHITL("batchQueue endpoint called");
+      advancedDecisionEngine.logHITL("batchQueue endpoint called");
 
       let { items } = req.body;
 
-      AdvancedDecisionEngine.logHITL(`items type: ${typeof items}, isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
+      advancedDecisionEngine.logHITL(`items type: ${typeof items}, isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
 
       // Handle case where items is a string (double-stringified JSON)
       if (typeof items === "string") {
         try {
           items = JSON.parse(items);
-          AdvancedDecisionEngine.logHITL(`Parsed string items, now isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
+          advancedDecisionEngine.logHITL(`Parsed string items, now isArray: ${Array.isArray(items)}, length: ${items?.length || 0}`);
         } catch (parseErr) {
           console.error("[NLP-HITL] Failed to parse items string:", parseErr.message);
         }
       }
 
       if (!Array.isArray(items) || items.length === 0) {
-        AdvancedDecisionEngine.logHITL("Empty or invalid items array");
+        advancedDecisionEngine.logHITL("Empty or invalid items array");
         return res.json({ success: true, queued: 0, skipped: 0 });
       }
 
-      AdvancedDecisionEngine.logHITL("First item sample:", JSON.stringify(items[0], null, 2));
+      advancedDecisionEngine.logHITL("First item sample:", JSON.stringify(items[0], null, 2));
 
-      const result = await AdvancedDecisionEngine.batchQueueForReview(items);
-      AdvancedDecisionEngine.logHITL(`batchQueueForReview result:`, result);
+      const result = await advancedDecisionEngine.batchQueueForReview(items);
+      advancedDecisionEngine.logHITL(`batchQueueForReview result:`, result);
       res.json({
         success: true,
         queued: result.queued,

@@ -1,7 +1,7 @@
-const ComplaintRepository = require("../repositories/ComplaintRepository");
-const ComplaintAssignmentRepository = require("../repositories/ComplaintAssignmentRepository");
-const ComplaintHistoryRepository = require("../repositories/ComplaintHistoryRepository");
-const NotificationService = require("./NotificationService");
+const ComplaintRepository = require("../repositories/complaintRepository");
+const ComplaintAssignmentRepository = require("../repositories/complaintAssignmentRepository");
+const ComplaintHistoryRepository = require("../repositories/complaintHistoryRepository");
+const NotificationService = require("./notificationService");
 const Database = require("../config/database");
 const { getTimelineStepKey } = require("../utils/complaintUtils");
 
@@ -53,7 +53,7 @@ class LguOfficerService {
           completed_at: complaint.resolved_at,
           complaint: {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || "Complaint Details",
+            title: complaint.descriptive_su?.slice(0, 100) || "complaint Details",
             description: complaint.descriptive_su,
             category: complaint.category,
             subcategory: complaint.subcategory,
@@ -110,7 +110,7 @@ class LguOfficerService {
         completed_at: assignment.completed_at,
         complaint: complaint ? {
           id: complaint.id,
-          title: complaint.descriptive_su?.slice(0, 100) || "Complaint Details",
+          title: complaint.descriptive_su?.slice(0, 100) || "complaint Details",
           description: complaint.descriptive_su,
           category: complaint.category,
           subcategory: complaint.subcategory,
@@ -123,7 +123,7 @@ class LguOfficerService {
           last_activity_at: complaint.last_activity_at
         } : {
           id: assignment.complaint_id,
-          title: "Complaint Details Not Available",
+          title: "complaint Details Not Available",
           description: "Details could not be loaded",
           category: "General",
           subcategory: "unknown",
@@ -194,7 +194,7 @@ class LguOfficerService {
           completed_at: assignment.completed_at,
           complaint: complaint ? {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || "Complaint Details",
+            title: complaint.descriptive_su?.slice(0, 100) || "complaint Details",
             description: complaint.descriptive_su,
             category: complaint.category,
             subcategory: complaint.subcategory,
@@ -204,7 +204,7 @@ class LguOfficerService {
             last_activity_at: complaint.last_activity_at
           } : {
             id: assignment.complaint_id,
-            title: "Complaint Details Not Available",
+            title: "complaint Details Not Available",
             description: "Details could not be loaded",
             category: "General",
             subcategory: "unknown",
@@ -298,7 +298,7 @@ class LguOfficerService {
         await this.notificationService.createNotification(
           complaint.submitted_by,
           "officer_update",
-          "Update on Your Complaint",
+          "Update on Your complaint",
           `Officer added an update: "${message.substring(0, 100)}${message.length > 100 ? "..." : ""}"`,
           {
             priority: "info",
@@ -333,7 +333,7 @@ class LguOfficerService {
     };
 
     // Update complaint status
-    const updatedComplaint = await this.complaintRepo.update(complaintId, {
+    const updatedcomplaint = await this.complaintRepo.update(complaintId, {
       status: "resolved by officer",
       workflow_status: "action_taken", // Matches steps: action_taken
       comment: currentComment,
@@ -356,10 +356,10 @@ class LguOfficerService {
     // Notify citizen for confirmation
     try {
       await this.notificationService.createNotification(
-        updatedComplaint.submitted_by,
+        updatedcomplaint.submitted_by,
         "complaint_resolved",
-        "Complaint Resolved",
-        `Your complaint "${updatedComplaint.descriptive_su?.slice(0, 100) || "your complaint"}" has been resolved. Please confirm if you're satisfied with the resolution.`,
+        "complaint Resolved",
+        `Your complaint "${updatedcomplaint.descriptive_su?.slice(0, 100) || "your complaint"}" has been resolved. Please confirm if you're satisfied with the resolution.`,
         {
           priority: "success",
           link: `/citizen/complaints/${complaintId}`,
@@ -374,7 +374,7 @@ class LguOfficerService {
       console.warn("[LGU_OFFICER_SERVICE] Failed to notify citizen:", notifError.message);
     }
 
-    return updatedComplaint;
+    return updatedcomplaint;
   }
 
   /**
@@ -463,7 +463,7 @@ class LguOfficerService {
   /**
    * Update complaint status and add comment
    */
-  async updateComplaintStatus(complaintId, officerId, status, comment) {
+  async updatecomplaintStatus(complaintId, officerId, status, comment) {
     // 1. Prepare data
     const updateData = {
       date: new Date().toISOString(),
@@ -474,7 +474,7 @@ class LguOfficerService {
     const stepKey = getTimelineStepKey(status) || status;
 
     // 3. Update via Repo
-    const updatedComplaint = await this.complaintRepo.updateStatusAndComment(
+    const updatedcomplaint = await this.complaintRepo.updateStatusAndComment(
       complaintId,
       stepKey, // Use stepKey as the mapping key
       updateData,
@@ -483,20 +483,20 @@ class LguOfficerService {
 
     // 3. Create Notification
     // Notify citizen if relevant
-    if (updatedComplaint.submitted_by) {
+    if (updatedcomplaint.submitted_by) {
       try {
         if (comment) {
-          await this.notificationService.notifyComplaintUpdate(
-            updatedComplaint.submitted_by,
+          await this.notificationService.notifycomplaintUpdate(
+            updatedcomplaint.submitted_by,
             complaintId,
-            updatedComplaint.descriptive_su?.slice(0, 100) || "Your complaint",
+            updatedcomplaint.descriptive_su?.slice(0, 100) || "Your complaint",
             comment
           );
         } else {
-          await this.notificationService.notifyComplaintStatusChanged(
-            updatedComplaint.submitted_by,
+          await this.notificationService.notifycomplaintStatusChanged(
+            updatedcomplaint.submitted_by,
             complaintId,
-            updatedComplaint.descriptive_su?.slice(0, 100) || "Your complaint",
+            updatedcomplaint.descriptive_su?.slice(0, 100) || "Your complaint",
             status,
             "previous" // Placeholder if old status not easily available here
           );
@@ -506,7 +506,7 @@ class LguOfficerService {
       }
     }
 
-    return updatedComplaint;
+    return updatedcomplaint;
   }
 
   // Helper methods
@@ -519,7 +519,7 @@ class LguOfficerService {
   }
 
   _getActivityDescription(activity, complaint = null) {
-    const complaintTitle = complaint?.descriptive_su?.slice(0, 100) || `Complaint #${activity.complaint_id?.substring(0, 8)}`;
+    const complaintTitle = complaint?.descriptive_su?.slice(0, 100) || `complaint #${activity.complaint_id?.substring(0, 8)}`;
     const complaintCategory = complaint?.category || "General";
     switch (this._getActivityType(activity)) {
       case "task_completed":

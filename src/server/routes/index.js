@@ -21,6 +21,7 @@ const complianceRoutes = require("./complianceRoutes");
 const officeConfirmationRoutes = require("./officeConfirmationRoutes");
 const publicApiRoutes = require("./publicApiRoutes");
 const brainDashboardRoutes = require("./brainDashboardRoutes");
+const lguAdminRoutes = require("./lguAdminRoutes");
 
 const router = express.Router();
 // CAPTCHA routes
@@ -37,6 +38,7 @@ router.use("/coordinator", coordinatorRoutes);
 router.use("/identity", ocrRoutes);
 router.use("/verification", verificationRoutes);
 router.use("/superadmin", superAdminRoutes);
+router.use("/lgu-admin", lguAdminRoutes);
 router.use("/lgu", lguRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/storage", storageRoutes);

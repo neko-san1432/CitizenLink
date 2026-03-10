@@ -290,14 +290,14 @@ function getMenuItemsForRole(role) {
   const menuItems = {
     citizen: [
       { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
-      { url: "/fileComplaint", icon: "fileComplaint", label: "File Complaint" },
+      { url: "/filecomplaint", icon: "filecomplaint", label: "File complaint" },
       { url: "/digos-map", icon: "map", label: "Digos City Map" },
       {
         label: "You",
         icon: "user",
         children: [
-          { url: "/profile", icon: "user", label: "Profile" },
-          { url: "/settings", icon: "settings", label: "Settings" },
+          { url: "/profile", icon: "user", label: "profile" },
+          { url: "/settings", icon: "settings", label: "settings" },
         ]
       },
     ],
@@ -313,27 +313,27 @@ function getMenuItemsForRole(role) {
         icon: "analytics",
         children: [
           {
-            url: "/brain-analytics-page?tab=temporal",
+            url: "/brainAnalytics-page?tab=temporal",
             label: "Time Trends",
             icon: "clock",
           },
           {
-            url: "/brain-analytics-page?tab=categories",
+            url: "/brainAnalytics-page?tab=categories",
             label: "Categories",
             icon: "tags",
           },
           {
-            url: "/brain-analytics-page?tab=edge-cases",
+            url: "/brainAnalytics-page?tab=edge-cases",
             label: "Smart Detection",
             icon: "alert",
           },
           {
-            url: "/brain-analytics-page?tab=data-table",
-            label: "All Complaints",
+            url: "/brainAnalytics-page?tab=data-table",
+            label: "All complaints",
             icon: "table",
           },
           {
-            url: "/brain-analytics-page?tab=system-training",
+            url: "/brainAnalytics-page?tab=system-training",
             label: "Train System",
             icon: "brain",
           },
@@ -348,8 +348,8 @@ function getMenuItemsForRole(role) {
         label: "You",
         icon: "briefcase",
         children: [
-          { url: "/profile", icon: "user", label: "Profile" },
-          { url: "/settings", icon: "settings", label: "Settings" },
+          { url: "/profile", icon: "user", label: "profile" },
+          { url: "/settings", icon: "settings", label: "settings" },
         ]
       },
     ],
@@ -379,8 +379,8 @@ function getMenuItemsForRole(role) {
         label: "You",
         icon: "shield",
         children: [
-          { url: "/profile", icon: "user", label: "Profile" },
-          { url: "/settings", icon: "settings", label: "Settings" },
+          { url: "/profile", icon: "user", label: "profile" },
+          { url: "/settings", icon: "settings", label: "settings" },
         ]
       },
     ],

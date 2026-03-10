@@ -469,12 +469,12 @@ class NlpManagementService {
       try {
         const { data, error } = await this.supabase.from(tableName).select("*");
         if (error) {
-          console.warn(`[NlpManagementService] Error fetching ${tableName}: ${error.message}`);
+          console.warn(`[nlpManagementService] Error fetching ${tableName}: ${error.message}`);
           return [];
         }
         return data || [];
       } catch (e) {
-        console.warn(`[NlpManagementService] Exception fetching ${tableName}: ${e.message}`);
+        console.warn(`[nlpManagementService] Exception fetching ${tableName}: ${e.message}`);
         return [];
       }
     };

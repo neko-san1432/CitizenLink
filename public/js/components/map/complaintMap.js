@@ -325,6 +325,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       setPin(lat, lng, true);
     }
   } catch (e) {
-    console.error("Complaint map init error:", e);
+    console.error("complaint map init error:", e);
   }
 });

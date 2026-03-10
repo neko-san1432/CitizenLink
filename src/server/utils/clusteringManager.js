@@ -8,7 +8,7 @@ let clusteringSchedulerInstance = null;
 module.exports = {
   /**
    * Set the clustering scheduler instance
-   * @param {ClusteringScheduler} scheduler - Scheduler instance
+   * @param {clusteringScheduler} scheduler - Scheduler instance
    */
   setScheduler(scheduler) {
     clusteringSchedulerInstance = scheduler;
@@ -16,7 +16,7 @@ module.exports = {
 
   /**
    * Get the clustering scheduler instance
-   * @returns {ClusteringScheduler|null} Scheduler instance or null
+   * @returns {clusteringScheduler|null} Scheduler instance or null
    */
   getScheduler() {
     return clusteringSchedulerInstance;

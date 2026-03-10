@@ -19,7 +19,7 @@ class Database {
   }
   /**
    * Get a fresh service-role client that bypasses RLS.
-   * Use this for queries on tables with FORCE ROW LEVEL SECURITY
+   * Use this for queries on tables with FORCE ROW LEVEL security
    * (e.g., complaints table) where the standard client still triggers RLS.
    */
   static getServiceClient() {

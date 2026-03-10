@@ -1,23 +1,23 @@
 /**
- * Complaint Form Controller
+ * complaint Form Controller
  * Main form initialization and event handling
  */
-import { handleComplaintSubmit, resetComplaintForm } from "./formSubmission.js";
+import { handlecomplaintSubmit, resetcomplaintForm } from "./formSubmission.js";
 import { setupRealtimeValidation } from "../../utils/validation.js";
-import { createComplaintFileHandler, setupDragAndDrop } from "../../utils/fileHandler.js";
+import { createcomplaintFileHandler, setupDragAndDrop } from "../../utils/fileHandler.js";
 import showMessage from "../toast.js";
 import apiClient from "../../config/apiClient.js";
 import { getActiveRole, isInCitizenMode, canSwitchToCitizen } from "../../auth/roleToggle.js";
 import { getUserRole } from "../../auth/authChecker.js";
 
-// Complaint type and subtype mapping
-// Complaint subtypes removed
+// complaint type and subtype mapping
+// complaint subtypes removed
 
 /**
  * Initialize complaint form
  */
 
-export async function initializeComplaintForm() {
+export async function initializecomplaintForm() {
   const form = document.getElementById("complaintForm");
   if (!form) {
     console.error("[COMPLAINT FORM] Form element not found");
@@ -66,7 +66,7 @@ export async function initializeComplaintForm() {
     return;
   }
   // Initialize file handler with upload state callback
-  const fileHandler = createComplaintFileHandler({
+  const fileHandler = createcomplaintFileHandler({
     previewContainer: elements.filePreview,
     onFilesChange: (_files) => {
       // console.log removed for security
@@ -88,7 +88,7 @@ export async function initializeComplaintForm() {
   setupFileHandling(elements.fileDropZone, elements.fileInput, fileHandler);
   setupFormValidation(elements.form);
   setupFormSubmission(elements.form, fileHandler);
-  loadDepartments();
+  loaddepartments();
   // Prevent any auto-focus behavior (browser default or otherwise)
   setTimeout(() => {
     // Remove focus from any form field
@@ -170,17 +170,17 @@ function setupFormSubmission(form, fileHandler) {
       // Get current files
       const selectedFiles = fileHandler.getFiles();
       // Submit the complaint with fileHandler for progress tracking
-      const _result = await handleComplaintSubmit(form, selectedFiles, fileHandler);
+      const _result = await handlecomplaintSubmit(form, selectedFiles, fileHandler);
       // console.log removed for security
       // Reset form on success
-      resetComplaintForm(form, () => fileHandler.clearAll());
+      resetcomplaintForm(form, () => fileHandler.clearAll());
       // Redirect to dashboard after delay
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 2000);
     } catch (error) {
       console.error("[COMPLAINT FORM] Submission failed:", error);
-      // Error is already handled in handleComplaintSubmit
+      // Error is already handled in handlecomplaintSubmit
     }
   });
   // console.log removed for security
@@ -188,12 +188,12 @@ function setupFormSubmission(form, fileHandler) {
 /**
  * Load and render departments dynamically
  */
-async function loadDepartments() {
+async function loaddepartments() {
   const container = document.getElementById("departmentCheckboxes");
   if (!container) return;
   try {
     // console.log removed for security
-    const response = await apiClient.getActiveDepartments();
+    const response = await apiClient.getActivedepartments();
     if (response.success && response.data) {
       const departments = response.data;
       // console.log removed for security
@@ -216,7 +216,7 @@ async function loadDepartments() {
     container.innerHTML = `
       <div class="error-placeholder">
         <p>Failed to load departments. You can still submit your complaint.</p>
-        <button type="button" onclick="window.retryLoadDepartments()" class="btn btn-sm btn-secondary">
+        <button type="button" onclick="window.retryLoaddepartments()" class="btn btn-sm btn-secondary">
           Retry
         </button>
       </div>
@@ -224,9 +224,9 @@ async function loadDepartments() {
   }
 }
 // Make retry function globally available
-window.retryLoadDepartments = loadDepartments;
+window.retryLoaddepartments = loaddepartments;
 // Auto-initialize when DOM is loaded
-document.addEventListener("DOMContentLoaded", initializeComplaintForm);
+document.addEventListener("DOMContentLoaded", initializecomplaintForm);
 // Export for manual initialization
 
 export { };

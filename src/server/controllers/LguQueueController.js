@@ -3,7 +3,7 @@
  * Handles department-specific queue management and assignments
  */
 const Database = require("../config/database");
-const NotificationService = require("../services/NotificationService");
+const NotificationService = require("../services/notificationService");
 const crypto = require("crypto");
 
 const db = Database.getInstance();
@@ -23,7 +23,7 @@ class LguQueueController {
    * Get department queue
    * Returns complaints assigned to the admin's department
    */
-  async getDepartmentQueue(req, res) {
+  async getdepartmentQueue(req, res) {
     try {
       const { status, priority, limit } = req.query;
 
@@ -37,7 +37,7 @@ class LguQueueController {
       if (!departmentCode) {
         return res.status(400).json({
           success: false,
-          error: "Department not specified in user metadata.",
+          error: "department not specified in user metadata.",
         });
       }
 
@@ -51,7 +51,7 @@ class LguQueueController {
       if (deptError || !department) {
         return res.status(404).json({
           success: false,
-          error: "Department not found",
+          error: "department not found",
         });
       }
 
@@ -83,13 +83,13 @@ class LguQueueController {
       }
 
       // Resolve Category UUIDs to Names
-      const ComplaintRepository = require("../repositories/ComplaintRepository");
+      const ComplaintRepository = require("../repositories/complaintRepository");
       const complaintRepo = new ComplaintRepository();
-      const resolvedComplaints = await complaintRepo._resolveCategoryNames(complaints || []);
+      const resolvedcomplaints = await complaintRepo._resolveCategoryNames(complaints || []);
 
       // Get assignment details for each complaint
       const complaintsWithAssignments = await Promise.all(
-        resolvedComplaints.map(async (complaint) => {
+        resolvedcomplaints.map(async (complaint) => {
           // Get all assignments for this complaint
           const { data: assignments } = await supabase
             .from("complaint_assignments")
@@ -97,7 +97,7 @@ class LguQueueController {
             .eq("complaint_id", complaint.id);
 
           // Check if complaint is assigned to this admin's department
-          const isAssignedToDepartment =
+          const isAssignedTodepartment =
                         assignments?.some(
                           (assignment) => assignment.department_id === department.id
                         ) || false;
@@ -105,7 +105,7 @@ class LguQueueController {
           return {
             ...complaint,
             assignments: assignments || [],
-            is_assigned_to_department: isAssignedToDepartment,
+            is_assigned_to_department: isAssignedTodepartment,
           };
         })
       );
@@ -139,7 +139,7 @@ class LguQueueController {
       const userId = req.user?.id;
 
       // Validate required parameters
-      if (!complaintId) return res.status(400).json({ success: false, error: "Complaint ID is required" });
+      if (!complaintId) return res.status(400).json({ success: false, error: "complaint ID is required" });
       if (!userId) return res.status(401).json({ success: false, error: "User not authenticated" });
 
       // Support both single officer (officerId) and multiple officers (officerIds)
@@ -156,7 +156,7 @@ class LguQueueController {
                 req.user.raw_user_meta_data?.dpt;
 
       if (!departmentCode) {
-        return res.status(400).json({ success: false, error: "Department not specified in user metadata." });
+        return res.status(400).json({ success: false, error: "department not specified in user metadata." });
       }
 
       // Verify complaint exists & is assigned to department
@@ -167,11 +167,11 @@ class LguQueueController {
         .single();
 
       if (complaintError || !complaint) {
-        return res.status(404).json({ success: false, error: "Complaint not found" });
+        return res.status(404).json({ success: false, error: "complaint not found" });
       }
 
       if (!complaint.department_r || !complaint.department_r.includes(departmentCode)) {
-        return res.status(403).json({ success: false, error: "Complaint is not assigned to your department" });
+        return res.status(403).json({ success: false, error: "complaint is not assigned to your department" });
       }
 
       // Generate a unique assignment group ID
@@ -221,7 +221,7 @@ class LguQueueController {
 
       res.json({
         success: true,
-        message: `Complaint assigned to ${createdAssignments.length} officer(s) successfully`,
+        message: `complaint assigned to ${createdAssignments.length} officer(s) successfully`,
         assignments: createdAssignments,
       });
 
@@ -238,13 +238,13 @@ class LguQueueController {
   /**
      * Assign complaint (Single Officer / Legacy)
      */
-  async assignComplaint(req, res) {
+  async assigncomplaint(req, res) {
     try {
       const userId = req.user.id;
       const { complaintId, officerId, priority, deadline, notes } = req.body;
 
       if (!complaintId || !officerId) {
-        return res.status(400).json({ success: false, error: "Complaint ID and Officer ID are required" });
+        return res.status(400).json({ success: false, error: "complaint ID and Officer ID are required" });
       }
 
       // Extract department
@@ -255,7 +255,7 @@ class LguQueueController {
                 req.user.raw_user_meta_data?.dpt;
 
       if (!departmentCode) {
-        return res.status(400).json({ success: false, error: "Department not specified in user metadata." });
+        return res.status(400).json({ success: false, error: "department not specified in user metadata." });
       }
 
       // Get department ID
@@ -266,7 +266,7 @@ class LguQueueController {
         .single();
 
       if (deptError || !department) {
-        return res.status(404).json({ success: false, error: "Department not found" });
+        return res.status(404).json({ success: false, error: "department not found" });
       }
 
       // Check if assignment already exists
@@ -334,7 +334,7 @@ class LguQueueController {
    * Get department assignments
    * Returns complaints assigned to the admin's department that need officer assignment
    */
-  async getDepartmentAssignments(req, res) {
+  async getdepartmentAssignments(req, res) {
     try {
       const {
         status,
@@ -355,7 +355,7 @@ class LguQueueController {
       if (!departmentCode) {
         return res.status(400).json({
           success: false,
-          error: "Department not specified in user metadata.",
+          error: "department not specified in user metadata.",
         });
       }
 
@@ -401,7 +401,7 @@ class LguQueueController {
       }
 
       // Resolve category UUIDs to text
-      const ComplaintRepository = require("../repositories/ComplaintRepository");
+      const ComplaintRepository = require("../repositories/complaintRepository");
       const complaintRepo = new ComplaintRepository();
       const resolvedData = await complaintRepo._resolveCategoryNames(data || []);
 

@@ -57,7 +57,7 @@ router.get("/config", apiLimiter, (req, res) => {
 
 router.get("/boundaries", apiLimiter, async (req, res) => {
   try {
-    const filePath = path.join(config.rootDir, "public", "assets", "json", "brgy_boundaries_location.json");
+    const filePath = path.join(config.rootDir, "public", "assets", "json", "brgyBoundariesLocation.json");
     const fs = require("fs").promises;
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path

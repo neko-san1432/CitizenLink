@@ -1,7 +1,7 @@
 const Database = require("../config/database");
 const {
   validateUserRole,
-  extractDepartmentCode,
+  extractdepartmentCode,
 } = require("../utils/roleValidation");
 const {
   extractUserMetadata,
@@ -201,7 +201,7 @@ const authenticateUser = async (req, res, next) => {
     }
 
     // Extract department code for LGU roles
-    const departmentCode = extractDepartmentCode(userRole);
+    const departmentCode = extractdepartmentCode(userRole);
 
     // Build standardized user object
     req.user = buildUserObject(

@@ -174,7 +174,7 @@ function createRateLimiter(maxRequests, windowMs, _skipSuccessfulRequests = fals
 const isDev = process.env.NODE_ENV !== "production";
 const DISABLE_RATE_LIMITING = isDev && process.env.DISABLE_RATE_LIMITING === "true";
 if (DISABLE_RATE_LIMITING) {
-  console.warn("[SECURITY] Rate limiting is DISABLED via DISABLE_RATE_LIMITING env var (dev only)");
+  console.warn("[security] Rate limiting is DISABLED via DISABLE_RATE_LIMITING env var (dev only)");
 }
 // Create a no-op rate limiter for when rate limiting is explicitly disabled
 const noOpLimiter = (req, res, next) => {

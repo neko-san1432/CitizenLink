@@ -36,10 +36,10 @@ function extractUserName(combinedMetadata, email) {
 /**
  * Extract user department from metadata and role
  * @param {Object} combinedMetadata - Combined user metadata
- * @param {string|null} departmentCode - Department code from role (if any)
- * @returns {string|null} Department code or null
+ * @param {string|null} departmentCode - department code from role (if any)
+ * @returns {string|null} department code or null
  */
-function extractUserDepartment(combinedMetadata, departmentCode) {
+function extractUserdepartment(combinedMetadata, departmentCode) {
   return (
     departmentCode ||
     combinedMetadata.department ||
@@ -55,7 +55,7 @@ function extractUserDepartment(combinedMetadata, departmentCode) {
  * @param {Object} tokenUser - Supabase user object from token
  * @param {Object} combinedMetadata - Combined metadata
  * @param {Object} roleValidation - Role validation result
- * @param {string|null} departmentCode - Department code from role
+ * @param {string|null} departmentCode - department code from role
  * @returns {Object} Standardized user object
  */
 function buildUserObject(
@@ -65,7 +65,7 @@ function buildUserObject(
   departmentCode
 ) {
   const userName = extractUserName(combinedMetadata, tokenUser.email);
-  const userDepartment = extractUserDepartment(
+  const userdepartment = extractUserdepartment(
     combinedMetadata,
     departmentCode
   );
@@ -91,7 +91,7 @@ function buildUserObject(
     mobileNumber:
       combinedMetadata.mobile_number || combinedMetadata.mobile || null,
     status: combinedMetadata.status || "active",
-    department: userDepartment,
+    department: userdepartment,
     employeeId: combinedMetadata.employee_id || null,
 
     // Role validation info
@@ -205,7 +205,7 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
     //   DELETE FROM auth.sessions WHERE user_id = user_uuid;
     //   RETURN (SELECT COUNT(*) FROM auth.sessions WHERE user_id = user_uuid);
     // END;
-    // $$ LANGUAGE plpgsql SECURITY DEFINER;
+    // $$ LANGUAGE plpgsql security DEFINER;
     try {
       // Try the simple RPC function first (in public schema)
       const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc(
@@ -313,7 +313,7 @@ async function invalidateAllUserSessions(userId, supabaseAdmin) {
 module.exports = {
   extractUserMetadata,
   extractUserName,
-  extractUserDepartment,
+  extractUserdepartment,
   buildUserObject,
   getCookieOptions,
   createErrorResponse,

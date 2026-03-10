@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
     rel="stylesheet" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <title>Review Complaint - DRIMS</title>
+  <title>Review complaint - DRIMS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="/css/style.css" />
@@ -17,9 +17,9 @@
   <link rel="stylesheet" href="/css/components/sidebar.css" />
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/header.css" />
-  <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
-  <link rel="stylesheet" href="/css/viewport-fix.css" />
-  <link rel="stylesheet" href="/css/pages/complaint-details.css" />
+  <link rel="stylesheet" href="/css/pages/dashboardCommon.css" />
+  <link rel="stylesheet" href="/css/viewportFix.css" />
+  <link rel="stylesheet" href="/css/pages/complaintDetails.css" />
   <style>
     /* ── Coordinator Review Page Overrides ──
        complaint-details.css locks every ancestor to overflow:hidden + fixed
@@ -120,7 +120,7 @@
           </div>
 
     <div id="error-message" class="empty-state" style="display: none">
-      <h2>⚠️ Error Loading Complaint</h2>
+      <h2>⚠️ Error Loading complaint</h2>
       <p id="error-text"></p>
       <button id="return-dashboard-btn" class="btn btn-primary">
         Return to Dashboard
@@ -129,7 +129,7 @@
 
     <div id="complaint-content" style="display: none; width: 100%;">
 
-      <!-- Complaint Header (Glass Panel) -->
+      <!-- complaint Header (Glass Panel) -->
       <div class="complaint-header glass-panel mb-6">
         <div class="complaint-title-section">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
@@ -191,12 +191,12 @@
         </div>
       </div>
 
-      <!-- Content Grid (Complaint Details + Actions) -->
+      <!-- Content Grid (complaint Details + Actions) -->
       <div class="complaint-content">
 
         <!-- Details Column -->
         <div class="content-section glass-panel">
-          <h3>📋 Complaint Details</h3>
+          <h3>📋 complaint Details</h3>
 
           <div class="detail-row" style="margin-bottom: 12px;">
             <div class="detail-label">Type & Subtype</div>
@@ -255,7 +255,7 @@
           </div>
 
           <div id="similar-section" class="content-section glass-panel" style="display: none;">
-            <h3>⚠️ Similar Complaints</h3>
+            <h3>⚠️ Similar complaints</h3>
             <div id="similar-list"></div>
           </div>
 
@@ -278,7 +278,7 @@
         <div class="modal-body">
           <form id="duplicate-form">
             <div class="form-group">
-              <label for="master-complaint">Master Complaint ID *</label>
+              <label for="master-complaint">Master complaint ID *</label>
               <select id="master-complaint" required>
                 <option value="">Select master complaint...</option>
               </select>
@@ -315,7 +315,7 @@
               <label for="reject-type" class="block text-sm font-semibold mb-1">Rejection Type *</label>
               <select id="reject-type" class="form-control w-full p-2 border rounded" required>
                 <option value="standard">Standard Rejection</option>
-                <option value="false">Mark as False Complaint (User Bad Behavior)</option>
+                <option value="false">Mark as False complaint (User Bad Behavior)</option>
               </select>
             </div>
 
@@ -365,11 +365,11 @@
   <script type="module" src="/js/auth/authChecker.js"></script>
   <script type="module" src="/js/auth/roleToggle.js"></script>
   <script type="module" src="/js/components/toast.js"></script>
-  <script type="module" src="/js/components/complaint/falseComplaintMarker.js"></script>
+  <script type="module" src="/js/components/complaint/falsecomplaintMarker.js"></script>
   <script type="module" src="/js/components/complaint/evidencePreview.js"></script>
   <script type="module" src="/js/components/complaint/complaintMap.js"></script>
   <script type="module" src="/js/coordinator/review.js"></script>
-  <script type="module" src="/js/coordinator/review-init.js"></script>
+  <script type="module" src="/js/coordinator/reviewInit.js"></script>
 </body>
 
 </html>

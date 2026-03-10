@@ -6,16 +6,16 @@
  * 2. Clustering (Incidents -> Clusters)
  */
 
-const NLPService = require("./brain/NLPService");
-const ClusteringService = require("./brain/ClusteringService");
-const TensorFlowService = require("./TensorFlowService"); // Direct access if needed
+const NLPService = require("./brain/nLPService");
+const ClusteringService = require("./brain/clusteringService");
+const TensorFlowService = require("./tensorFlowService"); // Direct access if needed
 
 class BrainService {
   constructor() {
     this.services = {
-      nlp: NLPService,
-      clustering: ClusteringService,
-      tf: TensorFlowService
+      nlp: nLPService,
+      clustering: clusteringService,
+      tf: tensorFlowService
     };
   }
 

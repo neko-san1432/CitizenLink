@@ -1,9 +1,9 @@
 const Database = require("../config/database");
-const TensorFlowService = require("./TensorFlowService");
-const Logger = require("../utils/Logger");
+const tensorFlowService = require("./tensorFlowService");
+const logger = require("../utils/logger");
 
 /**
- * AdvancedDecisionEngine
+ * advancedDecisionEngine
  * Core intelligence service for DRIMS.
  * Implements the hybrid classification logic: Rule-Based (Fast) -> AI Fallback (Slow).
  *
@@ -27,7 +27,7 @@ class AdvancedDecisionEngine {
      * Helper to log to file and optionally console
      */
   logHITL(message, data = null) {
-    Logger.log("NLP-HITL", message, data);
+    logger.log("NLP-HITL", message, data);
   }
 
   /**
@@ -124,8 +124,8 @@ class AdvancedDecisionEngine {
 
       // Initialize AI Service (background) - only if we have anchors
       if (Object.keys(this.anchors).length > 0) {
-        TensorFlowService.initialize().then(() => {
-          TensorFlowService.precomputeAnchors(this.anchors);
+        tensorFlowService.initialize().then(() => {
+          tensorFlowService.precomputeAnchors(this.anchors);
         });
       }
 
@@ -204,7 +204,7 @@ class AdvancedDecisionEngine {
 
     // 3. AI Fallback (Slow Path)
     try {
-      const aiResult = await TensorFlowService.classify(normalizedText);
+      const aiResult = await tensorFlowService.classify(normalizedText);
 
       if (aiResult && aiResult.category && aiResult.confidence > 0.6) {
         const result = {

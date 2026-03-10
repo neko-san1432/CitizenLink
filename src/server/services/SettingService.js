@@ -1,28 +1,28 @@
-const SettingRepository = require("../repositories/SettingRepository");
-const Setting = require("../models/Setting");
+const SettingRepository = require("../repositories/settingRepository");
+const setting = require("../models/setting");
 
 class SettingService {
 
   constructor() {
     this.settingRepo = new SettingRepository();
   }
-  async getAllSettings() {
+  async getAllsettings() {
     return this.settingRepo.findAll();
   }
-  async getPublicSettings() {
+  async getPublicsettings() {
     return this.settingRepo.findPublic();
   }
-  async getSettingsByCategory(category) {
+  async getsettingsByCategory(category) {
     return this.settingRepo.findByCategory(category);
   }
-  async getSettingByKey(key) {
+  async getsettingByKey(key) {
     const setting = await this.settingRepo.findByKey(key);
     if (!setting) {
-      throw new Error("Setting not found");
+      throw new Error("setting not found");
     }
     return setting;
   }
-  async getSettingValue(key, defaultValue = null) {
+  async getsettingValue(key, defaultValue = null) {
     try {
       const setting = await this.settingRepo.findByKey(key);
       return setting ? setting.getParsedValue() : defaultValue;
@@ -30,14 +30,14 @@ class SettingService {
       return defaultValue;
     }
   }
-  async createSetting(settingData) {
-    const validation = Setting.validate(settingData);
+  async createsetting(settingData) {
+    const validation = setting.validate(settingData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
-    const existingSetting = await this.settingRepo.findByKey(settingData.key);
-    if (existingSetting) {
-      throw new Error("Setting key already exists");
+    const existingsetting = await this.settingRepo.findByKey(settingData.key);
+    if (existingsetting) {
+      throw new Error("setting key already exists");
     }
     const sanitizedData = {
       key: settingData.key.trim().toLowerCase(),
@@ -49,10 +49,10 @@ class SettingService {
     };
     return this.settingRepo.create(sanitizedData);
   }
-  async updateSetting(key, settingData) {
-    const existingSetting = await this.getSettingByKey(key);
-    const validation = Setting.validate({
-      ...existingSetting,
+  async updatesetting(key, settingData) {
+    const existingsetting = await this.getsettingByKey(key);
+    const validation = setting.validate({
+      ...existingsetting,
       ...settingData
     });
     if (!validation.isValid) {
@@ -60,15 +60,15 @@ class SettingService {
     }
     const sanitizedData = {
       value: settingData.value,
-      type: settingData.type || existingSetting.type,
-      category: settingData.category || existingSetting.category,
-      description: settingData.description !== void 0 ? settingData.description?.trim() : existingSetting.description,
-      is_public: settingData.is_public !== void 0 ? settingData.is_public : existingSetting.is_public
+      type: settingData.type || existingsetting.type,
+      category: settingData.category || existingsetting.category,
+      description: settingData.description !== void 0 ? settingData.description?.trim() : existingsetting.description,
+      is_public: settingData.is_public !== void 0 ? settingData.is_public : existingsetting.is_public
     };
     return this.settingRepo.update(key, sanitizedData);
   }
-  async upsertSetting(settingData) {
-    const validation = Setting.validate(settingData);
+  async upsertsetting(settingData) {
+    const validation = setting.validate(settingData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
@@ -82,12 +82,12 @@ class SettingService {
     };
     return this.settingRepo.upsert(sanitizedData);
   }
-  async deleteSetting(key) {
-    await this.getSettingByKey(key);
+  async deletesetting(key) {
+    await this.getsettingByKey(key);
     return this.settingRepo.delete(key);
   }
-  async initializeDefaultSettings() {
-    const defaultSettings = [
+  async initializeDefaultsettings() {
+    const defaultsettings = [
       {
         key: "terms_and_conditions",
         value: `<h2>Terms and Conditions</h2>
@@ -130,9 +130,9 @@ class SettingService {
       }
     ];
     const results = [];
-    for (const setting of defaultSettings) {
+    for (const setting of defaultsettings) {
       try {
-        const result = await this.upsertSetting(setting);
+        const result = await this.upsertsetting(setting);
         results.push(result);
       } catch (error) {
         console.warn(`Failed to initialize setting ${setting.key}:`, error.message);

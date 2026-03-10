@@ -55,16 +55,16 @@ describe("Validation Middleware", () => {
   });
 
   describe("Schemas", () => {
-    describe("createComplaint", () => {
+    describe("createcomplaint", () => {
       it("should validate valid complaint", () => {
         const data = {
-          title: "Valid Complaint",
+          title: "Valid complaint",
           description: "This is a valid description of the issue.",
           category: "Infrastructure",
           subcategory: "Pothole",
           preferred_departments: ["Engineering"]
         };
-        const { error } = schemas.createComplaint.validate(data);
+        const { error } = schemas.createcomplaint.validate(data);
         expect(error).toBeUndefined();
       });
 
@@ -74,7 +74,7 @@ describe("Validation Middleware", () => {
           category: "Infrastructure",
           subcategory: "Pothole"
         };
-        const { error } = schemas.createComplaint.validate(data);
+        const { error } = schemas.createcomplaint.validate(data);
         expect(error).toBeDefined();
       });
     });

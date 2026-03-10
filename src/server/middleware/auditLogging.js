@@ -1,4 +1,4 @@
-const AuditLogRepository = require("../repositories/AuditLogRepository");
+const AuditLogRepository = require("../repositories/auditLogRepository");
 
 const auditLog = new AuditLogRepository();
 

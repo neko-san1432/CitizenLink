@@ -1,13 +1,13 @@
 const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
-const ComplaintService = require("../services/ComplaintService");
+const ComplaintService = require("../services/complaintService");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const path = require("path");
 // const fs = require("fs"); // Unused if mock loading is removed
 
 const router = express.Router();
 
-function mapBodyRowToBrainComplaint(row) {
+function mapBodyRowToBraincomplaint(row) {
   const description =
     row.descriptive_su ||
     row.description ||
@@ -58,13 +58,13 @@ router.get(
         includeResolved,
       };
 
-      const result = await complaintService.getComplaintLocations(filters);
+      const result = await complaintService.getcomplaintLocations(filters);
       const rows = Array.isArray(result)
         ? result
         : Array.isArray(result?.data)
           ? result.data
           : [];
-      const complaints = rows.map(mapBodyRowToBrainComplaint);
+      const complaints = rows.map(mapBodyRowToBraincomplaint);
 
 
       res.json({
@@ -134,7 +134,7 @@ router.get(
         if (!Array.isArray(data) || data.length === 0) return;
 
         for (const row of data) {
-          const complaint = mapBodyRowToBrainComplaint(row);
+          const complaint = mapBodyRowToBraincomplaint(row);
           send({ type: "NEW_COMPLAINT", complaint });
         }
 

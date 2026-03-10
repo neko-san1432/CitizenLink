@@ -1,16 +1,16 @@
 import apiClient from "../config/apiClient.js";
 import showMessage from "../components/toast.js";
 
-class DepartmentManager {
+class departmentManager {
   constructor() {
     this.departments = [];
-    this.currentDepartment = null;
+    this.currentdepartment = null;
     this.searchTerm = "";
     this.filterStatus = "all";
     this.filterStatus = "all";
   }
   async init() {
-    await this.loadDepartments();
+    await this.loaddepartments();
     this.setupEventListeners();
     this.startStatusRefresh();
   }
@@ -35,26 +35,26 @@ class DepartmentManager {
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         this.searchTerm = e.target.value.toLowerCase();
-        this.renderDepartments();
+        this.renderdepartments();
       });
     }
 
     if (statusFilter) {
       statusFilter.addEventListener("change", (e) => {
         this.filterStatus = e.target.value;
-        this.renderDepartments();
+        this.renderdepartments();
       });
     }
   }
-  async loadDepartments() {
+  async loaddepartments() {
     try {
       // Fetch ALL departments to allow management of inactive ones
       const response = await apiClient.get("/api/departments");
       if (response.success) {
         this.departments = response.data;
         // Load officers for each department
-        await this.loadOfficersForAllDepartments();
-        this.renderDepartments();
+        await this.loadOfficersForAlldepartments();
+        this.renderdepartments();
         this.updateStats();
       }
     } catch (error) {
@@ -62,10 +62,10 @@ class DepartmentManager {
       showMessage("error", "Failed to load departments");
     }
   }
-  async loadOfficersForAllDepartments() {
+  async loadOfficersForAlldepartments() {
     const promises = this.departments.map(async (dept) => {
       try {
-        const response = await apiClient.getDepartmentOfficers(dept.id);
+        const response = await apiClient.getdepartmentOfficers(dept.id);
         if (response.success) {
           dept.officers = response.data.map((officer) => ({
             ...officer,
@@ -91,7 +91,7 @@ class DepartmentManager {
     });
     await Promise.all(promises);
   }
-  getFilteredDepartments() {
+  getFiltereddepartments() {
     return this.departments.filter((dept) => {
       // Status Filter
       if (this.filterStatus === "active" && !dept.is_active) return false;
@@ -112,13 +112,13 @@ class DepartmentManager {
     });
   }
 
-  renderDepartments() {
+  renderdepartments() {
     const grid = document.getElementById("departmentGrid");
     if (!grid) return;
     grid.innerHTML = "";
 
-    const filteredDepartments = this.getFilteredDepartments();
-    const safeHtml = filteredDepartments
+    const filtereddepartments = this.getFiltereddepartments();
+    const safeHtml = filtereddepartments
       .map((dept) => {
         const statusClass = dept.is_active ? "status-active" : "status-inactive";
         const statusText = dept.is_active ? "Active" : "Inactive";
@@ -199,7 +199,7 @@ class DepartmentManager {
           </div>
 
           <div class="card-actions">
-            <button class="action-btn btn-edit" onclick="departmentManager.editDepartment(${dept.id})">
+            <button class="action-btn btn-edit" onclick="departmentManager.editdepartment(${dept.id})">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -330,9 +330,9 @@ class DepartmentManager {
     };
     try {
       let response;
-      if (this.currentDepartment) {
+      if (this.currentdepartment) {
         response = await apiClient.put(
-          `/api/departments/${this.currentDepartment.id}`,
+          `/api/departments/${this.currentdepartment.id}`,
           data
         );
       } else {
@@ -341,20 +341,20 @@ class DepartmentManager {
       if (response.success) {
         showMessage("success", response.message);
         this.closeModal();
-        await this.loadDepartments();
+        await this.loaddepartments();
       }
     } catch (error) {
-      console.error("Department operation failed:", error);
+      console.error("department operation failed:", error);
       showMessage("error", error.message || "Operation failed");
     }
   }
   openModal(mode = "add", department = null) {
-    this.currentDepartment = department;
+    this.currentdepartment = department;
     const modal = document.getElementById("departmentModal");
     const title = document.getElementById("modalTitle");
     const form = document.getElementById("departmentForm");
     if (mode === "edit" && department) {
-      title.textContent = "Edit Department";
+      title.textContent = "Edit department";
       document.getElementById("departmentName").value = department.name;
       document.getElementById("departmentCode").value = department.code;
       document.getElementById("departmentDescription").value =
@@ -362,7 +362,7 @@ class DepartmentManager {
       document.getElementById("departmentActive").checked =
         department.is_active;
     } else {
-      title.textContent = "Add Department";
+      title.textContent = "Add department";
       form.reset();
     }
     modal.style.display = "block";
@@ -370,9 +370,9 @@ class DepartmentManager {
   closeModal() {
     const modal = document.getElementById("departmentModal");
     modal.style.display = "none";
-    this.currentDepartment = null;
+    this.currentdepartment = null;
   }
-  editDepartment(id) {
+  editdepartment(id) {
     const department = this.departments.find((d) => d.id === id);
     if (department) {
       this.openModal("edit", department);
@@ -391,8 +391,8 @@ class DepartmentManager {
         is_active: newStatus,
       });
       if (response.success) {
-        showMessage("success", `Department ${action}d successfully`);
-        await this.loadDepartments();
+        showMessage("success", `department ${action}d successfully`);
+        await this.loaddepartments();
       }
     } catch (error) {
       console.error("Status toggle failed:", error);
@@ -403,7 +403,7 @@ class DepartmentManager {
     const department = this.departments.find((d) => d.id === departmentId);
     if (!department) return;
     department.officersVisible = !department.officersVisible;
-    this.renderDepartments();
+    this.renderdepartments();
   }
   getLastSeenText(lastSignInAt) {
     if (!lastSignInAt) return "Never";
@@ -443,8 +443,8 @@ class DepartmentManager {
     if (!hasVisibleOfficers) return;
     try {
       // Reload officers for all departments
-      await this.loadOfficersForAllDepartments();
-      this.renderDepartments();
+      await this.loadOfficersForAlldepartments();
+      this.renderdepartments();
     } catch (error) {
       console.error("Failed to refresh officer status:", error);
     }
@@ -468,7 +468,7 @@ globalThis.toggleOfficers = (departmentId) => {
 };
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  globalThis.departmentManager = new DepartmentManager();
+  globalThis.departmentManager = new departmentManager();
   globalThis.departmentManager.init();
 });
 // Close modal when clicking outside

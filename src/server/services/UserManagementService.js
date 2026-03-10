@@ -2,7 +2,7 @@ const Database = require("../config/database");
 const { _USER_ROLES, _ROLE_HIERARCHY, _SWITCHABLE_ROLES } = require("../../shared/constants");
 
 /**
- * UserManagementService
+ * userManagementService
  * Handles user management operations including banning/unbanning
  */
 class UserManagementService {
@@ -231,7 +231,7 @@ class UserManagementService {
    */
   async logBanAction(userId, action, performedBy, banData, ipAddress = null, userAgent = null) {
     try {
-      const AuditLogRepository = require("../repositories/AuditLogRepository");
+      const AuditLogRepository = require("../repositories/auditLogRepository");
       const auditLog = new AuditLogRepository();
 
       await auditLog.log(`user_${action}`, performedBy, {

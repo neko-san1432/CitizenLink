@@ -72,7 +72,7 @@ npm audit
 
 **Date:** 2025-11-14T17:30:22Z
 **Status:** ✅ All Security Issues Resolved - False Positives Removed
-**Details:** See [SECURITY_FIXES_SUMMARY.md](./SECURITY_FIXES_SUMMARY.md)
+**Details:** See [security_FIXES_SUMMARY.md](./security_FIXES_SUMMARY.md)
 
 ### Security Scan Results:
 - **npm audit:** 0 vulnerabilities (previously 17 moderate)

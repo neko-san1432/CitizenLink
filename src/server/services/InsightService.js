@@ -1,9 +1,9 @@
 const Database = require("../config/database");
-const ClusteringService = require("./ClusteringService");
-const AlertService = require("./AlertService");
+const clusteringService = require("./clusteringService");
+const alertService = require("./alertService");
 
 /**
- * InsightService
+ * insightService
  * Aggregates data for dashboard visualizations and role-based analytics.
  */
 class InsightService {
@@ -23,13 +23,13 @@ class InsightService {
       console.log(`[INSIGHTS] Generating for ${role} ${deptId ? `(${deptId})` : ""}`);
 
       // 1. Fetch relevant complaints
-      const { data: complaints, error } = await this._fetchComplaints(role, deptId);
+      const { data: complaints, error } = await this._fetchcomplaints(role, deptId);
       if (error) throw error;
 
       // 2. Fetch Clusters & Alerts (Global for Coordinator, Scoped for LGU?)
       // Clusters are geographic, so they are useful context even for Depts
-      const clusterResult = await ClusteringService.generateClusters();
-      const alerts = await AlertService.generateAlerts();
+      const clusterResult = await clusteringService.generateClusters();
+      const alerts = await alertService.generateAlerts();
 
       // 3. Generate Statistics
       const stats = this._calculateStatistics(complaints);
@@ -56,7 +56,7 @@ class InsightService {
     }
   }
 
-  async _fetchComplaints(role, deptId) {
+  async _fetchcomplaints(role, deptId) {
     let query = this.supabase
       .from("complaints")
       .select("*")

@@ -1,11 +1,11 @@
-const SimilarityCalculatorService = require("./SimilarityCalculatorService");
-const BrainService = require("./BrainService"); // New Brain Integration
+const SimilarityCalculatorService = require("./similarityCalculatorService");
+const brainService = require("./brainService"); // New Brain Integration
 const Database = require("../config/database");
 
 /**
- * ClusteringScheduler
+ * clusteringScheduler
  * Handles automatic scheduling of DBSCAN clustering operations
- * Integrated with BrainService for Advanced Logic (DBSCAN++)
+ * Integrated with brainService for Advanced Logic (DBSCAN++)
  */
 class ClusteringScheduler {
   constructor() {
@@ -20,8 +20,8 @@ class ClusteringScheduler {
     this.config = {
       intervalHours: 5 / 60, // Run every 5 minutes
       radiusKm: 0.5,
-      minComplaintsPerCluster: 3,
-      onlyIfNewComplaints: true, // Smart trigger: only cluster if new complaints exist
+      mincomplaintsPerCluster: 3,
+      onlyIfNewcomplaints: true, // Smart trigger: only cluster if new complaints exist
       enabled: true
     };
   }
@@ -39,7 +39,7 @@ class ClusteringScheduler {
       return;
     }
 
-    console.log(`[CLUSTERING_SCHEDULER] Starting automatic clustering scheduler (Powered by BrainService)`);
+    console.log(`[CLUSTERING_SCHEDULER] Starting automatic clustering scheduler (Powered by brainService)`);
     const intervalMinutes = this.config.intervalHours * 60;
     console.log(`[CLUSTERING_SCHEDULER] Interval: ${intervalMinutes} minutes`);
 
@@ -65,7 +65,7 @@ class ClusteringScheduler {
     }
   }
 
-  async hasNewComplaints() {
+  async hasNewcomplaints() {
     // ... (Existing logic kept same? or simplified?)
     // Reusing existing logic for safety
     try {
@@ -85,7 +85,7 @@ class ClusteringScheduler {
   }
 
   /**
-   * Run clustering operation via BrainService
+   * Run clustering operation via brainService
    */
   async runClustering() {
     if (this.isRunning) {
@@ -99,7 +99,7 @@ class ClusteringScheduler {
     try {
       console.log("[CLUSTERING_SCHEDULER] Starting intelligence cycle...");
 
-      // 1. Fetch Active Complaints
+      // 1. Fetch Active complaints
       // We generally want "open" complaints or recent ones
       const { data: complaints, error } = await this.supabase
         .from("complaints")
@@ -117,11 +117,11 @@ class ClusteringScheduler {
         return;
       }
 
-      // 2. Run BrainService
-      const intelligence = BrainService.runIntelligenceCycle(complaints);
+      // 2. Run brainService
+      const intelligence = brainService.runIntelligenceCycle(complaints);
 
       // 3. Map Clusters to Database Format
-      // BrainService returns internal format, we need to match DB schema for 'complaint_clusters'
+      // brainService returns internal format, we need to match DB schema for 'complaint_clusters'
       const mappedClusters = intelligence.clusters.map((c, index) => ({
         cluster_name: `Cluster ${index + 1} - ${c.category}`,
         center_lat: c.latitude,

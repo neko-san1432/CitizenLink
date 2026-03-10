@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const Complaint = require("../models/Complaint");
+const Complaint = require("../models/complaint");
 const {
   ADAPTIVE_EPSILON,
   ADAPTIVE_MINPTS,
@@ -9,7 +9,7 @@ const {
 } = require("../utils/similarityUtils");
 
 /**
- * ClusteringService v5.0
+ * clusteringService v5.0
  * Implements Thesis-Validated Adaptive DBSCAN clustering for complaint analytics.
  *
  * SYNCHRONIZED with CitizenLink_Simulated_System

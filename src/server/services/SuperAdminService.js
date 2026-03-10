@@ -1,9 +1,9 @@
-const RoleManagementService = require("./RoleManagementService");
+const RoleManagementService = require("./roleManagementService");
 const { USER_ROLES } = require("../../shared/constants");
 const Database = require("../config/database");
 
 /**
- * SuperAdminService
+ * superAdminService
  * Handles Super Admin operations: role swaps, department transfers, system logs
  */
 class SuperAdminService {
@@ -105,10 +105,10 @@ class SuperAdminService {
    * Transfer user between departments
    * Can transfer officers, admins, coordinators, HR across departments
    */
-  async transferUserBetweenDepartments(
+  async transferUserBetweendepartments(
     userId,
-    fromDepartment,
-    toDepartment,
+    fromdepartment,
+    todepartment,
     superAdminId,
     reason
   ) {
@@ -136,27 +136,27 @@ class SuperAdminService {
         throw new Error("Reason is required for department transfer");
       }
       // Perform transfer
-      const result = await this.roleService.transferDepartment(
+      const result = await this.roleService.transferdepartment(
         userId,
-        fromDepartment,
-        toDepartment,
+        fromdepartment,
+        todepartment,
         superAdminId,
         reason
       );
       return {
         success: true,
-        message: `User transferred from ${fromDepartment} to ${toDepartment}`,
+        message: `User transferred from ${fromdepartment} to ${todepartment}`,
         ...result,
       };
     } catch (error) {
-      console.error("[SUPER_ADMIN] Department transfer error:", error);
+      console.error("[SUPER_ADMIN] department transfer error:", error);
       throw error;
     }
   }
   /**
    * Promote citizen to any department
    */
-  async assignCitizenToDepartment(
+  async assignCitizenTodepartment(
     userId,
     role,
     departmentId,
@@ -222,14 +222,14 @@ class SuperAdminService {
 
       // Update role and assign department (if not super-admin or complaint-coordinator)
       const rolesWithoutDept = ["super-admin", "complaint-coordinator"];
-      const needsDepartment = !rolesWithoutDept.includes(role);
+      const needsdepartment = !rolesWithoutDept.includes(role);
 
       let modificationReason = reason;
       if (!modificationReason) {
         if (role === "super-admin") {
           modificationReason = "Promoted to Super Admin";
         } else if (role === "complaint-coordinator") {
-          modificationReason = "Promoted to Complaint Coordinator";
+          modificationReason = "Promoted to complaint Coordinator";
         } else {
           modificationReason = `Assigned to ${departmentId} as ${role}`;
         }
@@ -241,9 +241,9 @@ class SuperAdminService {
       };
 
       // Only assign department if role requires it
-      if (needsDepartment && departmentId) {
+      if (needsdepartment && departmentId) {
         metadata.department = departmentId;
-      } else if (!needsDepartment) {
+      } else if (!needsdepartment) {
         // Explicitly clear department for roles that don't need it
         metadata.department = null;
         metadata.clear_department = true;
@@ -444,7 +444,7 @@ class SuperAdminService {
         throw new Error("Only Super Admin can view latest registered users");
       }
 
-      const userService = require("./UserService");
+      const userService = require("./userService");
 
       // Get all users (we'll filter for confirmed emails/OAuth)
       const result = await userService.getUsers(
@@ -494,7 +494,7 @@ class SuperAdminService {
         }
       } catch (err) {
         console.error("[SUPER_ADMIN] Error fetching confirmed users:", err);
-        // Fallback: return users from UserService (may not have confirmation status)
+        // Fallback: return users from userService (may not have confirmation status)
         confirmedUsers = allUsers
           .sort(
             (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
@@ -523,7 +523,7 @@ class SuperAdminService {
         throw new Error("Only Super Admin can view role distribution");
       }
 
-      const userService = require("./UserService");
+      const userService = require("./userService");
       const result = await userService.getUsers(
         { includeInactive: false },
         { page: 1, limit: 10000 }
@@ -665,7 +665,7 @@ class SuperAdminService {
         }
       });
 
-      // Aggregate Complaints by Date
+      // Aggregate complaints by Date
       // Note: usage of submitted_at is correct as per schema
       // Use service client to bypass RLS recursion on complaints table
       const serviceClient = Database.getServiceClient();

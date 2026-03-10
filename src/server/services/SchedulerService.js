@@ -1,10 +1,10 @@
 const cron = require("node-cron");
-const ReportService = require("./ReportService");
-const EmailService = require("./EmailService");
+const reportService = require("./reportService");
+const emailService = require("./emailService");
 const Database = require("../config/database");
 
 /**
- * SchedulerService
+ * schedulerService
  * Automates daily/weekly/monthly reporting tasks.
  */
 class SchedulerService {
@@ -43,7 +43,7 @@ class SchedulerService {
       const reportsToSend = [];
 
       // A. Daily Report (Always)
-      const dailyPDF = await ReportService.generatePDF(
+      const dailyPDF = await reportService.generatePDF(
         "executive", "coordinator",
         this._formatDate(today), this._formatDate(today)
       );
@@ -53,7 +53,7 @@ class SchedulerService {
       if (isSunday) {
         const weekStart = new Date(today);
         weekStart.setDate(today.getDate() - 6);
-        const weeklyPDF = await ReportService.generatePDF(
+        const weeklyPDF = await reportService.generatePDF(
           "executive", "coordinator",
           this._formatDate(weekStart), this._formatDate(today)
         );
@@ -63,7 +63,7 @@ class SchedulerService {
       // C. Monthly Report (If End of Month)
       if (isEndOfMonth) {
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        const monthlyPDF = await ReportService.generatePDF(
+        const monthlyPDF = await reportService.generatePDF(
           "executive", "coordinator",
           this._formatDate(monthStart), this._formatDate(today)
         );
@@ -82,7 +82,7 @@ class SchedulerService {
                     <p><em>Generated automatically by DRIMS Analytics Node.</em></p>
                 `;
 
-        await EmailService.sendEmail(adminEmail, subject, html, reportsToSend);
+        await emailService.sendEmail(adminEmail, subject, html, reportsToSend);
         console.log(`[SCHEDULER] ✅ Sent ${reportsToSend.length} reports to ${adminEmail}`);
       }
 

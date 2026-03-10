@@ -1,9 +1,9 @@
 /**
- * Departments Page
+ * departments Page
  * Displays government departments information for citizens
  */
 
-// Department icons mapping
+// department icons mapping
 const departmentIcons = {
   CEO: "🏗️",
   GSO: "🔧",
@@ -24,7 +24,7 @@ const departmentIcons = {
   CAO: "📊",
 };
 
-// Department colors mapping (lighter variants for backgrounds)
+// department colors mapping (lighter variants for backgrounds)
 const departmentColors = {
   CEO: "#fef2f2",
   GSO: "#fffbeb",
@@ -45,10 +45,10 @@ const departmentColors = {
   CAO: "#f3f4f6",
 };
 
-let allDepartments = []; // Store for filtering
+let alldepartments = []; // Store for filtering
 let systemConfig = { legacyRolesEnabled: false };
 
-async function loadDepartments() {
+async function loaddepartments() {
   try {
     // Load config first
     try {
@@ -64,8 +64,8 @@ async function loadDepartments() {
     const result = await response.json();
 
     if (result.success && result.data) {
-      allDepartments = result.data;
-      renderDepartments(allDepartments);
+      alldepartments = result.data;
+      renderdepartments(alldepartments);
       setupSearch();
     } else {
       showError("Failed to load departments");
@@ -82,17 +82,17 @@ function setupSearch() {
 
   searchInput.addEventListener("input", (e) => {
     const query = e.target.value.toLowerCase();
-    const filtered = allDepartments.filter(
+    const filtered = alldepartments.filter(
       (dept) =>
         (dept.name && dept.name.toLowerCase().includes(query)) ||
         (dept.code && dept.code.toLowerCase().includes(query)) ||
         (dept.description && dept.description.toLowerCase().includes(query))
     );
-    renderDepartments(filtered);
+    renderdepartments(filtered);
   });
 }
 
-function renderDepartments(departments) {
+function renderdepartments(departments) {
   const content = document.getElementById("departments-content");
   if (!content) return;
 
@@ -111,14 +111,14 @@ function renderDepartments(departments) {
   grid.className = "departments-grid";
 
   grid.innerHTML = departments
-    .map((dept) => createDepartmentCard(dept))
+    .map((dept) => createdepartmentCard(dept))
     .join("");
 
   content.innerHTML = "";
   content.appendChild(grid);
 }
 
-function createDepartmentCard(department) {
+function createdepartmentCard(department) {
   const icon = departmentIcons[department.code] || "🏢";
   // Default to a light neutral background if code not found
   const bgColor = departmentColors[department.code] || "#f3f4f6";
@@ -146,7 +146,7 @@ function createDepartmentCard(department) {
       .replace(/'/g, "&#039;");
   };
 
-  const name = escapeHtml(department.name || "Unknown Department");
+  const name = escapeHtml(department.name || "Unknown department");
   const code = escapeHtml(department.code || "");
   const description = escapeHtml(
     department.description || "No description provided."
@@ -156,7 +156,7 @@ function createDepartmentCard(department) {
 
   const keyRoles = ["LGU Officer"];
   if (systemConfig.legacyRolesEnabled) {
-    keyRoles.push("Complaint Coordinator");
+    keyRoles.push("complaint Coordinator");
   }
 
   return `
@@ -203,4 +203,4 @@ function showError(message) {
 }
 
 // Load departments when page loads
-document.addEventListener("DOMContentLoaded", loadDepartments);
+document.addEventListener("DOMContentLoaded", loaddepartments);

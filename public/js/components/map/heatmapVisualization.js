@@ -1,5 +1,5 @@
 /**
- * Heatmap Visualization Component for Complaint Locations
+ * Heatmap Visualization Component for complaint Locations
  * Integrates with Leaflet maps and DBSCAN clustering
  */
 
@@ -169,7 +169,7 @@ class HeatmapVisualization {
   constructor(map) {
     this.map = map;
     this.complaintData = [];
-    this.allComplaintData = []; // Store all complaints for client-side filtering
+    this.allcomplaintData = []; // Store all complaints for client-side filtering
     this.roleScopedCache = null; // Cache filtered complaints per role for this tick
     this.markerMap = new Map(); // Map complaint ID to marker for quick lookup
     this.clusters = [];
@@ -187,9 +187,9 @@ class HeatmapVisualization {
       console.warn("HeatmapVisualization: Adaptive DBSCAN not found, falling back to standard DBSCAN");
     }
 
-    // Initialize Complaint Intelligence (NLP/Triage)
-    if (typeof ComplaintIntelligence !== "undefined") {
-      this.intelligence = new ComplaintIntelligence();
+    // Initialize complaint Intelligence (NLP/Triage)
+    if (typeof complaintIntelligence !== "undefined") {
+      this.intelligence = new complaintIntelligence();
       console.log("HeatmapVisualization: Context-Aware Intelligence v3.6 active");
     }
 
@@ -197,7 +197,7 @@ class HeatmapVisualization {
     this.currentFilters = {};
     this.filterByBoundary = true; // Enable boundary filtering by default
     this.userRole = null; // Will be set when role is determined
-    this.userDepartment = null; // Will be set for LGU admins
+    this.userdepartment = null; // Will be set for LGU admins
     // Dynamic heatmap scaling configuration
     this.dynamicScaling = {
       enabled: true, // Enable dynamic scaling by default
@@ -255,7 +255,7 @@ class HeatmapVisualization {
    * @param {Object} complaint
    * @returns {string[]} department codes
    */
-  getComplaintDepartments(complaint) {
+  getcomplaintdepartments(complaint) {
     if (!complaint) return [];
 
     const rawEntries = [];
@@ -270,7 +270,7 @@ class HeatmapVisualization {
 
     pushValue(complaint.departments);
     pushValue(complaint.department_r);
-    pushValue(complaint.secondaryDepartments);
+    pushValue(complaint.secondarydepartments);
     pushValue(complaint.department);
     pushValue(complaint.departmentCode || complaint.department_code);
 
@@ -301,24 +301,24 @@ class HeatmapVisualization {
    * Scope visible complaints based on role
    * @returns {Array} complaints limited to current user's access
    */
-  getRoleScopedComplaints() {
-    if (!Array.isArray(this.allComplaintData)) return [];
+  getRoleScopedcomplaints() {
+    if (!Array.isArray(this.allcomplaintData)) return [];
 
     const cacheHit =
       this.roleScopedCache &&
       this.roleScopedCache.role === this.userRole &&
-      this.roleScopedCache.department === this.userDepartment &&
-      this.roleScopedCache.sourceSize === this.allComplaintData.length;
+      this.roleScopedCache.department === this.userdepartment &&
+      this.roleScopedCache.sourceSize === this.allcomplaintData.length;
 
     if (cacheHit) {
       return this.roleScopedCache.data;
     }
 
-    const scoped = this.filterComplaintsByRole(this.allComplaintData);
+    const scoped = this.filtercomplaintsByRole(this.allcomplaintData);
     this.roleScopedCache = {
       role: this.userRole,
-      department: this.userDepartment,
-      sourceSize: this.allComplaintData.length,
+      department: this.userdepartment,
+      sourceSize: this.allcomplaintData.length,
       data: scoped,
     };
 
@@ -346,7 +346,7 @@ class HeatmapVisualization {
             session?.user?.raw_user_meta_data ||
             session?.user?.user_metadata ||
             {};
-          this.userDepartment = metadata.dpt || metadata.department;
+          this.userdepartment = metadata.dpt || metadata.department;
         } catch (error) {
           console.warn(
             "[HEATMAP] Failed to get department from metadata:",
@@ -357,7 +357,7 @@ class HeatmapVisualization {
 
       console.log("[HEATMAP] User role initialized:", {
         role: this.userRole,
-        department: this.userDepartment,
+        department: this.userdepartment,
       });
     } catch (error) {
       console.error("[HEATMAP] Failed to initialize user role:", error);
@@ -372,7 +372,7 @@ class HeatmapVisualization {
    * @param {Array} complaints - Array of complaints to filter
    * @returns {Array} Filtered complaints based on role
    */
-  filterComplaintsByRole(complaints) {
+  filtercomplaintsByRole(complaints) {
     if (!this.userRole) {
       // If role not initialized, return all (will be filtered later)
       return complaints;
@@ -384,7 +384,7 @@ class HeatmapVisualization {
       return complaints; // All complaints for heatmap, but markers won't be shown
     }
 
-    // Complaint coordinators / super-admin: See all complaints
+    // complaint coordinators / super-admin: See all complaints
     if (
       this.userRole === "super-admin"
     ) {
@@ -392,13 +392,13 @@ class HeatmapVisualization {
     }
 
     // LGU Staff: See complaints assigned to their department (if dept is set)
-    if (this.userRole === "lgu" && this.userDepartment) {
-      const targetDept = String(this.userDepartment || "")
+    if (this.userRole === "lgu" && this.userdepartment) {
+      const targetDept = String(this.userdepartment || "")
         .toUpperCase()
         .trim();
       return complaints.filter((complaint) => {
-        const complaintDepartments = this.getComplaintDepartments(complaint);
-        return complaintDepartments.includes(targetDept);
+        const complaintdepartments = this.getcomplaintdepartments(complaint);
+        return complaintdepartments.includes(targetDept);
       });
     }
 
@@ -410,7 +410,7 @@ class HeatmapVisualization {
    * Load complaint data from API
    * @param {Object} filters - Filter options
    */
-  async loadComplaintData(filters = {}) {
+  async loadcomplaintData(filters = {}) {
     try {
       // console.log removed for security
       this.currentFilters = filters;
@@ -430,14 +430,14 @@ class HeatmapVisualization {
         );
       } else if (
         this.userRole === "lgu" &&
-        this.userDepartment &&
+        this.userdepartment &&
         !sanitizedFilters.department
       ) {
         // Automatically add department filter for LGU staff if not already present
-        sanitizedFilters.department = this.userDepartment;
+        sanitizedFilters.department = this.userdepartment;
         console.log(
           "[HEATMAP] LGU Admin detected - adding department filter to API request:",
-          this.userDepartment
+          this.userdepartment
         );
       }
 
@@ -540,7 +540,7 @@ class HeatmapVisualization {
             status: item.status || item.workflow_status || "new",
             workflow_status: item.workflow_status || item.status || "new",
             confirmation_status: item.confirmation_status || "pending",
-            title: item.title || "Complaint",
+            title: item.title || "complaint",
             type: item.type || item.category || "General",
             category: item.category || item.type || "General",
             location: item.location || item.location_text || "",
@@ -600,7 +600,7 @@ class HeatmapVisualization {
         }
       }
 
-      this.allComplaintData = withinBoundaryData;
+      this.allcomplaintData = withinBoundaryData;
 
       // Invalidate role cache when new data arrives
       this.roleScopedCache = null;
@@ -617,27 +617,27 @@ class HeatmapVisualization {
       console.log(`[HEATMAP] Data loading summary:`);
       console.log(`  - Raw data from API: ${raw.length} complaints`);
       console.log(
-        `  - After coordinate validation: ${this.allComplaintData.length} complaints`
+        `  - After coordinate validation: ${this.allcomplaintData.length} complaints`
       );
       if (this.filterByBoundary && this._filteredCount > 0) {
         console.log(
           `  - Filtered out by boundary: ${this._filteredCount} complaint(s)`
         );
         console.log(
-          `  - Remaining within boundaries: ${this.allComplaintData.length} complaint(s)`
+          `  - Remaining within boundaries: ${this.allcomplaintData.length} complaint(s)`
         );
       }
       console.log(
         `  - After client-side filters: ${this.complaintData.length} complaint(s) visible`
       );
       console.log(
-        `  - User role: ${this.userRole}, Department: ${this.userDepartment || "N/A"
+        `  - User role: ${this.userRole}, department: ${this.userdepartment || "N/A"
         }`
       );
 
       // Debug: Check if we're missing complaints
-      if (raw.length > this.allComplaintData.length) {
-        const missing = raw.length - this.allComplaintData.length;
+      if (raw.length > this.allcomplaintData.length) {
+        const missing = raw.length - this.allcomplaintData.length;
         console.warn(
           `[HEATMAP] ⚠️ WARNING: ${missing} complaint(s) were filtered out (invalid coordinates or outside boundaries)`
         );
@@ -917,7 +917,7 @@ class HeatmapVisualization {
   }
   /**
    * Calculate intensity value for heatmap based on complaint properties
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @returns {number} Intensity value (0-1)
    */
   getIntensityValue(complaint) {
@@ -952,7 +952,7 @@ class HeatmapVisualization {
    * @param {Object} filters - Filter criteria
    */
   applyClientSideFilters(filters = {}) {
-    const baseData = this.getRoleScopedComplaints();
+    const baseData = this.getRoleScopedcomplaints();
 
     if (!baseData || baseData.length === 0) {
       this.complaintData = [];
@@ -960,8 +960,8 @@ class HeatmapVisualization {
     }
 
     const effectiveFilters = { ...filters };
-    if (this.userRole === "lgu" && this.userDepartment) {
-      effectiveFilters.department = this.userDepartment;
+    if (this.userRole === "lgu" && this.userdepartment) {
+      effectiveFilters.department = this.userdepartment;
     }
 
     // Debug: Check sample complaints for department data
@@ -1051,22 +1051,22 @@ class HeatmapVisualization {
           : [effectiveFilters.department];
         // Get complaint's assigned departments - backend returns as 'departments' field (from department_r)
         // Fallback to department_r in case backend format changes
-        const complaintDepartments = this.getComplaintDepartments(complaint);
+        const complaintdepartments = this.getcomplaintdepartments(complaint);
 
         // Debug logging
 
         // If complaint has no departments assigned, exclude it from results
-        if (complaintDepartments.length === 0) {
+        if (complaintdepartments.length === 0) {
           return false;
         }
 
         // Check if any selected department code matches any department in departments array
         // Use case-insensitive comparison to handle any case variations
-        const matchesDepartment = departmentArray.some((filterDept) => {
+        const matchesdepartment = departmentArray.some((filterDept) => {
           const filterDeptUpper = String(filterDept || "")
             .toUpperCase()
             .trim();
-          return complaintDepartments.some((complaintDept) => {
+          return complaintdepartments.some((complaintDept) => {
             const complaintDeptUpper = String(complaintDept || "")
               .toUpperCase()
               .trim();
@@ -1074,7 +1074,7 @@ class HeatmapVisualization {
           });
         });
 
-        if (!matchesDepartment) {
+        if (!matchesdepartment) {
           return false;
         }
       }
@@ -1133,7 +1133,7 @@ class HeatmapVisualization {
       return this.markerLayer;
     }
 
-    if (!this.allComplaintData || this.allComplaintData.length === 0) {
+    if (!this.allcomplaintData || this.allcomplaintData.length === 0) {
       console.warn("[HEATMAP] No complaint data to create markers from");
       this.markerLayer = null;
       return null;
@@ -1141,7 +1141,7 @@ class HeatmapVisualization {
 
     // Initialize user role if not already done
     if (!this.userRole) {
-      // Synchronous fallback - role should be initialized in loadComplaintData
+      // Synchronous fallback - role should be initialized in loadcomplaintData
       console.warn(
         "[HEATMAP] User role not initialized, defaulting to citizen"
       );
@@ -1149,7 +1149,7 @@ class HeatmapVisualization {
     }
 
     // Filter complaints for markers based on role
-    let complaintsForMarkers = this.getRoleScopedComplaints();
+    let complaintsForMarkers = this.getRoleScopedcomplaints();
 
     // Citizens: No markers (only heatmap)
     // if (this.userRole === "citizen") {
@@ -1165,14 +1165,14 @@ class HeatmapVisualization {
     if (
       this.userRole === "super-admin"
     ) {
-      complaintsForMarkers = this.allComplaintData;
+      complaintsForMarkers = this.allcomplaintData;
       console.log("[HEATMAP] Super-admin: Showing all markers");
     }
     // LGU Staff: Only complaints assigned to their office/department
-    else if (this.userRole === "lgu" && this.userDepartment) {
-      complaintsForMarkers = this.getRoleScopedComplaints();
+    else if (this.userRole === "lgu" && this.userdepartment) {
+      complaintsForMarkers = this.getRoleScopedcomplaints();
       console.log(
-        `[HEATMAP] LGU Staff (${this.userDepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allComplaintData.length} total`
+        `[HEATMAP] LGU Staff (${this.userdepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allcomplaintData.length} total`
       );
     }
     // Default: No markers
@@ -1190,7 +1190,7 @@ class HeatmapVisualization {
 
     complaintsForMarkers.forEach((complaint, index) => {
       try {
-        const marker = this.createComplaintMarker(complaint, index);
+        const marker = this.createcomplaintMarker(complaint, index);
         // Add marker to layer group (but NOT to map)
         this.markerLayer.addLayer(marker);
         // Store marker reference by complaint ID for quick lookup
@@ -1251,7 +1251,7 @@ class HeatmapVisualization {
     // Apply filters to determine which complaints should be visible
     this.applyClientSideFilters(this.currentFilters || {});
 
-    const visibleComplaintIds = new Set(this.complaintData.map((c) => c.id));
+    const visiblecomplaintIds = new Set(this.complaintData.map((c) => c.id));
     let visibleCount = 0;
     let hiddenCount = 0;
 
@@ -1268,7 +1268,7 @@ class HeatmapVisualization {
       let shouldBeVisible = false;
 
       if (complaintId) {
-        shouldBeVisible = visibleComplaintIds.has(complaintId);
+        shouldBeVisible = visiblecomplaintIds.has(complaintId);
       } else {
         // Fallback: check by coordinates (less reliable but works if ID is missing)
         const latLng = marker.getLatLng();
@@ -1325,7 +1325,7 @@ class HeatmapVisualization {
     // console.log removed for security
     this.complaintData.forEach((complaint, _index) => {
       // console.log removed for security
-      const circle = this.createComplaintCircle(complaint);
+      const circle = this.createcomplaintCircle(complaint);
       this.circleLayer.addLayer(circle);
     });
     // console.log removed for security
@@ -1333,12 +1333,12 @@ class HeatmapVisualization {
   }
   /**
    * Create individual complaint marker
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @param {number} index - Index of the complaint (for unique styling)
    * @returns {L.Marker} Leaflet marker
    */
-  createComplaintMarker(complaint, index = 0) {
-    const icon = this.getComplaintIcon(complaint, index);
+  createcomplaintMarker(complaint, index = 0) {
+    const icon = this.getcomplaintIcon(complaint, index);
     const marker = L.marker([complaint.lat, complaint.lng], {
       icon,
       // Add z-index offset to prevent stacking
@@ -1349,7 +1349,7 @@ class HeatmapVisualization {
     // Also store directly on marker for quick access
     marker._complaintId = complaint.id;
     // Create popup content
-    const popupContent = this.createComplaintPopup(complaint);
+    const popupContent = this.createcomplaintPopup(complaint);
     marker.bindPopup(popupContent, {
       maxWidth: 250,
       className: "complaint-popup",
@@ -1358,10 +1358,10 @@ class HeatmapVisualization {
   }
   /**
    * Create clickable circle for complaint
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @returns {L.Circle} Leaflet circle
    */
-  createComplaintCircle(complaint) {
+  createcomplaintCircle(complaint) {
     const priorityColors = {
       low: "#28a745",
       medium: "#ffc107",
@@ -1411,7 +1411,7 @@ class HeatmapVisualization {
     // Create detailed popup content (async)
     circle.bindPopup(
       async () => {
-        return await this.createDetailedComplaintPopup(complaint);
+        return await this.createDetailedcomplaintPopup(complaint);
       },
       {
         maxWidth: 280,
@@ -1430,11 +1430,11 @@ class HeatmapVisualization {
   }
   /**
    * Get appropriate icon for complaint
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @param {number} index - Index of the complaint (for unique styling)
    * @returns {L.Icon} Leaflet icon
    */
-  getComplaintIcon(complaint, index = 0) {
+  getcomplaintIcon(complaint, index = 0) {
     // Color based on complaint status
     // Handles both 'status' and 'workflow_status' fields
     const statusColors = {
@@ -1514,10 +1514,10 @@ class HeatmapVisualization {
   }
   /**
    * Create popup content for complaint
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @returns {string} HTML content
    */
-  createComplaintPopup(complaint) {
+  createcomplaintPopup(complaint) {
     const submittedDate = new Date(complaint.submittedAt).toLocaleDateString();
     const priorityClass = complaint.priority.replace(" ", "-").toLowerCase();
     const assignedOffices =
@@ -1549,10 +1549,10 @@ class HeatmapVisualization {
 
   /**
    * Create detailed popup content for complaint circles
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @returns {string} HTML content
    */
-  async createDetailedComplaintPopup(complaint) {
+  async createDetailedcomplaintPopup(complaint) {
     const submittedDate = new Date(complaint.submittedAt).toLocaleDateString();
     const _submittedTime = new Date(complaint.submittedAt).toLocaleTimeString();
     const priorityClass = complaint.priority.replace(" ", "-").toLowerCase();
@@ -1569,7 +1569,7 @@ class HeatmapVisualization {
     );
 
     // Check if user has access to this complaint
-    const hasAccess = await this.checkComplaintAccess(complaint);
+    const hasAccess = await this.checkcomplaintAccess(complaint);
 
     if (!hasAccess) {
       return `
@@ -1679,11 +1679,11 @@ class HeatmapVisualization {
             </div>
           </div>
           <div class="popup-actions" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; gap: 4px;">
-            <button class="btn-details" onclick="viewComplaintDetails('${complaint.id
+            <button class="btn-details" onclick="viewcomplaintDetails('${complaint.id
 }')" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📋 Details
             </button>
-            <button class="btn-location" onclick="centerOnComplaint(${complaint.lat
+            <button class="btn-location" onclick="centerOncomplaint(${complaint.lat
 }, ${complaint.lng
 })" style="font-size: 10px; padding: 4px 8px; flex: 1;">
               📍 Center
@@ -1696,10 +1696,10 @@ class HeatmapVisualization {
 
   /**
    * Check if user has access to view full details of a complaint
-   * @param {Object} complaint - Complaint data
+   * @param {Object} complaint - complaint data
    * @returns {boolean} True if user has access
    */
-  async checkComplaintAccess(complaint) {
+  async checkcomplaintAccess(complaint) {
     try {
       // Import getUserRole function
       const { getUserRole } = await import("../../auth/authChecker.js");
@@ -1719,7 +1719,7 @@ class HeatmapVisualization {
       // (complaint-coordinator is normalized to 'lgu' by auth middleware)
 
       // With simplified roles, department is stored separately in metadata
-      let userDepartment = null;
+      let userdepartment = null;
       if (userRole && userRole === "lgu") {
         // Get department from user metadata
         try {
@@ -1731,7 +1731,7 @@ class HeatmapVisualization {
             session?.user?.raw_user_meta_data ||
             session?.user?.user_metadata ||
             {};
-          userDepartment = metadata.dpt || metadata.department;
+          userdepartment = metadata.dpt || metadata.department;
         } catch (error) {
           console.warn("Failed to get department from metadata:", error);
         }
@@ -1739,40 +1739,40 @@ class HeatmapVisualization {
 
       // console.log removed for security
 
-      if (!userDepartment) {
+      if (!userdepartment) {
         // console.log removed for security
         return false;
       }
 
       // Check if complaint is assigned to user's department
-      const complaintDepartment = complaint.department?.toUpperCase();
-      const complaintDepartments = complaint.departments || [];
-      const secondaryDepartments = complaint.secondaryDepartments || [];
+      const complaintdepartment = complaint.department?.toUpperCase();
+      const complaintdepartments = complaint.departments || [];
+      const secondarydepartments = complaint.secondarydepartments || [];
 
       // Check primary department
-      if (complaintDepartment === userDepartment) {
+      if (complaintdepartment === userdepartment) {
         // console.log removed for security
         return true;
       }
 
       // Check if user's department is in the departments array
-      if (complaintDepartments.includes(userDepartment)) {
+      if (complaintdepartments.includes(userdepartment)) {
         // console.log removed for security
         return true;
       }
 
       // Check if user's department is in secondary departments
-      if (secondaryDepartments.includes(userDepartment)) {
+      if (secondarydepartments.includes(userdepartment)) {
         // console.log removed for security
         return true;
       }
 
       // Check if it's a joint/forced complaint (multiple departments)
-      if (complaintDepartment && complaintDepartment.includes(",")) {
-        const assignedDepartments = complaintDepartment
+      if (complaintdepartment && complaintdepartment.includes(",")) {
+        const assigneddepartments = complaintdepartment
           .split(",")
           .map((dept) => dept.trim().toUpperCase());
-        if (assignedDepartments.includes(userDepartment)) {
+        if (assigneddepartments.includes(userdepartment)) {
           // console.log removed for security
           return true;
         }
@@ -2162,7 +2162,7 @@ class HeatmapVisualization {
 
       if (complaint) {
         // Create new icon with updated size and color based on current zoom and complaint status
-        const newIcon = this.getComplaintIcon(complaint, index);
+        const newIcon = this.getcomplaintIcon(complaint, index);
         marker.setIcon(newIcon);
       }
     });
@@ -2189,7 +2189,7 @@ class HeatmapVisualization {
 
     if (marker) {
       const index = markers.indexOf(marker);
-      const newIcon = this.getComplaintIcon(complaint, index);
+      const newIcon = this.getcomplaintIcon(complaint, index);
       marker.setIcon(newIcon);
     }
   }

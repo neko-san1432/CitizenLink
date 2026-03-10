@@ -211,11 +211,11 @@ export const AdvancedFeatures = {
         iconClass = "fa-briefcase-medical";
       }
       if (dominant === "Fire") {
-        suggestedTeam = "Fire Department";
+        suggestedTeam = "Fire department";
         iconClass = "fa-fire";
       }
       if (dominant === "Crime") {
-        suggestedTeam = "Police Department";
+        suggestedTeam = "Police department";
         iconClass = "fa-shield-alt";
       }
       if (dominant === "Accident") {
@@ -354,7 +354,7 @@ export const AdvancedFeatures = {
 async function loadBarangayBoundaries() {
   try {
     // Adjust path if needed based on where this is served
-    const response = await fetch("/assets/json/brgy_boundaries_location.json");
+    const response = await fetch("/assets/json/brgyBoundariesLocation.json");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     barangayGeoJSON = {

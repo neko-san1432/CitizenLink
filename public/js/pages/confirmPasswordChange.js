@@ -102,7 +102,7 @@ async function ensureSessionFromLink() {
   try {
     const supabase = await supabaseProxy;
     // Supabase sends access_token in the URL hash for recovery
-    // SECURITY: Extract hash immediately and clear from URL to prevent token exposure
+    // security: Extract hash immediately and clear from URL to prevent token exposure
     if (window.location.hash && window.location.hash.includes("access_token")) {
       const hashFragment = window.location.hash;
 
@@ -125,7 +125,7 @@ async function ensureSessionFromLink() {
         }
       }
 
-      // SECURITY: Clear hash from URL immediately after processing to prevent token exposure
+      // security: Clear hash from URL immediately after processing to prevent token exposure
       window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
       return true;
     }

@@ -1,8 +1,8 @@
 const { NOTIFICATION_TYPES, _NOTIFICATION_PRIORITY } = require("../../src/shared/constants");
 
 describe("Notification System", () => {
-  let NotificationService;
-  let NotificationController;
+  let notificationService;
+  let notificationController;
   let notificationService;
   let notificationController;
   let mockSupabase;
@@ -64,8 +64,8 @@ describe("Notification System", () => {
       getClient: () => mockSupabase
     }));
 
-    NotificationService = require("../../src/server/services/NotificationService");
-    NotificationController = require("../../src/server/controllers/NotificationController");
+    notificationService = require("../../src/server/services/notificationService");
+    notificationController = require("../../src/server/controllers/notificationController");
 
     notificationService = new NotificationService();
     notificationController = new NotificationController();
@@ -87,7 +87,7 @@ describe("Notification System", () => {
     };
   });
 
-  describe("NotificationService", () => {
+  describe("notificationService", () => {
     describe("createNotification", () => {
       it("should create a notification successfully", async () => {
         const mockData = { id: "notif-1", title: "Test" };
@@ -162,7 +162,7 @@ describe("Notification System", () => {
     });
   });
 
-  describe("NotificationController", () => {
+  describe("notificationController", () => {
     describe("getUnreadNotifications", () => {
       it("should return enriched notifications with links", async () => {
         const mockNotifs = [

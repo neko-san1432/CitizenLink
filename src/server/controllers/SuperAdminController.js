@@ -1,8 +1,8 @@
-const SuperAdminService = require("../services/SuperAdminService");
-const UserManagementService = require("../services/UserManagementService");
+const SuperAdminService = require("../services/superAdminService");
+const UserManagementService = require("../services/userManagementService");
 
 /**
- * SuperAdminController
+ * superAdminController
  * Handles Super Admin operations
  */
 class SuperAdminController {
@@ -88,7 +88,7 @@ class SuperAdminController {
    * POST /api/superadmin/transfer-department
    * Transfer user between departments
    */
-  async transferDepartment(req, res) {
+  async transferdepartment(req, res) {
     try {
       const { user } = req;
       const { user_id, from_department, to_department, reason } = req.body;
@@ -111,7 +111,7 @@ class SuperAdminController {
         });
       }
       const result =
-        await this.superAdminService.transferUserBetweenDepartments(
+        await this.superAdminService.transferUserBetweendepartments(
           user_id,
           from_department || null,
           to_department,
@@ -157,7 +157,7 @@ class SuperAdminController {
       if (!department_id) {
         return res.status(400).json({
           success: false,
-          error: "Department ID is required",
+          error: "department ID is required",
         });
       }
       // Get current role
@@ -183,7 +183,7 @@ class SuperAdminController {
         currentRole
       });
 
-      const result = await this.superAdminService.assignCitizenToDepartment(
+      const result = await this.superAdminService.assignCitizenTodepartment(
         user_id,
         role,
         department_id,
@@ -234,8 +234,8 @@ class SuperAdminController {
       // Also include terminal logs if requested
       const includeTerminal = req.query.include_terminal === "true";
       if (includeTerminal) {
-        const consoleLogger = require("../utils/consoleLogger");
-        const terminalLogs = consoleLogger.getLogs({
+        const consolelogger = require("../utils/consolelogger");
+        const terminalLogs = consolelogger.getLogs({
           level: req.query.terminal_level || "all",
           limit: req.query.terminal_limit
             ? parseInt(req.query.terminal_limit)
@@ -299,19 +299,19 @@ class SuperAdminController {
         });
       }
 
-      const consoleLogger = require("../utils/consoleLogger");
+      const consolelogger = require("../utils/consolelogger");
       const options = {
         level: req.query.level || "all",
         limit: req.query.limit ? parseInt(req.query.limit) : 500,
         since: req.query.since || null,
       };
 
-      const logs = consoleLogger.getLogs(options);
+      const logs = consolelogger.getLogs(options);
 
       res.json({
         success: true,
         logs,
-        total: consoleLogger.getLogCount(),
+        total: consolelogger.getLogCount(),
       });
     } catch (error) {
       console.error("[SUPERADMIN_CONTROLLER] Get terminal logs error:", error);

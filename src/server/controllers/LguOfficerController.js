@@ -1,4 +1,4 @@
-const LguOfficerService = require("../services/LguOfficerService");
+const LguOfficerService = require("../services/lguOfficerService");
 const { ErrorHandler } = require("../middleware/errorHandler");
 
 class LguOfficerController {
@@ -39,7 +39,7 @@ class LguOfficerController {
 
       return res.json({
         success: true,
-        message: "Complaint marked as resolved successfully",
+        message: "complaint marked as resolved successfully",
         complaint
       });
     } catch (error) {
@@ -162,7 +162,7 @@ class LguOfficerController {
   /**
    * Update complaint status with comment (Generic LGU Action)
    */
-  async updateComplaintStatus(req, res) {
+  async updatecomplaintStatus(req, res) {
     try {
       const { complaintId } = req.params;
       const { status, comment } = req.body;
@@ -172,7 +172,7 @@ class LguOfficerController {
         return res.status(400).json({ success: false, error: "Status and comment are required" });
       }
 
-      const complaint = await this.officerService.updateComplaintStatus(complaintId, userId, status, comment);
+      const complaint = await this.officerService.updatecomplaintStatus(complaintId, userId, status, comment);
 
       return res.json({
         success: true,

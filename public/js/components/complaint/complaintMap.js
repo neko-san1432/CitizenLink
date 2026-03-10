@@ -1,8 +1,8 @@
 /**
- * Complaint Map Component
+ * complaint Map Component
  * Displays an interactive map showing the complaint location
  */
-class ComplaintMap {
+class complaintMap {
 
   constructor(containerId, options = {}) {
     this.containerId = containerId;
@@ -124,7 +124,7 @@ class ComplaintMap {
       this.resizeHandler = resizeHandler;
     });
   }
-  setLocation(latitude, longitude, title = "Complaint Location", description = "") {
+  setLocation(latitude, longitude, title = "complaint Location", description = "") {
 
     if (!this.map) {
       // If still initializing, wait a bit and retry once
@@ -286,14 +286,14 @@ class ComplaintMap {
   }
 
   // Static method to create map with complaint data
-  static createComplaintMap(containerId, complaintData) {
-    const map = new ComplaintMap(containerId);
+  static createcomplaintMap(containerId, complaintData) {
+    const map = new complaintMap(containerId);
 
     if (complaintData.latitude && complaintData.longitude) {
       map.setLocation(
         complaintData.latitude,
         complaintData.longitude,
-        complaintData.descriptive_su || "Complaint Location",
+        complaintData.descriptive_su || "complaint Location",
         complaintData.location_text || ""
       );
     }
@@ -303,7 +303,7 @@ class ComplaintMap {
 }
 
 // Export for use in other modules
-window.ComplaintMap = ComplaintMap;
+window.complaintMap = complaintMap;
 
 // Auto-initialize if DOM is ready
 if (document.readyState === "loading") {
@@ -311,14 +311,14 @@ if (document.readyState === "loading") {
     // Auto-initialize maps with data-complaint-map attribute
     document.querySelectorAll("[data-complaint-map]").forEach(element => {
       const complaintData = JSON.parse(element.dataset.complaintMap || "{}");
-      ComplaintMap.createComplaintMap(element.id, complaintData);
+      complaintMap.createcomplaintMap(element.id, complaintData);
     });
   });
 } else {
   // Auto-initialize maps with data-complaint-map attribute
   document.querySelectorAll("[data-complaint-map]").forEach(element => {
     const complaintData = JSON.parse(element.dataset.complaintMap || "{}");
-    ComplaintMap.createComplaintMap(element.id, complaintData);
+    complaintMap.createcomplaintMap(element.id, complaintData);
 
   });
 }

@@ -48,11 +48,11 @@ const getDashboardPath = (userRole) => {
 
 // Redirects from role-prefixed URLs to simplified URLs (backward compatibility)
 router.get(
-  "/citizen/fileComplaint",
+  "/citizen/filecomplaint",
   authenticateUser,
   requireRole(["citizen"]),
   (req, res) => {
-    res.redirect("/fileComplaint");
+    res.redirect("/filecomplaint");
   }
 );
 router.get(
@@ -136,7 +136,7 @@ router.get("/dashboard", authenticateUser, (req, res) => {
 });
 
 // General protected pages (simplified URLs)
-router.get("/myProfile", authenticateUser, (req, res) => {
+router.get("/myprofile", authenticateUser, (req, res) => {
   res.redirect("/profile");
 });
 
@@ -153,14 +153,14 @@ router.get("/publication", authenticateUser, (req, res) => {
   res.sendFile(path.join(config.rootDir, "views", "pages", "publication.html"));
 });
 
-// File Complaint page (citizen only or staff in citizen mode)
-router.get("/fileComplaint", authenticateUser, (req, res) => {
+// File complaint page (citizen only or staff in citizen mode)
+router.get("/filecomplaint", authenticateUser, (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "citizen", "fileComplaint.html")
+    path.join(config.rootDir, "views", "pages", "citizen", "filecomplaint.html")
   );
 });
 
-// Departments page (role-aware)
+// departments page (role-aware)
 router.get("/departments", authenticateUser, (req, res) => {
   const userRole = req.user?.role || "citizen";
   if (userRole === "super-admin") {
@@ -192,7 +192,7 @@ router.get(
   }
 );
 
-// Complaint Details page (authenticated users only)
+// complaint Details page (authenticated users only)
 router.get("/complaint-details", authenticateUser, (req, res) => {
   res.sendFile(
     path.join(config.rootDir, "views", "pages", "complaint-details.html")
@@ -286,7 +286,7 @@ router.get(
   }
 );
 router.get(
-  "/brain-analytics-page",
+  "/brainAnalytics-page",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
   (req, res) => {
@@ -296,7 +296,7 @@ router.get(
         "views",
         "pages",
         "lgu-admin",
-        "brain-analytics.html"
+        "brainAnalytics.html"
       )
     );
   }
@@ -478,7 +478,7 @@ const authPages = [
   "resetPass",
   // "reset-password", // Allow logged-in users to access reset password page
   "confirm-password-change",
-  "OAuthContinuation",
+  "oAuthContinuation",
   "success",
   "email-verification-success",
 ];
@@ -501,7 +501,7 @@ router.get(
   redirectIfAuthenticated,
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "OAuthContinuation.html")
+      path.join(config.rootDir, "views", "pages", "oAuthContinuation.html")
     );
   }
 );

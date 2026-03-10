@@ -6,7 +6,7 @@ async function ensureSessionFromLink() {
   try {
     const supabase = await supabaseProxy;
     // Supabase sends access_token in the URL hash for recovery
-    // SECURITY: Extract hash immediately and clear from URL to prevent token exposure
+    // security: Extract hash immediately and clear from URL to prevent token exposure
     if (window.location.hash && window.location.hash.includes("access_token")) {
       const hashFragment = window.location.hash;
 
@@ -46,7 +46,7 @@ async function ensureSessionFromLink() {
         }
       }
 
-      // SECURITY: Clear hash from URL immediately after processing to prevent token exposure
+      // security: Clear hash from URL immediately after processing to prevent token exposure
       // Use replaceState to remove hash without triggering page reload
       if (window.history && window.history.replaceState) {
         window.history.replaceState(
@@ -72,7 +72,7 @@ async function ensureSessionFromLink() {
   }
 }
 document.addEventListener("DOMContentLoaded", async () => {
-  // SECURITY: Process token immediately and clear from URL
+  // security: Process token immediately and clear from URL
   const hadToken =
     window.location.hash && window.location.hash.includes("access_token");
   const hadRecoveryToken =
@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const modeRequest = document.getElementById("mode-request");
   const msg = document.getElementById("message");
 
-  // SECURITY: Hide all modes first, then show only the correct one
+  // security: Hide all modes first, then show only the correct one
   if (modeRecovery) modeRecovery.style.display = "none";
   if (modeLoggedIn) modeLoggedIn.style.display = "none";
   if (modeRequest) modeRequest.style.display = "none";

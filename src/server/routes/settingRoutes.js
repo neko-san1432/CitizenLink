@@ -1,5 +1,5 @@
 const express = require("express");
-const SettingController = require("../controllers/SettingController");
+const SettingController = require("../controllers/settingController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 
@@ -9,11 +9,11 @@ const settingController = new SettingController();
 // SEC-16 FIX: CSRF protection on all state-changing routes
 router.use(csrfProtection);
 router.get("/public",
-  (req, res) => settingController.getPublicSettings(req, res)
+  (req, res) => settingController.getPublicsettings(req, res)
 );
 router.get("/category/:category",
   authenticateUser,
-  (req, res) => settingController.getSettingsByCategory(req, res)
+  (req, res) => settingController.getsettingsByCategory(req, res)
 );
 router.post("/initialize",
   authenticateUser,
@@ -23,27 +23,27 @@ router.post("/initialize",
 router.get("/",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  (req, res) => settingController.getAllSettings(req, res)
+  (req, res) => settingController.getAllsettings(req, res)
 );
 router.get("/:key",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  (req, res) => settingController.getSettingByKey(req, res)
+  (req, res) => settingController.getsettingByKey(req, res)
 );
 router.post("/",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  (req, res) => settingController.createSetting(req, res)
+  (req, res) => settingController.createsetting(req, res)
 );
 router.put("/:key",
   authenticateUser,
   requireRole(["lgu", "super-admin"]),
-  (req, res) => settingController.updateSetting(req, res)
+  (req, res) => settingController.updatesetting(req, res)
 );
 router.delete("/:key",
   authenticateUser,
   requireRole(["super-admin"]),
-  (req, res) => settingController.deleteSetting(req, res)
+  (req, res) => settingController.deletesetting(req, res)
 );
 
 module.exports = router;

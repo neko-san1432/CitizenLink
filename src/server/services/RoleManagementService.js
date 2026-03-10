@@ -2,7 +2,7 @@ const Database = require("../config/database");
 const { USER_ROLES, ROLE_HIERARCHY, SWITCHABLE_ROLES } = require("../../shared/constants");
 
 /**
-* RoleManagementService
+* roleManagementService
 * Handles role changes by modifying auth.users.raw_user_meta_data
 */
 class RoleManagementService {
@@ -237,7 +237,7 @@ class RoleManagementService {
   /**
   * Assign user to department
   */
-  async assignDepartment(userId, departmentId, assignedBy) {
+  async assigndepartment(userId, departmentId, assignedBy) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
@@ -269,7 +269,7 @@ class RoleManagementService {
   /**
   * Transfer user between departments
   */
-  async transferDepartment(userId, fromDepartment, toDepartment, transferredBy, reason) {
+  async transferdepartment(userId, fromdepartment, todepartment, transferredBy, reason) {
     try {
       const { data: currentUser, error: getUserError } = await this.supabase.auth.admin.getUserById(userId);
       if (getUserError) throw getUserError;
@@ -277,8 +277,8 @@ class RoleManagementService {
       const currentMetadata = user.raw_user_meta_data || {};
       const updatedMetadata = {
         ...currentMetadata,
-        department: toDepartment,
-        previous_department: fromDepartment,
+        department: todepartment,
+        previous_department: fromdepartment,
         department_transferred_at: new Date().toISOString(),
         department_transferred_by: transferredBy,
         transfer_reason: reason
@@ -291,13 +291,13 @@ class RoleManagementService {
       );
       if (updateError) throw updateError;
       // Log the transfer
-      await this.logDepartmentTransfer(userId, fromDepartment, toDepartment, transferredBy, reason);
+      await this.logdepartmentTransfer(userId, fromdepartment, todepartment, transferredBy, reason);
       // console.log removed for security
       return {
         success: true,
         user: updatedUser.user,
-        from_department: fromDepartment,
-        to_department: toDepartment
+        from_department: fromdepartment,
+        to_department: todepartment
       };
     } catch (error) {
       console.error("[ROLE] Transfer department error:", error);
@@ -307,7 +307,7 @@ class RoleManagementService {
   /**
   * Log department transfer
   */
-  async logDepartmentTransfer(userId, fromDept, toDept, performedBy, reason) {
+  async logdepartmentTransfer(userId, fromDept, toDept, performedBy, reason) {
     try {
       const logEntry = {
         user_id: userId,

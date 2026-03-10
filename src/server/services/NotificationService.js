@@ -6,7 +6,7 @@ const {
   NOTIFICATION_ICONS
 } = require("../../shared/constants");
 /**
-* NotificationService
+* notificationService
 * Handles all notification-related operations
 */
 class NotificationService {
@@ -16,10 +16,10 @@ class NotificationService {
     this.supabase = this.db.getClient();
   }
   /**
-  * Notify all LGU staff of a department about a new complaint assignment
-  * Department matching by code suffix in role or profile metadata
+  * Notify all LGU staff of a department about a new Complaint assignment
+  * department matching by code suffix in role or profile metadata
   */
-  async notifyDepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
+  async notifydepartmentAdminsByCode(departmentCode, complaintId, complaintTitle) {
     try {
       // Use RPC for efficient lookup (O(1) instead of O(N))
       const { data: admins, error } = await this.supabase.rpc("get_users_by_role", {
@@ -39,7 +39,7 @@ class NotificationService {
       const notifications = admins.map((admin) => ({
         userId: admin.id,
         type: NOTIFICATION_TYPES.APPROVAL_REQUIRED,
-        title: "New Complaint Assigned to Your Department",
+        title: "New complaint Assigned to Your department",
         message: `"${complaintTitle}" has been assigned to ${departmentCode}. Please review and assign to an officer.`,
         priority: NOTIFICATION_PRIORITY.INFO,
         link: `/assignments`,
@@ -51,7 +51,7 @@ class NotificationService {
       }));
       return this.createBulkNotifications(notifications);
     } catch (error) {
-      console.error("[NOTIFICATION] notifyDepartmentAdminsByCode error:", error);
+      console.error("[NOTIFICATION] notifydepartmentAdminsByCode error:", error);
       return { success: false, error: error.message };
     }
   }
@@ -459,11 +459,11 @@ class NotificationService {
   /**
   * Notify citizen about complaint submission
   */
-  async notifyComplaintSubmitted(citizenId, complaintId, complaintTitle) {
+  async notifycomplaintSubmitted(citizenId, complaintId, complaintTitle) {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_SUBMITTED,
-      "Complaint Submitted",
+      "complaint Submitted",
       `Your complaint "${complaintTitle}" has been received and is being reviewed.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -475,7 +475,7 @@ class NotificationService {
   /**
   * Notify citizen about status change
   */
-  async notifyComplaintStatusChanged(citizenId, complaintId, complaintTitle, newStatus, oldStatus) {
+  async notifycomplaintStatusChanged(citizenId, complaintId, complaintTitle, newStatus, oldStatus) {
     // FC-09 FIX: Map all workflow statuses to human-readable messages
     const statusMessages = {
       "submitted": "has been submitted and is awaiting review",
@@ -498,7 +498,7 @@ class NotificationService {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_STATUS_CHANGED,
-      "Complaint Status Updated",
+      "complaint Status Updated",
       `Your complaint "${complaintTitle}" ${statusMessages[newStatus] || `status changed to ${newStatus}`}.`,
       {
         priority,
@@ -561,13 +561,13 @@ class NotificationService {
     );
   }
   /**
-  * Notify coordinator about new complaint needing review
+  * Notify coordinator about new Complaint needing review
   */
-  async notifyNewComplaintReview(coordinatorId, complaintId, complaintTitle) {
+  async notifyNewcomplaintReview(coordinatorId, complaintId, complaintTitle) {
     return this.createNotification(
       coordinatorId,
       NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW,
-      "New Complaint for Review",
+      "New complaint for Review",
       `"${complaintTitle}" needs your review and assignment.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -579,16 +579,16 @@ class NotificationService {
   /**
   * Notify citizen that their complaint was marked as duplicate
   */
-  async notifyComplaintDuplicate(citizenId, complaintId, complaintTitle, masterComplaintId) {
+  async notifycomplaintDuplicate(citizenId, complaintId, complaintTitle, mastercomplaintId) {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_DUPLICATE,
-      "Complaint Linked to Existing Issue",
+      "complaint Linked to Existing Issue",
       `Your complaint "${complaintTitle}" has been linked to an existing similar complaint. Updates will be shared.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
-        link: `/citizen/complaints/${masterComplaintId}`,
-        metadata: { complaint_id: complaintId, master_complaint_id: masterComplaintId }
+        link: `/citizen/complaints/${mastercomplaintId}`,
+        metadata: { complaint_id: complaintId, master_complaint_id: mastercomplaintId }
       }
     );
   }
@@ -716,11 +716,11 @@ class NotificationService {
   /**
    * Notify citizen that complaint was assigned to officer
    */
-  async notifyComplaintAssignedToOfficer(citizenId, complaintId, complaintTitle, officerInfo) {
+  async notifycomplaintAssignedToOfficer(citizenId, complaintId, complaintTitle, officerInfo) {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_ASSIGNED,
-      "Complaint Assigned to Officer",
+      "complaint Assigned to Officer",
       `Your complaint "${complaintTitle}" has been assigned to an officer and work will begin soon.`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,
@@ -733,7 +733,7 @@ class NotificationService {
     );
   }
   /**
-   * Find all complaint coordinators and notify them about new complaint
+   * Find all complaint coordinators and notify them about new Complaint
    * FC-08 FIX: Query 'lgu' role (the 3-role system normalizes all LGU staff to 'lgu')
    */
   async notifyAllCoordinators(complaintId, complaintTitle) {
@@ -756,7 +756,7 @@ class NotificationService {
       const notifications = coordinators.map((coordinator) => ({
         userId: coordinator.id,
         type: NOTIFICATION_TYPES.NEW_COMPLAINT_REVIEW,
-        title: "New Complaint for Review",
+        title: "New complaint for Review",
         message: `"${complaintTitle}" needs your review and assignment.`,
         priority: NOTIFICATION_PRIORITY.INFO,
         link: `/coordinator/review/${complaintId}`,
@@ -777,11 +777,11 @@ class NotificationService {
   /**
    * Notify citizen of a general update/comment on their complaint
    */
-  async notifyComplaintUpdate(citizenId, complaintId, complaintTitle, message) {
+  async notifycomplaintUpdate(citizenId, complaintId, complaintTitle, message) {
     return this.createNotification(
       citizenId,
       NOTIFICATION_TYPES.COMPLAINT_UPDATE,
-      "Update on Your Complaint",
+      "Update on Your complaint",
       `A new update was added to "${complaintTitle}": ${message.substring(0, 50)}${message.length > 50 ? "..." : ""}`,
       {
         priority: NOTIFICATION_PRIORITY.INFO,

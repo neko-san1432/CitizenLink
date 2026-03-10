@@ -1,8 +1,8 @@
-const ComplaintRepository = require("../repositories/ComplaintRepository");
+const ComplaintRepository = require("../repositories/complaintRepository");
 const Database = require("../config/database");
 
 /**
- * DuplicationDetectionService
+ * duplicationDetectionService
  * Detects duplicate and similar complaints using multiple algorithms
  */
 class DuplicationDetectionService {
@@ -25,9 +25,9 @@ class DuplicationDetectionService {
     try {
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        throw new Error("Complaint not found");
+        throw new Error("complaint not found");
       }
-      // Convert Complaint model to plain object for similarity algorithms
+      // Convert complaint model to plain object for similarity algorithms
       const complaintData = complaint.toJSON ? complaint.toJSON() : complaint;
 
       // Run multiple detection algorithms

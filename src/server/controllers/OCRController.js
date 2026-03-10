@@ -14,7 +14,7 @@ try {
 class OCRController {
   constructor() {
     // Python script path
-    this.pythonScriptPath = path.join(__dirname, "../services/ocr_service.py");
+    this.pythonScriptPath = path.join(__dirname, "../services/ocrService.py");
   }
 
   /**

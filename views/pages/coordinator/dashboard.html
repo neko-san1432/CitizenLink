@@ -17,13 +17,13 @@
   <link rel="stylesheet" href="/css/components/sidebar.css" />
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/header.css" />
-  <link rel="stylesheet" href="/css/pages/dashboard-common.css" />
-  <link rel="stylesheet" href="/css/pages/dashboard-redesign.css" />
-  <link rel="stylesheet" href="/css/pages/coordinator-dashboard.css" />
-  <link rel="stylesheet" href="/css/viewport-fix.css" />
+  <link rel="stylesheet" href="/css/pages/dashboardCommon.css" />
+  <link rel="stylesheet" href="/css/pages/dashboardRedesign.css" />
+  <link rel="stylesheet" href="/css/pages/coordinatorDashboard.css" />
+  <link rel="stylesheet" href="/css/viewportFix.css" />
   <script type="module" src="/js/utils/theme.js"></script>
 
-  <link rel="stylesheet" href="/brain-analytics/analytics.css">
+  <link rel="stylesheet" href="/brainAnalytics/analytics.css">
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"
     integrity="sha256-0A8+j/io+cED2tYcL9S7WBQ+FASq398J4pttsaLeCj8=" crossorigin="anonymous"></script>
 </head>
@@ -194,12 +194,12 @@
             <div id="analytics-overview-container">
               <!-- Stats Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <!-- Total Complaints -->
+                <!-- Total complaints -->
                 <div
                   class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Complaints</p>
-                    <h3 class="text-2xl font-bold text-gray-800" id="totalComplaints">-</h3>
+                    <p class="text-sm text-gray-500 font-medium">Total complaints</p>
+                    <h3 class="text-2xl font-bold text-gray-800" id="totalcomplaints">-</h3>
                   </div>
                   <div class="p-3 bg-gray-100 text-gray-600 rounded-lg">
                     <i class="fas fa-clipboard-list text-xl"></i>
@@ -368,20 +368,20 @@
                     </div>
                   </div>
 
-                  <!-- Complaints by Category -->
+                  <!-- complaints by Category -->
                   <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-grow" style="flex: 1;">
                     <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-chart-bar mr-2 text-gray-500"></i>
-                      Complaints by Category</h3>
+                      complaints by Category</h3>
                     <div class="h-[300px] relative">
                       <canvas id="categoryChart"></canvas>
                     </div>
                   </div>
 
-                  <!-- Complaints by Barangay -->
+                  <!-- complaints by Barangay -->
                   <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-grow" style="flex: 1;">
                     <h3 class="font-semibold text-gray-800 mb-4"><i
                         class="fas fa-map-marked-alt mr-2 text-gray-500"></i>
-                      Complaints by Barangay</h3>
+                      complaints by Barangay</h3>
                     <div class="h-[300px] relative">
                       <canvas id="barangayChart"></canvas>
                     </div>
@@ -408,7 +408,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"
       integrity="sha256-SERKgtTty1vsDxll+qzd4Y2cF9swY9BCq62i9wXJ9Uo=" crossorigin="anonymous"></script>
     <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/services/toastNotificationService.js"></script>
+    <script type="module" src="../../js/services/toastnotificationService.js"></script>
 
     <script type="module" src="../../js/components/header.js"></script>
     <script type="module" src="../../js/components/sidebar.js"></script>
@@ -418,21 +418,21 @@
     <script type="module" src="/js/coordinator/dashboard.js"></script>
 
     <!-- Brain Analytics Scripts -->
-    <script src="/brain-dashboard/shared/taxonomy.js"></script>
-    <script src="/brain-dashboard/nlp-processor.js"></script>
-    <script src="/brain-dashboard/simulation-engine.js?v=3.0.2"></script>
-    <script src="/brain-analytics/analytics.js"></script>
+    <script src="/brainDashboard/shared/taxonomy.js"></script>
+    <script src="/brainDashboard/nlpProcessor.js"></script>
+    <script src="/brainDashboard/simulationEngine.js?v=3.0.2"></script>
+    <script src="/brainAnalytics/analytics.js"></script>
 
     <script type="module">
       // Initialize toast notification service
-      import toastNotificationService from "../../js/services/toastNotificationService.js";
+      import toastnotificationService from "../../js/services/toastnotificationService.js";
 
       // Start listening for real-time notifications
-      toastNotificationService.startListening();
+      toastnotificationService.startListening();
 
       // Clean up on page unload
       window.addEventListener("beforeunload", () => {
-        toastNotificationService.stopListening();
+        toastnotificationService.stopListening();
       });
     </script>
 </body>

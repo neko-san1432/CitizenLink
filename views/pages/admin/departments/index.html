@@ -9,13 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
     rel="stylesheet" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <title>Department Management - DRIMS</title>
+  <title>department Management - DRIMS</title>
   <link rel="stylesheet" href="../../../css/style.css" />
   <link rel="stylesheet" href="../../../css/toast.css" />
   <link rel="stylesheet" href="../../../css/components/sidebar.css" />
   <link rel="stylesheet" href="../../../css/app.css" />
   <link rel="stylesheet" href="../../../css/header.css" />
-  <link rel="stylesheet" href="../../../css/pages/admin-departments.css" />
+  <link rel="stylesheet" href="../../../css/pages/admindepartments.css" />
   <style>
     .controls-section {
       display: flex;
@@ -89,9 +89,9 @@
     <div id="sidebar" class="collapsible"></div>
     <div id="app" class="collapsible">
       <div class="page-header">
-        <h1>Department Management</h1>
+        <h1>department Management</h1>
         <button class="btn btn-primary" onclick="openModal('add')">
-          Add Department
+          Add department
         </button>
       </div>
 
@@ -125,7 +125,7 @@
           </div>
           <div class="stat-content">
             <h3 id="totalCount">0</h3>
-            <p>Total Departments</p>
+            <p>Total departments</p>
           </div>
         </div>
         <div class="stat-card">
@@ -136,28 +136,28 @@
           </div>
           <div class="stat-content">
             <h3 id="activeCount">0</h3>
-            <p>Active Departments</p>
+            <p>Active departments</p>
           </div>
         </div>
       </div>
 
       <div id="departmentGrid" class="department-grid">
-        <!-- Departments will be loaded here -->
+        <!-- departments will be loaded here -->
       </div>
     </div>
   </div>
 
-  <!-- Add/Edit Department Modal -->
+  <!-- Add/Edit department Modal -->
   <div id="departmentModal" class="modal">
     <div class="modal-content">
-      <h2 id="modalTitle">Add Department</h2>
+      <h2 id="modalTitle">Add department</h2>
       <form id="departmentForm">
         <div class="form-group">
-          <label for="departmentName">Department Name</label>
+          <label for="departmentName">department Name</label>
           <input type="text" id="departmentName" name="name" required />
         </div>
         <div class="form-group">
-          <label for="departmentCode">Department Code</label>
+          <label for="departmentCode">department Code</label>
           <input type="text" id="departmentCode" name="code" required pattern="[A-Z0-9_]+"
             title="Use only uppercase letters, numbers, and underscores" />
         </div>
@@ -176,7 +176,7 @@
             Cancel
           </button>
           <button type="submit" class="btn btn-primary">
-            Save Department
+            Save department
           </button>
         </div>
       </form>

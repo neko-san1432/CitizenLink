@@ -67,7 +67,7 @@ async function loadDigosBoundary() {
 
       // 3. Final fallback: try direct file path (may not work in production)
       try {
-        response = await fetch("/assets/json/digos-city-boundary.json");
+        response = await fetch("/assets/json/digosCityBoundary.json");
         if (response.ok) {
           const boundary = await response.json();
           boundaryCache = boundary;

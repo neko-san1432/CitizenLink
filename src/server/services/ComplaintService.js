@@ -1,21 +1,21 @@
-const ComplaintRepository = require("../repositories/ComplaintRepository");
-const ComplaintAssignmentRepository = require("../repositories/ComplaintAssignmentRepository");
+const ComplaintRepository = require("../repositories/complaintRepository");
+const ComplaintAssignmentRepository = require("../repositories/complaintAssignmentRepository");
 const Database = require("../config/database");
-const ComplaintHistoryRepository = require("../repositories/ComplaintHistoryRepository");
-const DepartmentRepository = require("../repositories/DepartmentRepository");
-const Complaint = require("../models/Complaint");
-const NotificationService = require("./NotificationService");
+const ComplaintHistoryRepository = require("../repositories/complaintHistoryRepository");
+const DepartmentRepository = require("../repositories/departmentRepository");
+const Complaint = require("../models/complaint");
+const NotificationService = require("./notificationService");
 const {
-  normalizeComplaintData,
-  prepareComplaintForInsert,
-  validateComplaintConsistency,
+  normalizecomplaintData,
+  preparecomplaintForInsert,
+  validatecomplaintConsistency,
   _getAssignmentProgress,
   getTimelineStepKey,
 } = require("../utils/complaintUtils");
 const { isPotentialDuplicate } = require("../utils/similarityUtils");
 
-const AdvancedDecisionEngine = require("./AdvancedDecisionEngine");
-const DepartmentService = require("./DepartmentService");
+const advancedDecisionEngine = require("./advancedDecisionEngine");
+const DepartmentService = require("./departmentService");
 
 // ... (existing imports)
 
@@ -33,7 +33,7 @@ class ComplaintService {
     this.notificationService = notificationService || new NotificationService();
     this.historyRepo = historyRepo || new ComplaintHistoryRepository();
   }
-  async createComplaint(userId, complaintData, files = [], token = null) {
+  async createcomplaint(userId, complaintData, files = [], token = null) {
     // Debug: Log received complaint data
 
     // 1. NLP INTELLIGENCE INTEGRATION
@@ -44,7 +44,7 @@ class ComplaintService {
     if (complaintText && (!complaintData.category || !complaintData.urgency_score)) {
       try {
         console.log("[COMPLAINT] 🧠 Running Advanced Decision Engine...");
-        nlpResult = await AdvancedDecisionEngine.classify(complaintText);
+        nlpResult = await advancedDecisionEngine.classify(complaintText);
 
         // Auto-fill category if missing
         if (!complaintData.category && nlpResult.category && nlpResult.category !== "Others") {
@@ -81,20 +81,20 @@ class ComplaintService {
     }
 
     // Parse preferred_departments - handle both array and individual values
-    let preferredDepartments = complaintData.preferred_departments || [];
+    let preferreddepartments = complaintData.preferred_departments || [];
     // If preferred_departments is a string, check if it's JSON or just a single value
-    if (typeof preferredDepartments === "string") {
+    if (typeof preferreddepartments === "string") {
       // Try to parse as JSON first
       try {
-        preferredDepartments = JSON.parse(preferredDepartments);
+        preferreddepartments = JSON.parse(preferreddepartments);
       } catch (e) {
         // If JSON parsing fails, treat it as a single department code
-        preferredDepartments = [preferredDepartments].filter(Boolean);
+        preferreddepartments = [preferreddepartments].filter(Boolean);
       }
     }
     // If preferred_departments is not an array, convert it to array
-    if (!Array.isArray(preferredDepartments)) {
-      preferredDepartments = [preferredDepartments].filter(Boolean);
+    if (!Array.isArray(preferreddepartments)) {
+      preferreddepartments = [preferreddepartments].filter(Boolean);
     }
 
     // Map client field names to server field names
@@ -108,7 +108,7 @@ class ComplaintService {
       // Handle fallback for descriptive_su if generic description is provided
       // No 'title' field in DB anymore
       // Store user's preferred departments
-      preferred_departments: preferredDepartments,
+      preferred_departments: preferreddepartments,
       // Map location (client sends 'location', server expects 'location_text')
       location_text: complaintData.location || complaintData.location_text,
       // Audit / Safe deletion columns
@@ -178,32 +178,32 @@ class ComplaintService {
     }
 
     // [FC-07] Auto-assign departments from subcategory mapping when user hasn't selected any
-    if (preferredDepartments.length === 0 && (complaintData.subcategory || mappedData.subcategory)) {
+    if (preferreddepartments.length === 0 && (complaintData.subcategory || mappedData.subcategory)) {
       try {
         const subcategoryId = complaintData.subcategory || mappedData.subcategory;
         const deptService = new DepartmentService();
-        const mappedDepts = await deptService.getDepartmentsBySubcategory(subcategoryId);
+        const mappedDepts = await deptService.getdepartmentsBySubcategory(subcategoryId);
 
         if (mappedDepts && mappedDepts.length > 0) {
           // Use department codes sorted by response_priority (already sorted from query)
-          preferredDepartments = mappedDepts.map(d => d.department_code);
-          mappedData.department_r = preferredDepartments;
-          mappedData.preferred_departments = preferredDepartments;
-          console.log(`[COMPLAINT] Auto-assigned departments from subcategory mapping: ${preferredDepartments.join(", ")}`);
+          preferreddepartments = mappedDepts.map(d => d.department_code);
+          mappedData.department_r = preferreddepartments;
+          mappedData.preferred_departments = preferreddepartments;
+          console.log(`[COMPLAINT] Auto-assigned departments from subcategory mapping: ${preferreddepartments.join(", ")}`);
         }
       } catch (autoAssignError) {
-        console.warn("[COMPLAINT] Department auto-assignment failed:", autoAssignError.message);
+        console.warn("[COMPLAINT] department auto-assignment failed:", autoAssignError.message);
       }
     }
 
     // Prepare data for insertion using utility functions
-    const preparedData = prepareComplaintForInsert(mappedData);
+    const preparedData = preparecomplaintForInsert(mappedData);
 
     // Debug: Log what fields are being sent to database
     // Debug: Log what fields are being sent to database
 
     // Validate data consistency
-    const consistencyCheck = validateComplaintConsistency(preparedData);
+    const consistencyCheck = validatecomplaintConsistency(preparedData);
     if (!consistencyCheck.isValid) {
       console.warn(
         "[COMPLAINT] Data consistency issues:",
@@ -211,26 +211,26 @@ class ComplaintService {
       );
     }
     const complaint = new Complaint(preparedData);
-    const validation = Complaint.validate(complaint);
+    const validation = complaint.validate(complaint);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
     const sanitizedData = complaint.sanitizeForInsert();
-    console.log("[DEBUG] Complaint Insert Payload Keys:", Object.keys(sanitizedData));
-    const createdComplaint = await this.complaintRepo.create(
+    console.log("[DEBUG] complaint Insert Payload Keys:", Object.keys(sanitizedData));
+    const createdcomplaint = await this.complaintRepo.create(
       sanitizedData,
       token
     );
 
     try {
-      await this._processWorkflow(createdComplaint, preferredDepartments);
-      await this._processFileUploads(createdComplaint.id, files, userId);
+      await this._processWorkflow(createdcomplaint, preferreddepartments);
+      await this._processFileUploads(createdcomplaint.id, files, userId);
       // Send notification to citizen
       try {
-        await this.notificationService.notifyComplaintSubmitted(
+        await this.notificationService.notifycomplaintSubmitted(
           userId,
-          createdComplaint.id,
-          createdComplaint.descriptive_su?.slice(0, 100) || "Your complaint"
+          createdcomplaint.id,
+          createdcomplaint.descriptive_su?.slice(0, 100) || "Your complaint"
         );
       } catch (notifError) {
         console.warn(
@@ -243,8 +243,8 @@ class ComplaintService {
         // Use the new method that finds all coordinators and notifies them
         const coordResult =
           await this.notificationService.notifyAllCoordinators(
-            createdComplaint.id,
-            createdComplaint.descriptive_su?.slice(0, 100) || "New complaint"
+            createdcomplaint.id,
+            createdcomplaint.descriptive_su?.slice(0, 100) || "New complaint"
           );
         if (!coordResult.success) {
           console.warn(
@@ -258,14 +258,14 @@ class ComplaintService {
           coordNotifError.message
         );
       }
-      const finalComplaint = await this.complaintRepo.findById(
-        createdComplaint.id,
+      const finalcomplaint = await this.complaintRepo.findById(
+        createdcomplaint.id,
         token
       );
-      return finalComplaint;
+      return finalcomplaint;
     } catch (error) {
       console.warn("Post-creation processing failed:", error.message);
-      return createdComplaint;
+      return createdcomplaint;
     }
   }
   async _processWorkflow(complaint, departmentArray) {
@@ -298,7 +298,7 @@ class ComplaintService {
           }
         }
       } catch (error) {
-        console.warn("[WORKFLOW] Department assignment failed:", error.message);
+        console.warn("[WORKFLOW] department assignment failed:", error.message);
       }
     }
     if (departmentArray.length > 0) {
@@ -323,7 +323,7 @@ class ComplaintService {
   }
 
   /**
-   * Detect potential duplicates for a new complaint
+   * Detect potential duplicates for a new Complaint
    * @param {Object} complaintData - New complaint data {latitude, longitude, category, subcategory}
    * @returns {Promise<Array>} List of potential duplicates
    */
@@ -407,7 +407,7 @@ class ComplaintService {
    * @param {string} complaintId
    * @param {string} userId
    */
-  async upvoteComplaint(complaintId, userId) {
+  async upvotecomplaint(complaintId, userId) {
     try {
       const client = this.complaintRepo.supabase;
 
@@ -477,7 +477,7 @@ class ComplaintService {
         .eq("id", complaintId)
         .single();
 
-      if (fetchError || !complaint) throw new Error("Complaint not found");
+      if (fetchError || !complaint) throw new Error("complaint not found");
 
       let finalCount = complaint.upvote_count || 0;
       if (action === "added") finalCount++;
@@ -540,7 +540,7 @@ class ComplaintService {
    * @param {string} masterId - The ID of the Main Report
    * @param {Array<string>} childIds - List of IDs to merge into master
    */
-  async bulkMergeComplaints(masterId, childIds) {
+  async bulkMergecomplaints(masterId, childIds) {
     if (!masterId || !childIds || childIds.length === 0)
       return { success: false };
 
@@ -591,7 +591,7 @@ class ComplaintService {
       try {
         // Store in evidence subfolder for initial evidence
         const fileName = `${complaintId}/evidence/${Date.now()}-${file.originalname
-        }`;
+          }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -665,7 +665,7 @@ class ComplaintService {
       try {
         // Store in completion subfolder
         const fileName = `${complaintId}/completion/${Date.now()}-${file.originalname
-        }`;
+          }`;
         // Upload file to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("complaint-evidence")
@@ -718,14 +718,14 @@ class ComplaintService {
     }
     return evidenceFiles;
   }
-  async getComplaintById(id, userId = null, token = null) {
+  async getcomplaintById(id, userId = null, token = null) {
     try {
       const complaint = await this.complaintRepo.findById(id, token);
       if (!complaint) {
         console.log(
-          `[COMPLAINT_SERVICE] Complaint ${id} not found in database`
+          `[COMPLAINT_SERVICE] complaint ${id} not found in database`
         );
-        throw new Error("Complaint not found");
+        throw new Error("complaint not found");
       }
       if (userId && complaint.submitted_by !== userId) {
         console.log(
@@ -762,7 +762,7 @@ class ComplaintService {
               name:
                 combined.name ||
                 `${combined.first_name || ""} ${combined.last_name || ""
-                }`.trim() ||
+                  }`.trim() ||
                 user.email,
               first_name: combined.first_name,
               last_name: combined.last_name,
@@ -794,18 +794,18 @@ class ComplaintService {
         );
       }
       // Return normalized complaint data for frontend compatibility
-      return normalizeComplaintData(complaint);
+      return normalizecomplaintData(complaint);
     } catch (error) {
-      // Re-throw known errors (Complaint not found, Access denied)
+      // Re-throw known errors (complaint not found, Access denied)
       if (
-        error.message === "Complaint not found" ||
+        error.message === "complaint not found" ||
         error.message === "Access denied"
       ) {
         throw error;
       }
       // Log and wrap unexpected errors
       console.error(
-        `[COMPLAINT_SERVICE] Unexpected error in getComplaintById for ${id}:`,
+        `[COMPLAINT_SERVICE] Unexpected error in getcomplaintById for ${id}:`,
         error
       );
       throw new Error(`Failed to fetch complaint: ${error.message}`);
@@ -814,14 +814,14 @@ class ComplaintService {
   /**
    * Reconcile workflow status based on current assignments and confirmations
    * This ensures eventual consistency between workflow_status and actual state
-   * @param {string} complaintId - Complaint ID
+   * @param {string} complaintId - complaint ID
    */
   async reconcileWorkflowStatus(complaintId) {
     try {
       // Get current complaint state
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        return; // Complaint not found, nothing to reconcile
+        return; // complaint not found, nothing to reconcile
       }
 
       // Update confirmation status using database function
@@ -843,12 +843,12 @@ class ComplaintService {
       );
     }
   }
-  async getUserComplaints(userId, options = {}) {
+  async getUsercomplaints(userId, options = {}) {
     try {
       const result = await this.complaintRepo.findByUserId(userId, options);
       return result;
     } catch (error) {
-      console.error("[COMPLAINT_SERVICE] Error in getUserComplaints:", error);
+      console.error("[COMPLAINT_SERVICE] Error in getUsercomplaints:", error);
       console.error("[COMPLAINT_SERVICE] Error stack:", error.stack);
       throw error;
     }
@@ -857,7 +857,7 @@ class ComplaintService {
     try {
       const { supabase } = this.complaintRepo;
       // Get total complaints count
-      const { count: totalComplaints, error: totalError } = await supabase
+      const { count: totalcomplaints, error: totalError } = await supabase
         .from("complaints")
         .select("*", { count: "exact", head: true })
         .eq("submitted_by", userId);
@@ -886,20 +886,32 @@ class ComplaintService {
         acc[category] = (acc[category] || 0) + 1;
         return acc;
       }, {});
-      // Get recent activity (last 30 days)
+      // Get recent activity (last 30 days) and trend
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const { count: recentComplaints, error: recentError } = await supabase
+      const { data: trendData, count: recentcomplaints, error: recentError } = await supabase
         .from("complaints")
-        .select("*", { count: "exact", head: true })
+        .select("submitted_at", { count: "exact" })
         .eq("submitted_by", userId)
         .gte("submitted_at", thirtyDaysAgo.toISOString());
+
       if (recentError) throw recentError;
+
+      // Group by day for trend chart
+      const dailyTrend = {};
+      if (trendData) {
+        trendData.forEach(c => {
+          const date = new Date(c.submitted_at).toISOString().split('T')[0];
+          dailyTrend[date] = (dailyTrend[date] || 0) + 1;
+        });
+      }
+
       return {
-        totalComplaints: totalComplaints || 0,
-        recentComplaints: recentComplaints || 0,
+        totalcomplaints: totalcomplaints || 0,
+        recentcomplaints: recentcomplaints || 0,
         statusCounts,
-        categoryCounts, // Changed from typeCounts to categoryCounts
+        categoryCounts,
+        dailyTrend, // New field for trend chart
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
@@ -910,11 +922,11 @@ class ComplaintService {
       throw error;
     }
   }
-  async getAllComplaints(options = {}) {
+  async getAllcomplaints(options = {}) {
     return this.complaintRepo.findAll(options);
   }
-  async updateComplaintStatus(id, updateData, userId = null) {
-    const complaint = await this.getComplaintById(id);
+  async updatecomplaintStatus(id, updateData, userId = null) {
+    const complaint = await this.getcomplaintById(id);
     const {
       status: workflowStatus,
       priority,
@@ -922,8 +934,8 @@ class ComplaintService {
       subcategory,
       notes,
     } = typeof updateData === "string"
-      ? { status: updateData, notes: userId } // Handle legacy signature if needed
-      : updateData;
+        ? { status: updateData, notes: userId } // Handle legacy signature if needed
+        : updateData;
 
     const dataToUpdate = { updated_at: new Date().toISOString() };
 
@@ -948,18 +960,18 @@ class ComplaintService {
 
       // FC-01 FIX: Enforce valid workflow transitions
       const VALID_TRANSITIONS = {
-        new:          ["submitted", "cancelled", "rejected"],
-        submitted:    ["verified", "rejected", "cancelled"],
-        verified:     ["assigned", "under_review", "rejected", "cancelled"],
-        assigned:     ["under_review", "in_progress", "rejected", "cancelled"],
+        new: ["submitted", "cancelled", "rejected"],
+        submitted: ["verified", "rejected", "cancelled"],
+        verified: ["assigned", "under_review", "rejected", "cancelled"],
+        assigned: ["under_review", "in_progress", "rejected", "cancelled"],
         under_review: ["in_progress", "action_taken", "rejected", "cancelled"],
-        in_progress:  ["action_taken", "completed", "rejected", "cancelled"],
+        in_progress: ["action_taken", "completed", "rejected", "cancelled"],
         action_taken: ["completed", "resolved", "in_progress", "rejected", "cancelled"],
-        completed:    ["resolved", "closed"],
-        resolved:     ["closed"],
-        closed:       [],
-        cancelled:    ["submitted"],   // Allow re-opening
-        rejected:     ["submitted"],   // Allow re-opening
+        completed: ["resolved", "closed"],
+        resolved: ["closed"],
+        closed: [],
+        cancelled: ["submitted"],   // Allow re-opening
+        rejected: ["submitted"],   // Allow re-opening
       };
       const currentStatus = complaint.workflow_status || "new";
       const allowed = VALID_TRANSITIONS[currentStatus];
@@ -990,11 +1002,11 @@ class ComplaintService {
       dataToUpdate.comment = currentComment;
     }
 
-    const updatedComplaint = await this.complaintRepo.update(id, dataToUpdate);
+    const updatedcomplaint = await this.complaintRepo.update(id, dataToUpdate);
 
     try {
       await this.complaintRepo.logAction(id, "status_updated", {
-        reason: `Complaint updated by coordinator/admin`,
+        reason: `complaint updated by coordinator/admin`,
         details: {
           old_status: complaint.workflow_status,
           new_status: workflowStatus || complaint.workflow_status,
@@ -1025,7 +1037,7 @@ class ComplaintService {
     // Send notification to citizen if status changed
     if (workflowStatus && complaint.workflow_status !== workflowStatus) {
       try {
-        await this.notificationService.notifyComplaintStatusChanged(
+        await this.notificationService.notifycomplaintStatusChanged(
           complaint.submitted_by,
           id,
           complaint.descriptive_su?.slice(0, 100) || "Your complaint",
@@ -1041,7 +1053,7 @@ class ComplaintService {
     } else if (notes) {
       // If only notes were added but status didn't change, still notify
       try {
-        await this.notificationService.notifyComplaintUpdate(
+        await this.notificationService.notifycomplaintUpdate(
           complaint.submitted_by,
           id,
           complaint.descriptive_su?.slice(0, 100) || "Your complaint",
@@ -1054,11 +1066,11 @@ class ComplaintService {
         );
       }
     }
-    return updatedComplaint;
+    return updatedcomplaint;
   }
   async assignCoordinator(complaintId, coordinatorId, assignedBy) {
-    await this.getComplaintById(complaintId);
-    const updatedComplaint = await this.complaintRepo.assignCoordinator(
+    await this.getcomplaintById(complaintId);
+    const updatedcomplaint = await this.complaintRepo.assignCoordinator(
       complaintId,
       coordinatorId
     );
@@ -1073,17 +1085,17 @@ class ComplaintService {
         error.message
       );
     }
-    return updatedComplaint;
+    return updatedcomplaint;
   }
-  async transferComplaint(
+  async transfercomplaint(
     complaintId,
     fromDept,
     toDept,
     reason,
     transferredBy
   ) {
-    await this.getComplaintById(complaintId);
-    const updatedComplaint = await this.complaintRepo.update(complaintId, {
+    await this.getcomplaintById(complaintId);
+    const updatedcomplaint = await this.complaintRepo.update(complaintId, {
       assigned_coordinator_id: null,
     });
     try {
@@ -1114,9 +1126,9 @@ class ComplaintService {
     } catch (error) {
       console.warn("[AUDIT] Transfer logging failed:", error.message);
     }
-    return updatedComplaint;
+    return updatedcomplaint;
   }
-  async getComplaintStats(filters = {}) {
+  async getcomplaintStats(filters = {}) {
     const { department, dateFrom, dateTo } = filters;
 
     // Helper to build base query - use service client to bypass RLS recursion
@@ -1198,11 +1210,11 @@ class ComplaintService {
 
     return stats;
   }
-  async getComplaintLocationSlim(filters = {}) {
+  async getcomplaintLocationSlim(filters = {}) {
     return this.complaintRepo.findLocationsSlim(filters);
   }
 
-  async getComplaintLocations(filters = {}) {
+  async getcomplaintLocations(filters = {}) {
     const {
       status,
       confirmationStatus,
@@ -1502,7 +1514,7 @@ class ComplaintService {
               if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
               return {
                 id: complaint.id,
-                title: complaint.descriptive_su?.slice(0, 100) || "Complaint",
+                title: complaint.descriptive_su?.slice(0, 100) || "complaint",
                 status: complaint.workflow_status,
                 priority: complaint.priority || "medium",
                 lat,
@@ -1569,7 +1581,7 @@ class ComplaintService {
 
           return {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || "Complaint",
+            title: complaint.descriptive_su?.slice(0, 100) || "complaint",
             status: complaint.workflow_status,
             priority: complaint.priority || "medium",
             lat,
@@ -1578,7 +1590,7 @@ class ComplaintService {
             submittedAt: complaint.submitted_at,
             department: departmentR.length > 0 ? departmentR[0] : "Unknown",
             departments: departmentR, // Always return as array
-            secondaryDepartments:
+            secondarydepartments:
               departmentR.length > 1 ? departmentR.slice(1) : [],
             type: complaint.category || "General",
             category: complaint.category,
@@ -1608,7 +1620,7 @@ class ComplaintService {
       }
       return transformedData;
     } catch (error) {
-      console.error("[COMPLAINT-SERVICE] getComplaintLocations error:", error);
+      console.error("[COMPLAINT-SERVICE] getcomplaintLocations error:", error);
       throw error;
     }
   }
@@ -1621,7 +1633,7 @@ class ComplaintService {
       // Get complaint and verify ownership
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        throw new Error("Complaint not found");
+        throw new Error("complaint not found");
       }
       if (complaint.submitted_by !== userId) {
         throw new Error("Not authorized to send reminder for this complaint");
@@ -1706,7 +1718,7 @@ class ComplaintService {
             await this.notificationService.createNotification(
               assignment.assigned_to,
               "complaint_reminder",
-              "Complaint Reminder",
+              "complaint Reminder",
               `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || "Your assigned complaint"}"`,
               {
                 priority: "warning",
@@ -1720,7 +1732,7 @@ class ComplaintService {
             await this.notificationService.createNotification(
               assignment.assigned_by,
               "complaint_reminder",
-              "Complaint Reminder",
+              "complaint Reminder",
               `Citizen has sent a reminder for complaint: "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}"`,
               {
                 priority: "warning",
@@ -1747,9 +1759,9 @@ class ComplaintService {
    * @param {Object} filters - Filter options
    * @returns {Promise<Object>} List of false complaints
    */
-  async getFalseComplaints(filters = {}) {
+  async getFalsecomplaints(filters = {}) {
     try {
-      const {supabase} = this.complaintRepo;
+      const { supabase } = this.complaintRepo;
       let query = supabase
         .from("complaints")
         .select("*")
@@ -1777,9 +1789,9 @@ class ComplaintService {
    * Get false complaint statistics
    * @returns {Promise<Object>} Statistics about false complaints
    */
-  async getFalseComplaintStatistics() {
+  async getFalsecomplaintStatistics() {
     try {
-      const {supabase} = this.complaintRepo;
+      const { supabase } = this.complaintRepo;
 
       // Get total count of false complaints
       const { count: total, error: countError } = await supabase
@@ -1821,13 +1833,13 @@ class ComplaintService {
   }
   /**
    * Get complaint evidence files from Supabase storage
-   * @param {string} complaintId - Complaint ID
+   * @param {string} complaintId - complaint ID
    * @param {Object} user - User object requesting the evidence
    * @returns {Promise<Array>} Array of evidence files with signed URLs
    */
-  async getComplaintEvidence(complaintId, user) {
+  async getcomplaintEvidence(complaintId, user) {
     try {
-      const {supabase} = this.complaintRepo;
+      const { supabase } = this.complaintRepo;
       // First, verify the user has access to this complaint
       const { data: complaint, error: complaintError } = await supabase
         .from("complaints")
@@ -1836,7 +1848,7 @@ class ComplaintService {
         .single();
       if (complaintError || !complaint) {
         console.error(
-          `[COMPLAINT_SERVICE] Complaint not found:`,
+          `[COMPLAINT_SERVICE] complaint not found:`,
           complaintError
         );
         // Return empty array instead of throwing error - complaint might have been deleted
@@ -1921,7 +1933,7 @@ class ComplaintService {
   }
   /**
    * Confirm resolution (Citizen side)
-   * @param {string} complaintId - Complaint ID
+   * @param {string} complaintId - complaint ID
    * @param {string} citizenId - Citizen user ID
    * @param {boolean} confirmed - Whether citizen confirms the resolution
    * @param {string} feedback - Optional feedback from citizen
@@ -1930,10 +1942,10 @@ class ComplaintService {
   async confirmResolution(complaintId, citizenId, confirmed, _feedback = null) {
     try {
       // Use repository client (service-role) to avoid RLS issues
-      const {supabase} = this.complaintRepo;
+      const { supabase } = this.complaintRepo;
 
       // Bypass table update for now
-      const updatedComplaint = {
+      const updatedcomplaint = {
         id: complaintId,
         confirmed_by_citizen: confirmed,
       };
@@ -1950,7 +1962,7 @@ class ComplaintService {
       }
       return {
         success: true,
-        data: updatedComplaint,
+        data: updatedcomplaint,
         message: confirmed
           ? "Resolution confirmed successfully"
           : "Resolution feedback recorded",
@@ -1963,7 +1975,7 @@ class ComplaintService {
   async createAssignment(complaintId, officerIds, assignedBy) {
     try {
       // Validate complaint exists
-      await this.getComplaintById(complaintId);
+      await this.getcomplaintById(complaintId);
       // Create assignment records using the repository method
       const assignments = await this.complaintRepo.createAssignments(
         complaintId,
@@ -1971,7 +1983,7 @@ class ComplaintService {
         assignedBy
       );
       // BE-01/FC-02 FIX: Use valid status from validStatuses array
-      await this.updateComplaintStatus(complaintId, "assigned");
+      await this.updatecomplaintStatus(complaintId, "assigned");
       return assignments;
     } catch (error) {
       console.error("[COMPLAINT-SERVICE] Error creating assignment:", error);
@@ -1980,7 +1992,7 @@ class ComplaintService {
   }
   /**
    * Get confirmation message for a complaint based on confirmation status and user role
-   * @param {string} complaintId - Complaint ID
+   * @param {string} complaintId - complaint ID
    * @param {string} userRole - User role (citizen, lgu-admin, lgu-officer, complaint-coordinator, etc.)
    * @returns {Promise<string>} Confirmation message
    */
@@ -1988,7 +2000,7 @@ class ComplaintService {
     try {
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        throw new Error("Complaint not found");
+        throw new Error("complaint not found");
       }
 
       const confirmationStatus = (
@@ -2043,9 +2055,9 @@ class ComplaintService {
             workflowStatus === "in_progress" ||
             workflowStatus === "assigned"
           ) {
-            return "Complaint is being processed. Confirmation will be required once the resolution is complete.";
+            return "complaint is being processed. Confirmation will be required once the resolution is complete.";
           }
-          return "Complaint is pending review and assignment.";
+          return "complaint is pending review and assignment.";
       }
     } catch (error) {
       console.error(
@@ -2058,16 +2070,16 @@ class ComplaintService {
   }
   /**
    * Mark a complaint as false
-   * @param {string} complaintId - Complaint ID
+   * @param {string} complaintId - complaint ID
    * @param {string} userId - User ID marking the complaint
    * @param {string} reason - Reason for marking as false
    * @returns {Promise<Object>} Result
    */
-  async markAsFalseComplaint(complaintId, userId, reason, notes) {
+  async markAsFalsecomplaint(complaintId, userId, reason, notes) {
     try {
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        throw new Error("Complaint not found");
+        throw new Error("complaint not found");
       }
 
       // [TIMELINE] Update comment JSON for rejection phase
@@ -2079,7 +2091,7 @@ class ComplaintService {
         is_false: true
       };
 
-      const { data: updatedComplaint, error: updateError } =
+      const { data: updatedcomplaint, error: updateError } =
         await this.complaintRepo.supabase
           .from("complaints")
           .update({
@@ -2110,8 +2122,8 @@ class ComplaintService {
 
       return {
         success: true,
-        data: updatedComplaint,
-        message: "Complaint marked as false successfully",
+        data: updatedcomplaint,
+        message: "complaint marked as false successfully",
       };
     } catch (error) {
       console.error("[COMPLAINT_SERVICE] Error marking as false:", error);
@@ -2124,31 +2136,31 @@ class ComplaintService {
 
   /**
    * Mark a complaint as duplicate
-   * @param {string} complaintId - Complaint ID
-   * @param {string} masterComplaintId - Master Complaint ID
+   * @param {string} complaintId - complaint ID
+   * @param {string} mastercomplaintId - Master complaint ID
    * @param {string} userId - User ID marking the duplicate
    * @returns {Promise<Object>} Result
    */
-  async markAsDuplicate(complaintId, masterComplaintId, userId) {
+  async markAsDuplicate(complaintId, mastercomplaintId, userId) {
     try {
       const complaint = await this.complaintRepo.findById(complaintId);
       if (!complaint) {
-        throw new Error("Complaint not found");
+        throw new Error("complaint not found");
       }
 
-      const masterComplaint = await this.complaintRepo.findById(
-        masterComplaintId
+      const mastercomplaint = await this.complaintRepo.findById(
+        mastercomplaintId
       );
-      if (!masterComplaint) {
+      if (!mastercomplaint) {
         throw new Error("Master complaint not found");
       }
 
-      const { data: updatedComplaint, error: updateError } =
+      const { data: updatedcomplaint, error: updateError } =
         await this.complaintRepo.supabase
           .from("complaints")
           .update({
             is_duplicate: true,
-            master_complaint_id: masterComplaintId,
+            master_complaint_id: mastercomplaintId,
             workflow_status: "closed", // Or 'rejected'/'duplicate' if available
             duplicate_marked_by: userId,
             duplicate_marked_at: new Date().toISOString(),
@@ -2163,8 +2175,8 @@ class ComplaintService {
       // Log action
       try {
         await this.complaintRepo.logAction(complaintId, "marked_duplicate", {
-          reason: `Duplicate of ${masterComplaintId}`,
-          details: { marked_by: userId, master_id: masterComplaintId },
+          reason: `Duplicate of ${mastercomplaintId}`,
+          details: { marked_by: userId, master_id: mastercomplaintId },
         });
       } catch (logError) {
         console.warn("[AUDIT] Log action failed:", logError.message);
@@ -2172,8 +2184,8 @@ class ComplaintService {
 
       return {
         success: true,
-        data: updatedComplaint,
-        message: "Complaint marked as duplicate successfully",
+        data: updatedcomplaint,
+        message: "complaint marked as duplicate successfully",
       };
     } catch (error) {
       console.error("[COMPLAINT_SERVICE] Error marking as duplicate:", error);
@@ -2183,7 +2195,7 @@ class ComplaintService {
       };
     }
   }
-  async getComplaintHistory(complaintId) {
+  async getcomplaintHistory(complaintId) {
     return this.historyRepo.list(complaintId);
   }
 }

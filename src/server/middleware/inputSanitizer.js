@@ -432,7 +432,7 @@ class InputSanitizer {
         });
         if (hasThreat) {
           console.warn(
-            `[SECURITY] SQL injection attempt detected in ${path}: ${obj.substring(
+            `[security] SQL injection attempt detected in ${path}: ${obj.substring(
               0,
               100
             )}...`
@@ -482,7 +482,7 @@ class InputSanitizer {
         const hasThreat = xssPatterns.some((pattern) => pattern.test(obj));
         if (hasThreat) {
           console.warn(
-            `[SECURITY] XSS attempt detected in ${path}: ${obj.substring(
+            `[security] XSS attempt detected in ${path}: ${obj.substring(
               0,
               100
             )}...`
@@ -565,7 +565,7 @@ class InputSanitizer {
       const allowedProtocols = ["http:", "https:", "ftp:", "ftps:"];
       if (!allowedProtocols.includes(url.protocol)) {
         console.warn(
-          `[SECURITY] Disallowed protocol detected: ${url.protocol}`
+          `[security] Disallowed protocol detected: ${url.protocol}`
         );
         return "";
       }
@@ -587,7 +587,7 @@ class InputSanitizer {
       ];
       if (suspiciousPatterns.some((pattern) => pattern.test(trimmedUrl))) {
         console.warn(
-          `[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(
+          `[security] Suspicious URL pattern detected: ${trimmedUrl.substring(
             0,
             100
           )}...`
@@ -597,7 +597,7 @@ class InputSanitizer {
       // Check for protocol confusion attacks (e.g., "http:javascript:alert(1)")
       if (url.protocol !== `${trimmedUrl.split(":")[0]}:`) {
         console.warn(
-          `[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(
+          `[security] Protocol confusion detected: ${trimmedUrl.substring(
             0,
             100
           )}...`
@@ -617,7 +617,7 @@ class InputSanitizer {
           const num = parseInt(part, 10);
           if (num < 0 || num > 255) {
             console.warn(
-              `[SECURITY] Invalid IP address detected: ${url.hostname}`
+              `[security] Invalid IP address detected: ${url.hostname}`
             );
             return "";
           }
@@ -636,7 +636,7 @@ class InputSanitizer {
       ];
       if (privateRanges.some((range) => range.test(url.hostname))) {
         console.warn(
-          `[SECURITY] Private/localhost URL detected: ${url.hostname}`
+          `[security] Private/localhost URL detected: ${url.hostname}`
         );
         return "";
       }
@@ -645,7 +645,7 @@ class InputSanitizer {
     } catch (error) {
       // If URL constructor fails, the URL is invalid
       console.warn(
-        `[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`
+        `[security] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`
       );
       return "";
     }

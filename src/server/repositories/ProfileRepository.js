@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const Profile = require("../models/Profile");
+const Profile = require("../models/profile");
 
 class ProfileRepository {
   constructor() {
@@ -32,7 +32,7 @@ class ProfileRepository {
   /**
    * Sync user data to profiles table
    */
-  async upsertProfile(userData) {
+  async upsertprofile(userData) {
     const profileData = {
       id: userData.id,
       email: userData.email,

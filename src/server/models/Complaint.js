@@ -81,7 +81,7 @@ class Complaint {
             original_lng: "[REDACTED]",
           });
           errors.push(
-            "Complaint location must be within Digos City boundaries"
+            "complaint location must be within Digos City boundaries"
           );
         }
       }

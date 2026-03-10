@@ -32,7 +32,7 @@ const handlePasswordResetError = async (
       "  2. RedirectTo URL not whitelisted in Supabase Dashboard → Authentication → URL Configuration"
     );
     console.error(
-      "  3. SMTP/SES not configured in Supabase Dashboard → Settings → Auth"
+      "  3. SMTP/SES not configured in Supabase Dashboard → settings → Auth"
     );
     console.error("  4. Supabase project email service issue");
 

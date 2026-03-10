@@ -14,13 +14,13 @@ class Setting {
   static validate(data) {
     const errors = [];
     if (!data.key || data.key.trim().length < 2) {
-      errors.push("Setting key must be at least 2 characters");
+      errors.push("setting key must be at least 2 characters");
     }
     if (data.key && !/^[a-z0-9_]+$/.test(data.key.trim())) {
-      errors.push("Setting key must contain only lowercase letters, numbers, and underscores");
+      errors.push("setting key must contain only lowercase letters, numbers, and underscores");
     }
     if (!data.value && data.value !== "") {
-      errors.push("Setting value is required");
+      errors.push("setting value is required");
     }
     const validTypes = ["text", "textarea", "html", "boolean", "number", "json"];
     if (data.type && !validTypes.includes(data.type)) {

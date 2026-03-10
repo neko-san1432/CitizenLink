@@ -14,7 +14,7 @@ class LguTeamController {
      * Get department officers
      * Returns list of LGU officers in the admin's department
      */
-  async getDepartmentOfficers(req, res) {
+  async getdepartmentOfficers(req, res) {
     try {
       const userRole = req.user.role;
 
@@ -28,7 +28,7 @@ class LguTeamController {
       if (!departmentCode) {
         return res.status(400).json({
           success: false,
-          error: "Department not specified in user metadata.",
+          error: "department not specified in user metadata.",
         });
       }
 
@@ -42,7 +42,7 @@ class LguTeamController {
       if (deptError || !department) {
         return res.status(404).json({
           success: false,
-          error: "Department not found"
+          error: "department not found"
         });
       }
 
@@ -68,13 +68,13 @@ class LguTeamController {
 
           // Normalize: any lgu-* or complaint-coordinator role is treated as 'lgu'
           const isLguUser = role === "lgu" || role === "complaint-coordinator" || role.startsWith("lgu-");
-          const hasCorrectDepartment =
+          const hasCorrectdepartment =
                         metadata.dpt === departmentCode ||
                         rawMetadata.dpt === departmentCode ||
                         metadata.department === departmentCode ||
                         rawMetadata.department === departmentCode;
 
-          return isLguUser && (hasCorrectDepartment || !departmentCode);
+          return isLguUser && (hasCorrectdepartment || !departmentCode);
         })
         .map((user) => ({
           id: user.id,

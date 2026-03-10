@@ -1,13 +1,13 @@
-const SettingService = require("../services/SettingService");
+const SettingService = require("../services/settingService");
 
 class SettingController {
 
   constructor() {
     this.settingService = new SettingService();
   }
-  async getAllSettings(req, res) {
+  async getAllsettings(req, res) {
     try {
-      const settings = await this.settingService.getAllSettings();
+      const settings = await this.settingService.getAllsettings();
       res.json({
         success: true,
         data: settings
@@ -20,9 +20,9 @@ class SettingController {
       });
     }
   }
-  async getPublicSettings(req, res) {
+  async getPublicsettings(req, res) {
     try {
-      const settings = await this.settingService.getPublicSettings();
+      const settings = await this.settingService.getPublicsettings();
       res.json({
         success: true,
         data: settings
@@ -35,10 +35,10 @@ class SettingController {
       });
     }
   }
-  async getSettingsByCategory(req, res) {
+  async getsettingsByCategory(req, res) {
     try {
       const { category } = req.params;
-      const settings = await this.settingService.getSettingsByCategory(category);
+      const settings = await this.settingService.getsettingsByCategory(category);
       res.json({
         success: true,
         data: settings
@@ -51,30 +51,30 @@ class SettingController {
       });
     }
   }
-  async getSettingByKey(req, res) {
+  async getsettingByKey(req, res) {
     try {
       const { key } = req.params;
-      const setting = await this.settingService.getSettingByKey(key);
+      const setting = await this.settingService.getsettingByKey(key);
       res.json({
         success: true,
         data: setting
       });
     } catch (error) {
       console.error("Error fetching setting:", error);
-      const status = error.message === "Setting not found" ? 404 : 500;
+      const status = error.message === "setting not found" ? 404 : 500;
       res.status(status).json({
         success: false,
         error: error.message
       });
     }
   }
-  async createSetting(req, res) {
+  async createsetting(req, res) {
     try {
-      const setting = await this.settingService.createSetting(req.body);
+      const setting = await this.settingService.createsetting(req.body);
       res.status(201).json({
         success: true,
         data: setting,
-        message: "Setting created successfully"
+        message: "setting created successfully"
       });
     } catch (error) {
       console.error("Error creating setting:", error);
@@ -86,18 +86,18 @@ class SettingController {
       });
     }
   }
-  async updateSetting(req, res) {
+  async updatesetting(req, res) {
     try {
       const { key } = req.params;
-      const setting = await this.settingService.updateSetting(key, req.body);
+      const setting = await this.settingService.updatesetting(key, req.body);
       res.json({
         success: true,
         data: setting,
-        message: "Setting updated successfully"
+        message: "setting updated successfully"
       });
     } catch (error) {
       console.error("Error updating setting:", error);
-      const status = error.message === "Setting not found" ? 404 :
+      const status = error.message === "setting not found" ? 404 :
         error.message.includes("Validation failed") ? 400 : 500;
       res.status(status).json({
         success: false,
@@ -105,17 +105,17 @@ class SettingController {
       });
     }
   }
-  async deleteSetting(req, res) {
+  async deletesetting(req, res) {
     try {
       const { key } = req.params;
-      await this.settingService.deleteSetting(key);
+      await this.settingService.deletesetting(key);
       res.json({
         success: true,
-        message: "Setting deleted successfully"
+        message: "setting deleted successfully"
       });
     } catch (error) {
       console.error("Error deleting setting:", error);
-      const status = error.message === "Setting not found" ? 404 : 500;
+      const status = error.message === "setting not found" ? 404 : 500;
       res.status(status).json({
         success: false,
         error: error.message
@@ -124,7 +124,7 @@ class SettingController {
   }
   async initializeDefaults(req, res) {
     try {
-      const settings = await this.settingService.initializeDefaultSettings();
+      const settings = await this.settingService.initializeDefaultsettings();
       res.json({
         success: true,
         data: settings,

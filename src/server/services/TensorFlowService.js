@@ -13,10 +13,10 @@ try {
 const use = require("@tensorflow-models/universal-sentence-encoder");
 const fs = require("fs");
 const path = require("path");
-const CACHE_FILE = path.join(process.cwd(), "storage", "ai_cache", "tf_anchor_cache.json");
+const CACHE_FILE = path.join(process.cwd(), "storage", "aiCache", "tfAnchorCache.json");
 
 /**
- * TensorFlowService
+ * tensorFlowService
  * Wrapper for TensorFlow.js and Universal Sentence Encoder (USE).
  * Handles model loading, embedding generation, and extensive caching.
  */
@@ -38,7 +38,7 @@ class TensorFlowService {
 
     this.modelLoadingPromise = (async () => {
       try {
-        const cacheDir = path.join(process.cwd(), "storage", "ai_cache", "tf_model_cache");
+        const cacheDir = path.join(process.cwd(), "storage", "aiCache", "tfModelCache");
         const modelJsonPath = path.join(cacheDir, "model.json");
         const weightsPath = path.join(cacheDir, "weights.bin");
 

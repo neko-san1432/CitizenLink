@@ -20,14 +20,14 @@ async function checkAuthentication() {
   }
 }
 
-async function fetchProfile() {
+async function fetchprofile() {
   const res = await fetch("/api/auth/profile");
   if (!res.ok) throw new Error("Failed to load profile");
   const json = await res.json();
   return json?.data || {};
 }
 
-function renderSettings(profile) {
+function rendersettings(profile) {
   const firstName = profile?.firstName || profile?.first_name || "";
   const lastName = profile?.lastName || profile?.last_name || "";
   const middleName = profile?.middleName || profile?.middle_name || "";
@@ -291,8 +291,8 @@ function wireHandlers() {
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await checkAuthentication())) return;
   try {
-    const profile = await fetchProfile();
-    renderSettings(profile);
+    const profile = await fetchprofile();
+    rendersettings(profile);
     wireTabs();
     wireHandlers();
   } catch (error) {

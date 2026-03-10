@@ -5,7 +5,7 @@
  * Hybrid Rule-Based + AI Text Analysis
  */
 
-const TensorFlowService = require("../TensorFlowService"); // AI Fallback Provider
+const tensorFlowService = require("../tensorFlowService"); // AI Fallback Provider
 
 class NLPService {
   constructor() {
@@ -52,7 +52,7 @@ class NLPService {
         keywords: ["lamok", "dengue", "daga", "rat", "cockroach", "ipis", "pest"],
         urgency: 40, confidence: 0.82
       },
-      "Noise Complaint": {
+      "Noise complaint": {
         keywords: ["ingay", "noise", "karaoke", "videoke", "loud", "tahol"],
         urgency: 30, confidence: 0.80
       }
@@ -188,11 +188,11 @@ class NLPService {
     } else {
       // 3. AI Fallback (if no keywords found)
       try {
-        // Call TensorFlowService for semantic analysis
-        // We'll assume TensorFlowService has a method classifyWithNLP or similar
+        // Call tensorFlowService for semantic analysis
+        // We'll assume tensorFlowService has a method classifyWithNLP or similar
         // For now, we use classify() if available
-        if (TensorFlowService.classify) {
-          const aiResult = await TensorFlowService.classify(text);
+        if (tensorFlowService.classify) {
+          const aiResult = await tensorFlowService.classify(text);
           if (aiResult && aiResult.confidence > 0.6) {
             result = {
               category: aiResult.category,
@@ -202,7 +202,7 @@ class NLPService {
           }
         }
       } catch (e) {
-        console.warn("[NLPService] AI Fallback failed:", e.message);
+        console.warn("[nLPService] AI Fallback failed:", e.message);
       }
     }
 

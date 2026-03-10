@@ -14,7 +14,7 @@ function _validateAndSanitizeURL(urlString) {
     // Whitelist of allowed protocols
     const allowedProtocols = ["http:", "https:", "ftp:", "ftps:"];
     if (!allowedProtocols.includes(url.protocol)) {
-      console.warn(`[SECURITY] Disallowed protocol detected: ${url.protocol}`);
+      console.warn(`[security] Disallowed protocol detected: ${url.protocol}`);
       return "";
     }
     // Check for suspicious patterns
@@ -34,12 +34,12 @@ function _validateAndSanitizeURL(urlString) {
       /wss:/i
     ];
     if (suspiciousPatterns.some(pattern => pattern.test(trimmedUrl))) {
-      console.warn(`[SECURITY] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
+      console.warn(`[security] Suspicious URL pattern detected: ${trimmedUrl.substring(0, 100)}...`);
       return "";
     }
     // Check for protocol confusion attacks
     if (url.protocol !== `${trimmedUrl.split(":")[0]  }:`) {
-      console.warn(`[SECURITY] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
+      console.warn(`[security] Protocol confusion detected: ${trimmedUrl.substring(0, 100)}...`);
       return "";
     }
     // Validate hostname
@@ -58,14 +58,14 @@ function _validateAndSanitizeURL(urlString) {
       /^fe80:/i
     ];
     if (privateRanges.some(range => range.test(url.hostname))) {
-      console.warn(`[SECURITY] Private/localhost URL detected: ${url.hostname}`);
+      console.warn(`[security] Private/localhost URL detected: ${url.hostname}`);
       return "";
     }
     // Return the validated URL
     return trimmedUrl;
   } catch (error) {
     // If URL constructor fails, the URL is invalid
-    console.warn(`[SECURITY] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
+    console.warn(`[security] Invalid URL format: ${trimmedUrl.substring(0, 100)}...`);
     return "";
   }
 }

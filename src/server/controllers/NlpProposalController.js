@@ -1,4 +1,4 @@
-const NlpProposalService = require("../services/NlpProposalService");
+const nlpProposalService = require("../services/nlpProposalService");
 
 class NlpProposalController {
   async createProposal(req, res) {
@@ -11,7 +11,7 @@ class NlpProposalController {
         return res.status(400).json({ error: "Type and data are required" });
       }
 
-      const proposal = await NlpProposalService.createProposal(userId, userRole, type, data);
+      const proposal = await nlpProposalService.createProposal(userId, userRole, type, data);
       res.status(201).json({ success: true, data: proposal });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
@@ -24,7 +24,7 @@ class NlpProposalController {
         status: req.query.status,
         type: req.query.type
       };
-      const proposals = await NlpProposalService.getProposals(filters);
+      const proposals = await nlpProposalService.getProposals(filters);
       res.json({ success: true, data: proposals });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
@@ -35,7 +35,7 @@ class NlpProposalController {
     try {
       const { id } = req.params;
       const userId = req.user.id;
-      const proposal = await NlpProposalService.approveByCoordinator(id, userId);
+      const proposal = await nlpProposalService.approveByCoordinator(id, userId);
       res.json({ success: true, data: proposal });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
@@ -47,7 +47,7 @@ class NlpProposalController {
       const { id } = req.params;
       const userId = req.user.id;
       const { data_override } = req.body || {};
-      const proposal = await NlpProposalService.approveBySuperAdmin(id, userId, data_override);
+      const proposal = await nlpProposalService.approveBySuperAdmin(id, userId, data_override);
       res.json({ success: true, data: proposal });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
@@ -59,7 +59,7 @@ class NlpProposalController {
       const { id } = req.params;
       const { reason } = req.body;
       const userId = req.user.id;
-      const proposal = await NlpProposalService.rejectProposal(id, userId, reason);
+      const proposal = await nlpProposalService.rejectProposal(id, userId, reason);
       res.json({ success: true, data: proposal });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
@@ -67,7 +67,7 @@ class NlpProposalController {
   }
   async getStats(req, res) {
     try {
-      const stats = await NlpProposalService.getStats();
+      const stats = await nlpProposalService.getStats();
       res.json({ success: true, data: stats });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });

@@ -1,5 +1,5 @@
 /**
- * Complaint Location Picker - Simple Map for Location Selection
+ * complaint Location Picker - Simple Map for Location Selection
  * Dedicated map component for complaint form without restrictive zoom limits
  */
 // Global map reference for complaint form
@@ -10,7 +10,7 @@ window.complaintMap = null;
  * @param {Object} options - Map configuration options
  * @returns {L.Map} - Leaflet map instance
  */
-async function initializeComplaintLocationPicker(
+async function initializecomplaintLocationPicker(
   containerId = "complaint-map",
   options = {}
 ) {
@@ -32,7 +32,7 @@ async function initializeComplaintLocationPicker(
       // Return a promise that resolves when the map is visible
       return new Promise((resolve) => {
         setTimeout(async () => {
-          const map = await initializeComplaintLocationPicker(containerId, options);
+          const map = await initializecomplaintLocationPicker(containerId, options);
           resolve(map);
         }, 500); // Check every 500ms
       });
@@ -587,9 +587,9 @@ function setupLocationPicker(map) {
 /**
  * Initialize the complete complaint location picker
  */
-async function initializeComplaintLocationPickerComplete() {
+async function initializecomplaintLocationPickerComplete() {
   try {
-    const map = await initializeComplaintLocationPicker();
+    const map = await initializecomplaintLocationPicker();
     if (map) {
       setupLocationPicker(map);
     }
@@ -600,8 +600,8 @@ async function initializeComplaintLocationPickerComplete() {
 // Auto-initialize when DOM is ready
 document.addEventListener(
   "DOMContentLoaded",
-  initializeComplaintLocationPickerComplete
+  initializecomplaintLocationPickerComplete
 );
 // Export functions for manual use
-window.initializeComplaintLocationPicker = initializeComplaintLocationPicker;
+window.initializecomplaintLocationPicker = initializecomplaintLocationPicker;
 window.setupLocationPicker = setupLocationPicker;

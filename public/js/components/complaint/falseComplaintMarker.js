@@ -1,10 +1,10 @@
 /**
- * False Complaint Marker Component
+ * False complaint Marker Component
  * Handles marking complaints as false with reasons and evidence
  */
 import { supabase } from "/js/config/config.js";
 
-class FalseComplaintMarker {
+class FalsecomplaintMarker {
 
   constructor() {
     this.modal = null;
@@ -39,7 +39,7 @@ class FalseComplaintMarker {
       <div class="false-complaint-content">
         <div class="false-complaint-header">
           <div class="false-complaint-icon">⚠️</div>
-          <div class="false-complaint-title">Mark as False Complaint</div>
+          <div class="false-complaint-title">Mark as False complaint</div>
         </div>
         
         <div class="warning-message">
@@ -73,7 +73,7 @@ class FalseComplaintMarker {
           </div>
           
           <div class="form-group">
-            <label class="form-label">Evidence of False Complaint</label>
+            <label class="form-label">Evidence of False complaint</label>
             <div class="false-complaint-reasons">
               <label class="reason-option">
                 <input type="checkbox" class="reason-radio" value="duplicate-check">
@@ -86,7 +86,7 @@ class FalseComplaintMarker {
                 <input type="checkbox" class="reason-radio" value="location-false">
                 <div>
                   <div class="reason-text">False location information</div>
-                  <div class="reason-description">Complaint location does not exist or is incorrect</div>
+                  <div class="reason-description">complaint location does not exist or is incorrect</div>
                 </div>
               </label>
               <label class="reason-option">
@@ -109,7 +109,7 @@ class FalseComplaintMarker {
           <div class="false-complaint-actions">
             <button type="button" class="btn btn-secondary" id="cancel-false-complaint">Cancel</button>
             <button type="submit" class="btn btn-danger" id="confirm-false-complaint">
-              Mark as False Complaint
+              Mark as False complaint
             </button>
           </div>
         </form>
@@ -170,7 +170,7 @@ class FalseComplaintMarker {
     try {
       // Show loading state
       this.showLoading();
-      // SECURITY: Use Supabase session token, never localStorage
+      // security: Use Supabase session token, never localStorage
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       const headers = { "Content-Type": "application/json" };
@@ -190,7 +190,7 @@ class FalseComplaintMarker {
       });
       const result = await response.json();
       if (result.success) {
-        this.showSuccess("Complaint marked as false successfully.");
+        this.showSuccess("complaint marked as false successfully.");
         // Execute callback if provided
         if (this.callback && typeof this.callback === "function") {
           this.callback(result);
@@ -267,4 +267,4 @@ class FalseComplaintMarker {
 }
 // Export the class
 
-export default FalseComplaintMarker;
+export default FalsecomplaintMarker;

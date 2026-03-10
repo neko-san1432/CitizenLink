@@ -55,7 +55,7 @@ class HeatmapController {
   async loadData() {
     try {
       const filters = this.controls ? this.controls.getCurrentFilters() : {};
-      await this.heatmapViz.loadComplaintData(filters);
+      await this.heatmapViz.loadcomplaintData(filters);
       this.refreshVisualization();
     } catch (error) {
       console.error("[HEATMAP-CONTROLLER] Failed to load data:", error);
@@ -107,7 +107,7 @@ class HeatmapController {
    */
   async applyFilters(filters) {
     try {
-      await this.heatmapViz.loadComplaintData(filters);
+      await this.heatmapViz.loadcomplaintData(filters);
       this.refreshVisualization();
     } catch (error) {
       console.error("[HEATMAP-CONTROLLER] Failed to apply filters:", error);
@@ -120,7 +120,7 @@ class HeatmapController {
   updateStatistics() {
     if (!this.heatmapViz || !this.controls) return;
     const stats = {
-      totalComplaints: this.heatmapViz.complaintData.length,
+      totalcomplaints: this.heatmapViz.complaintData.length,
       clusteringStats: this.heatmapViz.getClusteringStatistics(),
     };
     this.controls.updateStatistics(stats);
@@ -232,7 +232,7 @@ class HeatmapController {
   /**
    * Fit map to show all complaints
    */
-  fitToComplaints() {
+  fitTocomplaints() {
     if (
       !this.heatmapViz ||
       !this.map ||

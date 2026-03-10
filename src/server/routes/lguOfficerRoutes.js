@@ -1,7 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
-const LguOfficerController = require("../controllers/LguOfficerController");
+const LguOfficerController = require("../controllers/lguOfficerController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 
@@ -21,7 +21,7 @@ router.use(requireRole(["lgu"])); // Simplified role requirement
 router.get("/assigned-tasks", lguOfficerController.getAssignedTasks.bind(lguOfficerController));
 // Mark complaint as resolved
 router.post("/complaints/:complaintId/resolve", lguOfficerController.markAsResolved.bind(lguOfficerController));
-router.post("/complaints/:complaintId/update-status", lguOfficerController.updateComplaintStatus.bind(lguOfficerController));
+router.post("/complaints/:complaintId/update-status", lguOfficerController.updatecomplaintStatus.bind(lguOfficerController));
 // Get all tasks assigned to the officer
 router.get("/my-tasks", lguOfficerController.getMyTasks.bind(lguOfficerController));
 // Update task status

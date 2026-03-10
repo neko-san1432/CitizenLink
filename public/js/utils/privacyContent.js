@@ -12,7 +12,7 @@ const PRIVACY_SECTIONS = [
     body: [
       "Identity details such as your name, contact information, and barangay affiliation.",
       "Account credentials and metadata required to manage your profile.",
-      "Complaint submissions including descriptions, media uploads, location details, and supporting evidence.",
+      "complaint submissions including descriptions, media uploads, location details, and supporting evidence.",
       "Usage analytics (device, browser, timestamps) captured to secure the platform and improve performance.",
       "Communications you send to the LGU or support teams through DRIMS."
     ]
@@ -49,7 +49,7 @@ const PRIVACY_SECTIONS = [
   {
     title: "Data Retention",
     body: [
-      "Complaint records are retained for as long as necessary to resolve the case, comply with archiving rules, and support auditing.",
+      "complaint records are retained for as long as necessary to resolve the case, comply with archiving rules, and support auditing.",
       "Account information is retained while your account is active. You may request deletion when no longer needed, subject to legal and archival requirements.",
       "Activity logs that help with security investigations are retained for at least 12 months."
     ]

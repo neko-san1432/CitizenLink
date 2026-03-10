@@ -1,11 +1,11 @@
 /**
- * Hierarchical Complaint Form Controller
+ * Hierarchical complaint Form Controller
  * Handles category -> subcategory -> department selection
  */
-import { handleComplaintSubmit, resetComplaintForm } from "./formSubmission.js";
+import { handlecomplaintSubmit, resetcomplaintForm } from "./formSubmission.js";
 import { setupRealtimeValidation } from "../../utils/validation.js";
 import {
-  createComplaintFileHandler,
+  createcomplaintFileHandler,
   setupDragAndDrop,
 } from "../../utils/fileHandler.js";
 import showMessage from "../toast.js";
@@ -21,7 +21,7 @@ import { getUserRole } from "../../auth/authChecker.js";
  * Initialize hierarchical complaint form
  */
 
-export async function initializeComplaintForm() {
+export async function initializecomplaintForm() {
   const form = document.getElementById("complaintForm");
   if (!form) {
     console.error("[COMPLAINT FORM] Form element not found");
@@ -71,7 +71,7 @@ export async function initializeComplaintForm() {
     return;
   }
   // Initialize file handler with upload state callback
-  const fileHandler = createComplaintFileHandler({
+  const fileHandler = createcomplaintFileHandler({
     previewContainer: elements.filePreview,
     onFilesChange: (_files) => {
       // console.log removed for security
@@ -93,7 +93,7 @@ export async function initializeComplaintForm() {
   // Setup form functionality
   setupHierarchicalSelection(elements);
   setupFileHandling(elements.fileDropZone, elements.fileInput, fileHandler);
-  // Departments are now auto-assigned by NLP
+  // departments are now auto-assigned by NLP
   setupFormValidation(elements.form);
   setupFormSubmission(elements.form, fileHandler);
   loadCategories();
@@ -315,7 +315,7 @@ function renderDuplicateItem(d) {
   return `
         <div class="duplicate-item">
             <div class="duplicate-info">
-                <span class="duplicate-title">${d.title || "Untitled Complaint"
+                <span class="duplicate-title">${d.title || "Untitled complaint"
 }</span>
                 <div class="duplicate-meta">
                     <span>📅 ${new Date(
@@ -638,7 +638,7 @@ async function loadSubcategories(categoryId, subcategorySelect) {
 /**
  * Auto-select appropriate departments when subcategory is selected
  */
-async function autoSelectAppropriateDepartments(
+async function autoSelectAppropriatedepartments(
   subcategoryId,
   departmentCheckboxes
 ) {
@@ -651,13 +651,13 @@ async function autoSelectAppropriateDepartments(
     if (error) throw error;
     if (data && data.length > 0) {
       // Find departments that are mapped to this subcategory
-      const mappedDepartments = data.filter(
+      const mappeddepartments = data.filter(
         (dept) =>
           dept.department_subcategory_mapping &&
           dept.department_subcategory_mapping.response_priority
       );
       // Auto-check mapped departments
-      mappedDepartments.forEach((dept) => {
+      mappeddepartments.forEach((dept) => {
         const checkbox = document.querySelector(`input[value="${dept.code}"]`);
         if (checkbox) {
           checkbox.checked = true;
@@ -666,12 +666,12 @@ async function autoSelectAppropriateDepartments(
       });
       // console.log removed for security
       // Show helpful message
-      if (mappedDepartments.length > 0) {
+      if (mappeddepartments.length > 0) {
         const suggestionMessage = document.createElement("div");
         suggestionMessage.className = "suggestion-message";
         suggestionMessage.innerHTML = `
           <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 6px; padding: 12px; margin: 10px 0; color: #155724;">
-            <strong>💡 Suggested Departments:</strong> We've pre-selected departments that typically handle this type of complaint. You can uncheck any that don't apply to your specific situation.
+            <strong>💡 Suggested departments:</strong> We've pre-selected departments that typically handle this type of complaint. You can uncheck any that don't apply to your specific situation.
           </div>
         `;
         // Remove existing suggestion message if any
@@ -694,7 +694,7 @@ async function autoSelectAppropriateDepartments(
 /**
  * Load ALL departments (always show all, regardless of category/subcategory)
  */
-async function loadAllDepartments(departmentCheckboxes) {
+async function loadAlldepartments(departmentCheckboxes) {
   if (!departmentCheckboxes) return;
   try {
     departmentCheckboxes.innerHTML =
@@ -719,26 +719,26 @@ async function loadAllDepartments(departmentCheckboxes) {
       `;
       departmentCheckboxes.appendChild(searchContainer);
       // Group departments by level
-      const lguDepartments = data.filter((dept) => dept.level === "LGU");
-      const ngaDepartments = data.filter((dept) => dept.level === "NGA");
+      const lgudepartments = data.filter((dept) => dept.level === "LGU");
+      const ngadepartments = data.filter((dept) => dept.level === "NGA");
       // Create LGU section
-      if (lguDepartments.length > 0) {
+      if (lgudepartments.length > 0) {
         const lguSection = document.createElement("div");
         lguSection.className = "department-section";
         lguSection.innerHTML = "<h4>Local Government Units (LGU)</h4>";
-        lguDepartments.forEach((dept) => {
-          const checkbox = createDepartmentCheckbox(dept);
+        lgudepartments.forEach((dept) => {
+          const checkbox = createdepartmentCheckbox(dept);
           lguSection.appendChild(checkbox);
         });
         departmentCheckboxes.appendChild(lguSection);
       }
       // Create NGA section
-      if (ngaDepartments.length > 0) {
+      if (ngadepartments.length > 0) {
         const ngaSection = document.createElement("div");
         ngaSection.className = "department-section";
         ngaSection.innerHTML = "<h4>National Government Agencies (NGA)</h4>";
-        ngaDepartments.forEach((dept) => {
-          const checkbox = createDepartmentCheckbox(dept);
+        ngadepartments.forEach((dept) => {
+          const checkbox = createdepartmentCheckbox(dept);
           ngaSection.appendChild(checkbox);
         });
         departmentCheckboxes.appendChild(ngaSection);
@@ -751,7 +751,7 @@ async function loadAllDepartments(departmentCheckboxes) {
       suggestionMessage.className = "suggestion-message";
       suggestionMessage.innerHTML = `
         <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 6px; padding: 12px; margin: 10px 0; color: #155724;">
-          <strong>💡 Department Selection (Optional):</strong> You can select departments that should handle your complaint. If none are selected, the system will route your complaint to appropriate departments automatically.
+          <strong>💡 department Selection (Optional):</strong> You can select departments that should handle your complaint. If none are selected, the system will route your complaint to appropriate departments automatically.
         </div>
       `;
       departmentCheckboxes.insertBefore(
@@ -759,7 +759,7 @@ async function loadAllDepartments(departmentCheckboxes) {
         departmentCheckboxes.firstChild
       );
       // Setup search functionality
-      setupDepartmentSearch(data);
+      setupdepartmentSearch(data);
       // No "None" option - users can simply leave all departments unchecked
     } else {
       departmentCheckboxes.innerHTML =
@@ -775,7 +775,7 @@ async function loadAllDepartments(departmentCheckboxes) {
 /**
  * Create department checkbox element
  */
-function createDepartmentCheckbox(department) {
+function createdepartmentCheckbox(department) {
   const wrapper = document.createElement("div");
   wrapper.className = "checkbox-wrapper";
   const checkbox = document.createElement("input");
@@ -855,15 +855,15 @@ function setupFormSubmission(form, fileHandler) {
       }
     }
     // Get selected departments (optional)
-    const selectedDepartments = Array.from(
+    const selecteddepartments = Array.from(
       form.querySelectorAll('input[name="departments"]:checked')
     ).map((checkbox) => checkbox.value);
-    // Department selection is now optional - no validation required
+    // department selection is now optional - no validation required
     // console.log removed for security
     // Add selected departments as preferred_departments (user's choice)
-    if (selectedDepartments.length > 0) {
+    if (selecteddepartments.length > 0) {
       // Send array of selected department codes
-      selectedDepartments.forEach((deptCode) => {
+      selecteddepartments.forEach((deptCode) => {
         const hiddenInput = document.createElement("input");
         hiddenInput.type = "hidden";
         hiddenInput.name = "preferred_departments";
@@ -900,13 +900,13 @@ function setupFormSubmission(form, fileHandler) {
       // Get selected files from file handler
       const selectedFiles = fileHandler.getFiles();
       // Submit the complaint using the correct parameters with fileHandler for progress tracking
-      const _result = await handleComplaintSubmit(
+      const _result = await handlecomplaintSubmit(
         form,
         selectedFiles,
         fileHandler
       );
       // Reset form on success
-      resetComplaintForm(form, () => fileHandler.clearAll());
+      resetcomplaintForm(form, () => fileHandler.clearAll());
       // Redirect to dashboard after delay
       setTimeout(() => {
         window.location.href = "/dashboard";
@@ -922,14 +922,14 @@ function setupFormSubmission(form, fileHandler) {
           submitBtn.textContent = submitBtn.dataset.originalText;
         }
       }
-      // Error message is already shown in handleComplaintSubmit
+      // Error message is already shown in handlecomplaintSubmit
     }
   });
 }
 /**
  * Setup department search functionality
  */
-function setupDepartmentSearch(allDepartments) {
+function setupdepartmentSearch(alldepartments) {
   const searchInput = document.getElementById("department-search");
   const searchResultsInfo = document.getElementById("search-results-info");
   const searchResultsCount = document.getElementById("search-results-count");
@@ -940,9 +940,9 @@ function setupDepartmentSearch(allDepartments) {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const query = e.target.value.toLowerCase().trim();
-      filterDepartments(
+      filterdepartments(
         query,
-        allDepartments,
+        alldepartments,
         searchResultsInfo,
         searchResultsCount
       );
@@ -952,9 +952,9 @@ function setupDepartmentSearch(allDepartments) {
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.target.value = "";
-      filterDepartments(
+      filterdepartments(
         "",
-        allDepartments,
+        alldepartments,
         searchResultsInfo,
         searchResultsCount
       );
@@ -964,9 +964,9 @@ function setupDepartmentSearch(allDepartments) {
 /**
  * Filter departments based on search query
  */
-function filterDepartments(
+function filterdepartments(
   query,
-  allDepartments,
+  alldepartments,
   searchResultsInfo,
   searchResultsCount
 ) {
@@ -1018,7 +1018,7 @@ function filterDepartments(
 }
 // Initialize when DOM is ready
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeComplaintForm);
+  document.addEventListener("DOMContentLoaded", initializecomplaintForm);
 } else {
-  initializeComplaintForm();
+  initializecomplaintForm();
 }

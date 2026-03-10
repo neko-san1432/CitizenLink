@@ -17,7 +17,7 @@ function loadBarangayBoundaries() {
   }
 
   try {
-    const boundariesPath = path.join(__dirname, "../../../public/assets/json/brgy_boundaries_location.json");
+    const boundariesPath = path.join(__dirname, "../../../public/assets/json/brgyBoundariesLocation.json");
     const boundariesData = fs.readFileSync(boundariesPath, "utf8");
     const boundaries = JSON.parse(boundariesData);
     barangayBoundariesCache = boundaries;
@@ -112,8 +112,8 @@ function normalizeBarangayName(name) {
 
 /**
  * Classify complaint coordinates into a barangay
- * @param {number} latitude - Complaint latitude
- * @param {number} longitude - Complaint longitude
+ * @param {number} latitude - complaint latitude
+ * @param {number} longitude - complaint longitude
  * @returns {string|null} Barangay name or null if not found
  */
 function classifyBarangay(latitude, longitude) {
@@ -171,7 +171,7 @@ function classifyBarangay(latitude, longitude) {
  * @param {Array} complaints - Array of complaint objects with latitude and longitude
  * @returns {Map} Map of complaint ID to barangay name
  */
-function classifyComplaints(complaints) {
+function classifycomplaints(complaints) {
   const classificationMap = new Map();
 
   for (const complaint of complaints) {
@@ -193,7 +193,7 @@ function classifyComplaints(complaints) {
 
 module.exports = {
   classifyBarangay,
-  classifyComplaints,
+  classifycomplaints,
   loadBarangayBoundaries
 };
 

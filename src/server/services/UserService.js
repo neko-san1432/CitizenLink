@@ -226,7 +226,7 @@ class UserService {
         normalizedUpdateData.role = normalizeRole(normalizedUpdateData.role);
         if (originalRole !== normalizedUpdateData.role) {
           console.log(
-            "[UserService] Normalizing role from",
+            "[userService] Normalizing role from",
             originalRole,
             "to",
             normalizedUpdateData.role,
@@ -503,7 +503,7 @@ class UserService {
       "role",
       "normalized_role",
       "base_role",
-      // Department fields
+      // department fields
       "department",
       "dpt",
       // Status field

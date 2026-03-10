@@ -1,5 +1,5 @@
 const express = require("express");
-const SuperAdminController = require("../controllers/SuperAdminController");
+const SuperAdminController = require("../controllers/superAdminController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { validate, schemas } = require("../middleware/validation");
 const { csrfProtection } = require("../middleware/csrf");
@@ -35,7 +35,7 @@ router.post("/unban-user", authenticateUser, requireSuperAdmin, validate(schemas
 // User listing and details for Super Admin
 router.get("/users", authenticateUser, requireSuperAdmin, async (req, res) => {
   try {
-    const UserService = require("../services/UserService");
+    const userService = require("../services/userService");
 
     const { search, barangay, role, department, status, page, limit } =
       req.query;
@@ -44,7 +44,7 @@ router.get("/users", authenticateUser, requireSuperAdmin, async (req, res) => {
       page: page ? Number.parseInt(page) : 1,
       limit: limit ? Number.parseInt(limit) : 20,
     };
-    const result = await UserService.getUsers(filters, pagination);
+    const result = await userService.getUsers(filters, pagination);
     const filteredUsers = barangay
       ? (result.users || []).filter(
         (u) =>
@@ -71,9 +71,9 @@ router.get(
   requireSuperAdmin,
   async (req, res) => {
     try {
-      const UserService = require("../services/UserService");
+      const userService = require("../services/userService");
 
-      const user = await UserService.getUserById(req.params.id);
+      const user = await userService.getUserById(req.params.id);
       if (!user)
         return res
           .status(404)
@@ -94,7 +94,7 @@ router.get(
   requireSuperAdmin,
   async (req, res) => {
     try {
-      const ComplaintService = require("../services/ComplaintService");
+      const ComplaintService = require("../services/complaintService");
 
       const service = new ComplaintService();
       const options = {
@@ -103,7 +103,7 @@ router.get(
         status: req.query.status,
         type: req.query.type,
       };
-      const result = await service.getUserComplaints(req.params.id, options);
+      const result = await service.getUsercomplaints(req.params.id, options);
       return res.json({
         success: true,
         data: result.complaints,
@@ -124,14 +124,14 @@ router.get(
   }
 );
 /**
- * Department Transfers — SEC-19: Added Joi validation
+ * department Transfers — SEC-19: Added Joi validation
  */
 router.post(
   "/transfer-department",
   authenticateUser,
   requireSuperAdmin,
-  validate(schemas.transferDepartment),
-  (req, res) => superAdminController.transferDepartment(req, res)
+  validate(schemas.transferdepartment),
+  (req, res) => superAdminController.transferdepartment(req, res)
 );
 /**
  * Citizen Assignment — SEC-19: Added Joi validation

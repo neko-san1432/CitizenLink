@@ -1,9 +1,9 @@
 /**
- * Console Logger
+ * Console logger
  * Captures console output for display in server logs page
  */
 
-class ConsoleLogger {
+class Consolelogger {
   constructor(maxLogs = 1000) {
     this.logs = [];
     this.maxLogs = maxLogs;
@@ -166,9 +166,9 @@ class ConsoleLogger {
 }
 
 // Create singleton instance
-const consoleLogger = new ConsoleLogger(1000);
+const consolelogger = new Consolelogger(1000);
 
 // Start capturing immediately
-consoleLogger.startCapture();
+consolelogger.startCapture();
 
-module.exports = consoleLogger;
+module.exports = consolelogger;

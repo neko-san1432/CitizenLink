@@ -1,4 +1,4 @@
-/* Profile Revamp V2 - Viewport Fitted */
+/* profile Revamp V2 - Viewport Fitted */
 .profile-page-container {
   height: calc(100vh - 64px);
   /* Adjust for header height */
@@ -200,7 +200,7 @@
   }
 }
 
-/* Settings Page Header Styles */
+/* settings Page Header Styles */
 .profile-header-section {
   padding: 1.5rem 2rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));

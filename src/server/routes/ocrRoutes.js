@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const OCRController = require("../controllers/OCRController");
+const oCRController = require("../controllers/oCRController");
 const { authLimiter } = require("../middleware/rateLimiting");
 const { authenticateUser } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
@@ -31,7 +31,7 @@ router.post(
   authenticateUser,
   authLimiter,
   upload.single("file"),
-  OCRController.processId
+  oCRController.processId
 );
 
 // Secondary Residency Verification (Bill/Cert/Cedula) — SEC-01 FIX: require authentication
@@ -40,7 +40,7 @@ router.post(
   authenticateUser,
   authLimiter,
   upload.single("file"),
-  OCRController.processResidencyDoc
+  oCRController.processResidencyDoc
 );
 
 module.exports = router;

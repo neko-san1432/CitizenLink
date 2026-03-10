@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+  <title>complaint Details - DRIMS</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/toast.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/pages/complaintDetails.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+
+<body>
+  <!-- Header -->
+  <header id="header" class="header-container"></header>
+
+  <!-- Sidebar -->
+  <div id="sidebar" class="collapsible"></div>
+
+  <div id="app">
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Loading State -->
+        <!-- Loading State (Skeleton) -->
+        <div id="loading" class="complaint-details" style="display: flex;">
+          <!-- Skeleton Column 1 -->
+          <div class="glass-panel" style="flex: 1; gap: 1rem;">
+            <div class="skeleton" style="height: 60px; border-radius: 10px; width: 100%;"></div>
+            <div style="display: flex; gap: 10px;">
+              <div class="skeleton" style="height: 24px; width: 80px; border-radius: 12px;"></div>
+              <div class="skeleton" style="height: 24px; width: 80px; border-radius: 12px;"></div>
+            </div>
+            <div class="skeleton" style="height: 120px; border-radius: 8px; width: 100%; margin-top: 10px;"></div>
+            <div class="skeleton" style="height: 40px; width: 40%; border-radius: 8px; margin-top: auto;"></div>
+          </div>
+
+          <!-- Skeleton Column 2 -->
+          <div class="glass-panel" style="flex: 1; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <div class="skeleton" style="height: 20px; width: 120px; border-radius: 4px;"></div>
+              <div class="skeleton" style="height: 20px; width: 60px; border-radius: 4px;"></div>
+            </div>
+            <div class="skeleton" style="flex: 1; min-height: 200px; border-radius: 8px;"></div>
+            <div class="skeleton" style="height: 80px; border-radius: 8px;"></div>
+          </div>
+
+          <!-- Skeleton Column 3 -->
+          <div class="glass-panel" style="flex: 0.8; gap: 1rem;">
+            <div class="skeleton" style="height: 24px; width: 140px; border-radius: 4px; margin-bottom: 10px;"></div>
+            <div class="skeleton" style="height: 60px; width: 100%; border-radius: 8px;"></div>
+            <div class="skeleton" style="height: 60px; width: 100%; border-radius: 8px;"></div>
+            <div class="skeleton" style="height: 60px; width: 100%; border-radius: 8px;"></div>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="error-state" style="display: none">
+          <h2>Error Loading complaint</h2>
+          <p id="error-message">Unable to load complaint details.</p>
+          <button class="btn btn-primary" onclick="location.reload()">
+            Retry
+          </button>
+        </div>
+
+        <!-- complaint Details -->
+        <div id="complaint-details" class="complaint-details animate-fade-in" style="display: none">
+          <!-- Column 1: Primary Details -->
+          <div class="glass-panel complaint-view-card">
+            <!-- Consolidated Thin Header -->
+            <div class="details-header-card">
+              <div class="complaint-title-section">
+                <a href="#" id="return-link" class="breadcrumb-link"
+                  style="margin-right: 8px; color: #64748b; display: flex; align-items: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </a>
+                <span id="complaint-id" class="complaint-id-tag">#12345</span>
+                <span id="complaint-category-badge" class="category-badge-compact">CATEGORY</span>
+                <h1 id="complaint-title" class="complaint-title">complaint Title</h1>
+              </div>
+              <div class="complaint-actions" id="complaint-actions">
+                <!-- Actions -->
+              </div>
+            </div>
+
+            <div class="complaint-meta"
+              style="padding: 0 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span id="complaint-status" class="complaint-status">Pending</span>
+              <span id="complaint-priority" class="complaint-priority">Medium</span>
+              <span id="complaint-date" style="font-size: 0.65rem; color: #64748b; font-weight: 500;"></span>
+            </div>
+
+            <!-- Description -->
+            <div class="content-section" style="background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Description</h3>
+              <p id="complaint-description" class="text-gray-700 leading-relaxed"></p>
+            </div>
+
+            <!-- AI Analytics (Hidden by default) -->
+            <div id="ai-analytics-section" class="content-section"
+              style="display: none; background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                <i class="fas fa-brain text-purple-600"></i> AI Intelligence
+              </h3>
+              <div id="ai-analytics-content" class="text-sm space-y-2"
+                style="background: transparent; border: none; padding: 0;"></div>
+            </div>
+
+            <!-- Complainant -->
+            <div id="complainant-section" class="content-section"
+              style="display: none; background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">👤 Complainant</h3>
+              <div id="complainant-info" class="complainant-info"
+                style="background: transparent; border: none; padding: 0;"></div>
+            </div>
+
+            <!-- Attachments -->
+            <div class="content-section" style="background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Attachments</h3>
+              <div id="complaint-attachments" class="attachments-list"></div>
+            </div>
+          </div>
+
+          <!-- Column 2: Location Context -->
+          <div class="glass-panel location-panel">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <h3 class="text-sm font-bold text-gray-800 m-0">Location Context</h3>
+              <button id="view-on-map-btn" class="btn btn-secondary btn-xs"
+                style="font-size: 0.7rem; padding: 2px 8px;">Full Map</button>
+            </div>
+
+            <div id="complaint-map" class="complaint-map" style="flex: 1; min-height: 200px;"></div>
+
+            <div class="content-section"
+              style="margin-top: 8px; background: rgba(248, 250, 252, 0.4); border: none; box-shadow: none;">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Address Details</h3>
+              <div id="complaint-location" class="location-info"></div>
+            </div>
+          </div>
+
+          <!-- Column 3: Timeline -->
+          <div class="glass-panel status-timeline-panel">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <h3 class="text-sm font-bold text-gray-800 m-0">Status Progress</h3>
+              <div id="timeline-badge"
+                class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase">Active</div>
+            </div>
+            <div id="timeline-items" class="progress-stepper" style="flex: 1; overflow-y: auto; padding-right: 4px;">
+              <!-- Timeline entries -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer"></footer>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-container"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="/js/components/header.js"></script>
+  <script type="module" src="/js/components/sidebar.js"></script>
+  <script type="module" src="/js/auth/authChecker.js"></script>
+  <script type="module" src="/js/auth/roleToggle.js"></script>
+  <script type="module" src="/js/components/toast.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet Routing Machine - DISABLED -->
+  <!-- <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script> -->
+  <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" /> -->
+  <script type="module" src="/js/pages/complaintDetails.js"></script>
+</body>
+
+</html>

@@ -55,10 +55,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadBoundaries();
 
     // If heatmap visualization exists, reload data to apply boundary filtering
-    // if (window.heatmapViz && typeof window.heatmapViz.loadComplaintData === "function") {
+    // if (window.heatmapViz && typeof window.heatmapViz.loadcomplaintData === "function") {
     //   console.log("[BOUNDARY] Boundaries loaded, reloading heatmap data with boundary filter");
     //   const currentFilters = window.heatmapViz.currentFilters || {};
-    //   await window.heatmapViz.loadComplaintData(currentFilters);
+    //   await window.heatmapViz.loadcomplaintData(currentFilters);
 
     //   // Recreate heatmap and markers with filtered data
     //   if (window.heatmapViz.heatmapLayer) {

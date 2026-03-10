@@ -3,7 +3,7 @@ const { extractUserMetadata } = require("../utils/authUtils");
 
 const supabase = Database.getClient();
 
-class OAuthController {
+class oauthController {
   /**
    * Check OAuth user status and determine redirect
    * This is called after OAuth authentication to check if user needs to complete profile
@@ -205,5 +205,5 @@ class OAuthController {
   }
 }
 
-module.exports = new OAuthController();
+module.exports = new oauthController();
 

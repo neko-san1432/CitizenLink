@@ -308,7 +308,7 @@ export const setupRealtimeValidation = (form) => {
  * @returns {Object}
  */
 
-export const extractComplaintFormData = (formElement) => {
+export const extractcomplaintFormData = (formElement) => {
   if (!formElement) return {};
   const getVal = (selector) => {
     const el = formElement.querySelector(selector);
@@ -374,7 +374,7 @@ export const isWithinCityBoundary = async (latitude, longitude) => {
  * @returns {{ valid: boolean, errors: string[] }}
  */
 
-export const validateComplaintForm = (data) => {
+export const validatecomplaintForm = (data) => {
   const errors = [];
   if (!data) {
     return { valid: false, errors: ["Invalid form data"] };
@@ -423,7 +423,7 @@ export const validateComplaintForm = (data) => {
  * @param {number} longitude - Longitude coordinate
  * @returns {Promise<{valid: boolean, error?: string}>}
  */
-export const validateComplaintCoordinates = async (latitude, longitude) => {
+export const validatecomplaintCoordinates = async (latitude, longitude) => {
   if (typeof latitude !== "number" || typeof longitude !== "number") {
     return { valid: false, error: "Coordinates must be numeric" };
   }
@@ -436,7 +436,7 @@ export const validateComplaintCoordinates = async (latitude, longitude) => {
   if (!withinBoundary) {
     return {
       valid: false,
-      error: "Complaint location must be within Digos City boundaries",
+      error: "complaint location must be within Digos City boundaries",
     };
   }
 

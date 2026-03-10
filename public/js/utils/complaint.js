@@ -1,4 +1,4 @@
-// Complaint-related utilities (status/priority mappings)
+// complaint-related utilities (status/priority mappings)
 
 export function getStatusText(status) {
   const statusTexts = {

@@ -30,10 +30,10 @@ const SWITCHABLE_ROLES = [
   "super-admin"
 ];
 // FC-11 NOTE: These COMPLAINT_STATUS and WORKFLOW_STATUS constants are defined
-// for reference but are NOT currently used by ComplaintService (which uses its
+// for reference but are NOT currently used by complaintService (which uses its
 // own inline validStatuses array). Align these with the VALID_TRANSITIONS map
-// in ComplaintService.js when refactoring.
-// Complaint Statuses
+// in complaintService.js when refactoring.
+// complaint Statuses
 const COMPLAINT_STATUS = {
   PENDING_REVIEW: "pending review",
   IN_PROGRESS: "in progress",
@@ -57,7 +57,7 @@ const PRIORITY_LEVELS = {
   HIGH: "high",
   URGENT: "urgent"
 };
-// Complaint Types
+// complaint Types
 const COMPLAINT_TYPES = {
   INFRASTRUCTURE: "infrastructure",
   PUBLIC_SAFETY: "public-safety",
@@ -85,11 +85,11 @@ const PAGINATION = {
 // API Response Messages
 const MESSAGES = {
   SUCCESS: {
-    COMPLAINT_SUBMITTED: "Complaint submitted successfully",
-    COMPLAINT_UPDATED: "Complaint updated successfully",
-    DEPARTMENT_CREATED: "Department created successfully",
-    DEPARTMENT_UPDATED: "Department updated successfully",
-    SETTING_UPDATED: "Setting updated successfully"
+    COMPLAINT_SUBMITTED: "complaint submitted successfully",
+    COMPLAINT_UPDATED: "complaint updated successfully",
+    DEPARTMENT_CREATED: "department created successfully",
+    DEPARTMENT_UPDATED: "department updated successfully",
+    SETTING_UPDATED: "setting updated successfully"
   },
   ERROR: {
     INVALID_INPUT: "Invalid input provided",

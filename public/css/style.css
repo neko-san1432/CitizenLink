@@ -1,5 +1,5 @@
 /* Enhanced Design System & Components */
-@import url('/css/design-system.css');
+@import url('/css/designSystem.css');
 @import url('/css/utilities.css');
 @import url('/css/layouts.css');
 @import url('/css/animations.css');
@@ -8,7 +8,7 @@
 @import url('/css/components/buttons.css');
 @import url('/css/components/cards.css');
 @import url('/css/components/forms.css');
-@import url('/css/components/tables-lists.css');
+@import url('/css/components/tablesLists.css');
 
 /* Original Stylesheets */
 @import url('/css/app.css');
@@ -16,10 +16,10 @@
 @import url('/css/app.css');
 @import url('/css/toast.css');
 @import url('/css/header.css');
-@import url('/css/pages/dashboard-redesign.css');
+@import url('/css/pages/dashboardRedesign.css');
 @import url('/css/components/modal.css');
 @import url('/css/components/sidebar.css');
-@import url('/css/components/header-dropdowns.css');
+@import url('/css/components/headerDropdowns.css');
 
 :root {
   --primary-50: #eff6ff;

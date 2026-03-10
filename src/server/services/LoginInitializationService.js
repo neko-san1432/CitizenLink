@@ -1,5 +1,5 @@
 /**
- * LoginInitializationService
+ * loginInitializationService
  *
  * Handles post-login initialization tasks such as:
  * - Processing complaints through NLP
@@ -10,7 +10,7 @@
  * the analytics and training queues.
  */
 
-const AdvancedDecisionEngine = require("./AdvancedDecisionEngine");
+const advancedDecisionEngine = require("./advancedDecisionEngine");
 const database = require("../config/database");
 
 // Roles that trigger full analytics initialization
@@ -72,7 +72,7 @@ class LoginInitializationService {
 
     try {
       // 1. Fetch all complaints
-      const complaints = await this.fetchComplaints();
+      const complaints = await this.fetchcomplaints();
       console.log(`[LOGIN-INIT] Fetched ${complaints.length} complaints`);
 
       if (complaints.length === 0) {
@@ -81,7 +81,7 @@ class LoginInitializationService {
       }
 
       // 2. Process complaints through NLP and queue low-confidence for HITL
-      await this.processComplaintsForHITL(complaints);
+      await this.processcomplaintsForHITL(complaints);
 
       // 3. Could add DBSCAN clustering here if needed
       // await this.runClustering(complaints);
@@ -99,7 +99,7 @@ class LoginInitializationService {
   /**
      * Fetch complaints from database
      */
-  async fetchComplaints() {
+  async fetchcomplaints() {
     const { data, error } = await this.supabase
       .from("complaints")
       .select("id, description, original_text, category, subcategory, status, created_at")
@@ -117,7 +117,7 @@ class LoginInitializationService {
   /**
      * Process complaints through NLP and queue low-confidence items for HITL
      */
-  async processComplaintsForHITL(complaints) {
+  async processcomplaintsForHITL(complaints) {
     const CONFIDENCE_THRESHOLD = 0.7;
     const itemsToQueue = [];
 
@@ -129,7 +129,7 @@ class LoginInitializationService {
         if (!text) continue;
 
         // Run NLP classification
-        const result = await AdvancedDecisionEngine.classify(text);
+        const result = await advancedDecisionEngine.classify(text);
 
         const confidence = result?.confidence || 0.5;
         const isOthers = result?.category === "Others" || complaint.category === "Others";
@@ -160,7 +160,7 @@ class LoginInitializationService {
 
     if (itemsToQueue.length > 0) {
       // Batch queue to database
-      const result = await AdvancedDecisionEngine.batchQueueForReview(itemsToQueue);
+      const result = await advancedDecisionEngine.batchQueueForReview(itemsToQueue);
       console.log(`[LOGIN-INIT] ✅ Queued ${result.queued} items (${result.skipped} duplicates skipped)`);
     }
   }

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         data: {
           labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
           datasets: [{
-            label: "Incoming Complaints",
+            label: "Incoming complaints",
             data: [12, 19, 3, 5, 2, 3, 7],
             borderColor: "rgb(75, 192, 192)",
             tension: 0.1
@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error("Failed to load dashboard stats:", error);
   } finally {
+    // Reveal the dashboard only when everything is ready
     hideDashboardLoader();
   }
 });
@@ -72,12 +73,12 @@ async function loadNotices() {
   try {
     const response = await fetch("/api/content/notices?limit=5&status=active");
     const result = await response.json();
-    
+
     if (result.success && result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(notice => {
         const priorityColor = notice.priority === 'urgent' || notice.priority === 'high' ? 'text-red-700 font-bold' : 'text-gray-800 font-semibold';
         const dateStr = new Date(notice.valid_from).toLocaleDateString([], { month: 'short', day: 'numeric' });
-        
+
         return `
           <div class="p-3 bg-white rounded-lg border border-red-100 shadow-sm hover:shadow-md transition">
             <div class="flex justify-between items-start mb-1">
@@ -104,12 +105,12 @@ async function loadNews() {
   try {
     const response = await fetch("/api/content/news?limit=5&status=published");
     const result = await response.json();
-    
+
     if (result.success && result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(item => {
         const dateStr = new Date(item.published_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
         const categoryTag = item.category ? `<span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium mb-1">${item.category}</span>` : '';
-        
+
         return `
           <div class="p-3 bg-white rounded-lg border border-blue-100 shadow-sm hover:shadow-md transition">
             ${categoryTag}
@@ -137,11 +138,11 @@ async function loadEvents() {
   try {
     const response = await fetch("/api/content/events?limit=5&status=upcoming");
     const result = await response.json();
-    
+
     if (result.success && result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(event => {
         const dateStr = new Date(event.event_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-        
+
         return `
           <div class="p-3 bg-white rounded-lg border border-emerald-100 shadow-sm hover:shadow-md transition">
             <div class="flex items-center gap-3">

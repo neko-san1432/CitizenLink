@@ -1,5 +1,5 @@
 /**
- * Department Utilities
+ * department Utilities
  * Provides dynamic department name mapping and lookup functions
  */
 import apiClient from "../config/apiClient.js";
@@ -12,7 +12,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
  * Get all departments with their codes and names
  */
 
-export async function getDepartments() {
+export async function getdepartments() {
   const now = Date.now();
   // Return cached data if still valid
   if (departmentCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
@@ -57,8 +57,8 @@ export async function getDepartments() {
  * Get department name by code
  */
 
-export async function getDepartmentNameByCode(code) {
-  const departments = await getDepartments();
+export async function getdepartmentNameByCode(code) {
+  const departments = await getdepartments();
   const department = departments.find(dept => dept.code === code);
   return department ? department.name : code;
 }
@@ -66,34 +66,34 @@ export async function getDepartmentNameByCode(code) {
 /**
  * Get department name by ID or code (handles both numeric IDs and codes)
  */
-export async function getDepartmentNameByIdOrCode(idOrCode) {
-  const departments = await getDepartments();
+export async function getdepartmentNameByIdOrCode(idOrCode) {
+  const departments = await getdepartments();
   // Try to find by ID (if numeric) or by code
   const department = departments.find(dept =>
     String(dept.id) === String(idOrCode) || dept.code === idOrCode
   );
-  return department ? department.name : (typeof idOrCode === "number" ? `Department ${idOrCode}` : idOrCode);
+  return department ? department.name : (typeof idOrCode === "number" ? `department ${idOrCode}` : idOrCode);
 }
 
 /**
  * Get all departments as a simple array (for dropdowns, etc.)
  * Uses /api/departments/active endpoint for better performance
  */
-let activeDepartmentsCache = null;
-let activeDepartmentsCacheTimestamp = null;
+let activedepartmentsCache = null;
+let activedepartmentsCacheTimestamp = null;
 
-export async function getActiveDepartments() {
+export async function getActivedepartments() {
   const now = Date.now();
   // Return cached data if still valid
-  if (activeDepartmentsCache && activeDepartmentsCacheTimestamp && (now - activeDepartmentsCacheTimestamp) < CACHE_DURATION) {
-    return activeDepartmentsCache;
+  if (activedepartmentsCache && activedepartmentsCacheTimestamp && (now - activedepartmentsCacheTimestamp) < CACHE_DURATION) {
+    return activedepartmentsCache;
   }
   try {
     const response = await fetch("/api/departments/active");
     const result = await response.json();
     if (result.success && result.data) {
-      activeDepartmentsCache = result.data;
-      activeDepartmentsCacheTimestamp = now;
+      activedepartmentsCache = result.data;
+      activedepartmentsCacheTimestamp = now;
       return result.data;
     }
     return [];

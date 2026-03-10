@@ -3,8 +3,8 @@
  * Provides barangay prioritization insights based on complaint volume and clusters
  */
 const Database = require("../config/database");
-const { classifyComplaints } = require("../utils/barangayClassifier");
-const SimilarityCalculatorService = require("./SimilarityCalculatorService");
+const { classifycomplaints } = require("../utils/barangayClassifier");
+const SimilarityCalculatorService = require("./similarityCalculatorService");
 
 class InsightsService {
   constructor() {
@@ -46,7 +46,7 @@ class InsightsService {
       }
 
       // Classify complaints by barangay based on coordinates
-      const complaintBarangayMap = classifyComplaints(complaints);
+      const complaintBarangayMap = classifycomplaints(complaints);
 
       console.log(
         `[INSIGHTS] Classified ${complaintBarangayMap.size} out of ${complaints.length} complaints into barangays`
@@ -58,13 +58,13 @@ class InsightsService {
       if (complaints.length >= 3) {
         try {
           // Use DBSCAN clustering with reasonable parameters for prioritization
-          const clusterResults = this.similarityService.clusterComplaints(
+          const clusterResults = this.similarityService.clustercomplaints(
             complaints,
             0.1, // 0.1 radius (requested)
             5 // minimum 5 complaints per cluster
           );
 
-          // clusterComplaints returns array with complaint_ids property
+          // clustercomplaints returns array with complaint_ids property
           clusters = clusterResults
             .map((cluster) => ({
               complaint_ids: cluster.complaint_ids || [],
@@ -146,7 +146,7 @@ class InsightsService {
         } else if (!barangay) {
           // Log unclassified complaints for debugging
           console.warn(
-            `[INSIGHTS] Complaint ${complaint.id} could not be classified into a barangay. Coords: (${complaint.latitude}, ${complaint.longitude})`
+            `[INSIGHTS] complaint ${complaint.id} could not be classified into a barangay. Coords: (${complaint.latitude}, ${complaint.longitude})`
           );
         }
       });
@@ -155,17 +155,17 @@ class InsightsService {
       // A cluster belongs to a barangay if any complaint in the cluster belongs to that barangay
       // AND the cluster contains at least one complaint from the current period
       if (clusters && clusters.length > 0) {
-        const periodComplaintIds = new Set(complaints.map((c) => c.id));
+        const periodcomplaintIds = new Set(complaints.map((c) => c.id));
 
         clusters.forEach((cluster) => {
           if (!cluster.complaint_ids || cluster.complaint_ids.length === 0)
             return;
 
           // Check if this cluster contains any complaints from the current period
-          const hasPeriodComplaints = cluster.complaint_ids.some((id) =>
-            periodComplaintIds.has(id)
+          const hasPeriodcomplaints = cluster.complaint_ids.some((id) =>
+            periodcomplaintIds.has(id)
           );
-          if (!hasPeriodComplaints) {
+          if (!hasPeriodcomplaints) {
             // Skip clusters that don't contain any complaints from the current period
             return;
           }
@@ -173,7 +173,7 @@ class InsightsService {
           const clusterBarangays = new Set();
           cluster.complaint_ids.forEach((complaintId) => {
             // Only count complaints from the current period
-            if (!periodComplaintIds.has(complaintId)) return;
+            if (!periodcomplaintIds.has(complaintId)) return;
 
             // Find which barangay this complaint belongs to
             for (const [barangay, data] of barangayData.entries()) {
@@ -195,17 +195,17 @@ class InsightsService {
       }
 
       // Calculate statistics for frequency thresholds
-      const allComplaintCounts = Array.from(barangayData.values()).map(
+      const allcomplaintCounts = Array.from(barangayData.values()).map(
         (d) => d.complaintCount
       );
-      const avgComplaints =
-        allComplaintCounts.length > 0
-          ? allComplaintCounts.reduce((a, b) => a + b, 0) /
-            allComplaintCounts.length
+      const avgcomplaints =
+        allcomplaintCounts.length > 0
+          ? allcomplaintCounts.reduce((a, b) => a + b, 0) /
+            allcomplaintCounts.length
           : 0;
 
       // Calculate frequency thresholds (low, medium, high)
-      const sortedCounts = [...allComplaintCounts].sort((a, b) => a - b);
+      const sortedCounts = [...allcomplaintCounts].sort((a, b) => a - b);
       const lowThreshold =
         sortedCounts.length > 0
           ? sortedCounts[Math.floor(sortedCounts.length * 0.33)] || 0
@@ -221,7 +221,7 @@ class InsightsService {
 
       // Get ALL complaints (not just current period) for calculating averages
       // We need historical data to calculate proper averages
-      const { data: allHistoricalComplaints, error: allComplaintsError } =
+      const { data: allHistoricalcomplaints, error: allcomplaintsError } =
         await this.supabase
           .from("complaints")
           .select("id, submitted_at, latitude, longitude")
@@ -229,30 +229,30 @@ class InsightsService {
           .not("longitude", "is", null)
           .neq("workflow_status", "cancelled");
 
-      if (allComplaintsError) {
+      if (allcomplaintsError) {
         console.warn(
           "[INSIGHTS] Error fetching historical complaints for averages:",
-          allComplaintsError
+          allcomplaintsError
         );
       }
 
       // Classify all historical complaints by barangay
-      const allComplaintsBarangayMap =
-        allHistoricalComplaints && allHistoricalComplaints.length > 0
-          ? classifyComplaints(allHistoricalComplaints)
+      const allcomplaintsBarangayMap =
+        allHistoricalcomplaints && allHistoricalcomplaints.length > 0
+          ? classifycomplaints(allHistoricalcomplaints)
           : new Map();
 
       // Group all historical complaints by barangay
-      const barangayHistoricalComplaints = new Map();
-      allComplaintsBarangayMap.forEach((barangayName, complaintId) => {
-        if (!barangayHistoricalComplaints.has(barangayName)) {
-          barangayHistoricalComplaints.set(barangayName, []);
+      const barangayHistoricalcomplaints = new Map();
+      allcomplaintsBarangayMap.forEach((barangayName, complaintId) => {
+        if (!barangayHistoricalcomplaints.has(barangayName)) {
+          barangayHistoricalcomplaints.set(barangayName, []);
         }
-        const complaint = allHistoricalComplaints.find(
+        const complaint = allHistoricalcomplaints.find(
           (c) => c.id === complaintId
         );
         if (complaint) {
-          barangayHistoricalComplaints.get(barangayName).push(complaint);
+          barangayHistoricalcomplaints.get(barangayName).push(complaint);
         }
       });
 
@@ -266,10 +266,10 @@ class InsightsService {
         };
 
         // Get all historical complaints for this barangay
-        const barangayComplaints =
-          barangayHistoricalComplaints.get(barangayName) || [];
+        const barangaycomplaints =
+          barangayHistoricalcomplaints.get(barangayName) || [];
 
-        if (barangayComplaints.length === 0) {
+        if (barangaycomplaints.length === 0) {
           return averages;
         }
 
@@ -280,16 +280,16 @@ class InsightsService {
         const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
         // Count complaints in each period
-        const _dailyCount = barangayComplaints.filter(
+        const _dailyCount = barangaycomplaints.filter(
           (c) => new Date(c.submitted_at) >= oneDayAgo
         ).length;
-        const weeklyCount = barangayComplaints.filter(
+        const weeklyCount = barangaycomplaints.filter(
           (c) => new Date(c.submitted_at) >= oneWeekAgo
         ).length;
-        const monthlyCount = barangayComplaints.filter(
+        const monthlyCount = barangaycomplaints.filter(
           (c) => new Date(c.submitted_at) >= oneMonthAgo
         ).length;
-        const yearlyCount = barangayComplaints.filter(
+        const yearlyCount = barangaycomplaints.filter(
           (c) => new Date(c.submitted_at) >= oneYearAgo
         ).length;
 
@@ -360,7 +360,7 @@ class InsightsService {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         statistics: {
-          averageComplaints: Math.round(avgComplaints * 100) / 100,
+          averagecomplaints: Math.round(avgcomplaints * 100) / 100,
           frequencyThresholds: {
             low: lowThreshold,
             medium: mediumThreshold,
