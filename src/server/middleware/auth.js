@@ -36,11 +36,38 @@ const authenticateUser = async (req, res, next) => {
       );
     }
 
-    // Validate token with Supabase
-    const {
-      data: { user: tokenUser },
-      error,
-    } = await supabase.auth.getUser(token);
+    // --- TEST LOGIN BYPASS (DEV MODE) ---
+    let tokenUser = null;
+    let error = null;
+
+    if (process.env.ENABLE_TEST_LOGIN === "true" && token?.startsWith("test-login-token-")) {
+      const role = token.replace("test-login-token-", "");
+      console.log(`[AUTH] [TEST_LOGIN] Recognizing test token for role: ${role}`);
+
+      tokenUser = {
+        id: `test-uid-${role}`,
+        email: `${role}@drims.test`,
+        email_confirmed_at: new Date().toISOString(),
+        user_metadata: {
+          role: role,
+          name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          status: "active"
+        },
+        raw_user_meta_data: {
+          role: role,
+          name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          status: "active"
+        }
+      };
+    } else {
+      // Validate token with Supabase
+      const {
+        data: { user: supabaseUser },
+        error: supabaseError,
+      } = await supabase.auth.getUser(token);
+      tokenUser = supabaseUser;
+      error = supabaseError;
+    }
 
     if (error || !tokenUser) {
       // Clear invalid cookie

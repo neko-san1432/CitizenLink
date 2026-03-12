@@ -1,3 +1,5 @@
+import skeletonLoader from "./skeletonLoader.js";
+
 /**
  * ThemeManager
  * Handles global theme state (light, dark).

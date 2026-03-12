@@ -1,0 +1,142 @@
+/* 
+ * Global Skeleton Loading Styles
+ * Part of DRIMS Premium Design System
+ */
+
+:root {
+    --skeleton-bg: rgba(229, 231, 235, 0.4);
+    --skeleton-shimmer: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    --skeleton-speed: 1.5s;
+}
+
+/* Base Skeleton Pulse */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--skeleton-bg);
+    border-radius: 8px;
+    z-index: 1;
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: var(--skeleton-shimmer);
+    animation: shimmer var(--skeleton-speed) infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Global Overlay */
+#global-skeleton-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #ffffff;
+    z-index: 99999;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s;
+    overflow: hidden;
+}
+
+[data-theme="dark"] #global-skeleton-loader {
+    background: #0f172a;
+    --skeleton-bg: rgba(30, 41, 59, 0.5);
+    --skeleton-shimmer: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%);
+}
+
+.skeleton-header {
+    height: 60px;
+    width: 100%;
+}
+
+.skeleton-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    z-index: 10;
+}
+
+.skeleton-main {
+    margin-left: 280px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.skeleton-card {
+    height: 180px;
+    width: 100%;
+}
+
+.skeleton-title {
+    height: 32px;
+    width: 250px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-text {
+    height: 16px;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-circle {
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+}
+
+/* Layout for the global loader */
+.skeleton-layout {
+    display: flex;
+    gap: 2rem;
+    height: 100%;
+}
+
+.skeleton-content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* Hide the loader when finished */
+.skeleton-fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .skeleton-sidebar {
+        display: none;
+    }
+
+    .skeleton-main {
+        margin-left: 0;
+    }
+}

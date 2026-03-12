@@ -156,7 +156,7 @@ router.get("/publication", authenticateUser, (req, res) => {
 // File complaint page (citizen only or staff in citizen mode)
 router.get("/filecomplaint", authenticateUser, (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "citizen", "filecomplaint.html")
+    path.join(config.rootDir, "views", "pages", "citizen", "fileComplaint.html")
   );
 });
 
@@ -170,7 +170,7 @@ router.get("/departments", authenticateUser, (req, res) => {
         "views",
         "pages",
         "admin",
-        "department-structure.html"
+        "departmentStructure.html"
       )
     );
   } else {
@@ -195,12 +195,12 @@ router.get(
 // complaint Details page (authenticated users only)
 router.get("/complaint-details", authenticateUser, (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "complaint-details.html")
+    path.join(config.rootDir, "views", "pages", "complaintDetails.html")
   );
 });
 router.get("/complaint-details/:id", authenticateUser, (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "complaint-details.html")
+    path.join(config.rootDir, "views", "pages", "complaintDetails.html")
   );
 });
 
@@ -225,7 +225,7 @@ router.get(
         "views",
         "pages",
         "admin",
-        "nlp-training.html"
+        "nlpTraining.html"
       )
     );
   }
@@ -295,7 +295,7 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "lgu-admin",
+        "lguAdmin",
         "brainAnalytics.html"
       )
     );
@@ -311,8 +311,8 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "lgu-admin",
-        "dictionary-manager.html"
+        "lguAdmin",
+        "dictionaryManager.html"
       )
     );
   }
@@ -405,7 +405,7 @@ router.get(
         "views",
         "pages",
         "coordinator",
-        "review-queue.html"
+        "reviewQueue.html"
       )
     );
   }
@@ -455,8 +455,8 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "super-admin",
-        "user-manager.html"
+        "superAdmin",
+        "userManager.html"
       )
     );
   }
@@ -476,11 +476,11 @@ const authPages = [
   "login",
   "signup",
   "resetPass",
-  // "reset-password", // Allow logged-in users to access reset password page
-  "confirm-password-change",
+  // "resetPassword", // Allow logged-in users to access reset password page
+  "confirmPasswordChange",
   "oAuthContinuation",
   "success",
-  "email-verification-success",
+  "emailVerificationSuccess",
 ];
 authPages.forEach((page) => {
   router.get(`/${page}`, redirectIfAuthenticated, (req, res) => {
@@ -491,7 +491,7 @@ authPages.forEach((page) => {
 // Explicitly define reset-password route without redirectIdAuthenticated
 router.get("/reset-password", (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "reset-password.html")
+    path.join(config.rootDir, "views", "pages", "resetPassword.html")
   );
 });
 
@@ -509,7 +509,7 @@ router.get(
 // OAuth callback page (handles OAuth redirect)
 router.get("/oauth-callback", (req, res) => {
   res.sendFile(
-    path.join(config.rootDir, "views", "pages", "oauth-callback.html")
+    path.join(config.rootDir, "views", "pages", "oauthCallback.html")
   );
 });
 
@@ -520,7 +520,7 @@ router.get("/signup-with-code", redirectIfAuthenticated, (req, res) => {
     "views",
     "pages",
     "auth",
-    "signup-with-code.html"
+    "signupWithCode.html"
   );
   res.sendFile(filePath);
 });
@@ -538,17 +538,17 @@ router.get("/terms", (req, res) => {
   );
 });
 
-// [LEGACY] Complete position signup — HR flow deprecated
-// router.get("/complete-position-signup", (req, res) => {
-//   res.sendFile(
-//     path.join(
-//       config.rootDir,
-//       "views",
-//       "pages",
-//       "auth",
-//       "complete-position-signup.html"
-//     )
-//   );
-// });
+// Complete position signup — HR flow
+router.get("/complete-position-signup", (req, res) => {
+  res.sendFile(
+    path.join(
+      config.rootDir,
+      "views",
+      "pages",
+      "auth",
+      "completePositionSignup.html"
+    )
+  );
+});
 
 module.exports = router;

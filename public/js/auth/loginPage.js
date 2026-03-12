@@ -24,4 +24,77 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  // Test Login Logic
+  async function initTestLogin() {
+    try {
+      const response = await fetch("/api/config");
+      const config = await response.json();
+
+      if (config.testLoginEnabled && config.testEmails) {
+        injectTestUI(config.testEmails);
+      }
+    } catch (error) {
+      console.warn("[TEST LOGIN] Failed to load config:", error);
+    }
+  }
+
+  function injectTestUI(testEmails) {
+    const sidebar = document.querySelector(".auth-sidebar");
+    if (!sidebar) return;
+
+    const testSection = document.createElement("div");
+    testSection.className = "oauth-section test-login-section";
+    testSection.style.marginTop = "2rem";
+    testSection.style.paddingTop = "2rem";
+    testSection.style.borderTop = "1px solid rgba(255, 255, 255, 0.1)";
+
+    testSection.innerHTML = `
+      <h3 class="oauth-title" style="color: var(--primary-color)">Quick Login (Test Mode)</h3>
+      <div class="oauth-buttons" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button type="button" class="btn btn-secondary test-btn" data-email="${testEmails.citizen}" data-role="Citizen">
+          <span>Login as Citizen</span>
+        </button>
+        <button type="button" class="btn btn-secondary test-btn" data-email="${testEmails.lgu}" data-role="LGU">
+          <span>Login as LGU</span>
+        </button>
+        <button type="button" class="btn btn-secondary test-btn" data-email="${testEmails.superAdmin}" data-role="Super Admin">
+          <span>Login as Super Admin</span>
+        </button>
+      </div>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 1rem; text-align: center;">
+        Password: <code>${testEmails.password}</code>
+      </p>
+    `;
+
+    sidebar.appendChild(testSection);
+
+    // Add event listeners to test buttons
+    testSection.querySelectorAll(".test-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const emailInput = document.getElementById("email");
+        const passInput = document.getElementById("password");
+        const loginForm = document.getElementById("login");
+
+        if (emailInput && passInput && loginForm) {
+          emailInput.value = btn.dataset.email;
+          passInput.value = testEmails.password;
+
+          // Trigger input events for any validation logic
+          emailInput.dispatchEvent(new Event("input", { bubbles: true }));
+          passInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+          // Show a quick message
+          const btnText = btn.querySelector("span");
+          // const originalText = btnText.textContent;
+          btnText.textContent = "Logging in...";
+
+          // Submit the form
+          loginForm.dispatchEvent(new Event("submit", { cancelable: true }));
+        }
+      });
+    });
+  }
+
+  initTestLogin();
 });

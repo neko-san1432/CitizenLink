@@ -4,7 +4,7 @@ import showMessage from "../components/toast.js";
 import { renderPrivacyNotice } from "../utils/privacyContent.js";
 import { getOAuthContext, setOAuthContext, clearOAuthContext, suppressAuthErrorNotifications } from "../auth/authChecker.js";
 import { getCsrfToken } from "../utils/csrf.js";
-import { shouldSkipAuthCheck } from "../utils/oauth-cleanup.js";
+import { shouldSkipAuthCheck } from "../utils/oauthCleanup.js";
 
 // Check if user is already logged in and redirect to dashboard
 const shouldDeferAuthRedirect = () => {

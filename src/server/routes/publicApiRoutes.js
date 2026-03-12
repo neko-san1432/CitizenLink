@@ -51,7 +51,14 @@ function evictOldestCacheEntries() {
 router.get("/config", apiLimiter, (req, res) => {
   res.json({
     legacyRolesEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
-    legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLES === "true"
+    legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
+    testLoginEnabled: process.env.ENABLE_TEST_LOGIN === "true",
+    testEmails: process.env.ENABLE_TEST_LOGIN === "true" ? {
+      citizen: process.env.TEST_CITIZEN_EMAIL,
+      lgu: process.env.TEST_LGU_EMAIL,
+      superAdmin: process.env.TEST_SUPER_ADMIN_EMAIL,
+      password: process.env.TEST_PASSWORD
+    } : null
   });
 });
 
@@ -71,7 +78,7 @@ router.get("/boundaries", apiLimiter, async (req, res) => {
 // Digos city boundary endpoint (for validation)
 router.get("/digos-boundary", apiLimiter, async (req, res) => {
   try {
-    const filePath = path.join(config.rootDir, "src", "client", "assets", "digos-city-boundary.json");
+    const filePath = path.join(config.rootDir, "public", "assets", "json", "digosCityBoundary.json");
     const fs = require("fs").promises;
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe: reading static asset file with hardcoded path

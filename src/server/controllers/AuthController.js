@@ -178,6 +178,63 @@ class AuthController {
           error: emailValidation.error,
         });
       }
+      // --- TEST LOGIN BYPASS (DEV MODE) ---
+      if (process.env.ENABLE_TEST_LOGIN === "true" && password === process.env.TEST_PASSWORD) {
+        const testEmails = {
+          [process.env.TEST_CITIZEN_EMAIL]: "citizen",
+          [process.env.TEST_LGU_EMAIL]: "lgu",
+          [process.env.TEST_SUPER_ADMIN_EMAIL]: "super-admin"
+        };
+
+        if (testEmails[email]) {
+          const role = testEmails[email];
+          logger.log("AUTH", `[TEST_LOGIN] Bypassing auth for ${email} (Role: ${role})`);
+
+          // Create a mock user object
+          const mockUser = {
+            id: `test-uid-${role}`,
+            email: email,
+            email_confirmed_at: new Date().toISOString(),
+            user_metadata: {
+              role: role,
+              name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+              first_name: "Test",
+              last_name: role.charAt(0).toUpperCase() + role.slice(1),
+              status: "active"
+            },
+            raw_user_meta_data: {
+              role: role,
+              name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+              status: "active"
+            }
+          };
+
+          // Generate a mock token that the middleware will recognize
+          const mockToken = `test-login-token-${role}`;
+          const cookieOptions = getCookieOptions(remember);
+          res.cookie("sb_access_token", mockToken, cookieOptions);
+
+          // Return success response mimicking Supabase
+          return res.json({
+            success: true,
+            data: {
+              user: {
+                id: mockUser.id,
+                email: mockUser.email,
+                name: mockUser.user_metadata.name,
+                role: role,
+                normalizedRole: role,
+                status: "active"
+              },
+              // Return mock token for client-side (though middleware handles it)
+              refresh_token: "test-refresh-token",
+              expires_at: Math.floor(Date.now() / 1000) + 3600
+            },
+            message: "Test login successful (Bypass Mode)"
+          });
+        }
+      }
+
       // Supabase Auth login
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
