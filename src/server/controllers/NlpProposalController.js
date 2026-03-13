@@ -1,4 +1,4 @@
-const nlpProposalService = require("../services/nlpProposalService");
+const nlpProposalService = require("../services/ml/NlpProposalService");
 
 class NlpProposalController {
   async createProposal(req, res) {

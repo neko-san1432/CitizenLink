@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const AuditLogRepository = require("../repositories/auditLogRepository");
+const AuditLogRepository = require("../repositories/AuditLogRepository");
 
 class ComplianceService {
   constructor() {

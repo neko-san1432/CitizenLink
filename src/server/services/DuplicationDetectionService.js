@@ -1,4 +1,4 @@
-const ComplaintRepository = require("../repositories/complaintRepository");
+const ComplaintRepository = require("../repositories/ComplaintRepository");
 const Database = require("../config/database");
 
 /**

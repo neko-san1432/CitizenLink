@@ -3,12 +3,12 @@
  * Verifies that the controller enforces department filtering based on user roles
  */
 
-const ComplaintController = require("../../src/server/controllers/complaintController");
-const complaintService = require("../../src/server/services/complaintService");
+const ComplaintController = require("../../src/server/controllers/ComplaintController");
+const complaintService = require("../../src/server/services/ComplaintService");
 const { createMockRequest, createMockResponse } = require("../utils/testHelpers");
 
 // Mock complaintService
-jest.mock("../../src/server/services/complaintService");
+jest.mock("../../src/server/services/ComplaintService");
 
 describe("Heatmap Role-Based Filtering", () => {
   let complaintController;

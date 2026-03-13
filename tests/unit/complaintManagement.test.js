@@ -28,7 +28,7 @@ describe("complaintService - Management Features", () => {
       createNotification: jest.fn().mockResolvedValue(true)
     };
 
-    complaintService = require("../../src/server/services/complaintService");
+    complaintService = require("../../src/server/services/ComplaintService");
     // Inject mocks via constructor
     complaintService = new ComplaintService(mockcomplaintRepo, null, null, mocknotificationService);
   });

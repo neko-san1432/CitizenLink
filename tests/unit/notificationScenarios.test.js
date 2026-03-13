@@ -1,4 +1,4 @@
-const ComplaintService = require("../../src/server/services/complaintService");
+const ComplaintService = require("../../src/server/services/ComplaintService");
 
 describe("Notification scenarios (current services)", () => {
   let complaintService;

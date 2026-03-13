@@ -93,12 +93,12 @@ function renderFeed(containerId, items, type) {
   }
 
   container.innerHTML = items.map(item => {
-    let title = item.title || "Untitled";
-    let dateStr = item.published_at || item.created_at || item.event_date;
-    let date = dateStr ? new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' }) : "";
+    const title = item.title || "Untitled";
+    const dateStr = item.published_at || item.created_at || item.event_date;
+    const date = dateStr ? new Date(dateStr).toLocaleDateString([], { month: "short", day: "numeric" }) : "";
 
-    if (type === 'notices') {
-      const priorityColor = item.priority === 'urgent' || item.priority === 'high' ? 'text-red-700 font-bold' : 'text-gray-800 font-semibold';
+    if (type === "notices") {
+      const priorityColor = item.priority === "urgent" || item.priority === "high" ? "text-red-700 font-bold" : "text-gray-800 font-semibold";
       return `
           <div class="p-3 bg-white rounded-lg border border-red-100 shadow-sm hover:shadow-md transition">
             <div class="flex justify-between items-start mb-1">
@@ -108,8 +108,8 @@ function renderFeed(containerId, items, type) {
             <p class="text-xs text-gray-600 line-clamp-2">${item.content}</p>
           </div>
         `;
-    } else if (type === 'news') {
-      const categoryTag = item.category ? `<span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium mb-1">${item.category}</span>` : '';
+    } else if (type === "news") {
+      const categoryTag = item.category ? `<span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium mb-1">${item.category}</span>` : "";
       return `
           <div class="p-3 bg-white rounded-lg border border-blue-100 shadow-sm hover:shadow-md transition">
             ${categoryTag}
@@ -120,13 +120,13 @@ function renderFeed(containerId, items, type) {
             <p class="text-xs text-gray-600 line-clamp-2">${item.excerpt || item.content}</p>
           </div>
         `;
-    } else if (type === 'events') {
+    } else if (type === "events") {
       const eventDate = new Date(dateStr);
       return `
           <div class="p-3 bg-white rounded-lg border border-emerald-100 shadow-sm hover:shadow-md transition">
             <div class="flex items-center gap-3">
               <div class="flex flex-col items-center justify-center pt-1 pb-1 px-2 bg-emerald-50 rounded text-emerald-700 min-w-[32px] flex-shrink-0 border border-emerald-100">
-                <span class="text-[9px] font-bold leading-none mb-0.5">${eventDate.toLocaleDateString([], { month: 'short' }).toUpperCase()}</span>
+                <span class="text-[9px] font-bold leading-none mb-0.5">${eventDate.toLocaleDateString([], { month: "short" }).toUpperCase()}</span>
                 <span class="text-sm font-black leading-none">${eventDate.getDate()}</span>
               </div>
               <div class="flex-1">
@@ -136,7 +136,7 @@ function renderFeed(containerId, items, type) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span class="line-clamp-1">${item.location || 'TBA'}</span>
+                  <span class="line-clamp-1">${item.location || "TBA"}</span>
                 </div>
               </div>
             </div>
@@ -173,10 +173,10 @@ function updateActivity(activities) {
            </div>
             <div>
               <p class="text-sm font-medium text-gray-800">${item.descriptive_su || item.title || "Activity"
-          }</p>
+}</p>
               <p class="text-xs text-gray-500">${new Date(
-            item.submitted_at || item.created_at
-          ).toLocaleDateString()}</p>
+    item.submitted_at || item.created_at
+  ).toLocaleDateString()}</p>
             </div>
          </div>
       `

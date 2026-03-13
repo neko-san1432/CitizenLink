@@ -1,5 +1,5 @@
 const express = require("express");
-const SuperAdminController = require("../controllers/superAdminController");
+const SuperAdminController = require("../controllers/SuperAdminController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { validate, schemas } = require("../middleware/validation");
 const { csrfProtection } = require("../middleware/csrf");
@@ -35,7 +35,7 @@ router.post("/unban-user", authenticateUser, requireSuperAdmin, validate(schemas
 // User listing and details for Super Admin
 router.get("/users", authenticateUser, requireSuperAdmin, async (req, res) => {
   try {
-    const userService = require("../services/userService");
+    const userService = require("../services/user/UserService");
 
     const { search, barangay, role, department, status, page, limit } =
       req.query;
@@ -71,7 +71,7 @@ router.get(
   requireSuperAdmin,
   async (req, res) => {
     try {
-      const userService = require("../services/userService");
+      const userService = require("../services/user/UserService");
 
       const user = await userService.getUserById(req.params.id);
       if (!user)
@@ -94,7 +94,7 @@ router.get(
   requireSuperAdmin,
   async (req, res) => {
     try {
-      const ComplaintService = require("../services/complaintService");
+      const ComplaintService = require("../services/ComplaintService");
 
       const service = new ComplaintService();
       const options = {

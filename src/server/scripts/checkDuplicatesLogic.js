@@ -1,7 +1,7 @@
 require("dotenv").config();
 const Database = require("../config/database");
-const ComplaintService = require("../services/complaintService");
-const ComplaintRepository = require("../repositories/complaintRepository");
+const ComplaintService = require("../services/ComplaintService");
+const ComplaintRepository = require("../repositories/ComplaintRepository");
 
 // Same as seed
 const SEED_CONFIG = {

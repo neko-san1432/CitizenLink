@@ -43,14 +43,14 @@ describe("Link Generator (hRService)", () => {
 
     // Setup mocks using doMock
     jest.doMock("../../src/server/config/database", () => MockDatabase);
-    jest.doMock("../../src/server/services/roleManagementService", () => {
+    jest.doMock("../../src/server/services/RoleManagementService", () => {
       return jest.fn().mockImplementation(() => mockRoleService);
     });
     jest.doMock("../../src/server/utils/roleValidation", () => mockRoleValidation);
-    jest.doMock("../../src/server/services/userService", () => mockuserService);
+    jest.doMock("../../src/server/services/UserService", () => mockuserService);
 
     // Require hRService after mocks are set up
-    hRService = require("../../src/server/services/hRService");
+    hRService = require("../../src/server/services/HRService");
     hrService = new HRService();
   });
 

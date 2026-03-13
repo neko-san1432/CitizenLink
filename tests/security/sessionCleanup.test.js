@@ -33,7 +33,7 @@ describe("Session Cleanup & Data Removal", () => {
     });
 
     // Require authController AFTER mocking
-    authController = require("../../src/server/controllers/authController");
+    authController = require("../../src/server/controllers/AuthController");
 
     // We need to attach the mock query builder methods to spy on them
     // The SupabaseMock from utility might create new instances on each 'from' call

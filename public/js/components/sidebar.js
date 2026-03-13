@@ -157,10 +157,10 @@ async function setSidebarRole() {
 <div class="sidebar-brand">
   <div class="brand-logo">
     <img src="${brandConfig.logo.imageUrl}" alt="${brandConfig.name
-        } Logo" class="brand-icon" style="width: 32px; height: 32px; object-fit: contain;">
+} Logo" class="brand-icon" style="width: 32px; height: 32px; object-fit: contain;">
     <div class="brand-text">
       <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name
-        }</a>
+}</a>
       <div class="brand-subtitle">Citizen Link</div>
     </div>
   </div>
@@ -169,48 +169,48 @@ async function setSidebarRole() {
         
 <div class="sidebar-menu">
           ${menuItems
-          .map((item) => {
-            if (item.children) {
-              return `
+    .map((item) => {
+      if (item.children) {
+        return `
               <div class="menu-group">
                 <div class="menu-header">
                   <div class="menu-header-content">
                     <span class="menu-icon">${getMenuIcon(item.icon, {
-                size: 20,
-              })}</span>
+    size: 20,
+  })}</span>
                     <span>${item.label}</span>
                   </div>
                   ${getIcon("chevronDown", { className: "menu-chevron", size: 16 })}
                 </div>
                 <div class="menu-children">
                   ${item.children
-                  .map(
-                    (child) => `
+    .map(
+      (child) => `
                     <a href="${root}${child.url}" data-icon="${child.icon
-                      }" aria-label="${child.label}">
+}" aria-label="${child.label}">
                       <span class="menu-icon">${getMenuIcon(child.icon, {
-                        size: 18,
-                      })}</span>
+    size: 18,
+  })}</span>
                       <span>${child.label}</span>
                     </a>
                   `
-                  )
-                  .join("")}
+    )
+    .join("")}
                 </div>
               </div>
             `;
-            }
-            return `
+      }
+      return `
             <a href="${root}${item.url}" data-icon="${item.icon}" aria-label="${item.label
-              }">
+}">
               <span class="menu-icon">${getMenuIcon(item.icon, {
-                size: 20,
-              })}</span>
+    size: 20,
+  })}</span>
               <span>${item.label}</span>
             </a>
           `;
-          })
-          .join("")}
+    })
+    .join("")}
 </div>
         
 <div class="sidebar-bottom">
@@ -224,8 +224,8 @@ async function setSidebarRole() {
           <div class="sidebar-footer">
             <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
               <span class="menu-icon">${getMenuIcon("signout", {
-            size: 20,
-          })}</span>
+    size: 20,
+  })}</span>
               <span>Sign Out</span>
             </a>
           </div>
@@ -244,7 +244,7 @@ async function setSidebarRole() {
       menuHeaders.forEach(header => {
         header.addEventListener("click", function() {
           if (this.parentElement) {
-            this.parentElement.classList.toggle('expanded');
+            this.parentElement.classList.toggle("expanded");
           }
         });
       });

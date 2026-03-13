@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const oCRController = require("../controllers/oCRController");
+const oCRController = require("../controllers/OCRController");
 const { authLimiter } = require("../middleware/rateLimiting");
 const { authenticateUser } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");

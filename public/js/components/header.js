@@ -504,9 +504,9 @@ document.addEventListener("DOMContentLoaded", () => {
       initializeGlobalClickHandler();
 
       // Setup global handler for data-href (CSP compliance for quick actions)
-      document.querySelectorAll('[data-href]').forEach(el => {
-        el.addEventListener('click', function() {
-          window.location.href = this.getAttribute('data-href');
+      document.querySelectorAll("[data-href]").forEach(el => {
+        el.addEventListener("click", function() {
+          window.location.href = this.getAttribute("data-href");
         });
       });
     }, 50);

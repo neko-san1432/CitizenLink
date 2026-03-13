@@ -51,14 +51,7 @@ function evictOldestCacheEntries() {
 router.get("/config", apiLimiter, (req, res) => {
   res.json({
     legacyRolesEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
-    legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
-    testLoginEnabled: process.env.ENABLE_TEST_LOGIN === "true",
-    testEmails: process.env.ENABLE_TEST_LOGIN === "true" ? {
-      citizen: process.env.TEST_CITIZEN_EMAIL,
-      lgu: process.env.TEST_LGU_EMAIL,
-      superAdmin: process.env.TEST_SUPER_ADMIN_EMAIL,
-      password: process.env.TEST_PASSWORD
-    } : null
+    legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLES === "true"
   });
 });
 

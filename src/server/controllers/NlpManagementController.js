@@ -3,7 +3,7 @@
  * API handlers for Super Admin direct NLP data management
  */
 
-const nlpManagementService = require("../services/nlpManagementService");
+const nlpManagementService = require("../services/ml/NlpManagementService");
 
 class NlpManagementController {
   // =========== KEYWORDS ===========

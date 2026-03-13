@@ -160,7 +160,7 @@ describe("Session Hijacking Prevention", () => {
     });
 
     it("should invalidate old sessions on logout", async () => {
-      const { logout } = require("../../src/server/controllers/authController");
+      const { logout } = require("../../src/server/controllers/AuthController");
       expect(logout).toBeDefined();
     });
   });

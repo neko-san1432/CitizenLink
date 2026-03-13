@@ -3,7 +3,7 @@ const ejs = require("ejs");
 const path = require("path");
 const fs = require("fs");
 const fastCsv = require("fast-csv");
-const insightService = require("./insightService");
+const insightService = require("./analytics/InsightService");
 
 /**
  * reportService

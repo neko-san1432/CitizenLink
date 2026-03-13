@@ -10,7 +10,7 @@
  * the analytics and training queues.
  */
 
-const advancedDecisionEngine = require("./advancedDecisionEngine");
+const advancedDecisionEngine = require("./ml/AdvancedDecisionEngine");
 const database = require("../config/database");
 
 // Roles that trigger full analytics initialization

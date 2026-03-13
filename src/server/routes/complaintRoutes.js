@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const ComplaintController = require("../controllers/complaintController");
+const ComplaintController = require("../controllers/ComplaintController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 const {

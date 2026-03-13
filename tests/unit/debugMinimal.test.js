@@ -1,4 +1,4 @@
-const ComplaintService = require("../../src/server/services/complaintService");
+const ComplaintService = require("../../src/server/services/ComplaintService");
 
 describe("Minimal complaintService smoke test", () => {
   test("updates workflow status and notifies submitter", async () => {

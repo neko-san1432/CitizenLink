@@ -1,5 +1,5 @@
-const SuperAdminService = require("../services/superAdminService");
-const UserManagementService = require("../services/userManagementService");
+const SuperAdminService = require("../services/SuperAdminService");
+const UserManagementService = require("../services/user/UserManagementService");
 
 /**
  * superAdminController
@@ -234,7 +234,7 @@ class SuperAdminController {
       // Also include terminal logs if requested
       const includeTerminal = req.query.include_terminal === "true";
       if (includeTerminal) {
-        const consolelogger = require("../utils/consolelogger");
+        const consolelogger = require("../utils/consoleLogger");
         const terminalLogs = consolelogger.getLogs({
           level: req.query.terminal_level || "all",
           limit: req.query.terminal_limit
@@ -299,7 +299,7 @@ class SuperAdminController {
         });
       }
 
-      const consolelogger = require("../utils/consolelogger");
+      const consolelogger = require("../utils/consoleLogger");
       const options = {
         level: req.query.level || "all",
         limit: req.query.limit ? parseInt(req.query.limit) : 500,

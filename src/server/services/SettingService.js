@@ -1,5 +1,5 @@
-const SettingRepository = require("../repositories/settingRepository");
-const setting = require("../models/setting");
+const SettingRepository = require("../repositories/SettingRepository");
+const setting = require("../models/Setting");
 
 class SettingService {
 

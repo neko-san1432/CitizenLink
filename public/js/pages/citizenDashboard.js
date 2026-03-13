@@ -102,23 +102,23 @@ function renderWidgetList(containerId, items, type) {
   if (!container) return;
 
   if (!items || items.length === 0) {
-    const bgClass = type === 'notices' ? 'bg-orange-50' : (type === 'events' ? 'bg-green-50' : 'bg-gray-50');
-    const borderClass = type === 'notices' ? 'border-orange-200' : (type === 'events' ? 'border-green-200' : 'border-gray-200');
+    const bgClass = type === "notices" ? "bg-orange-50" : (type === "events" ? "bg-green-50" : "bg-gray-50");
+    const borderClass = type === "notices" ? "border-orange-200" : (type === "events" ? "border-green-200" : "border-gray-200");
     container.innerHTML = `<div class="text-center py-8 text-gray-500 ${bgClass} rounded-lg border border-dashed ${borderClass}"><p>No recent ${type}</p></div>`;
     return;
   }
 
   container.innerHTML = items.map(item => {
-    let title = item.title || "Untitled";
-    let dateStr = item.published_at || item.created_at || item.event_date;
-    let date = dateStr ? new Date(dateStr).toLocaleDateString() : "";
+    const title = item.title || "Untitled";
+    const dateStr = item.published_at || item.created_at || item.event_date;
+    const date = dateStr ? new Date(dateStr).toLocaleDateString() : "";
     let meta = "";
 
-    if (type === 'events') {
+    if (type === "events") {
       meta = `<span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">Event</span>`;
-    } else if (type === 'notices') {
-      let colorClass = item.priority === 'urgent' ? 'text-red-600 bg-red-50 border-red-200' : 'text-orange-600 bg-orange-50 border-orange-200';
-      meta = `<span class="text-xs font-semibold px-2 py-0.5 rounded border ${colorClass} capitalize">${item.priority || 'Normal'}</span>`;
+    } else if (type === "notices") {
+      const colorClass = item.priority === "urgent" ? "text-red-600 bg-red-50 border-red-200" : "text-orange-600 bg-orange-50 border-orange-200";
+      meta = `<span class="text-xs font-semibold px-2 py-0.5 rounded border ${colorClass} capitalize">${item.priority || "Normal"}</span>`;
     }
 
     return `
@@ -162,7 +162,7 @@ function updateActivity(complaints) {
            </svg>
          </div>
          <div class="flex-1 min-w-0">
-           <p class="text-base font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || (c.subcategory ? (c.category + ' - ' + c.subcategory).replace(/\b\w/g, l => l.toUpperCase()) : (c.category || 'General').replace(/\b\w/g, l => l.toUpperCase()))}</p>
+           <p class="text-base font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || (c.subcategory ? (`${c.category  } - ${  c.subcategory}`).replace(/\b\w/g, l => l.toUpperCase()) : (c.category || "General").replace(/\b\w/g, l => l.toUpperCase()))}</p>
            <p class="text-sm text-gray-500 mt-1">${new Date(c.submitted_at || c.created_at).toLocaleDateString()} • <span class="capitalize">${c.category || "General"}</span></p>
          </div>
          <div class="flex-shrink-0">
@@ -293,8 +293,8 @@ async function loadNotices() {
 
     if (result.success && result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(notice => {
-        const priorityColor = notice.priority === 'urgent' || notice.priority === 'high' ? 'text-red-700 font-bold' : 'text-gray-800 font-semibold';
-        const dateStr = new Date(notice.valid_from).toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const priorityColor = notice.priority === "urgent" || notice.priority === "high" ? "text-red-700 font-bold" : "text-gray-800 font-semibold";
+        const dateStr = new Date(notice.valid_from).toLocaleDateString([], { month: "short", day: "numeric" });
 
         return `
           <div class="p-3 bg-white rounded-lg border border-red-100 shadow-sm hover:shadow-md transition">
@@ -325,8 +325,8 @@ async function loadNews() {
 
     if (result.success && result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(item => {
-        const dateStr = new Date(item.published_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
-        const categoryTag = item.category ? `<span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium mb-1">${item.category}</span>` : '';
+        const dateStr = new Date(item.published_at).toLocaleDateString([], { month: "short", day: "numeric" });
+        const categoryTag = item.category ? `<span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium mb-1">${item.category}</span>` : "";
 
         return `
           <div class="p-3 bg-white rounded-lg border border-blue-100 shadow-sm hover:shadow-md transition">
@@ -358,13 +358,13 @@ async function loadEvents() {
 
     if (result.success && result.data && result.data.length > 0) {
       container.innerHTML = result.data.map(event => {
-        const dateStr = new Date(event.event_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        const dateStr = new Date(event.event_date).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 
         return `
           <div class="p-3 bg-white rounded-lg border border-emerald-100 shadow-sm hover:shadow-md transition">
             <div class="flex items-center gap-3">
               <div class="flex flex-col items-center justify-center pt-1 pb-1 px-2 bg-emerald-50 rounded text-emerald-700 min-w-[32px] flex-shrink-0 border border-emerald-100">
-                <span class="text-[9px] font-bold leading-none mb-0.5">${new Date(event.event_date).toLocaleDateString([], { month: 'short' }).toUpperCase()}</span>
+                <span class="text-[9px] font-bold leading-none mb-0.5">${new Date(event.event_date).toLocaleDateString([], { month: "short" }).toUpperCase()}</span>
                 <span class="text-sm font-black leading-none">${new Date(event.event_date).getDate()}</span>
               </div>
               <div class="flex-1">
@@ -374,7 +374,7 @@ async function loadEvents() {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span class="line-clamp-1">${event.location || 'TBA'}</span>
+                  <span class="line-clamp-1">${event.location || "TBA"}</span>
                 </div>
               </div>
             </div>

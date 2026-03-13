@@ -3,7 +3,7 @@
  * Handles automatic reminders for unworked/unresponded complaints
  */
 const Database = require("../config/database");
-const NotificationService = require("./notificationService");
+const NotificationService = require("./NotificationService");
 
 // Get service role client (bypasses RLS)
 // Note: We get it fresh each time to ensure it's using service role key

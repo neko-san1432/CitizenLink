@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const clusteringService = require("./clusteringService");
+const clusteringService = require("./analytics/ClusteringService");
 
 /**
  * alertService

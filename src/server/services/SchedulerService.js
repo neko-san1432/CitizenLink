@@ -1,6 +1,6 @@
 const cron = require("node-cron");
-const reportService = require("./reportService");
-const emailService = require("./emailService");
+const reportService = require("./ReportService");
+const emailService = require("./EmailService");
 const Database = require("../config/database");
 
 /**

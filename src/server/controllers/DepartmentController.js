@@ -1,4 +1,4 @@
-const DepartmentService = require("../services/departmentService");
+const DepartmentService = require("../services/DepartmentService");
 
 class DepartmentController {
 

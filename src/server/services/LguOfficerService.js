@@ -1,7 +1,7 @@
-const ComplaintRepository = require("../repositories/complaintRepository");
-const ComplaintAssignmentRepository = require("../repositories/complaintAssignmentRepository");
-const ComplaintHistoryRepository = require("../repositories/complaintHistoryRepository");
-const NotificationService = require("./notificationService");
+const ComplaintRepository = require("../repositories/ComplaintRepository");
+const ComplaintAssignmentRepository = require("../repositories/ComplaintAssignmentRepository");
+const ComplaintHistoryRepository = require("../repositories/ComplaintHistoryRepository");
+const NotificationService = require("./NotificationService");
 const Database = require("../config/database");
 const { getTimelineStepKey } = require("../utils/complaintUtils");
 

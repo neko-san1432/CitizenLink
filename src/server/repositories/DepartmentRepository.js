@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const Department = require("../models/department");
+const Department = require("../models/Department");
 
 class DepartmentRepository {
 

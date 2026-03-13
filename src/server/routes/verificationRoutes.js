@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const iDVerificationService = require("../services/iDVerificationService");
+const iDVerificationService = require("../services/IDVerificationService");
 const { authenticateUser } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 

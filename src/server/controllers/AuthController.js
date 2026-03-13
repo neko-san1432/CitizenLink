@@ -1,5 +1,5 @@
-const userService = require("../services/userService");
-const loginInitializationService = require("../services/loginInitializationService");
+const userService = require("../services/user/UserService");
+const loginInitializationService = require("../services/LoginInitializationService");
 const {
   ValidationError,
   ConflictError,
@@ -20,7 +20,7 @@ const {
 const supabase = Database.getClient();
 const { validatePasswordStrength } = require("../../shared/passwordValidation");
 const { validateUserRole } = require("../utils/roleValidation");
-const logger = require("../utils/logger");
+const logger = require("../utils/Logger");
 
 class AuthController {
   /**
@@ -177,62 +177,6 @@ class AuthController {
           success: false,
           error: emailValidation.error,
         });
-      }
-      // --- TEST LOGIN BYPASS (DEV MODE) ---
-      if (process.env.ENABLE_TEST_LOGIN === "true" && password === process.env.TEST_PASSWORD) {
-        const testEmails = {
-          [process.env.TEST_CITIZEN_EMAIL]: "citizen",
-          [process.env.TEST_LGU_EMAIL]: "lgu",
-          [process.env.TEST_SUPER_ADMIN_EMAIL]: "super-admin"
-        };
-
-        if (testEmails[email]) {
-          const role = testEmails[email];
-          logger.log("AUTH", `[TEST_LOGIN] Bypassing auth for ${email} (Role: ${role})`);
-
-          // Create a mock user object
-          const mockUser = {
-            id: `test-uid-${role}`,
-            email: email,
-            email_confirmed_at: new Date().toISOString(),
-            user_metadata: {
-              role: role,
-              name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-              first_name: "Test",
-              last_name: role.charAt(0).toUpperCase() + role.slice(1),
-              status: "active"
-            },
-            raw_user_meta_data: {
-              role: role,
-              name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-              status: "active"
-            }
-          };
-
-          // Generate a mock token that the middleware will recognize
-          const mockToken = `test-login-token-${role}`;
-          const cookieOptions = getCookieOptions(remember);
-          res.cookie("sb_access_token", mockToken, cookieOptions);
-
-          // Return success response mimicking Supabase
-          return res.json({
-            success: true,
-            data: {
-              user: {
-                id: mockUser.id,
-                email: mockUser.email,
-                name: mockUser.user_metadata.name,
-                role: role,
-                normalizedRole: role,
-                status: "active"
-              },
-              // Return mock token for client-side (though middleware handles it)
-              refresh_token: "test-refresh-token",
-              expires_at: Math.floor(Date.now() / 1000) + 3600
-            },
-            message: "Test login successful (Bypass Mode)"
-          });
-        }
       }
 
       // Supabase Auth login
@@ -1124,7 +1068,7 @@ class AuthController {
         isOAuth = false,
       } = req.body;
       // Validate signup code first
-      const HRService = require("../services/hRService");
+      const HRService = require("../services/user/HRService");
 
       const hrService = new HRService();
       const codeValidation = await hrService.validateSignupCode(signupCode);
@@ -1293,7 +1237,7 @@ class AuthController {
           .json({ success: false, error: "Signup code is required" });
       }
       // Validate signup code and extract intended role/department
-      const HRService = require("../services/hRService");
+      const HRService = require("../services/user/HRService");
 
       const hrService = new HRService();
       console.log("[OAUTH_SIGNUP_HR] Status: VALIDATING_SIGNUP_CODE", {

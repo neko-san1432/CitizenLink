@@ -1,4 +1,4 @@
-const LguOfficerService = require("../services/lguOfficerService");
+const LguOfficerService = require("../services/LguOfficerService");
 const { ErrorHandler } = require("../middleware/errorHandler");
 
 class LguOfficerController {

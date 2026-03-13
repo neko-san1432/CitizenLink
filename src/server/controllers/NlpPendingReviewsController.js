@@ -3,7 +3,7 @@
  * Handles HITL (Human-in-the-Loop) training queue for low-confidence classifications
  */
 
-const advancedDecisionEngine = require("../services/advancedDecisionEngine");
+const advancedDecisionEngine = require("../services/ml/AdvancedDecisionEngine");
 
 class NlpPendingReviewsController {
   /**

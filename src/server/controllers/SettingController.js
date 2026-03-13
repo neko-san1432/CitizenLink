@@ -1,4 +1,4 @@
-const SettingService = require("../services/settingService");
+const SettingService = require("../services/SettingService");
 
 class SettingController {
 

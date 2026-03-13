@@ -1,5 +1,5 @@
 const Database = require("../config/database");
-const NotificationService = require("./notificationService");
+const NotificationService = require("./NotificationService");
 
 class OfficeConfirmationService {
   constructor() {

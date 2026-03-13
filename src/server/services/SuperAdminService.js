@@ -1,4 +1,4 @@
-const RoleManagementService = require("./roleManagementService");
+const RoleManagementService = require("./user/RoleManagementService");
 const { USER_ROLES } = require("../../shared/constants");
 const Database = require("../config/database");
 
@@ -444,7 +444,7 @@ class SuperAdminService {
         throw new Error("Only Super Admin can view latest registered users");
       }
 
-      const userService = require("./userService");
+      const userService = require("./UserService");
 
       // Get all users (we'll filter for confirmed emails/OAuth)
       const result = await userService.getUsers(
@@ -523,7 +523,7 @@ class SuperAdminService {
         throw new Error("Only Super Admin can view role distribution");
       }
 
-      const userService = require("./userService");
+      const userService = require("./UserService");
       const result = await userService.getUsers(
         { includeInactive: false },
         { page: 1, limit: 10000 }

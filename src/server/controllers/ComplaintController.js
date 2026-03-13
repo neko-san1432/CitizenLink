@@ -1,4 +1,4 @@
-const ComplaintService = require("../services/complaintService");
+const ComplaintService = require("../services/ComplaintService");
 const { getWorkflowFromStatus } = require("../utils/complaintUtils");
 const fs = require("fs");
 const path = require("path");

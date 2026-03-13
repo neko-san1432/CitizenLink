@@ -1,6 +1,6 @@
 const { _createClient } = require("@supabase/supabase-js");
 const Database = require("../config/database");
-const Complaint = require("../models/complaint");
+const Complaint = require("../models/Complaint");
 const crypto = require("crypto");
 
 class ComplaintRepository {
@@ -96,7 +96,7 @@ class ComplaintRepository {
       .select(fields)
       .in("id", ids);
     if (error) throw error;
-    
+
     // Resolve UUID-based category/subcategory values to names
     return await this._resolveCategoryNames(data || []);
   }
@@ -162,10 +162,10 @@ class ComplaintRepository {
         console.error("[COMPLAINT_REPO] Database query error:", error);
         throw error;
       }
-      
+
       // Resolve UUID-based category/subcategory values to names
       const resolvedData = await this._resolveCategoryNames(data || []);
-      
+
       return {
         complaints: resolvedData,
         total: totalCount || 0,

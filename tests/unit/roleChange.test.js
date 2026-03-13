@@ -47,7 +47,7 @@ describe("roleManagementService - Role Changes", () => {
     }));
 
     // Require the service AFTER mocking
-    roleManagementService = require("../../src/server/services/roleManagementService");
+    roleManagementService = require("../../src/server/services/RoleManagementService");
     roleService = new RoleManagementService();
   });
 

@@ -67,13 +67,13 @@ router.post("/verify", async (req, res) => {
       const result = await response.json();
       if (result.success) {
         return res.json({ success: true, message: "CAPTCHA verification successful" });
-      } else {
-        return res.status(400).json({
-          success: false,
-          error: "CAPTCHA verification failed",
-          details: result["error-codes"]
-        });
       }
+      return res.status(400).json({
+        success: false,
+        error: "CAPTCHA verification failed",
+        details: result["error-codes"]
+      });
+
     }
 
     // Fallback: accept in development if no secret key configured

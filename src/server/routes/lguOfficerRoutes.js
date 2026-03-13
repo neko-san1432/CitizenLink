@@ -1,7 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
-const LguOfficerController = require("../controllers/lguOfficerController");
+const LguOfficerController = require("../controllers/LguOfficerController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
-const ComplaintService = require("../services/complaintService");
+const ComplaintService = require("../services/ComplaintService");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const path = require("path");
 // const fs = require("fs"); // Unused if mock loading is removed

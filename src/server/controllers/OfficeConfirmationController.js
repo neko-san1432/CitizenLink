@@ -1,4 +1,4 @@
-const OfficeConfirmationService = require("../services/officeConfirmationService");
+const OfficeConfirmationService = require("../services/OfficeConfirmationService");
 
 class OfficeConfirmationController {
   constructor() {

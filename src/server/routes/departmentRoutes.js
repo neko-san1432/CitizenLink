@@ -1,5 +1,5 @@
 const express = require("express");
-const DepartmentController = require("../controllers/departmentController");
+const DepartmentController = require("../controllers/DepartmentController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 

@@ -25,7 +25,7 @@ describe("Login Flow", () => {
     });
 
     // Require the controller AFTER mocking
-    authController = require("../../src/server/controllers/authController");
+    authController = require("../../src/server/controllers/AuthController");
 
     req = createMockRequest({
       method: "POST",

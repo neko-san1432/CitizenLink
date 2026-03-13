@@ -1,5 +1,5 @@
-const DepartmentRepository = require("../repositories/departmentRepository");
-const ComplaintRepository = require("../repositories/complaintRepository");
+const DepartmentRepository = require("../repositories/DepartmentRepository");
+const ComplaintRepository = require("../repositories/ComplaintRepository");
 const { getCategoryTodepartmentMapping, getKeywordBasedSuggestions } = require("../utils/departmentMapping");
 
 /**

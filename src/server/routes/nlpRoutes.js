@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const nlpProposalController = require("../controllers/nlpProposalController");
-const nlpManagementController = require("../controllers/nlpManagementController");
-const nlpPendingReviewsController = require("../controllers/nlpPendingReviewsController");
+const nlpProposalController = require("../controllers/NlpProposalController");
+const nlpManagementController = require("../controllers/NlpManagementController");
+const nlpPendingReviewsController = require("../controllers/NlpPendingReviewsController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 

@@ -64,8 +64,8 @@ describe("Notification System", () => {
       getClient: () => mockSupabase
     }));
 
-    notificationService = require("../../src/server/services/notificationService");
-    notificationController = require("../../src/server/controllers/notificationController");
+    notificationService = require("../../src/server/services/NotificationService");
+    notificationController = require("../../src/server/controllers/NotificationController");
 
     notificationService = new NotificationService();
     notificationController = new NotificationController();

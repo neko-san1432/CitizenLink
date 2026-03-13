@@ -1,5 +1,5 @@
 const express = require("express");
-const SettingController = require("../controllers/settingController");
+const SettingController = require("../controllers/SettingController");
 const { authenticateUser, requireRole } = require("../middleware/auth");
 const { csrfProtection } = require("../middleware/csrf");
 

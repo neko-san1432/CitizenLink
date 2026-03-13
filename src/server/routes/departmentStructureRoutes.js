@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const Database = require("../config/database");
 const { authenticateUser, requireRole } = require("../middleware/auth");
-const departmentService = require("../services/departmentService");
+const departmentService = require("../services/DepartmentService");
 const { csrfProtection } = require("../middleware/csrf");
 
 // SEC-16 FIX: CSRF protection on all state-changing routes

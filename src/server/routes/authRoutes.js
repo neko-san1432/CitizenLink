@@ -1,6 +1,6 @@
 const express = require("express");
-const authController = require("../controllers/authController");
-const oauthController = require("../controllers/oauthController");
+const authController = require("../controllers/AuthController");
+const oauthController = require("../controllers/OAuthController");
 const { authenticateUser } = require("../middleware/auth");
 const { ErrorHandler } = require("../middleware/errorHandler");
 const { csrfProtection, generateCsrfToken } = require("../middleware/csrf");

@@ -1,7 +1,7 @@
-const ComplaintController = require("../../src/server/controllers/complaintController");
-const ComplaintService = require("../../src/server/services/complaintService");
+const ComplaintController = require("../../src/server/controllers/ComplaintController");
+const ComplaintService = require("../../src/server/services/ComplaintService");
 
-jest.mock("../../src/server/services/complaintService");
+jest.mock("../../src/server/services/ComplaintService");
 
 describe("complaintController Error Handling", () => {
   let controller;

@@ -3,7 +3,7 @@
  * Tests user data deletion functionality
  */
 
-const ComplianceService = require("../../src/server/services/complianceService");
+const ComplianceService = require("../../src/server/services/ComplianceService");
 
 describe("User Deletion and Data Cleanup", () => {
   let complianceService;

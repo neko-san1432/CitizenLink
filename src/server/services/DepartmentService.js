@@ -1,6 +1,6 @@
-const DepartmentRepository = require("../repositories/departmentRepository");
+const DepartmentRepository = require("../repositories/DepartmentRepository");
 const { getdepartmentsByCategory } = require("../utils/departmentMapping");
-const department = require("../models/department");
+const department = require("../models/Department");
 
 class DepartmentService {
 

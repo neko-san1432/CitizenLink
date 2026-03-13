@@ -39,11 +39,11 @@ describe("Registration Flow (Signup with Code)", () => {
     }));
 
     // Setup Service mocks again because resetModules clears them
-    jest.doMock("../../src/server/services/hRService", () => {
+    jest.doMock("../../src/server/services/HRService", () => {
       return jest.fn().mockImplementation(() => mockhRService);
     });
 
-    jest.doMock("../../src/server/services/userService", () => mockuserService);
+    jest.doMock("../../src/server/services/UserService", () => mockuserService);
 
     jest.doMock("../../src/shared/passwordValidation", () => ({
       validatePasswordStrength: jest.fn().mockReturnValue({ isValid: true })
@@ -55,7 +55,7 @@ describe("Registration Flow (Signup with Code)", () => {
     }));
 
     // Re-import Controller after mocks
-    authController = require("../../src/server/controllers/authController");
+    authController = require("../../src/server/controllers/AuthController");
 
     req = createMockRequest({
       method: "POST",
