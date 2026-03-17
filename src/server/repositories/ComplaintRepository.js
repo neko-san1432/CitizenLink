@@ -146,7 +146,7 @@ class ComplaintRepository {
       client
         .from("complaints")
         .select(
-          "id, descriptive_su, workflow_status, submitted_at, is_duplicate, cancelled_at"
+          "id, description, workflow_status, submitted_at, is_duplicate, cancelled_at"
         )
         .eq("submitted_by", userId)
         .order("submitted_at", { ascending: false })
@@ -270,11 +270,11 @@ class ComplaintRepository {
       query = query.eq("type", type);
     }
     if (department) {
-      query = query.contains("department_r", [department]);
+      query = query.contains("departments", [department]);
     }
     if (search) {
       query = query.or(
-        `descriptive_su.ilike.%${search}%,location_text.ilike.%${search}%`
+        `description.ilike.%${search}%,location_text.ilike.%${search}%`
       );
     }
     const { data, error, count } = await query.range(
@@ -514,6 +514,59 @@ class ComplaintRepository {
    * Fetch a minimal set of fields needed for the heatmap layer.
    * Much faster than findAll() — no full-row scan, no joins.
    */
+  async getLocations(filters = {}) {
+    return await this.findLocationsSlim(filters);
+  }
+
+  async getStats(filters = {}) {
+    try {
+      const client = Database.getServiceClient();
+      let query = client.from("complaints").select("workflow_status, priority, category");
+      
+      const { department, startDate, endDate } = filters;
+      
+      if (department) {
+        if (Array.isArray(department)) {
+          query = query.contains("departments", department);
+        } else {
+          query = query.contains("departments", [department]);
+        }
+      }
+      
+      if (startDate) {
+        query = query.gte("submitted_at", startDate);
+      }
+      if (endDate) {
+        query = query.lte("submitted_at", endDate);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const stats = {
+        total: data.length,
+        byStatus: {},
+        byPriority: {},
+        byCategory: {}
+      };
+
+      data.forEach(c => {
+        const status = c.workflow_status || "unknown";
+        const priority = c.priority || "medium";
+        const category = c.category || "General";
+        
+        stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+        stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
+        stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+      });
+
+      return stats;
+    } catch (error) {
+      console.error("[COMPLAINT-REPO] getStats error:", error.message);
+      throw error;
+    }
+  }
+
   async findLocationsSlim(filters = {}) {
     try {
       const client = Database.getServiceClient();
@@ -530,7 +583,7 @@ class ComplaintRepository {
 
       let query = client
         .from("complaints")
-        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category, subcategory, department_r, submitted_at")
+        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category, subcategory, departments, submitted_at")
         .not("latitude", "is", null)
         .not("longitude", "is", null);
 
@@ -575,7 +628,7 @@ class ComplaintRepository {
       if (department && department.length > 0) {
         const deptUpper = department.map(d => String(d).toUpperCase().trim());
         results = results.filter(c => {
-          const depts = Array.isArray(c.department_r) ? c.department_r : [];
+          const depts = Array.isArray(c.departments) ? c.departments : [];
           return depts.some(d => deptUpper.includes(String(d).toUpperCase().trim()));
         });
       }
@@ -594,12 +647,99 @@ class ComplaintRepository {
         confirmation_status: c.confirmation_status || "pending",
         category: c.category || null,
         subcategory: c.subcategory || null,
-        department_r: c.department_r || [],
-        departments: c.department_r || [],
+        departments: c.departments || [],
         submitted_at: c.submitted_at,
       }));
     } catch (error) {
       console.error("[COMPLAINT-REPO] findLocationsSlim error:", error.message);
+      throw error;
+    }
+  }
+
+  async getLocations(filters = {}) {
+    return await this.findLocationsSlim(filters);
+  }
+
+  async getUserStatistics(userId) {
+    try {
+      const client = Database.getServiceClient();
+
+      const { data: complaints, error } = await client
+        .from("complaints")
+        .select("id, workflow_status, confirmation_status, submitted_at, priority, category, description")
+        .eq("submitted_by", userId);
+
+      if (error) throw error;
+
+      const catRes = await client.from("categories").select("id, name");
+      const categoryMap = new Map((catRes.data || []).map(c => [c.id, c.name]));
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      const getCategoryName = (catId) => {
+        if (uuidRegex.test(catId || "")) {
+          return categoryMap.get(catId) || catId;
+        }
+        return catId || "General";
+      };
+
+      const stats = {
+        total: complaints.length,
+        byStatus: {},
+        byConfirmationStatus: {},
+        byPriority: {},
+        categoryCounts: {},
+        recentActivity: []
+      };
+
+      complaints.forEach(c => {
+        stats.byStatus[c.workflow_status] = (stats.byStatus[c.workflow_status] || 0) + 1;
+        stats.byConfirmationStatus[c.confirmation_status] = (stats.byConfirmationStatus[c.confirmation_status] || 0) + 1;
+        stats.byPriority[c.priority] = (stats.byPriority[c.priority] || 0) + 1;
+        
+        const cat = getCategoryName(c.category);
+        stats.categoryCounts[cat] = (stats.categoryCounts[cat] || 0) + 1;
+      });
+
+      const sortedByDate = [...complaints].sort((a, b) => 
+        new Date(b.submitted_at) - new Date(a.submitted_at)
+      );
+
+      const complaintIds = complaints.map(c => c.id);
+      let statusChanges = [];
+      if (complaintIds.length > 0) {
+        const historyRes = await client
+          .from("complaint_history")
+          .select("id, complaint_id, action, created_at")
+          .in("complaint_id", complaintIds)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        
+        if (historyRes.data && historyRes.data.length > 0) {
+          const complaintMap = new Map(complaints.map(c => [c.id, c]));
+          statusChanges = historyRes.data.map(h => {
+            const comp = complaintMap.get(h.complaint_id);
+            return {
+              id: h.complaint_id,
+              status: h.action,
+              submitted_at: h.created_at,
+              category: comp ? getCategoryName(comp.category) : "General",
+              description: comp?.description || ""
+            };
+          });
+        }
+      }
+
+      stats.recentActivity = statusChanges.length > 0 ? statusChanges : sortedByDate.slice(0, 10).map(c => ({
+        id: c.id,
+        status: c.workflow_status,
+        submitted_at: c.submitted_at,
+        category: getCategoryName(c.category),
+        description: c.description || ""
+      }));
+
+      return stats;
+    } catch (error) {
+      console.error("[COMPLAINT-REPO] getUserStatistics error:", error.message);
       throw error;
     }
   }

@@ -79,7 +79,7 @@ class ComplaintCreateService {
       const ROUGH_DEGREE_DIFF = 0.01;
       const { data: candidates, error } = await client
         .from("complaints")
-        .select("id, descriptive_su, latitude, longitude, submitted_at, workflow_status, category, upvote_count")
+        .select("id, description, latitude, longitude, submitted_at, workflow_status, category, upvote_count")
         .gte("submitted_at", lookbackDate.toISOString())
         .neq("workflow_status", "closed")
         .neq("workflow_status", "rejected")

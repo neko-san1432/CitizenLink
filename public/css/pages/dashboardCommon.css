@@ -169,12 +169,6 @@ html.dark .complaint-item {
   /* Reduce 2xl */
 }
 
-/* Constrain Chart Heights */
-canvas#trendChart,
-canvas#distributionChart {
-  max-height: 200px !important;
-}
-
 /* Recent Activity List - Scroll internally */
 #recent-activity-list {
   max-height: 200px;

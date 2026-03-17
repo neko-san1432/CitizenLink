@@ -1,6 +1,6 @@
 describe("complaintService - Management Features", () => {
   let complaintService;
-  let complaintService;
+  let reminderService;
   let mockSupabase;
   let mockcomplaintRepo;
   let mocknotificationService;
@@ -118,7 +118,7 @@ describe("complaintService - Management Features", () => {
       jest.spyOn(complaintService, "getcomplaintById").mockResolvedValue({
         id: complaintId,
         submitted_by: "citizen-1",
-        descriptive_su: "Test complaint",
+        description: "Test complaint",
         workflow_status: "submitted",
         priority: "low",
         comment: {}

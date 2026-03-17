@@ -49,7 +49,7 @@ class LguDashboardController {
           supabase
             .from("complaints")
             .select("id", { count: "exact", head: true })
-            .contains("department_r", [departmentCode])
+            .contains("departments", [departmentCode])
             .not("workflow_status", "ilike", "completed")
             .then((res) => res.count || 0),
 
@@ -57,7 +57,7 @@ class LguDashboardController {
           supabase
             .from("complaints")
             .select("id", { count: "exact", head: true })
-            .contains("department_r", [departmentCode])
+            .contains("departments", [departmentCode])
             .in("workflow_status", [
               "new", "pending", "unassigned",
               "New", "Pending", "Unassigned",
@@ -69,7 +69,7 @@ class LguDashboardController {
           supabase
             .from("complaints")
             .select("id", { count: "exact", head: true })
-            .contains("department_r", [departmentCode])
+            .contains("departments", [departmentCode])
             .ilike("priority", "urgent")
             .not("workflow_status", "ilike", "completed")
             .then((res) => res.count || 0),
@@ -77,7 +77,7 @@ class LguDashboardController {
           supabase
             .from("complaints")
             .select("id", { count: "exact", head: true })
-            .contains("department_r", [departmentCode])
+            .contains("departments", [departmentCode])
             .ilike("priority", "high")
             .not("workflow_status", "ilike", "completed")
             .then((res) => res.count || 0),
@@ -85,7 +85,7 @@ class LguDashboardController {
           supabase
             .from("complaints")
             .select("id", { count: "exact", head: true })
-            .contains("department_r", [departmentCode])
+            .contains("departments", [departmentCode])
             .ilike("priority", "medium")
             .not("workflow_status", "ilike", "completed")
             .then((res) => res.count || 0),
@@ -93,7 +93,7 @@ class LguDashboardController {
           supabase
             .from("complaints")
             .select("id", { count: "exact", head: true })
-            .contains("department_r", [departmentCode])
+            .contains("departments", [departmentCode])
             .ilike("priority", "low")
             .not("workflow_status", "ilike", "completed")
             .then((res) => res.count || 0),
@@ -102,8 +102,8 @@ class LguDashboardController {
       // 2. Recent Unassigned (Limit 5)
       const { data: recentUnassigned } = await supabase
         .from("complaints")
-        .select("id, descriptive_su, submitted_at, location_text, priority")
-        .contains("department_r", [departmentCode])
+        .select("id, description, submitted_at, location_text, priority")
+        .contains("departments", [departmentCode])
         .in("workflow_status", [
           "new", "pending", "unassigned",
           "New", "Pending", "Unassigned",
@@ -119,7 +119,7 @@ class LguDashboardController {
       const { data: trendData } = await supabase
         .from("complaints")
         .select("submitted_at")
-        .contains("department_r", [departmentCode])
+        .contains("departments", [departmentCode])
         .gte("submitted_at", sevenDaysAgo.toISOString());
 
       // Aggregate trend in JS
@@ -135,7 +135,7 @@ class LguDashboardController {
       const { data: categoryData } = await supabase
         .from("complaints")
         .select("category")
-        .contains("department_r", [departmentCode])
+        .contains("departments", [departmentCode])
         .not("workflow_status", "in", "(cancelled,rejected)");
 
       const categoryDistribution = {};

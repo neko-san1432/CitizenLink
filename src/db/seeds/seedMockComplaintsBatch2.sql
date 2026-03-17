@@ -6,8 +6,8 @@
 
 -- Batch 1 (records 1 to 50)
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -1014,8 +1014,8 @@ INSERT INTO public.complaints (
 
 -- Batch 2 (records 51 to 100)
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -2022,8 +2022,8 @@ INSERT INTO public.complaints (
 
 -- Batch 3 (records 101 to 150)
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -3030,8 +3030,8 @@ INSERT INTO public.complaints (
 
 -- Batch 4 (records 151 to 200)
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -4038,8 +4038,8 @@ INSERT INTO public.complaints (
 
 -- Batch 5 (records 201 to 250)
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -5046,8 +5046,8 @@ INSERT INTO public.complaints (
 
 -- Batch 6 (records 251 to 271)
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES

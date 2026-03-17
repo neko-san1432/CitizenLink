@@ -283,7 +283,7 @@ function isEmergency(category, subcategory) {
  * - Confidence scoring
  */
 function processcomplaint(input) {
-  const description = safeText(input.description || input.descriptive_su || input.title || input.location_text);
+  const description = safeText(input.description || input.title || input.location_text);
   // const normalized = normalizeCategoryPair(input.category, input.subcategory); // Removed
   const point = {
     ...input,
@@ -1067,7 +1067,7 @@ function renderTable() {
         c.flags?.metaphor ? "Metaphor" : null,
         c.flags?.speculation ? "Conditional" : null,
       ].filter(Boolean);
-      const desc = safeText(c.description || c.original_text || c.descriptive_su || c.location_text);
+      const desc = safeText(c.description || c.original_text || c.location_text);
       const descDisplay = desc ? desc.slice(0, 120) : '<span style="color:var(--gray-400);font-style:italic;">No description</span>';
       return `<tr data-id="${safeText(c.id)}">
         <td>${safeText(c.id).slice(0, 8)}</td>

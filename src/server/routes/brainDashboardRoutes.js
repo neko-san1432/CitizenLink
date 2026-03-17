@@ -9,8 +9,8 @@ const router = express.Router();
 
 function mapBodyRowToBraincomplaint(row) {
   const description =
-    row.descriptive_su ||
     row.description ||
+    row.descriptive_su ||
     row.title ||
     row.location_text ||
     "";
@@ -27,7 +27,7 @@ function mapBodyRowToBraincomplaint(row) {
     status: row.workflow_status || row.status || null,
     title: row.title || null,
     location_text: row.location_text || null,
-    department_r: row.department_r || [],
+    departments: row.departments || row.department_r || [],
     priority: row.priority || null,
   };
 }
@@ -118,7 +118,7 @@ router.get(
         const { data, error } = await supabase
           .from("complaints")
           .select(
-            "id, title, descriptive_su, workflow_status, priority, latitude, longitude, location_text, submitted_at, department_r, category, subcategory"
+            "id, title, description, workflow_status, priority, latitude, longitude, location_text, submitted_at, departments, category, subcategory"
           )
           .gt("submitted_at", lastSeen)
           .not("latitude", "is", null)

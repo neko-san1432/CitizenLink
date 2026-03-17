@@ -340,7 +340,7 @@ class NotificationService {
   async deleteExpiredNotifications() {
     try {
       const { data, error } = await this.supabase
-        .from("notification")
+        .from("notifications")
         .delete()
         .lt("expires_at", new Date().toISOString())
         .select();

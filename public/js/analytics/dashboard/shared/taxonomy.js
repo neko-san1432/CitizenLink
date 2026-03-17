@@ -7,9 +7,9 @@
 })(typeof self !== "undefined" ? self : this, (fs, path) => {
   "use strict";
 
-  const DEFAULT_TAXONOMY_URL = "/categoriesSubcategories.json";
-  const DEFAULT_TAXONOMY_FILE = "categoriesSubcategories.json";
-  const DEFAULT_CONFIG_URL = "/brainConfig.json";
+  const DEFAULT_TAXONOMY_URL = "/assets/json/categoriesSubcategories.json";
+  const DEFAULT_TAXONOMY_FILE = "public/assets/json/categoriesSubcategories.json";
+  const DEFAULT_CONFIG_URL = "/assets/json/brainConfig.json";
 
   let cachedTaxonomy = null;
   let cachedPromise = null;
@@ -156,9 +156,7 @@
         if (!taxonomy) {
           const possiblePaths = resolved.url ? [resolved.url] : [
             DEFAULT_TAXONOMY_URL,
-            "/assets/data/categoriesSubcategories.json",
-            "categoriesSubcategories.json",
-            "../categoriesSubcategories.json"
+            "/assets/json/categoriesSubcategories.json"
           ];
 
           let response = null;

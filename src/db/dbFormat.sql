@@ -66,14 +66,15 @@ CREATE TABLE public.complaint_clusters (
 CREATE TABLE public.complaint_coordinators (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
-  department text NOT NULL,
+  department_id bigint NOT NULL,
   is_active boolean DEFAULT true,
   assigned_at timestamp with time zone DEFAULT now(),
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT complaint_coordinators_pkey PRIMARY KEY (id),
   CONSTRAINT complaint_coordinators_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_coordinators_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT complaint_coordinators_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT complaint_coordinators_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id)
 );
 CREATE TABLE public.complaint_duplicates (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -98,7 +99,8 @@ CREATE TABLE public.complaint_evidence (
   is_public boolean DEFAULT false,
   evidence_type text DEFAULT 'initial'::text CHECK (evidence_type = ANY (ARRAY['initial'::text, 'completion'::text])),
   CONSTRAINT complaint_evidence_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_evidence_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id)
+  CONSTRAINT complaint_evidence_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id),
+  CONSTRAINT complaint_evidence_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id) ON DELETE CASCADE
 );
 CREATE TABLE public.complaint_history (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -118,7 +120,8 @@ CREATE TABLE public.complaint_reminders (
   reminded_by uuid,
   reminder_type text DEFAULT 'manual'::text,
   CONSTRAINT complaint_reminders_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_reminders_reminded_by_fkey FOREIGN KEY (reminded_by) REFERENCES auth.users(id)
+  CONSTRAINT complaint_reminders_reminded_by_fkey FOREIGN KEY (reminded_by) REFERENCES auth.users(id),
+  CONSTRAINT complaint_reminders_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id) ON DELETE CASCADE
 );
 CREATE TABLE public.complaint_similarities (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -154,13 +157,13 @@ CREATE TABLE public.complaint_workflow_logs (
 CREATE TABLE public.complaints (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   submitted_by uuid NOT NULL,
-  descriptive_su text NOT NULL,
+  description text NOT NULL,
   location_text text,
   latitude double precision,
   longitude double precision,
   category text,
   subcategory text,
-  department_r ARRAY DEFAULT '{}'::text[],
+  departments ARRAY DEFAULT '{}'::text[],
   workflow_status text DEFAULT 'new'::text CHECK (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text, 'in_progress'::text, 'pending_approval'::text, 'completed'::text, 'cancelled'::text])),
   priority text DEFAULT 'low'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
   assigned_coordinator_id uuid,
@@ -343,18 +346,6 @@ CREATE TABLE public.nlp_keywords (
   CONSTRAINT nlp_keywords_pkey PRIMARY KEY (id),
   CONSTRAINT nlp_keywords_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
-CREATE TABLE public.nlp_logs (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  complaint_id uuid,
-  input_text text,
-  detected_category text,
-  detected_urgency integer,
-  method_used text,
-  confidence_score numeric,
-  processing_time_ms numeric,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT nlp_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT nlp_logs_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
 );
 CREATE TABLE public.nlp_metaphors (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -419,15 +410,15 @@ CREATE TABLE public.notices (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT notices_pkey PRIMARY KEY (id)
 );
-CREATE TABLE public.notification (
+CREATE TABLE public.notifications (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   type text NOT NULL,
   scope text,
   owner uuid DEFAULT auth.uid(),
-  news_id bigint,
-  complaint_id bigint,
-  notice_id bigint,
+  news_id uuid,
+  complaint_id uuid,
+  notice_id uuid,
   user_id uuid,
   priority text DEFAULT 'info'::text CHECK (priority = ANY (ARRAY['info'::text, 'warning'::text, 'urgent'::text])),
   title text,
@@ -435,11 +426,11 @@ CREATE TABLE public.notification (
   icon text DEFAULT '📢'::text,
   link text,
   metadata jsonb DEFAULT '{}'::jsonb,
-  read boolean DEFAULT false,
+  is_read boolean DEFAULT false,
   read_at timestamp with time zone,
   expires_at timestamp with time zone,
-  CONSTRAINT notification_pkey PRIMARY KEY (id),
-  CONSTRAINT notification_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.rate_limits (
   key text NOT NULL,
@@ -519,11 +510,6 @@ CREATE TABLE public.task_forces (
   CONSTRAINT task_forces_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
   CONSTRAINT task_forces_ended_by_fkey FOREIGN KEY (ended_by) REFERENCES auth.users(id)
 );
-CREATE TABLE public.upcomingEvents (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  owner uuid NOT NULL DEFAULT auth.uid(),
-  CONSTRAINT upcomingEvents_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_profiles (
   id uuid NOT NULL,
@@ -534,16 +520,6 @@ CREATE TABLE public.user_profiles (
   CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
-CREATE TABLE public.user_role_history (
-  id bigint NOT NULL DEFAULT nextval('user_role_history_id_seq'::regclass),
-  user_id uuid NOT NULL,
-  old_role text,
-  new_role text NOT NULL,
-  changed_by uuid,
-  reason text,
-  effective_date timestamp with time zone DEFAULT now(),
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT user_role_history_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_sessions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

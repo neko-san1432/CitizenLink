@@ -518,7 +518,7 @@ export class complaintDetails {
       this.complaint.priority || "medium"
     ).toLowerCase()}`;
     this.getElement("complaint-description").textContent =
-      this.complaint.descriptive_su || "No description provided";
+      this.complaint.description || "No description provided";
     // Display assignment progress if available
     this.displayAssignmentProgress();
     // Load and display confirmation message

@@ -1,0 +1,1002 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "nlp_dictionary_rules",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_dictionary_rules",
+    "policyname": "Enable write access for admins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_profiles",
+    "policyname": "Admins and Coordinators can view all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "check_is_admin_safe()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_profiles",
+    "policyname": "Users can update own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_profiles",
+    "policyname": "Users can view own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_reminders",
+    "policyname": "Citizens can insert reminders for own complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((complaint_id IN ( SELECT complaints.id\n   FROM complaints\n  WHERE (complaints.submitted_by = auth.uid()))) AND ((reminded_by IS NULL) OR (reminded_by = auth.uid())))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_reminders",
+    "policyname": "Citizens can view reminders for own complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM complaints\n  WHERE ((complaints.id = complaint_reminders.complaint_id) AND (complaints.submitted_by = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_reminders",
+    "policyname": "Coordinators and admins can insert reminders",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) = ANY (ARRAY['complaint-coordinator'::text, 'super-admin'::text, 'lgu-admin'::text, 'lgu-officer'::text])))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_reminders",
+    "policyname": "Coordinators and admins can view all reminders",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) = ANY (ARRAY['complaint-coordinator'::text, 'super-admin'::text, 'lgu-admin'::text, 'lgu-officer'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_reminders",
+    "policyname": "Officers can view reminders for assigned complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM complaint_assignments\n  WHERE ((complaint_assignments.complaint_id = complaint_reminders.complaint_id) AND (complaint_assignments.assigned_to = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "policyname": "hr_manage_signup_links",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((created_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND (((users.raw_user_meta_data ->> 'role'::text) ~~ 'lgu-hr%'::text) OR ((users.raw_user_meta_data ->> 'role'::text) = 'super-admin'::text))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "policyname": "public_view_active_signup_links",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((is_active = true) AND ((expires_at IS NULL) OR (expires_at > now())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_proposals",
+    "policyname": "Insert proposals",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = submitted_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_proposals",
+    "policyname": "Update proposals",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_proposals",
+    "policyname": "View proposals",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rate_limits",
+    "policyname": "Allow full access to service role",
+    "permissive": "PERMISSIVE",
+    "roles": "{service_role}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_history",
+    "policyname": "Staff can create complaint history",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_history",
+    "policyname": "Staff can view complaint history",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "policyname": "Admins can view audit logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_admin_or_above()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "policyname": "System can create audit logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "invitation_tokens",
+    "policyname": "HR can manage invitation tokens",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((get_user_role() = ANY (ARRAY['lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "policyname": "Manage assignments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'complaint-coordinator'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "policyname": "Staff can manage assignments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "policyname": "Staff can view assignments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "policyname": "View assignments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(is_staff() OR (EXISTS ( SELECT 1\n   FROM complaints c\n  WHERE ((c.id = complaint_assignments.complaint_id) AND (c.submitted_by = auth.uid())))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_subcategory_mapping",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_subcategory_mapping",
+    "policyname": "Enable write access for admins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "policyname": "Admins can update verifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "policyname": "Admins can view all verifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "policyname": "Users can insert own verification",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "policyname": "Users can view own verification",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_category_config",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_category_config",
+    "policyname": "Enable write access for admins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "policyname": "Coordinators can manage clusters",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "policyname": "Coordinators can view clusters",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "policyname": "Staff can manage clusters",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "policyname": "Staff can view clusters",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "policyname": "Delete pending reviews",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "policyname": "Insert pending reviews",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "policyname": "Update pending reviews",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "policyname": "View pending reviews",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_keywords",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_keywords",
+    "policyname": "Enable write access for admins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_metaphors",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_metaphors",
+    "policyname": "Enable write access for admins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "policyname": "Insert evidence",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = uploaded_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "policyname": "Staff can manage evidence",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "policyname": "View evidence",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((uploaded_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM complaints c\n  WHERE ((c.id = complaint_evidence.complaint_id) AND ((c.submitted_by = auth.uid()) OR (is_staff() AND ((EXISTS ( SELECT 1\n           FROM user_profiles\n          WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'complaint-coordinator'::text]))))) OR (user_department() = ANY (c.department_r)))))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "policyname": "Coordinators can manage similarities",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "policyname": "Coordinators can view similarities",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "policyname": "Staff can manage similarities",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "policyname": "Staff can view similarities",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "policyname": "Coordinators can manage duplicates",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "policyname": "Coordinators can view duplicates",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((get_user_role() = ANY (ARRAY['complaint-coordinator'::text, 'lgu-admin'::text, 'lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-admin-%'::text) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "policyname": "Staff can manage duplicates",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "policyname": "Staff can view duplicates",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "policyname": "Staff can create workflow logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "policyname": "Staff can view workflow logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "policyname": "Super admin can delete workflow logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(get_user_role() = 'super-admin'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_anchors",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_anchors",
+    "policyname": "Enable write access for admins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_logs",
+    "policyname": "Enable read access for admins only",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['super-admin'::text, 'lgu-admin'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "policyname": "Admins can create transfers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_admin_or_above()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "policyname": "HR and Super Admin can view transfers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((get_user_role() = ANY (ARRAY['lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "policyname": "System can log transfers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "policyname": "Users can view their own transfers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((user_id = auth.uid()) OR is_admin_or_above())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "news",
+    "policyname": "Admins can manage news",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((auth.jwt() ->> 'role'::text) = ANY (ARRAY['lgu_admin'::text, 'super_admin'::text]))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "news",
+    "policyname": "Public can view published news",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((status)::text = 'published'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "events",
+    "policyname": "Admins can manage events",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((auth.jwt() ->> 'role'::text) = ANY (ARRAY['lgu_admin'::text, 'super_admin'::text]))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "events",
+    "policyname": "Public can view upcoming and ongoing events",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((status)::text = ANY ((ARRAY['upcoming'::character varying, 'ongoing'::character varying])::text[]))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "departments",
+    "policyname": "Admins can manage departments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "is_admin_or_above()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "departments",
+    "policyname": "Everyone can view departments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "departments",
+    "policyname": "allow_all_departments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "role_changes",
+    "policyname": "Admins can create role changes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_admin_or_above()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "role_changes",
+    "policyname": "HR and Super Admin can view role changes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((get_user_role() = ANY (ARRAY['lgu-hr'::text, 'super-admin'::text])) OR (get_user_role() ~~ 'lgu-hr-%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "role_changes",
+    "policyname": "System can log role changes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "role_changes",
+    "policyname": "Users can view their own role changes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((user_id = auth.uid()) OR is_admin_or_above())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notices",
+    "policyname": "Admins can manage notices",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "((auth.jwt() ->> 'role'::text) = ANY (ARRAY['lgu_admin'::text, 'super_admin'::text]))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notices",
+    "policyname": "Public can view active notices",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(((status)::text = 'active'::text) AND ((valid_until IS NULL) OR (valid_until > now())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "All user can delete",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
+    "qual": "(((auth.jwt() ->> 'role'::text) ~~ 'lgu-admin-%'::text) OR ((auth.jwt() ->> 'role'::text) = 'citizen'::text) OR ((auth.jwt() ->> 'role'::text) ~~ 'lgu--%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "All user can edit",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(((auth.jwt() ->> 'role'::text) ~~ 'lgu-admin-%'::text) OR ((auth.jwt() ->> 'role'::text) = 'citizen'::text) OR ((auth.jwt() ->> 'role'::text) ~~ 'lgu--%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "All user can insert",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(((auth.jwt() ->> 'role'::text) ~~ 'lgu-admin-%'::text) OR ((auth.jwt() ->> 'role'::text) = 'citizen'::text) OR ((auth.jwt() ->> 'role'::text) ~~ 'lgu--%'::text))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "All user can see",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(((auth.jwt() ->> 'role'::text) ~~ 'lgu-admin-%'::text) OR ((auth.jwt() ->> 'role'::text) = 'citizen'::text) OR ((auth.jwt() ->> 'role'::text) ~~ 'lgu--%'::text))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "Service role can insert notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "System can create notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "Users can delete own notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(owner = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "Users can update own notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = user_id) OR (auth.uid() = owner))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notification",
+    "policyname": "Users can view own notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((auth.uid() = user_id) OR (auth.uid() = owner))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_sessions",
+    "policyname": "System can manage sessions",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_sessions",
+    "policyname": "Users can view their own sessions",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((user_id = auth.uid()) OR is_admin_or_above())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_sessions",
+    "policyname": "sessions_own_only",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(user_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Citizens can create complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = submitted_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Citizens can insert complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = submitted_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Citizens can update own complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = submitted_by)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Citizens can update own pending complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = submitted_by) AND (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text])))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Citizens can view own complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = submitted_by)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Coordinators can update assigned complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = assigned_coordinator_id) OR (EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) ~~ 'coordinator%'::text)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "Coordinators can view assigned complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((auth.uid() = assigned_coordinator_id) OR (EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) ~~ 'coordinator%'::text)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "HR can view all complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) ~~ 'hr%'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaints",
+    "policyname": "LGU Admins can update department complaints",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM auth.users\n  WHERE ((users.id = auth.uid()) AND ((users.raw_user_meta_data ->> 'role'::text) ~~ 'lgu-admin%'::text) AND ((EXISTS ( SELECT 1\n           FROM unnest(complaints.department_r) dept_code(dept_code)\n          WHERE (dept_code.dept_code = split_part((users.raw_user_meta_data ->> 'role'::text), '-'::text, 3)))) OR (EXISTS ( SELECT 1\n           FROM (departments d\n             JOIN subcategories s ON ((d.subcategory_id = s.id)))\n          WHERE ((s.name = complaints.subcategory) AND (d.code = split_part((users.raw_user_meta_data ->> 'role'::text), '-'::text, 3)))))))))",
+    "with_check": null
+  }
+]

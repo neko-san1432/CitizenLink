@@ -1,6 +1,6 @@
-import BarangayPrioritization from "../components/barangay-prioritization.js";
+import BarangayPrioritization from "../components/barangayPrioritization.js";
 
-import slidingPanel from "../components/sliding-panel.js?v=20260301";
+import slidingPanel from "../components/slidingPanel.js?v=20260301";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadReviewQueue(1);
@@ -95,7 +95,7 @@ async function loadReviewQueue(page = 1) {
         const cat = complaint.category || "General";
         const sub = complaint.subcategory;
         const categoryDisplay = sub ? `${cat} <span style="opacity:0.5">/</span> ${sub}` : cat;
-        const desc = complaint.descriptive_su || complaint.description || "—";
+        const desc = complaint.description || "—";
         const descSafe = (desc || "").replace(/"/g, "&quot;").replace(/</g, "&lt;");
         return `
                 <tr class="complaint-row cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" data-id="${complaint.id}">

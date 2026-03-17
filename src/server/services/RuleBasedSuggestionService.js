@@ -14,12 +14,12 @@ class RuleBasedSuggestionService {
   }
   /**
   * Compute department and coordinator suggestions for a complaint
-  * @param {object} complaint - complaint record (descriptive_su, category, location_text)
+  * @param {object} complaint - complaint record (description, category, location_text)
   * @returns {object} suggestions
   */
   async computeSuggestions(complaint) {
-    // Use descriptive_su as the primary text field (title column doesn't exist)
-    const text = [complaint.descriptive_su, complaint.location_text]
+    // Use description as the primary text field (title column doesn't exist)
+    const text = [complaint.description, complaint.location_text]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();

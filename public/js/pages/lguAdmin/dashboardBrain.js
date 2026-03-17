@@ -66,7 +66,7 @@ function processData() {
 
   BrainState.processedcomplaints = rawcomplaints.map(c => {
     // Basic normalization
-    const description = c.description || c.descriptive_su || c.title || "";
+    const description = c.description || c.title || "";
     let category = c.category || "Others";
     let subcategory = c.subcategory || null;
 

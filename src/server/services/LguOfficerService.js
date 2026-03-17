@@ -53,8 +53,8 @@ class LguOfficerService {
           completed_at: complaint.resolved_at,
           complaint: {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || "complaint Details",
-            description: complaint.descriptive_su,
+            title: complaint.description?.slice(0, 100) || "complaint Details",
+            description: complaint.description,
             category: complaint.category,
             subcategory: complaint.subcategory,
             status: complaint.workflow_status, // Use accurate workflow status
@@ -80,7 +80,7 @@ class LguOfficerService {
     const complaintIds = assignments.map(a => a.complaint_id);
     const complaints = await this.complaintRepo.findByIds(
       complaintIds,
-      "id, descriptive_su, category, subcategory, status, priority, submitted_at, location_text, latitude, longitude, last_activity_at"
+      "id, description, category, subcategory, status, priority, submitted_at, location_text, latitude, longitude, last_activity_at"
     );
 
     // Deduplicate assignments by complaint_id (keep the most recent one)
@@ -110,8 +110,8 @@ class LguOfficerService {
         completed_at: assignment.completed_at,
         complaint: complaint ? {
           id: complaint.id,
-          title: complaint.descriptive_su?.slice(0, 100) || "complaint Details",
-          description: complaint.descriptive_su,
+          title: complaint.description?.slice(0, 100) || "complaint Details",
+          description: complaint.description,
           category: complaint.category,
           subcategory: complaint.subcategory,
           status: complaint.status,
@@ -150,7 +150,7 @@ class LguOfficerService {
     const complaintIds = assignments.map(a => a.complaint_id);
     const complaints = await this.complaintRepo.findByIds(
       complaintIds,
-      "id, descriptive_su, category, subcategory, status, submitted_at, location_text, last_activity_at"
+      "id, description, category, subcategory, status, submitted_at, location_text, last_activity_at"
     );
 
     // Deduplicate assignments
@@ -194,8 +194,8 @@ class LguOfficerService {
           completed_at: assignment.completed_at,
           complaint: complaint ? {
             id: complaint.id,
-            title: complaint.descriptive_su?.slice(0, 100) || "complaint Details",
-            description: complaint.descriptive_su,
+            title: complaint.description?.slice(0, 100) || "complaint Details",
+            description: complaint.description,
             category: complaint.category,
             subcategory: complaint.subcategory,
             status: complaint.status,
@@ -359,7 +359,7 @@ class LguOfficerService {
         updatedcomplaint.submitted_by,
         "complaint_resolved",
         "complaint Resolved",
-        `Your complaint "${updatedcomplaint.descriptive_su?.slice(0, 100) || "your complaint"}" has been resolved. Please confirm if you're satisfied with the resolution.`,
+        `Your complaint "${updatedcomplaint.description?.slice(0, 100) || "your complaint"}" has been resolved. Please confirm if you're satisfied with the resolution.`,
         {
           priority: "success",
           link: `/citizen/complaints/${complaintId}`,
@@ -489,14 +489,14 @@ class LguOfficerService {
           await this.notificationService.notifycomplaintUpdate(
             updatedcomplaint.submitted_by,
             complaintId,
-            updatedcomplaint.descriptive_su?.slice(0, 100) || "Your complaint",
+            updatedcomplaint.description?.slice(0, 100) || "Your complaint",
             comment
           );
         } else {
           await this.notificationService.notifycomplaintStatusChanged(
             updatedcomplaint.submitted_by,
             complaintId,
-            updatedcomplaint.descriptive_su?.slice(0, 100) || "Your complaint",
+            updatedcomplaint.description?.slice(0, 100) || "Your complaint",
             status,
             "previous" // Placeholder if old status not easily available here
           );
@@ -519,7 +519,7 @@ class LguOfficerService {
   }
 
   _getActivityDescription(activity, complaint = null) {
-    const complaintTitle = complaint?.descriptive_su?.slice(0, 100) || `complaint #${activity.complaint_id?.substring(0, 8)}`;
+    const complaintTitle = complaint?.description?.slice(0, 100) || `complaint #${activity.complaint_id?.substring(0, 8)}`;
     const complaintCategory = complaint?.category || "General";
     switch (this._getActivityType(activity)) {
       case "task_completed":

@@ -34,6 +34,23 @@
             height: 100%;
         }
 
+        /* ========== TAB BUTTONS ========== */
+        .ui-tab-btn {
+            cursor: pointer;
+        }
+        .ui-tab-btn.active {
+            background-color: var(--primary-500) !important;
+            color: white !important;
+        }
+
+        /* ========== TAB CONTENT ========== */
+        .command-center .tab-content {
+            display: none;
+        }
+        .command-center .tab-content.active {
+            display: block;
+        }
+
         /* ========== MAIN LAYOUT ========== */
         .app-container {
             display: flex;
@@ -534,13 +551,14 @@
                 <i class="fas fa-layer-group text-blue-600 dark:text-blue-400"></i>
                 Command Center
             </button>
+            <!-- Toggle button outside sidebar - always visible on desktop -->
+            <button id="toggleCommandCenter"
+                class="fixed top-1/2 -translate-y-1/2 w-6 h-12 bg-white dark:bg-slate-900 border-y border-r border-gray-200 dark:border-slate-700 rounded-r-md shadow-[-2px_0_4px_rgba(0,0,0,0.05)] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 transition-all focus:outline-none z-[99]"
+                style="right: 340px;">
+                <i class="fas fa-chevron-right transition-transform" id="toggleCommandCenterIcon"></i>
+            </button>
             <aside id="commandCenterSidebar"
-                class="w-[340px] flex flex-col bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700 shadow-xl z-[100] shrink-0 h-full transition-transform duration-300 translate-x-0 relative">
-                <!-- Collapse Toggle outside on the left -->
-                <button id="toggleCommandCenter"
-                    class="absolute -left-6 top-1/2 -translate-y-1/2 w-6 h-12 bg-white dark:bg-slate-900 border-y border-l border-gray-200 dark:border-slate-700 rounded-l-md shadow-[-2px_0_4px_rgba(0,0,0,0.05)] flex items-center justify-center hidden md:flex hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
-                    <i class="fas fa-chevron-right transition-transform" id="toggleCommandCenterIcon"></i>
-                </button>
+                class="command-center w-[340px] flex flex-col bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700 shadow-xl z-[100] shrink-0 h-full transition-transform duration-300 translate-x-0 relative">
                 <div
                     class="px-4 py-3 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-gray-50/50 dark:bg-slate-800/50">
                     <h2
@@ -565,17 +583,17 @@
                     <div class="flex gap-1 p-1 bg-gray-100 dark:bg-slate-800 rounded-xl" role="tablist"
                         aria-label="Command Center Tabs">
                         <button type="button"
-                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn active"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ui-tab-btn active"
                             data-tab="cc-filters" role="tab" aria-selected="true"
                             style="background-color: var(--primary-500); color: white;">Filters</button>
                         <button type="button"
-                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600 transition-all ui-tab-btn"
                             data-tab="cc-layers" role="tab" aria-selected="false">Layers</button>
                         <button type="button"
-                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600 transition-all ui-tab-btn"
                             data-tab="cc-overview" role="tab" aria-selected="false">Overview</button>
                         <button type="button"
-                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all ui-tab-btn"
+                            class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600 transition-all ui-tab-btn"
                             data-tab="cc-intel" role="tab" aria-selected="false">Intel</button>
                     </div>
 
@@ -672,7 +690,7 @@
                                         <i class="fas fa-map-marker-alt text-green-500 w-4 pb-0.5"></i> Individual
                                         Markers
                                     </span>
-                                    <input type="checkbox" id="markersToggle" class="toggle-switch" checked>
+                                    <input type="checkbox" id="markersToggle" class="toggle-switch">
                                 </label>
 
                                 <label
@@ -859,12 +877,27 @@
 
             let ccIsCollapsed = false;
 
+            // Expose collapse function globally
+            window.collapseCommandCenter = () => {
+                if (!ccIsCollapsed) {
+                    toggleCommandCenter();
+                }
+            };
+
             const toggleCommandCenter = () => {
                 ccIsCollapsed = !ccIsCollapsed;
+                const toggleBtn = document.getElementById('toggleCommandCenter');
                 if (ccIsCollapsed) {
                     ccSidebar.classList.remove('translate-x-0');
                     ccSidebar.classList.add('translate-x-full');
-                    ccSidebar.style.marginRight = "-340px"; // Reclaims layout space
+                    ccSidebar.style.marginRight = "-340px";
+                    if (toggleBtn) {
+                        toggleBtn.style.right = "0px";
+                        toggleBtn.classList.remove('border-r');
+                        toggleBtn.classList.add('border-l');
+                        toggleBtn.classList.remove('rounded-r-md');
+                        toggleBtn.classList.add('rounded-l-md');
+                    }
                     if (toggleIcon) toggleIcon.classList.replace('fa-chevron-right', 'fa-chevron-left');
                     setTimeout(() => {
                         if (openBtn) openBtn.classList.remove('hidden');
@@ -873,7 +906,14 @@
                 } else {
                     ccSidebar.classList.remove('translate-x-full');
                     ccSidebar.classList.add('translate-x-0');
-                    ccSidebar.style.marginRight = "0"; // Restores layout space
+                    ccSidebar.style.marginRight = "0";
+                    if (toggleBtn) {
+                        toggleBtn.style.right = "340px";
+                        toggleBtn.classList.add('border-r');
+                        toggleBtn.classList.remove('border-l');
+                        toggleBtn.classList.add('rounded-r-md');
+                        toggleBtn.classList.remove('rounded-l-md');
+                    }
                     if (toggleIcon) toggleIcon.classList.replace('fa-chevron-left', 'fa-chevron-right');
                     if (openBtn) openBtn.classList.add('hidden');
                     setTimeout(() => {
@@ -1232,7 +1272,7 @@
     <!-- Floating Controls Bridge -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const ccTabButtons = document.querySelectorAll('.command-center .nav-tab[data-tab]');
+            const ccTabButtons = document.querySelectorAll('.command-center .ui-tab-btn[data-tab]');
             const ccTabPanels = document.querySelectorAll('.command-center .tab-content');
             const ccStorageKey = 'lguHeatmapCommandCenterTab';
 
@@ -1297,20 +1337,47 @@
             }
 
             if (mkToggle) {
-                mkToggle.addEventListener('change', () => {
-                    // Independent logic for individual markers
-                    const engine = window.simulationEngine;
-                    if (engine && engine.backgroundMarkers) {
-                        engine.backgroundMarkers.forEach((marker) => {
+                mkToggle.addEventListener('change', async () => {
+                    // Wait for simulation engine to be ready
+                    let attempts = 0;
+                    const waitForEngine = () => {
+                        return new Promise((resolve) => {
+                            const check = () => {
+                                if (window.simulationEngine && window.simulationEngine.backgroundMarkers && window.simulationEngine.backgroundMarkers.size > 0) {
+                                    resolve(window.simulationEngine);
+                                } else if (attempts < 50) {
+                                    attempts++;
+                                    setTimeout(check, 100);
+                                } else {
+                                    resolve(null);
+                                }
+                            };
+                            check();
+                        });
+                    };
+                    
+                    const engine = await waitForEngine();
+                    console.log('[MARKERS] Toggle clicked, checked:', mkToggle.checked, 'Engine:', !!engine);
+                    
+                    if (engine && engine.backgroundMarkers && engine.backgroundMarkers.size > 0) {
+                        engine.backgroundMarkers.forEach((marker, id) => {
                             if (mkToggle.checked) {
-                                if (window.map && !window.map.hasLayer(marker)) marker.addTo(window.map);
+                                if (window.map && !window.map.hasLayer(marker)) {
+                                    marker.addTo(window.map);
+                                }
                             } else {
-                                if (window.map && window.map.hasLayer(marker)) window.map.removeLayer(marker);
+                                if (window.map && window.map.hasLayer(marker)) {
+                                    window.map.removeLayer(marker);
+                                }
                             }
                         });
-                        console.log('[MARKERS] Individual markers toggled:', mkToggle.checked);
+                        console.log('[MARKERS] Individual markers toggled:', mkToggle.checked, 'Count:', engine.backgroundMarkers.size);
                     } else {
-                        console.warn('[MARKERS] Simulation engine or background markers not found');
+                        console.warn('[MARKERS] Simulation engine or background markers not found or empty', { 
+                            hasEngine: !!engine, 
+                            hasMarkers: !!(engine && engine.backgroundMarkers),
+                            markerCount: engine?.backgroundMarkers?.size || 0
+                        });
                     }
                 });
             }
@@ -1359,6 +1426,24 @@
                     }
                     if (window.map && typeof heatmapLayer !== 'undefined' && hmSwitch) {
                         hmSwitch.checked = heatmapLayer && window.map.hasLayer(heatmapLayer);
+                    }
+
+                    // Hide markers and heatmap on initial load (only AI Clusters should be visible)
+                    const engine = window.simulationEngine;
+                    if (engine && engine.backgroundMarkers && window.map) {
+                        // Hide individual markers if toggle is unchecked
+                        if (!mkToggle || !mkToggle.checked) {
+                            engine.backgroundMarkers.forEach((marker) => {
+                                if (window.map.hasLayer(marker)) {
+                                    window.map.removeLayer(marker);
+                                }
+                            });
+                        }
+                    }
+                    
+                    // Hide heatmap if toggle is unchecked
+                    if (hmSwitch && !hmSwitch.checked && typeof heatmapLayer !== 'undefined' && heatmapLayer && window.map && window.map.hasLayer(heatmapLayer)) {
+                        window.map.removeLayer(heatmapLayer);
                     }
 
                     // Sync individual markers toggle

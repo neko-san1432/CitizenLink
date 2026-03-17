@@ -25,6 +25,66 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Dev Quick Login (Development Only)
+  async function initDevQuickLogin() {
+    try {
+      // Check if dev endpoint exists by making a probe request
+      const probeResponse = await fetch("/api/dev/login", { method: "OPTIONS" });
+      
+      // If we get a 404 or method not allowed, dev mode is not enabled
+      if (!probeResponse.ok) {
+        console.log("[DEV] Dev login not available");
+        return;
+      }
+
+      // Show dev quick login section
+      const devSection = document.getElementById("dev-quick-login");
+      if (devSection) {
+        devSection.style.display = "block";
+      }
+
+      // Add event listeners to dev login buttons
+      const devButtons = document.querySelectorAll(".dev-login-btn");
+      devButtons.forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const role = btn.dataset.role;
+          const statusEl = document.getElementById("dev-login-status");
+          
+          btn.disabled = true;
+          btn.textContent = "Logging in...";
+          
+          try {
+            const response = await fetch("/api/dev/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ role })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              if (statusEl) statusEl.textContent = "✓ Logged in! Redirecting...";
+              window.location.href = data.redirect;
+            } else {
+              if (statusEl) statusEl.textContent = "✗ " + data.error;
+              btn.disabled = false;
+              btn.textContent = btn.dataset.role === "citizen" ? "Citizen" : btn.dataset.role === "lgu" ? "LGU" : "Super Admin";
+            }
+          } catch (error) {
+            if (statusEl) statusEl.textContent = "✗ Error: " + error.message;
+            btn.disabled = false;
+            btn.textContent = btn.dataset.role === "citizen" ? "Citizen" : btn.dataset.role === "lgu" ? "LGU" : "Super Admin";
+          }
+        });
+      });
+
+    } catch (error) {
+      console.log("[DEV] Dev login not available:", error.message);
+    }
+  }
+
+  initDevQuickLogin();
+
   // Test Login Logic
   async function initTestLogin() {
     try {

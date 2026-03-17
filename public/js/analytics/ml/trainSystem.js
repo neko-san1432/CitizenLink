@@ -115,7 +115,7 @@ async function ensureHITLTaxonomyLoaded() {
   // Fallback
   if (!taxonomy?.categories) {
     try {
-      const res = await fetch("/categoriesSubcategories.json");
+      const res = await fetch("/assets/json/categoriesSubcategories.json");
       if (res.ok) {
         taxonomy = await res.json();
         console.log("[TRAIN] Taxonomy loaded via fallback fetch");

@@ -42,7 +42,7 @@ describe("Notification scenarios (current services)", () => {
     jest.spyOn(complaintService, "getcomplaintById").mockResolvedValue({
       id: "comp-1",
       submitted_by: "citizen-1",
-      descriptive_su: "Road damage near market",
+      description: "Road damage near market",
       workflow_status: "submitted",
       priority: "low",
       comment: {}

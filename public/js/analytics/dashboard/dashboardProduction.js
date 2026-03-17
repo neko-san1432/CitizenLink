@@ -36,16 +36,34 @@ let currentFilterStartDate = null;
 let currentFilterEndDate = null;
 let clustersVisible = true; // Track cluster visibility state
 
-// Performance: Use requestAnimationFrame for smooth animations
-const rafId = null;
-
-// Barangay boundary data for offline zone detection
-let barangayGeoJSON = null;
-
-// Search feature state
-let searchHighlightMarker = null;
+// Category colors for heatmap
+let categoryColors = {};
 
 // ==================== v3.9 AUDIT FIX: XSS SANITIZATION ====================
+
+/**
+ * Load category colors from taxonomy JSON
+ */
+async function loadCategoryColors() {
+  try {
+    const response = await fetch('/assets/json/categoriesSubcategories.json');
+    const data = await response.json();
+    
+    // Extract colors from categories
+    categoryColors = {};
+    for (const [category, info] of Object.entries(data.categories)) {
+      if (info.color) {
+        categoryColors[category] = info.color;
+      }
+    }
+    
+    console.log('[CATEGORY_COLORS] Loaded:', Object.keys(categoryColors).length, 'categories');
+    return categoryColors;
+  } catch (error) {
+    console.error('[CATEGORY_COLORS] Failed to load:', error);
+    return {};
+  }
+}
 
 /**
  * Sanitize user input to prevent XSS attacks.
@@ -2377,6 +2395,9 @@ function attachCardClickHandlers() {
       cardElement.addEventListener("click", () => {
         console.log("[NAV] Flying to:", lat, lng, "zoom:", zoom);
 
+        // Collapse command center when clicking a complaint card
+        collapseCommandCenter();
+
         // Animate map to location
         map.flyTo([lat, lng], zoom, {
           duration: 1.5,
@@ -2447,61 +2468,97 @@ function renderCategoryDistribution(data) {
 
 // ==================== HEATMAP FUNCTIONS ====================
 
+// Store category heat layers for toggling
+let categoryHeatLayers = {};
+
 function createHeatmap(data) {
   if (!window.L.heatLayer) {
     console.error("[HEATMAP] Leaflet.heat plugin not loaded");
     return;
   }
 
-  // Destroy existing heatmap
-  if (heatmapLayer) {
-    map.removeLayer(heatmapLayer);
-  }
+  // Destroy existing heatmap layers
+  Object.values(categoryHeatLayers).forEach(layer => {
+    if (layer && map.hasLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+  categoryHeatLayers = {};
 
-  // Build heatmap data with intensity weighting
-  const heatData = data
-    .filter(p => p.latitude && p.longitude)
-    .map(p => {
-      // Critical categories get higher intensity
-      let intensity = 0.5;
-      if (["Fire", "Flooding"].includes(p.category)) {
-        intensity = 1.0;
-      } else if (["Pipe Leak", "Road Damage"].includes(p.category)) {
-        intensity = 0.7;
-      }
-      return [p.latitude, p.longitude, intensity];
+  // Build heatmap data grouped by category
+  const categoryData = {};
+  
+  data.filter(p => p.latitude && p.longitude).forEach(p => {
+    const category = p.category || "Others";
+    if (!categoryData[category]) {
+      categoryData[category] = [];
+    }
+    
+    // Intensity based on priority
+    let intensity = 0.5;
+    const upperCat = category.toUpperCase();
+    if (upperCat.includes("EMERGENCY") || upperCat.includes("FIRE")) {
+      intensity = 1.0;
+    } else if (upperCat.includes("FLOOD") || upperCat.includes("ACCIDENT") || upperCat.includes("CRIME")) {
+      intensity = 0.8;
+    } else if (upperCat.includes("HEALTH") || upperCat.includes("UTILITY")) {
+      intensity = 0.6;
+    }
+    
+    categoryData[category].push([p.latitude, p.longitude, intensity]);
+  });
+
+  // Create a separate heat layer for each category
+  Object.entries(categoryData).forEach(([category, points]) => {
+    if (points.length === 0) return;
+    
+    const color = categoryColors[category] || "#3b82f6"; // Default blue
+    
+    // Convert category color to heatmap gradient
+    const gradient = {
+      0.0: color + "00", // Transparent
+      0.3: color + "40", // 25% opacity
+      0.5: color + "80", // 50% opacity
+      0.7: color + "cc", // 80% opacity
+      1.0: color         // Full color
+    };
+
+    const heatLayer = L.heatLayer(points, {
+      radius: 25,
+      blur: 35,
+      maxZoom: 17,
+      max: 1.0,
+      gradient
     });
 
-  heatmapLayer = L.heatLayer(heatData, {
-    radius: 25,
-    blur: 35,
-    maxZoom: 17,
-    max: 1.0,
-    gradient: {
-      0.0: "#0000ff",
-      0.3: "#00ffff",
-      0.5: "#00ff00",
-      0.7: "#ffff00",
-      1.0: "#ff0000"
-    }
-  }).addTo(map);
+    categoryHeatLayers[category] = heatLayer;
+  });
 
-  console.log("[HEATMAP] Created with", heatData.length, "points");
+  console.log("[HEATMAP] Created", Object.keys(categoryHeatLayers).length, "category layers");
 }
 
 function toggleHeatmap() {
   const button = document.getElementById("toggleHeatmap");
 
-  if (heatmapLayer) {
-    if (map.hasLayer(heatmapLayer)) {
-      map.removeLayer(heatmapLayer);
-      button.classList.remove("active");
-      console.log("[HEATMAP] Hidden");
+  // Toggle all category heat layers
+  const anyShown = Object.values(categoryHeatLayers).some(layer => layer && map.hasLayer(layer));
+  
+  Object.values(categoryHeatLayers).forEach(layer => {
+    if (!layer) return;
+    
+    if (anyShown) {
+      if (map.hasLayer(layer)) map.removeLayer(layer);
     } else {
-      map.addLayer(heatmapLayer);
-      button.classList.add("active");
-      console.log("[HEATMAP] Shown");
+      if (!map.hasLayer(layer)) map.addLayer(layer);
     }
+  });
+
+  if (anyShown) {
+    button.classList.remove("active");
+    console.log("[HEATMAP] Hidden");
+  } else {
+    button.classList.add("active");
+    console.log("[HEATMAP] Shown");
   }
 }
 
@@ -2521,7 +2578,7 @@ function toggleClusters() {
   clustersVisible = !clustersVisible;
 
   if (clustersVisible) {
-    // Show clusters - hide background markers, show spotlight markers
+    // Show clusters - show spotlight markers
     simulationEngine.spotlightMarkers.forEach(marker => {
       if (marker && map.hasLayer) {
         marker.addTo(map);
@@ -2534,19 +2591,17 @@ function toggleClusters() {
       }
     });
 
-    // Hide background markers when clusters are visible
-    if (simulationEngine.backgroundMarkers) {
-      simulationEngine.backgroundMarkers.forEach((marker) => {
-        if (marker && map.hasLayer(marker)) {
-          map.removeLayer(marker);
-        }
+    // Show convex hulls if any
+    if (simulationEngine.convexHullLayers) {
+      simulationEngine.convexHullLayers.forEach(hull => {
+        if (hull && map) hull.addTo(map);
       });
     }
 
     button.classList.add("active");
-    console.log("[CLUSTERS] Shown - Background markers hidden");
+    console.log("[CLUSTERS] Shown - Background markers remain independent");
   } else {
-    // Hide clusters - show background markers, hide spotlight markers
+    // Hide clusters - hide spotlight markers
     simulationEngine.spotlightMarkers.forEach(marker => {
       if (marker && map.hasLayer(marker)) {
         map.removeLayer(marker);
@@ -2559,56 +2614,17 @@ function toggleClusters() {
       }
     });
 
-    // Show and enhance background markers when clusters are hidden
-    if (simulationEngine.backgroundMarkers) {
-      simulationEngine.backgroundMarkers.forEach((marker, id) => {
-        if (marker) {
-          // Add to map
-          marker.addTo(map);
-
-          // Find the complaint data for this marker
-          const complaint = simulationEngine.complaints.find(c => c.id === id);
-
-          if (complaint && !marker.getPopup()) {
-            // Add popup with complaint details if it doesn't have one
-            const popupContent = createSimplecomplaintPopup(complaint);
-            marker.bindPopup(popupContent, {
-              maxWidth: 300,
-              className: "background-marker-popup-container"
-            });
-
-            // v3.7: Load street-level location when popup opens
-            marker.on("popupopen", async () => {
-              const streetElements = document.querySelectorAll(".complaint-street-location");
-              for (const element of streetElements) {
-                const streetValue = element.querySelector(".street-value");
-                if (streetValue && streetValue.textContent.includes("Loading")) {
-                  const lat = parseFloat(element.dataset.lat);
-                  const lng = parseFloat(element.dataset.lng);
-                  if (!isNaN(lat) && !isNaN(lng)) {
-                    try {
-                      const address = await reverseGeocode(lat, lng);
-                      if (address && address.street) {
-                        streetValue.innerHTML = `<strong>${address.street}</strong> <span class="street-barangay">(${address.suburb || getJurisdiction(lat, lng)})</span>`;
-                      } else if (address && address.suburb) {
-                        streetValue.innerHTML = `<span class="street-barangay">${address.suburb}</span> <span class="no-street">(no street name)</span>`;
-                      } else {
-                        streetValue.innerHTML = '<span class="no-street">Street name unavailable</span>';
-                      }
-                    } catch (error) {
-                      streetValue.innerHTML = '<span class="no-street">Geocoding failed</span>';
-                    }
-                  }
-                }
-              }
-            });
-          }
-        }
+    // Hide convex hulls
+    if (simulationEngine.convexHullLayers) {
+      simulationEngine.convexHullLayers.forEach(hull => {
+        if (hull && map.hasLayer(hull)) map.removeLayer(hull);
       });
     }
 
+    // Note: We no longer touch background markers here
+    // They are controlled independently by the markers toggle
     button.classList.remove("active");
-    console.log("[CLUSTERS] Hidden - Background markers shown with popups");
+    console.log("[CLUSTERS] Hidden - Background markers remain independent");
   }
 }
 
@@ -2703,16 +2719,23 @@ function initMapLayersDropdown() {
  * @param {boolean} show - Whether to show heatmap
  */
 function toggleHeatmapFromDropdown(show) {
-  if (heatmapLayer) {
-    if (show && !map.hasLayer(heatmapLayer)) {
-      map.addLayer(heatmapLayer);
-      console.log("[HEATMAP] Shown via dropdown");
-    } else if (!show && map.hasLayer(heatmapLayer)) {
-      map.removeLayer(heatmapLayer);
-      console.log("[HEATMAP] Hidden via dropdown");
+  // Toggle all category heat layers
+  Object.entries(categoryHeatLayers).forEach(([category, layer]) => {
+    if (!layer) return;
+    
+    if (show && !map.hasLayer(layer)) {
+      map.addLayer(layer);
+    } else if (!show && map.hasLayer(layer)) {
+      map.removeLayer(layer);
     }
-  } else if (show) {
-    console.warn("[HEATMAP] Layer not yet created - load data first");
+  });
+  
+  if (show && Object.keys(categoryHeatLayers).length > 0) {
+    console.log("[HEATMAP] Shown via dropdown");
+  } else if (!show) {
+    console.log("[HEATMAP] Hidden via dropdown");
+  } else {
+    console.warn("[HEATMAP] Layers not yet created - load data first");
     // Reset switch
     const heatmapSwitch = document.getElementById("heatmapSwitch");
     if (heatmapSwitch) heatmapSwitch.checked = false;
@@ -2731,9 +2754,17 @@ function toggleClustersFromDropdown(show) {
 
   clustersVisible = show;
 
+  // Get noise markers (those with noise-marker-container class)
+  const noiseMarkers = simulationEngine.spotlightMarkers.filter(m => 
+    m.options?.className?.includes('noise-marker-container')
+  );
+  const clusterMarkers = simulationEngine.spotlightMarkers.filter(m => 
+    !m.options?.className?.includes('noise-marker-container')
+  );
+
   if (clustersVisible) {
-    // Show clusters
-    simulationEngine.spotlightMarkers.forEach(marker => {
+    // Show clusters - hide noise markers
+    clusterMarkers.forEach(marker => {
       if (marker && map) marker.addTo(map);
     });
 
@@ -2750,8 +2781,8 @@ function toggleClustersFromDropdown(show) {
 
     console.log("[CLUSTERS] Shown via independent toggle");
   } else {
-    // Hide clusters
-    simulationEngine.spotlightMarkers.forEach(marker => {
+    // Hide clusters - show noise markers instead
+    clusterMarkers.forEach(marker => {
       if (marker && map.hasLayer(marker)) map.removeLayer(marker);
     });
 
@@ -2765,6 +2796,11 @@ function toggleClustersFromDropdown(show) {
         if (hull && map.hasLayer(hull)) map.removeLayer(hull);
       });
     }
+
+    // Show noise markers when clusters are off
+    noiseMarkers.forEach(marker => {
+      if (marker && map && !map.hasLayer(marker)) marker.addTo(map);
+    });
 
     console.log("[CLUSTERS] Hidden via independent toggle");
   }
@@ -3018,7 +3054,6 @@ function analyzeClusterRationale(cluster) {
       contextNoun,
       street: dominantStreet
     };
-  }
   }
 
   // Single category - spatial hotspot
@@ -4372,6 +4407,9 @@ function visualizeClusters(clusters) {
 
     // v3.7: Load street-level location when popup opens
     marker.on("popupopen", async () => {
+      // Collapse command center sidebar when complaint is clicked
+      collapseCommandCenter();
+
       const streetLocationElement = document.getElementById(`street-location-${idx}`);
       if (streetLocationElement && streetLocationElement.textContent.includes("Loading")) {
         try {
@@ -4500,7 +4538,10 @@ function visualizeNoisePoints(noisePoints) {
       this._icon.querySelector(".noise-marker-inner").style.transform = "scale(1)";
     });
 
-    marker.addTo(map);
+    // Only add to map if clusters are not visible (show noise points as alternative to clusters)
+    if (!clustersVisible) {
+      marker.addTo(map);
+    }
     simulationEngine.spotlightMarkers.push(marker);
   });
 
@@ -5117,6 +5158,9 @@ function showSearchToast(message, type = "success") {
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[PRODUCTION] Initializing City Analytics Dashboard...");
+
+  // Load category colors for heatmap
+  await loadCategoryColors();
 
   // Initialize map
   initMap();

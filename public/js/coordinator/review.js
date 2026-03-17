@@ -227,7 +227,7 @@ function rendercomplaint(complaint) {
   // Details Mapping
   setText("complaint-type", complaint.category || complaint.type || "General");
   setText("complaint-subtype", (complaint.subcategory || complaint.subtype) ? ` • ${complaint.subcategory || complaint.subtype}` : "");
-  setText("complaint-description", complaint.descriptive_su || complaint.description || "No description provided");
+  setText("complaint-description", complaint.description || "No description provided");
   setText("complaint-location", complaint.location_text || "No location details");
 
   // Reject Button visibility (vanish if verified or above)

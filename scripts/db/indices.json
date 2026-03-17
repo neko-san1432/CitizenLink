@@ -1,0 +1,702 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "nlp_dictionary_rules",
+    "indexname": "nlp_dictionary_rules_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_dictionary_rules_pkey ON public.nlp_dictionary_rules USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_dictionary_rules",
+    "indexname": "nlp_dictionary_rules_unique",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_dictionary_rules_unique ON public.nlp_dictionary_rules USING btree (rule_type, pattern)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_dictionary_rules",
+    "indexname": "idx_nlp_dictionary_rules_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_dictionary_rules_type ON public.nlp_dictionary_rules USING btree (rule_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_dictionary_rules",
+    "indexname": "idx_nlp_dictionary_rules_pattern",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_dictionary_rules_pattern ON public.nlp_dictionary_rules USING btree (pattern)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_profiles",
+    "indexname": "user_profiles_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX user_profiles_pkey ON public.user_profiles USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_reminders",
+    "indexname": "complaint_reminders_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_reminders_pkey ON public.complaint_reminders USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "signup_links_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX signup_links_pkey ON public.signup_links USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "signup_links_code_key",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX signup_links_code_key ON public.signup_links USING btree (code)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "idx_signup_links_code",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_signup_links_code ON public.signup_links USING btree (code)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "idx_signup_links_role",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_signup_links_role ON public.signup_links USING btree (role)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "idx_signup_links_department",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_signup_links_department ON public.signup_links USING btree (department_code)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "idx_signup_links_created_by",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_signup_links_created_by ON public.signup_links USING btree (created_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "idx_signup_links_active",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_signup_links_active ON public.signup_links USING btree (is_active)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "signup_links",
+    "indexname": "idx_signup_links_expires",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_signup_links_expires ON public.signup_links USING btree (expires_at)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_proposals",
+    "indexname": "nlp_proposals_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_proposals_pkey ON public.nlp_proposals USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rate_limits",
+    "indexname": "rate_limits_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX rate_limits_pkey ON public.rate_limits USING btree (key)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_history",
+    "indexname": "complaint_history_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_history_pkey ON public.complaint_history USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_history",
+    "indexname": "idx_complaint_history_complaint_created",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_history_complaint_created ON public.complaint_history USING btree (complaint_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_history",
+    "indexname": "idx_complaint_history_action_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_history_action_type ON public.complaint_history USING btree (action_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "indexname": "audit_logs_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX audit_logs_pkey ON public.audit_logs USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "indexname": "idx_audit_logs_performed_by_created",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_audit_logs_performed_by_created ON public.audit_logs USING btree (performed_by, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "indexname": "idx_audit_logs_target",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_audit_logs_target ON public.audit_logs USING btree (target_type, target_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "indexname": "idx_audit_logs_action_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_audit_logs_action_type ON public.audit_logs USING btree (action_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "invitation_tokens",
+    "indexname": "invitation_tokens_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX invitation_tokens_pkey ON public.invitation_tokens USING btree (token)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "invitation_tokens",
+    "indexname": "idx_invitation_tokens_active_expires",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_invitation_tokens_active_expires ON public.invitation_tokens USING btree (active, expires_at)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "invitation_tokens",
+    "indexname": "idx_invitation_tokens_created_by",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_invitation_tokens_created_by ON public.invitation_tokens USING btree (created_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "invitation_tokens",
+    "indexname": "idx_invitation_tokens_role",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_invitation_tokens_role ON public.invitation_tokens USING btree (role)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_group_id",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_group_id ON public.complaint_assignments USING btree (assignment_group_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_type ON public.complaint_assignments USING btree (assignment_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "complaint_assignments_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_assignments_pkey ON public.complaint_assignments USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_complaint",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_complaint ON public.complaint_assignments USING btree (complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_status",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_status ON public.complaint_assignments USING btree (status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_assigned_to",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_assigned_to ON public.complaint_assignments USING btree (assigned_to)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_department",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_department ON public.complaint_assignments USING btree (department_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_priority",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_priority ON public.complaint_assignments USING btree (priority)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_assignments",
+    "indexname": "idx_complaint_assignments_deadline",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_assignments_deadline ON public.complaint_assignments USING btree (deadline)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_subcategory_mapping",
+    "indexname": "department_subcategory_mapping_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX department_subcategory_mapping_pkey ON public.department_subcategory_mapping USING btree (department_id, subcategory_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_subcategory_mapping",
+    "indexname": "idx_dept_sub_mapping_sub_id",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_dept_sub_mapping_sub_id ON public.department_subcategory_mapping USING btree (subcategory_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_subcategory_mapping",
+    "indexname": "idx_dept_sub_mapping_dept_id",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_dept_sub_mapping_dept_id ON public.department_subcategory_mapping USING btree (department_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "indexname": "id_verifications_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX id_verifications_pkey ON public.id_verifications USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "indexname": "idx_id_verifications_id_number",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX idx_id_verifications_id_number ON public.id_verifications USING btree (id_number)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "indexname": "idx_id_verifications_user_id",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_id_verifications_user_id ON public.id_verifications USING btree (user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "id_verifications",
+    "indexname": "idx_id_verifications_status",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_id_verifications_status ON public.id_verifications USING btree (verification_status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_category_config",
+    "indexname": "nlp_category_config_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_category_config_pkey ON public.nlp_category_config USING btree (category)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "complaint_clusters_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_clusters_pkey ON public.complaint_clusters USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "idx_clusters_location",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_clusters_location ON public.complaint_clusters USING btree (center_lat, center_lng)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "idx_clusters_pattern",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_clusters_pattern ON public.complaint_clusters USING btree (pattern_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "idx_clusters_status",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_clusters_status ON public.complaint_clusters USING btree (status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "idx_complaint_clusters_status",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_clusters_status ON public.complaint_clusters USING btree (status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "idx_complaint_clusters_pattern_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_clusters_pattern_type ON public.complaint_clusters USING btree (pattern_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_clusters",
+    "indexname": "idx_complaint_clusters_location",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_clusters_location ON public.complaint_clusters USING gist (ll_to_earth(center_lat, center_lng)) WHERE ((center_lat IS NOT NULL) AND (center_lng IS NOT NULL))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "indexname": "nlp_pending_reviews_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_pending_reviews_pkey ON public.nlp_pending_reviews USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "indexname": "idx_nlp_pending_reviews_status",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_pending_reviews_status ON public.nlp_pending_reviews USING btree (status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "indexname": "idx_nlp_pending_reviews_complaint",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_pending_reviews_complaint ON public.nlp_pending_reviews USING btree (complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_pending_reviews",
+    "indexname": "idx_nlp_pending_reviews_created",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_pending_reviews_created ON public.nlp_pending_reviews USING btree (created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_keywords",
+    "indexname": "nlp_keywords_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_keywords_pkey ON public.nlp_keywords USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_keywords",
+    "indexname": "nlp_keywords_term_unique",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_keywords_term_unique ON public.nlp_keywords USING btree (term)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_keywords",
+    "indexname": "idx_nlp_keywords_term",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_keywords_term ON public.nlp_keywords USING btree (term)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_keywords",
+    "indexname": "idx_nlp_keywords_category",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_keywords_category ON public.nlp_keywords USING btree (category)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_metaphors",
+    "indexname": "nlp_metaphors_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_metaphors_pkey ON public.nlp_metaphors USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "indexname": "complaint_evidence_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_evidence_pkey ON public.complaint_evidence USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "indexname": "idx_complaint_evidence_complaint",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_evidence_complaint ON public.complaint_evidence USING btree (complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "indexname": "idx_complaint_evidence_uploaded_at",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_evidence_uploaded_at ON public.complaint_evidence USING btree (uploaded_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "indexname": "idx_complaint_evidence_uploaded_by",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_evidence_uploaded_by ON public.complaint_evidence USING btree (uploaded_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_evidence",
+    "indexname": "idx_complaint_evidence_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_evidence_type ON public.complaint_evidence USING btree (evidence_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "complaint_similarities_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_similarities_pkey ON public.complaint_similarities USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "complaint_similarities_unique",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_similarities_unique ON public.complaint_similarities USING btree (complaint_id, similar_complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_cs_complaint_score",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_cs_complaint_score ON public.complaint_similarities USING btree (complaint_id, similarity_score DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_similarities_complaint",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_similarities_complaint ON public.complaint_similarities USING btree (complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_similarities_decision",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_similarities_decision ON public.complaint_similarities USING btree (coordinator_decision)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_similarities_score",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_similarities_score ON public.complaint_similarities USING btree (similarity_score DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_complaint_similarities_complaint",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_similarities_complaint ON public.complaint_similarities USING btree (complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_complaint_similarities_similar",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_similarities_similar ON public.complaint_similarities USING btree (similar_complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_similarities",
+    "indexname": "idx_complaint_similarities_score",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_similarities_score ON public.complaint_similarities USING btree (similarity_score DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "indexname": "complaint_duplicates_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_duplicates_pkey ON public.complaint_duplicates USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "indexname": "complaint_duplicates_unique",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_duplicates_unique ON public.complaint_duplicates USING btree (duplicate_complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "indexname": "idx_duplicates_duplicate",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_duplicates_duplicate ON public.complaint_duplicates USING btree (duplicate_complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_duplicates",
+    "indexname": "idx_duplicates_master",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_duplicates_master ON public.complaint_duplicates USING btree (master_complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "complaint_workflow_logs_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX complaint_workflow_logs_pkey ON public.complaint_workflow_logs USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_cwl_complaint_created",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_cwl_complaint_created ON public.complaint_workflow_logs USING btree (complaint_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_workflow_logs_action_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_workflow_logs_action_type ON public.complaint_workflow_logs USING btree (action_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_workflow_logs_complaint",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_workflow_logs_complaint ON public.complaint_workflow_logs USING btree (complaint_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_workflow_logs_created_at",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_workflow_logs_created_at ON public.complaint_workflow_logs USING btree (created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_complaint_workflow_logs_complaint_created",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_workflow_logs_complaint_created ON public.complaint_workflow_logs USING btree (complaint_id, created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_complaint_workflow_logs_action_type",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_workflow_logs_action_type ON public.complaint_workflow_logs USING btree (action_type)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "complaint_workflow_logs",
+    "indexname": "idx_complaint_workflow_logs_action_by",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_complaint_workflow_logs_action_by ON public.complaint_workflow_logs USING btree (action_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_anchors",
+    "indexname": "nlp_anchors_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_anchors_pkey ON public.nlp_anchors USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_anchors",
+    "indexname": "idx_nlp_anchors_category",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_nlp_anchors_category ON public.nlp_anchors USING btree (category)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "nlp_logs",
+    "indexname": "nlp_logs_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX nlp_logs_pkey ON public.nlp_logs USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "department_transfers_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX department_transfers_pkey ON public.department_transfers USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "idx_dept_transfers_created_at",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_dept_transfers_created_at ON public.department_transfers USING btree (created_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "idx_dept_transfers_performed_by",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_dept_transfers_performed_by ON public.department_transfers USING btree (performed_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "idx_dept_transfers_user",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_dept_transfers_user ON public.department_transfers USING btree (user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "idx_department_transfers_user",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_department_transfers_user ON public.department_transfers USING btree (user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "idx_department_transfers_performed_by",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_department_transfers_performed_by ON public.department_transfers USING btree (performed_by)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "department_transfers",
+    "indexname": "idx_department_transfers_to_department",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_department_transfers_to_department ON public.department_transfers USING btree (to_department)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "news",
+    "indexname": "news_pkey",
+    "tablespace": null,
+    "indexdef": "CREATE UNIQUE INDEX news_pkey ON public.news USING btree (id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "news",
+    "indexname": "idx_news_status",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_news_status ON public.news USING btree (status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "news",
+    "indexname": "idx_news_published_at",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_news_published_at ON public.news USING btree (published_at DESC)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "news",
+    "indexname": "idx_news_category",
+    "tablespace": null,
+    "indexdef": "CREATE INDEX idx_news_category ON public.news USING btree (category)"
+  }
+]

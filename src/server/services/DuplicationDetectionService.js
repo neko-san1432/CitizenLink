@@ -72,16 +72,16 @@ class DuplicationDetectionService {
       .map((candidate) => {
         // FC-06 FIX: textScore1 compares description text, textScore2 compares location text
         const textScore1 = this.calculateTextSimilarity(
-          (complaint.descriptive_su || "").toLowerCase(),
-          (candidate.descriptive_su || "").toLowerCase()
+          (complaint.description || "").toLowerCase(),
+          (candidate.description || "").toLowerCase()
         );
         const textScore2 = this.calculateTextSimilarity(
           (complaint.location_text || complaint.location || "").toLowerCase(),
           (candidate.location_text || candidate.location || "").toLowerCase()
         );
         const keywordScore = this.calculateKeywordOverlap(
-          `${complaint.descriptive_su || ""}`,
-          `${candidate.descriptive_su || ""}`
+          `${complaint.description || ""}`,
+          `${candidate.description || ""}`
         );
         const textScore =
           textScore1 * 0.4 + textScore2 * 0.4 + keywordScore * 0.2;

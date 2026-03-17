@@ -6,7 +6,7 @@ describe("Minimal complaintService smoke test", () => {
       findById: jest.fn().mockResolvedValue({
         id: "comp-123",
         submitted_by: "user-citizen-1",
-        descriptive_su: "Broken streetlight near plaza",
+        description: "Broken streetlight near plaza",
         workflow_status: "submitted",
         priority: "low",
         comment: {}
@@ -38,7 +38,7 @@ describe("Minimal complaintService smoke test", () => {
     jest.spyOn(complaintService, "getcomplaintById").mockResolvedValue({
       id: "comp-123",
       submitted_by: "user-citizen-1",
-      descriptive_su: "Broken streetlight near plaza",
+      description: "Broken streetlight near plaza",
       workflow_status: "submitted",
       priority: "low",
       comment: {}

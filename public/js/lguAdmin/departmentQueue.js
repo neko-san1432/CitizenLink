@@ -169,7 +169,7 @@ class departmentQueue {
                 </div>
                 
                 <div class="complaint-content">
-                    <p class="complaint-description">${complaint.descriptive_su || complaint.description || "No description provided"}</p>
+                    <p class="complaint-description">${complaint.description || "No description provided"}</p>
                     ${complaint.is_assigned_to_department === false ? `
                         <div class="info-banner" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
                             ⚠️ This complaint is not assigned to your department. Limited information only.

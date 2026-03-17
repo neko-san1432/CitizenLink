@@ -34,40 +34,40 @@ describe("Heatmap Data Processing", () => {
   });
 
   describe("department Array Handling", () => {
-    it("should handle department_r as array", () => {
+    it("should handle departments as array", () => {
       const complaint = {
-        department_r: ["DPWH", "DPS"]
+        departments: ["DPWH", "DPS"]
       };
 
-      const departmentR = Array.isArray(complaint.department_r)
-        ? complaint.department_r
-        : (complaint.department_r ? [complaint.department_r] : []);
+      const departmentsArr = Array.isArray(complaint.departments)
+        ? complaint.departments
+        : (complaint.departments ? [complaint.departments] : []);
 
       expect(departmentR).toEqual(["DPWH", "DPS"]);
       expect(departmentR.length).toBe(2);
     });
 
-    it("should convert string department_r to array", () => {
+    it("should convert string departments to array", () => {
       const complaint = {
-        department_r: "DPWH"
+        departments: "DPWH"
       };
 
-      const departmentR = Array.isArray(complaint.department_r)
-        ? complaint.department_r
-        : (complaint.department_r ? [complaint.department_r] : []);
+      const departmentsArr = Array.isArray(complaint.departments)
+        ? complaint.departments
+        : (complaint.departments ? [complaint.departments] : []);
 
       expect(departmentR).toEqual(["DPWH"]);
       expect(Array.isArray(departmentR)).toBe(true);
     });
 
-    it("should handle null/undefined department_r", () => {
+    it("should handle null/undefined departments", () => {
       const complaint = {
-        department_r: null
+        departments: null
       };
 
-      const departmentR = Array.isArray(complaint.department_r)
-        ? complaint.department_r
-        : (complaint.department_r ? [complaint.department_r] : []);
+      const departmentsArr = Array.isArray(complaint.departments)
+        ? complaint.departments
+        : (complaint.departments ? [complaint.departments] : []);
 
       expect(departmentR).toEqual([]);
     });
@@ -84,7 +84,7 @@ describe("Heatmap Data Processing", () => {
         longitude: "120.9842",
         location_text: "Manila City Hall",
         submitted_at: "2023-01-15T10:00:00Z",
-        department_r: ["DPWH", "DOT"],
+        departments: ["DPWH", "DOT"],
         category: "infrastructure-cat-id",
         subcategory: "roads-subcat-id"
       };
@@ -92,9 +92,9 @@ describe("Heatmap Data Processing", () => {
       // Simulate transformation logic
       const lat = parseFloat(mockcomplaint.latitude);
       const lng = parseFloat(mockcomplaint.longitude);
-      const departmentR = Array.isArray(mockcomplaint.department_r)
-        ? mockcomplaint.department_r
-        : (mockcomplaint.department_r ? [mockcomplaint.department_r] : []);
+      const departmentsArr = Array.isArray(mockcomplaint.departments)
+        ? mockcomplaint.departments
+        : (mockcomplaint.departments ? [mockcomplaint.departments] : []);
 
       const transformed = {
         id: mockcomplaint.id,
@@ -184,15 +184,15 @@ describe("Heatmap Data Processing", () => {
   describe("department Filtering", () => {
     it("should filter by department code", () => {
       const complaints = [
-        { id: "1", department_r: ["DPWH"] },
-        { id: "2", department_r: ["DPS"] },
-        { id: "3", department_r: ["DPWH", "DOT"] },
-        { id: "4", department_r: ["DOH"] }
+        { id: "1", departments: ["DPWH"] },
+        { id: "2", departments: ["DPS"] },
+        { id: "3", departments: ["DPWH", "DOT"] },
+        { id: "4", departments: ["DOH"] }
       ];
 
       const department = "DPWH";
       const filtered = complaints.filter(c =>
-        Array.isArray(c.department_r) && c.department_r.includes(department)
+        Array.isArray(c.departments) && c.departments.includes(department)
       );
 
       expect(filtered).toHaveLength(2);

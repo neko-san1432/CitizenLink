@@ -33,12 +33,12 @@ class ComplaintController {
     };
 
     if (
-      (complaint.department_r && complaint.department_r.length > 0) ||
+      (complaint.departments && complaint.departments.length > 0) ||
       complaint.assigned_coordinator_id
     ) {
       response.workflow = {
         auto_assigned: Boolean(
-          complaint.department_r && complaint.department_r.length > 0
+          complaint.departments && complaint.departments.length > 0
         ),
         coordinator_assigned: Boolean(complaint.assigned_coordinator_id),
         workflow_status: complaint.workflow_status,
@@ -54,7 +54,16 @@ class ComplaintController {
   async getCoordinatorStats(req, res) {
     try {
       const stats = await this.complaintService.getcomplaintStats(req.user);
-      res.json({ success: true, data: stats });
+      
+      // Map to dashboard expected format
+      const dashboardStats = {
+        incoming: stats.byStatus?.submitted || 0,
+        unverified: stats.byStatus?.submitted || 0, // In this flow, submitted is unverified
+        assigned: (stats.byStatus?.verified || 0) + (stats.byStatus?.under_review || 0),
+        escalated: (stats.byPriority?.urgent || 0) + (stats.byPriority?.critical || 0)
+      };
+
+      res.json({ success: true, data: dashboardStats });
     } catch (error) {
       console.error("[complaintController] getCoordinatorStats error:", error.message);
       res.status(500).json({ success: false, error: "Failed to fetch coordinator stats" });
@@ -432,10 +441,10 @@ class ComplaintController {
               const lat = Number.parseFloat(c.latitude);
               const lng = Number.parseFloat(c.longitude);
               if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-              const departments = Array.isArray(c.department_r)
-                ? c.department_r
-                : c.department_r
-                  ? [c.department_r]
+              const departments = Array.isArray(c.departments)
+                ? c.departments
+                : c.departments
+                  ? [c.departments]
                   : [];
               return {
                 id: c.id,
@@ -452,7 +461,7 @@ class ComplaintController {
                 type: c.category || "General",
                 category: c.category || null,
                 subcategory: c.subcategory || null,
-                department_r: departments,
+                departments,
               };
             })
             .filter(Boolean)

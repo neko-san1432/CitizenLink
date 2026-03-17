@@ -281,7 +281,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lgu-admin", "heatmap.html")
+      path.join(config.rootDir, "views", "pages", "lguAdmin", "heatmap.html")
     );
   }
 );

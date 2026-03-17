@@ -172,7 +172,7 @@ function updateActivity(activities) {
              </svg>
            </div>
             <div>
-              <p class="text-sm font-medium text-gray-800">${item.descriptive_su || item.title || "Activity"
+              <p class="text-sm font-medium text-gray-800">${item.description || item.title || "Activity"
 }</p>
               <p class="text-xs text-gray-500">${new Date(
     item.submitted_at || item.created_at

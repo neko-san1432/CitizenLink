@@ -28,8 +28,8 @@ END $$;
 -- ============================================================================
 
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -165,8 +165,8 @@ INSERT INTO public.complaints (
 -- ============================================================================
 
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -281,8 +281,8 @@ INSERT INTO public.complaints (
 -- ============================================================================
 
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -376,8 +376,8 @@ INSERT INTO public.complaints (
 -- ============================================================================
 
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES
@@ -429,8 +429,8 @@ INSERT INTO public.complaints (
 -- ============================================================================
 
 INSERT INTO public.complaints (
-    id, submitted_by, descriptive_su, location_text, latitude, longitude,
-    category, subcategory, department_r, workflow_status, priority, status,
+    id, submitted_by, description, location_text, latitude, longitude,
+    category, subcategory, departments, workflow_status, priority, status,
     confirmation_status, confirmed_by_citizen, all_responders_confirmed,
     submitted_at, updated_at, last_activity_at
 ) VALUES

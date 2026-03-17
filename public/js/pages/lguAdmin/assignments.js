@@ -525,10 +525,10 @@ class LguAdminAssignments {
         </td>
         <td class="p-4">
           <div class="font-semibold text-gray-800 dark:text-gray-200 mb-1">${escapeHtml(
-    assignment.descriptive_su ? (assignment.descriptive_su.substring(0, 50) + (assignment.descriptive_su.length > 50 ? "..." : "")) : (assignment.title || "Untitled")
+    assignment.description ? (assignment.description.substring(0, 50) + (assignment.description.length > 50 ? "..." : "")) : (assignment.title || "Untitled")
   )}</div>
           <div class="text-gray-500 dark:text-gray-400 text-xs max-w-[250px] truncate">
-            ${escapeHtml(assignment.descriptive_su || assignment.description || "No details")}
+            ${escapeHtml(assignment.description || "No details")}
           </div>
         </td>
         <td class="p-4">

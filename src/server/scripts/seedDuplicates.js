@@ -63,7 +63,7 @@ async function seed() {
       const complaint = {
         submitted_by: userId,
         title: `${SEED_CONFIG.TITLE} #${i + 1}`,
-        descriptive_su: SEED_CONFIG.DESCRIPTION,
+        description: SEED_CONFIG.DESCRIPTION,
         category: category.id,
         subcategory: subcategory ? subcategory.id : null,
         latitude: lat,

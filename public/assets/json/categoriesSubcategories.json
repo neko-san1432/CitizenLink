@@ -17,6 +17,7 @@
     "Infrastructure": {
       "description": "Physical structures and facilities requiring maintenance or repair",
       "priority": 55,
+      "color": "#f59e0b",
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -35,6 +36,7 @@
     "Utilities": {
       "description": "Essential services including water, electricity, and telecommunications",
       "priority": 65,
+      "color": "#8b5cf6",
       "clustering": {
         "epsilon": 60,
         "minPts": 5,
@@ -52,6 +54,7 @@
     "Environment": {
       "description": "Environmental and weather-related issues affecting public safety",
       "priority": 80,
+      "color": "#06b6d4",
       "clustering": {
         "epsilon": 60,
         "minPts": 5,
@@ -70,6 +73,7 @@
     "Public Safety": {
       "description": "Safety, crime, and security concerns requiring enforcement or immediate response",
       "priority": 85,
+      "color": "#ef4444",
       "clustering": {
         "epsilon": 25,
         "minPts": 1,
@@ -95,6 +99,7 @@
     "Sanitation": {
       "description": "Waste management, sanitation, sewage, and cleanliness issues",
       "priority": 40,
+      "color": "#84cc16",
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -112,6 +117,7 @@
     "Traffic": {
       "description": "Traffic, road obstructions, and transportation disruptions",
       "priority": 45,
+      "color": "#f97316",
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -128,6 +134,7 @@
     "Health Hazard": {
       "description": "Public health hazards and disease risks affecting community welfare",
       "priority": 70,
+      "color": "#ec4899",
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -143,6 +150,7 @@
     "Emergency": {
       "description": "Emergency situations requiring immediate response",
       "priority": 100,
+      "color": "#dc2626",
       "clustering": {
         "epsilon": 25,
         "minPts": 1,
@@ -162,6 +170,7 @@
     "Pest Infestation": {
       "description": "Animal-related incidents and pest infestations (vector risks, stray animals, infestations)",
       "priority": 45,
+      "color": "#a3e635",
       "clustering": {
         "epsilon": 40,
         "minPts": 4,
@@ -180,6 +189,7 @@
     "Noise": {
       "description": "Noise-related complaints and disturbances",
       "priority": 25,
+      "color": "#6b7280",
       "clustering": {
         "epsilon": 40,
         "minPts": 3,
@@ -196,6 +206,7 @@
     "Others": {
       "description": "Miscellaneous complaints not fitting other categories",
       "priority": 10,
+      "color": "#94a3b8",
       "clustering": {
         "epsilon": 40,
         "minPts": 4,

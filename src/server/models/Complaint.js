@@ -3,11 +3,11 @@ class Complaint {
     this.id = data.id;
     this.submitted_by = data.submitted_by;
     this.title = data.title;
-    this.descriptive_su = data.descriptive_su;
+    this.description = data.description || data.descriptive_su;
     this.location_text = data.location_text;
     this.latitude = data.latitude;
     this.longitude = data.longitude;
-    this.department_r = data.department_r || [];
+    this.departments = data.departments || data.department_r || [];
     this.preferred_departments = data.preferred_departments || [];
     this.category = data.category;
     this.subcategory = data.subcategory;
@@ -31,8 +31,6 @@ class Complaint {
     this.estimated_resolution_date = data.estimated_resolution_date;
     this.submitted_at = data.submitted_at;
     this.updated_at = data.updated_at;
-    this.submitted_at = data.submitted_at;
-    this.updated_at = data.updated_at;
     this.upvote_count = data.upvote_count || 0;
     // Audit fields
     this.submitted_by_snapshot = data.submitted_by_snapshot;
@@ -45,7 +43,8 @@ class Complaint {
     if (!data.title || data.title.trim().length < 5) {
       errors.push("Title must be at least 5 characters");
     }
-    if (!data.descriptive_su || data.descriptive_su.trim().length < 10) {
+    const description = data.description || data.descriptive_su;
+    if (!description || description.trim().length < 10) {
       errors.push("Description must be at least 10 characters");
     }
     // Location check removed to allow frontend flexibility
@@ -86,14 +85,6 @@ class Complaint {
         }
       }
     }
-    const validStatuses = [
-      "pending review",
-      "in progress",
-      "resolved",
-    ];
-    if (data.status && !validStatuses.includes(data.status)) {
-      errors.push("Invalid status");
-    }
     const validWorkflowStatuses = [
       "submitted",
       "verified",
@@ -124,11 +115,11 @@ class Complaint {
     return {
       submitted_by: this.submitted_by,
       // title: this.title?.trim(), // Removed - Validation Only, not in DB
-      descriptive_su: this.descriptive_su?.trim(),
+      description: this.description?.trim(),
       location_text: this.location_text?.trim(),
       latitude: this.latitude ? parseFloat(this.latitude) : null,
       longitude: this.longitude ? parseFloat(this.longitude) : null,
-      department_r: Array.isArray(this.department_r) ? this.department_r : [],
+      departments: Array.isArray(this.departments) ? this.departments : [],
       // preferred_departments: Array.isArray(this.preferred_departments)
       //   ? this.preferred_departments
       //   : [], // Removed - Used for logic but not stored in complaints table
@@ -152,11 +143,11 @@ class Complaint {
       id: this.id,
       submitted_by: this.submitted_by,
       title: this.title,
-      descriptive_su: this.descriptive_su,
+      description: this.description,
       location_text: this.location_text,
       latitude: this.latitude,
       longitude: this.longitude,
-      department_r: this.department_r,
+      departments: this.departments,
       preferred_departments: this.preferred_departments,
       category: this.category,
       subcategory: this.subcategory,

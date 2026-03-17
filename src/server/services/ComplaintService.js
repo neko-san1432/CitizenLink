@@ -133,6 +133,10 @@ class ComplaintService {
     return await this.readService.getComplaintHistory(complaintId);
   }
 
+  async getUserStatistics(userId) {
+    return await this.readService.getUserStatistics(userId);
+  }
+
   // Delegate update methods
   async updatecomplaintStatus(id, updateData, userId = null) {
     return await this.updateService.updateComplaintStatus(id, updateData, userId);
@@ -192,7 +196,7 @@ class ComplaintService {
     await this.notificationService.notifyTaskAssigned(
       userId,
       complaintId,
-      complaint.descriptive_su,
+      complaint.description,
       complaint.priority,
       null
     );

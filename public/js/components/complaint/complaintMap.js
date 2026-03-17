@@ -293,7 +293,7 @@ class complaintMap {
       map.setLocation(
         complaintData.latitude,
         complaintData.longitude,
-        complaintData.descriptive_su || "complaint Location",
+        complaintData.description || "complaint Location",
         complaintData.location_text || ""
       );
     }

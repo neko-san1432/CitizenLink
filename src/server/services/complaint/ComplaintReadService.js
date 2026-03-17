@@ -42,6 +42,10 @@ class ComplaintReadService {
   async getComplaintHistory(complaintId) {
     return await this.complaintRepo.findHistoryByComplaintId(complaintId);
   }
+
+  async getUserStatistics(userId) {
+    return await this.complaintRepo.getUserStatistics(userId);
+  }
 }
 
 module.exports = ComplaintReadService;

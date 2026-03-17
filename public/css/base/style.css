@@ -1,8 +1,8 @@
 /* Enhanced Design System & Components */
-@import url('/css/designSystem.css');
-@import url('/css/utilities.css');
-@import url('/css/layouts.css');
-@import url('/css/animations.css');
+@import url('/css/utils/designSystem.css');
+@import url('/css/utils/utilities.css');
+@import url('/css/layouts/layouts.css');
+@import url('/css/base/animations.css');
 
 /* Component Enhancements */
 @import url('/css/components/buttons.css');
@@ -11,11 +11,11 @@
 @import url('/css/components/tablesLists.css');
 
 /* Original Stylesheets */
-@import url('/css/app.css');
-@import url('/css/theme.css');
-@import url('/css/app.css');
-@import url('/css/toast.css');
-@import url('/css/header.css');
+@import url('/css/base/app.css');
+@import url('/css/base/theme.css');
+@import url('/css/base/app.css');
+@import url('/css/components/toast.css');
+@import url('/css/components/header.css');
 @import url('/css/pages/dashboardRedesign.css');
 @import url('/css/components/modal.css');
 @import url('/css/components/sidebar.css');

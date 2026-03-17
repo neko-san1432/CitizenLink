@@ -22,6 +22,7 @@ const cspConfig = {
       "https://cdn.jsdelivr.net",
       "https://cdn.tailwindcss.com",
       "https://cdnjs.cloudflare.com",
+      "https://cdn.sheetjs.com",
     ],
     imgSrc: [
       "'self'",

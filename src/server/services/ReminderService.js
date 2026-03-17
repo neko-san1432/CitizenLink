@@ -62,7 +62,7 @@ class ReminderService {
         .from("complaints")
         .select(`
           id, title, workflow_status, submitted_at, last_activity_at,
-          department_r, preferred_departments,
+          departments, preferred_departments,
           submitted_by, coordinator_notes
         `)
         .in("workflow_status", ["assigned", "in_progress"])
@@ -76,7 +76,7 @@ class ReminderService {
         .from("complaints")
         .select(`
           id, title, workflow_status, submitted_at, last_activity_at,
-          department_r, preferred_departments,
+          departments, preferred_departments,
           submitted_by, coordinator_notes
         `)
         .eq("workflow_status", "new")
@@ -178,11 +178,11 @@ class ReminderService {
     const supabase = getServiceClient();
     const departments = [];
     // Get departments from department_r array
-    if (complaint.department_r && complaint.department_r.length > 0) {
+    if (complaint.departments && complaint.departments.length > 0) {
       const { data: deptData } = await supabase
         .from("departments")
         .select("id, name, code")
-        .in("code", complaint.department_r);
+        .in("code", complaint.departments);
       if (deptData) {
         departments.push(...deptData);
       }
@@ -235,22 +235,22 @@ class ReminderService {
     const reminderMessages = {
       first: {
         title: "complaint Reminder",
-        message: `complaint "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}" has been pending for 24+ hours and needs attention.`,
+        message: `complaint "${complaint.description?.slice(0, 100) || "Pending complaint"}" has been pending for 24+ hours and needs attention.`,
         priority: "warning"
       },
       second: {
         title: "Urgent complaint Reminder",
-        message: `complaint "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}" has been pending for 3+ days and requires immediate attention.`,
+        message: `complaint "${complaint.description?.slice(0, 100) || "Pending complaint"}" has been pending for 3+ days and requires immediate attention.`,
         priority: "urgent"
       },
       third: {
         title: "Critical complaint Reminder",
-        message: `complaint "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}" has been pending for 1+ week and needs urgent resolution.`,
+        message: `complaint "${complaint.description?.slice(0, 100) || "Pending complaint"}" has been pending for 1+ week and needs urgent resolution.`,
         priority: "urgent"
       },
       final: {
         title: "Final complaint Reminder",
-        message: `complaint "${complaint.descriptive_su?.slice(0, 100) || "Pending complaint"}" has been pending for 2+ weeks. This is the final reminder.`,
+        message: `complaint "${complaint.description?.slice(0, 100) || "Pending complaint"}" has been pending for 2+ weeks. This is the final reminder.`,
         priority: "urgent"
       }
     };

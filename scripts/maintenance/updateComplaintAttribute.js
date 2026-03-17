@@ -16,7 +16,7 @@ async function updatecomplaintAttribute() {
   if (args.length < 3) {
     console.log("Usage: node scripts/updatecomplaintAttribute.js <complaint_id> <attribute_name> <new_value>");
     console.log("Example: node scripts/updatecomplaintAttribute.js 123-abc priority high");
-    console.log('Example: node scripts/updatecomplaintAttribute.js 123-abc descriptive_su "New updated description"');
+    console.log('Example: node scripts/updatecomplaintAttribute.js 123-abc description "New updated description"');
     process.exit(1);
   }
 

@@ -321,7 +321,7 @@ class NotificationController {
         .on("postgres_changes", {
           event: "INSERT",
           schema: "public",
-          table: "notification",
+          table: "notifications",
           filter: `user_id=eq.${userId}`
         }, (payload) => {
           // console.log removed for security

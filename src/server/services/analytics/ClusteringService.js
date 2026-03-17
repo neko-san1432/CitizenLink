@@ -77,7 +77,7 @@ class ClusteringService {
       const { data: complaints, error } = await this.supabase
         .from("complaints")
         // FC-10 FIX: Use correct column names (submitted_at not created_at, no title column)
-        .select("id, latitude, longitude, category, subcategory, submitted_at, urgency_score, location, descriptive_su")
+        .select("id, latitude, longitude, category, subcategory, submitted_at, urgency_score, location, description")
         .gte("submitted_at", sevenDaysAgo)
         .neq("workflow_status", "closed")
         .neq("workflow_status", "rejected");

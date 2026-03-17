@@ -3,6 +3,12 @@ const routes = require("./routes");
 const sessionRoutes = require("./routes/sessionRoutes");
 const pageRoutes = require("./routes/pages");
 const { setupMiddleware, setupErrorHandling } = require("./config/middleware");
+const config = require("../../config/app");
+
+let devAuthRoutes;
+if (config.env === "development") {
+  devAuthRoutes = require("./routes/devAuth");
+}
 
 class DRIMSApp {
   constructor() {
@@ -26,6 +32,11 @@ class DRIMSApp {
   }
 
   initializeRoutes() {
+    // Dev Auth Routes (only in development)
+    if (config.env === "development" && devAuthRoutes) {
+      this.app.use("/api/dev", devAuthRoutes);
+    }
+
     // API Routes
     this.app.use("/api", routes);
 

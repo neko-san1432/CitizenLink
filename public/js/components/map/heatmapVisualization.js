@@ -269,7 +269,7 @@ class HeatmapVisualization {
     };
 
     pushValue(complaint.departments);
-    pushValue(complaint.department_r);
+    pushValue(complaint.departments);
     pushValue(complaint.secondarydepartments);
     pushValue(complaint.department);
     pushValue(complaint.departmentCode || complaint.department_code);
@@ -502,7 +502,7 @@ class HeatmapVisualization {
           id: raw[0].id,
           title: raw[0].title,
           departments: raw[0].departments,
-          department_r: raw[0].department_r,
+          departments: raw[0].departments,
           departments_type: typeof raw[0].departments,
           departments_isArray: Array.isArray(raw[0].departments),
           allKeys: Object.keys(raw[0]),
@@ -1049,14 +1049,13 @@ class HeatmapVisualization {
         const departmentArray = Array.isArray(effectiveFilters.department)
           ? effectiveFilters.department
           : [effectiveFilters.department];
-        // Get complaint's assigned departments - backend returns as 'departments' field (from department_r)
-        // Fallback to department_r in case backend format changes
-        const complaintdepartments = this.getcomplaintdepartments(complaint);
+        // Check departments array (from department_r)
+        const complaintDepts = complaint.departments || [];
 
         // Debug logging
 
         // If complaint has no departments assigned, exclude it from results
-        if (complaintdepartments.length === 0) {
+        if (complaintDepts.length === 0) {
           return false;
         }
 

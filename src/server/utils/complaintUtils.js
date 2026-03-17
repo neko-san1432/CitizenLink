@@ -22,7 +22,7 @@ function _isUuidLike(value) {
 function _getTaxonomyLookup() {
   if (_taxonomyLookup) return _taxonomyLookup;
   try {
-    const filePath = path.join(process.cwd(), "public", "categoriesSubcategories.json");
+    const filePath = path.join(process.cwd(), "public", "assets", "json", "categoriesSubcategories.json");
     const taxonomy = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const parents = Object.keys(taxonomy?.categories || {}).map(_normalizeWhitespace).filter(Boolean);
     const subcats = [];
@@ -137,9 +137,9 @@ function getWorkflowFromStatus(status) {
 function normalizecomplaintData(complaint) {
   if (!complaint) return null;
   const normalized = { ...complaint };
-  // Derive primary and secondary departments from department_r
-  normalized.primary_department = getPrimarydepartment(complaint.department_r);
-  // normalized.secondary_departments = getSecondarydepartments(complaint.department_r); // Removed - derived from department_r
+  // Derive primary and secondary departments from departments
+  normalized.primary_department = getPrimarydepartment(complaint.departments);
+  // normalized.secondary_departments = getSecondarydepartments(complaint.departments); // Removed - derived from departments
   // Derive status from workflow_status for frontend compatibility
   normalized.status = getStatusFromWorkflow(complaint.workflow_status);
   // Include confirmation status for proper workflow display
@@ -147,15 +147,15 @@ function normalizecomplaintData(complaint) {
   // Add assignment progress information
   const progressInfo = getAssignmentProgress(complaint);
   normalized.assignment_progress = progressInfo;
-  // Ensure department_r is properly formatted
-  if (!Array.isArray(normalized.department_r)) {
-    normalized.department_r = [];
+  // Ensure departments is properly formatted
+  if (!Array.isArray(normalized.departments)) {
+    normalized.departments = [];
   }
-  // If we have primary_department but no department_r, populate it
-  if (complaint.primary_department && normalized.department_r.length === 0) {
-    normalized.department_r = [complaint.primary_department];
+  // If we have primary_department but no departments, populate it
+  if (complaint.primary_department && normalized.departments.length === 0) {
+    normalized.departments = [complaint.primary_department];
     // if (complaint.secondary_departments && Array.isArray(complaint.secondary_departments)) {
-    //   normalized.department_r.push(...complaint.secondary_departments);
+    //   normalized.departments.push(...complaint.secondary_departments);
     // }
   }
   return normalized;

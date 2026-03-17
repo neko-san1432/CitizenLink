@@ -15,6 +15,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (e) {
       console.error("Role toggle error", e);
     }
+
+    // Timeframe filter listener
+    const timeframeSelect = document.getElementById("activityTimeframe");
+    if (timeframeSelect) {
+      timeframeSelect.addEventListener("change", () => {
+        loadDashboardData();
+      });
+    }
   } catch (error) {
     console.error("Dashboard initialization failed:", error);
   } finally {
@@ -28,34 +36,58 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadDashboardData() {
   try {
-    // Parallel fetch for complaints and statistics
-    const [complaintsRes, statsRes] = await Promise.all([
-      fetch("/api/complaints/my?limit=5"),
-      fetch("/api/complaints/my-statistics")
-    ]);
-
-    if (complaintsRes.ok) {
-      const result = await complaintsRes.json();
-      if (result.success) {
-        updateActivity(result.data || []);
+    // Fetch ongoing resolution complaints for carousel
+    const ongoingRes = await fetch("/api/complaints/my?status=in_progress&limit=10");
+    if (ongoingRes.ok) {
+      const ongoingJson = await ongoingRes.json();
+      if (ongoingJson.success) {
+        updateOngoingResolution(ongoingJson.data.complaints || ongoingJson.data || []);
       }
     }
 
+    // Fetch statistics for recent activity
+    const statsRes = await fetch("/api/complaints/my-statistics");
+    
     if (statsRes.ok) {
       const statsJson = await statsRes.json();
       if (statsJson.success) {
-        initCharts(statsJson.data);
+        // Filter activity by timeframe
+        const filteredActivity = filterActivityByTimeframe(statsJson.data.recentActivity || [], 'all');
+        updateActivity(filteredActivity);
       }
-    } else {
-      // Fallback if stats fail
-      initCharts();
     }
 
-    await loadPublicationWidgets();
+    await Promise.all([
+      loadNews().catch(err => console.error("loadNews error:", err)),
+      loadNotices().catch(err => console.error("loadNotices error:", err)),
+      loadEvents().catch(err => console.error("loadEvents error:", err))
+    ]);
   } catch (error) {
     console.error("[CITIZEN] Load dashboard error:", error);
-    initCharts(); // Initialize empty/mock if fails
   }
+}
+
+function filterActivityByTimeframe(activities, timeframe) {
+  if (timeframe === "all") return activities;
+  
+  const now = new Date();
+  let startDate;
+  
+  switch (timeframe) {
+    case "7days":
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "30days":
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case "90days":
+      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      return activities;
+  }
+  
+  return activities.filter(a => new Date(a.submitted_at) >= startDate);
 }
 
 function hideDashboardLoader() {
@@ -144,17 +176,23 @@ function updateActivity(complaints) {
   const container = document.getElementById("recent-activity-list");
   if (!container) return;
 
-  if (complaints.length > 0) {
-    container.innerHTML = complaints
-      .map(
-        (c) => {
-          const status = c.workflow_status || "Submitted";
-          let statusClass = "bg-gray-100 text-gray-800";
-          if (["submitted", "new"].includes(status.toLowerCase())) statusClass = "bg-blue-100 text-blue-800";
-          else if (["in_progress", "assigned"].includes(status.toLowerCase())) statusClass = "bg-orange-100 text-orange-800";
-          else if (["resolved", "completed"].includes(status.toLowerCase())) statusClass = "bg-green-100 text-green-800";
+  if (!complaints || complaints.length === 0) {
+    container.innerHTML = `<div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+      <p>No recent activity</p>
+    </div>`;
+    return;
+  }
 
-          return `
+  container.innerHTML = complaints
+    .map(
+      (c) => {
+        const status = c.status || c.workflow_status || "Submitted";
+        let statusClass = "bg-gray-100 text-gray-800";
+        if (["submitted", "new"].includes(status.toLowerCase())) statusClass = "bg-blue-100 text-blue-800";
+        else if (["in_progress", "assigned"].includes(status.toLowerCase())) statusClass = "bg-orange-100 text-orange-800";
+        else if (["resolved", "completed"].includes(status.toLowerCase())) statusClass = "bg-green-100 text-green-800";
+
+        return `
        <div class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm transition-all">
          <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600">
            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +200,7 @@ function updateActivity(complaints) {
            </svg>
          </div>
          <div class="flex-1 min-w-0">
-           <p class="text-base font-semibold text-gray-900 truncate">${c.descriptive_su || c.description || c.title || (c.subcategory ? (`${c.category  } - ${  c.subcategory}`).replace(/\b\w/g, l => l.toUpperCase()) : (c.category || "General").replace(/\b\w/g, l => l.toUpperCase()))}</p>
+           <p class="text-base font-semibold text-gray-900 truncate">${c.description ? escapeHtml(c.description) : (c.category || "General").replace(/\b\w/g, l => l.toUpperCase())}</p>
            <p class="text-sm text-gray-500 mt-1">${new Date(c.submitted_at || c.created_at).toLocaleDateString()} • <span class="capitalize">${c.category || "General"}</span></p>
          </div>
          <div class="flex-shrink-0">
@@ -175,96 +213,38 @@ function updateActivity(complaints) {
         }
       )
       .join("");
-  } else {
-    container.innerHTML = `<div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-      <p>No recent activity</p>
-    </div>`;
-  }
 }
 
-function initCharts(stats = {}) {
-  const trendCtx = document.getElementById("trendChart");
-  if (trendCtx) {
-    const existing = Chart.getChart(trendCtx);
-    if (existing) existing.destroy();
+function updateOngoingResolution(complaints) {
+  const container = document.getElementById("ongoing-resolution-carousel");
+  if (!container) return;
 
-    const trend = stats.dailyTrend || {};
-    const labels = Object.keys(trend).sort();
-    const dataPoints = labels.map(l => trend[l]);
-
-    // Fallback if no data
-    const finalLabels = labels.length > 0 ? labels : ["No Activity"];
-    const finalData = dataPoints.length > 0 ? dataPoints : [0];
-
-    new Chart(trendCtx, {
-      type: "line",
-      data: {
-        labels: finalLabels,
-        datasets: [
-          {
-            label: "My Activity",
-            data: finalData,
-            borderColor: "#3b82f6",
-            tension: 0.4,
-            fill: true,
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, grid: { display: false }, ticks: { precision: 0 } },
-          x: { grid: { display: false } },
-        },
-      },
-    });
+  if (!complaints || complaints.length === 0) {
+    container.innerHTML = `<div class="text-center py-4 text-gray-500 w-full">
+      <p>No ongoing resolutions</p>
+    </div>`;
+    return;
   }
 
-  const distCtx = document.getElementById("distributionChart");
-  if (distCtx) {
-    const existing = Chart.getChart(distCtx);
-    if (existing) existing.destroy();
-
-    const categoryCounts = stats.categoryCounts || {};
-    const labels = Object.keys(categoryCounts);
-    const dataPoints = labels.map(l => categoryCounts[l]);
-
-    // Fallback if no data
-    const finalLabels = labels.length > 0 ? labels : ["No complaints"];
-    const finalData = dataPoints.length > 0 ? dataPoints : [0];
-
-    new Chart(distCtx, {
-      type: "doughnut",
-      data: {
-        labels: finalLabels,
-        datasets: [
-          {
-            data: finalData,
-            backgroundColor: [
-              "#3b82f6", "#10b981", "#f59e0b", "#ef4444",
-              "#6366f1", "#8b5cf6", "#ec4899", "#14b8a6"
-            ],
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "right",
-            labels: {
-              boxWidth: 12,
-              font: { size: 10 }
-            }
-          }
-        },
-      },
-    });
-  }
+  container.innerHTML = complaints
+    .map((c) => {
+      const status = c.status || c.workflow_status || "In Progress";
+      const desc = c.description || c.category || "Complaint";
+      
+      return `
+        <div class="flex-shrink-0 w-[280px] p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md transition-all cursor-pointer" onclick="window.location.href='/complaint/${c.id}'">
+          <div class="flex items-start justify-between mb-2">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+              ${status.replace("_", " ").toUpperCase()}
+            </span>
+            <span class="text-xs text-gray-400">${c.category_name || c.category || "General"}</span>
+          </div>
+          <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(desc.substring(0, 50))}${desc.length > 50 ? '...' : ''}</p>
+          <p class="text-xs text-gray-500 mt-1">Submitted: ${new Date(c.submitted_at || c.created_at).toLocaleDateString()}</p>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function setText(id, val) {

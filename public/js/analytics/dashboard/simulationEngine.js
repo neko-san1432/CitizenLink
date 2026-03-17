@@ -6799,7 +6799,8 @@ class SimulationEngine {
         this.backgroundMarkers.set(complaint.id, marker);
       }
 
-      marker.addTo(this.map);
+      // Don't add to map by default - only add when toggled on
+      // marker.addTo(this.map);
       rendered++;
     });
 
