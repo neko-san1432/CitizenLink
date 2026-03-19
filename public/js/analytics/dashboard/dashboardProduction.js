@@ -330,21 +330,20 @@ function addLivecomplaintMarker(complaint) {
   const color = categoryColors[complaint.category] || "#00d4ff";
   const hasAnomaly = complaint.road_proximity_anomaly || complaint.spatial_warning;
 
-  // Create pulsing marker
+  // Create priority marker (not emergency)
   const marker = L.marker([complaint.latitude, complaint.longitude], {
     icon: L.divIcon({
       html: `
-                <div class="live-complaint-marker ${hasAnomaly ? "anomaly" : ""}" style="--marker-color: ${hasAnomaly ? "#ef4444" : color};">
-                    <div class="live-pulse"></div>
-                    <div class="live-dot"></div>
-                    <span class="live-label">${hasAnomaly ? '<i class="fas fa-exclamation-triangle"></i> ANOMALY' : "LIVE"}</span>
+                <div class="priority-complaint-marker ${hasAnomaly ? "anomaly" : ""}" style="--marker-color: ${hasAnomaly ? "#ef4444" : color};">
+                    <div class="priority-dot"></div>
+                    <span class="priority-label">${hasAnomaly ? '<i class="fas fa-exclamation-triangle"></i> ALERT' : "PRIORITY"}</span>
                 </div>
             `,
-      className: "live-marker-container",
-      iconSize: [60, 60],
-      iconAnchor: [30, 30]
+      className: "priority-marker-container",
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
     }),
-    zIndexOffset: 2000
+    zIndexOffset: 1500
   }).addTo(map);
 
   // Open intelligence panel on click (lazy — no upfront HTML generation)
@@ -398,21 +397,22 @@ function showRealtimeNotification(complaint) {
  * Add live sync status indicator to the dashboard header.
  */
 function addRealtimeIndicator() {
-  const controlPanel = document.querySelector(".control-panel");
-  if (!controlPanel) return;
+  const hudBottom = document.getElementById("hud-bottom");
+  if (!hudBottom) return;
 
   // Check if already exists
   if (document.querySelector(".realtime-indicator")) return;
 
   const indicator = document.createElement("div");
-  indicator.className = "realtime-indicator";
+  indicator.className = "realtime-indicator tactical-realtime";
   indicator.innerHTML = `
         <div class="sync-dot"></div>
-        <span>REAL-TIME</span>
+        <span>LIVE SYNC</span>
     `;
-  indicator.title = "Receiving real-time complaints from the server";
+  indicator.title = "Receiving real-time field intelligence from the server";
 
-  controlPanel.insertBefore(indicator, controlPanel.firstChild);
+  // Append to hud-bottom instead of control-panel
+  hudBottom.appendChild(indicator);
 }
 
 const realtimeStyles = document.createElement("style");
@@ -582,7 +582,7 @@ function addAIStatusIndicator() {
   let footerContainer = document.querySelector(".ai-footer-container");
   if (!footerContainer) {
     footerContainer = document.createElement("div");
-    footerContainer.className = "ai-footer-container";
+    footerContainer.className = "ai-footer-container tactical-ai-footer";
     document.body.appendChild(footerContainer);
   }
 
@@ -759,321 +759,7 @@ if (document.readyState === "loading") {
   addAIStatusIndicator();
 }
 
-// ==================== v4.1 DEBUG/THESIS MODE ====================
-
-let debugModeActive = false;
-let debugPanelUpdateInterval = null;
-
-/**
- * v4.1: Add Debug/Thesis Mode toggle and floating performance panel
- * Shows real-time performance metrics for thesis demonstration
- */
-function addDebugModeToggle() {
-  const footerContainer = document.querySelector(".ai-footer-container");
-  if (!footerContainer) return;
-
-  // Check if already exists
-  if (document.querySelector(".debug-mode-toggle")) return;
-
-  // Create toggle button
-  const toggle = document.createElement("button");
-  toggle.className = "debug-mode-toggle";
-  toggle.id = "debugModeToggle";
-  toggle.innerHTML = '<i class="fas fa-bug"></i>';
-  toggle.title = "Toggle Debug/Thesis Mode";
-  toggle.onclick = toggleDebugMode;
-
-  // Insert before the AI status dot
-  const aiIndicator = document.querySelector(".ai-status-indicator");
-  if (aiIndicator) {
-    footerContainer.insertBefore(toggle, aiIndicator);
-  } else {
-    footerContainer.appendChild(toggle);
-  }
-
-  // Create floating performance panel (hidden by default)
-  const panel = document.createElement("div");
-  panel.className = "debug-performance-panel";
-  panel.id = "debugPerformancePanel";
-  panel.innerHTML = `
-        <div class="debug-panel-header">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>THESIS MODE: Performance Metrics</span>
-            <button class="debug-panel-close" onclick="toggleDebugMode()">×</button>
-        </div>
-        <div class="debug-panel-content">
-            <div class="debug-metric">
-                <span class="metric-label">Total Processing</span>
-                <span class="metric-value" id="metricTotalTime">--</span>
-            </div>
-            <div class="debug-metric">
-                <span class="metric-label">Rule-Based</span>
-                <span class="metric-value" id="metricRuleTime">--</span>
-            </div>
-            <div class="debug-metric ai-metric">
-                <span class="metric-label">AI Fallback</span>
-                <span class="metric-value" id="metricAITime">--</span>
-            </div>
-            <div class="debug-metric">
-                <span class="metric-label">Memory Usage</span>
-                <span class="metric-value" id="metricMemory">--</span>
-            </div>
-            <div class="debug-status">
-                <span class="status-label">Debug Logging:</span>
-                <span class="status-value" id="debugLoggingStatus">OFF</span>
-            </div>
-        </div>
-        <div class="debug-panel-footer">
-            <small>📋 Open Console (F12) for detailed reasoning traces</small>
-        </div>
-    `;
-  document.body.appendChild(panel);
-}
-
-/**
- * Toggle Debug/Thesis Mode
- */
-function toggleDebugMode() {
-  debugModeActive = !debugModeActive;
-
-  const toggle = document.getElementById("debugModeToggle");
-  const panel = document.getElementById("debugPerformancePanel");
-  const loggingStatus = document.getElementById("debugLoggingStatus");
-
-  if (debugModeActive) {
-    toggle.classList.add("active");
-    panel.classList.add("visible");
-    loggingStatus.textContent = "ON";
-    loggingStatus.className = "status-value active";
-
-    // Enable NLP debug mode
-    if (typeof window.setDebugMode === "function") {
-      window.setDebugMode(true);
-    }
-
-    // Start updating metrics
-    updateDebugMetrics();
-    debugPanelUpdateInterval = setInterval(updateDebugMetrics, 500);
-
-    console.log("[DASHBOARD] 🔬 Debug/Thesis Mode ENABLED - Detailed traces will appear here");
-  } else {
-    toggle.classList.remove("active");
-    panel.classList.remove("visible");
-    loggingStatus.textContent = "OFF";
-    loggingStatus.className = "status-value";
-
-    // Disable NLP debug mode
-    if (typeof window.setDebugMode === "function") {
-      window.setDebugMode(false);
-    }
-
-    // Stop updating metrics
-    if (debugPanelUpdateInterval) {
-      clearInterval(debugPanelUpdateInterval);
-      debugPanelUpdateInterval = null;
-    }
-
-    console.log("[DASHBOARD] 🔬 Debug/Thesis Mode DISABLED");
-  }
-}
-
-/**
- * Update the debug metrics panel with latest values
- */
-function updateDebugMetrics() {
-  if (!debugModeActive) return;
-
-  const status = typeof window.getDebugStatus === "function" ? window.getDebugStatus() : null;
-
-  if (status && status.metrics) {
-    const m = status.metrics;
-    document.getElementById("metricTotalTime").textContent = `${m.totalTime.toFixed(1)} ms`;
-    document.getElementById("metricRuleTime").textContent = `${m.ruleBasedTime.toFixed(1)} ms`;
-
-    const aiTimeEl = document.getElementById("metricAITime");
-    if (m.aiSkipped) {
-      aiTimeEl.textContent = "Skipped";
-      aiTimeEl.parentElement.classList.remove("used");
-    } else {
-      aiTimeEl.textContent = `${m.aiTime.toFixed(1)} ms`;
-      aiTimeEl.parentElement.classList.add("used");
-    }
-
-    document.getElementById("metricMemory").textContent = m.memoryUsage ? `${m.memoryUsage} MB` : "N/A";
-  }
-}
-
-// Debug Mode Toggle CSS
-const debugModeStyles = document.createElement("style");
-debugModeStyles.textContent = `
-    /* Debug Mode Toggle Button */
-    .debug-mode-toggle {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(15, 23, 42, 0.9);
-        color: #64748b;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .debug-mode-toggle:hover {
-        background: rgba(30, 41, 59, 0.95);
-        color: #94a3b8;
-        transform: scale(1.05);
-    }
-    
-    .debug-mode-toggle.active {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: white;
-        box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
-    }
-    
-    /* Debug Performance Panel */
-    .debug-performance-panel {
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
-        width: 280px;
-        background: rgba(15, 23, 42, 0.97);
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(10px) scale(0.95);
-        transition: all 0.3s ease;
-        z-index: 9998;
-        overflow: hidden;
-    }
-    
-    .debug-performance-panel.visible {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0) scale(1);
-    }
-    
-    .debug-panel-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 14px;
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: white;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-    
-    .debug-panel-header i {
-        font-size: 12px;
-    }
-    
-    .debug-panel-close {
-        margin-left: auto;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-        line-height: 1;
-    }
-    
-    .debug-panel-close:hover {
-        opacity: 1;
-    }
-    
-    .debug-panel-content {
-        padding: 14px;
-    }
-    
-    .debug-metric {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 10px;
-        margin-bottom: 6px;
-        background: rgba(30, 41, 59, 0.6);
-        border-radius: 6px;
-        border-left: 3px solid #3b82f6;
-    }
-    
-    .debug-metric.ai-metric {
-        border-left-color: #8b5cf6;
-    }
-    
-    .debug-metric.ai-metric.used {
-        background: rgba(139, 92, 246, 0.15);
-        border-left-color: #a78bfa;
-    }
-    
-    .metric-label {
-        font-size: 11px;
-        color: #94a3b8;
-        font-weight: 500;
-    }
-    
-    .metric-value {
-        font-size: 13px;
-        font-weight: 700;
-        color: #f1f5f9;
-        font-family: 'Monaco', 'Consolas', monospace;
-    }
-    
-    .debug-status {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        margin-top: 8px;
-        background: rgba(34, 197, 94, 0.1);
-        border-radius: 6px;
-        border: 1px dashed rgba(34, 197, 94, 0.3);
-    }
-    
-    .status-label {
-        font-size: 11px;
-        color: #64748b;
-    }
-    
-    .status-value {
-        font-size: 11px;
-        font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
-    }
-    
-    .status-value.active {
-        color: #22c55e;
-    }
-    
-    .debug-panel-footer {
-        padding: 10px 14px;
-        background: rgba(30, 41, 59, 0.5);
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    .debug-panel-footer small {
-        font-size: 10px;
-        color: #64748b;
-    }
-`;
-document.head.appendChild(debugModeStyles);
-
-// Initialize Debug Mode toggle when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", addDebugModeToggle);
-} else {
-  setTimeout(addDebugModeToggle, 100);  // Small delay to ensure footer container exists
-}
+// Removed Debug Mode Logic per User Request (v4.6)
 
 // ==================== OFFLINE ZONE DETECTION (Turf.js) ====================
 
@@ -1381,22 +1067,36 @@ function initMap() {
   // Determine initial theme
   const isDark = document.documentElement.classList.contains("dark");
   const defaultLayer = isDark ? baseLayers["Dark Mode"] : baseLayers["Light Mode"];
-  defaultLayer.addTo(map);
+  // v4.6 Custom Tile Switcher Logic
+  let currentLayerIndex = isDark ? 0 : 1;
+  const layerKeys = Object.keys(baseLayers);
+  let currentBaseLayer = baseLayers[layerKeys[currentLayerIndex]];
+  currentBaseLayer.addTo(map);
 
-  // Keep track of current layer to remove it on theme change
-  let currentBaseLayer = defaultLayer;
+  window.cycleMapTiles = function() {
+    map.removeLayer(currentBaseLayer);
+    currentLayerIndex = (currentLayerIndex + 1) % layerKeys.length;
+    currentBaseLayer = baseLayers[layerKeys[currentLayerIndex]];
+    currentBaseLayer.addTo(map);
+    currentBaseLayer.bringToBack();
+    
+    // Update HUD tooltip if needed
+    const tooltip = document.querySelector("#btn-cycle-tiles .layer-tooltip");
+    if (tooltip) tooltip.textContent = `Mode: ${layerKeys[currentLayerIndex]}`;
+    
+    console.log(`[MAP] Switched to ${layerKeys[currentLayerIndex]}`);
+    return layerKeys[currentLayerIndex];
+  };
 
   // Listen for theme changes from ThemeManager
   window.addEventListener("themeChanged", (e) => {
     const newTheme = e.detail.theme;
     map.removeLayer(currentBaseLayer);
-    currentBaseLayer = newTheme === "dark" ? baseLayers["Dark Mode"] : baseLayers["Light Mode"];
+    currentLayerIndex = newTheme === "dark" ? 0 : 1;
+    currentBaseLayer = baseLayers[layerKeys[currentLayerIndex]];
     currentBaseLayer.addTo(map);
-    currentBaseLayer.bringToBack(); // Ensure it stays behind markers
+    currentBaseLayer.bringToBack();
   });
-
-  // Add control
-  L.control.layers(baseLayers, null, { position: "bottomright" }).addTo(map);
 }
 
 // ==================== SMART INSIGHTS GENERATION ====================
@@ -1748,19 +1448,20 @@ function renderCriticalMarkers(criticalPoints) {
     };
     const icon = iconMap[criticality.type] || "exclamation-triangle";
 
-    // Create custom pulsing icon
+    // Create high-intensity pulsing emergency icon
     const pulsingIcon = L.divIcon({
-      className: "leaflet-critical-icon",
+      className: "leaflet-emergency-icon",
       html: `
-                <div class="critical-pulse-marker ${typeClass}">
-                    <div class="critical-marker-inner ${typeClass}">
+                <div class="emergency-pulse-marker ${typeClass}">
+                    <div class="emergency-marker-inner ${typeClass}">
+                        <div class="emergency-core"></div>
                         <i class="fas fa-${icon}"></i>
                     </div>
                 </div>
             `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
-      popupAnchor: [0, -20]
+      iconSize: [50, 50],
+      iconAnchor: [25, 25],
+      popupAnchor: [0, -25]
     });
 
     const marker = L.marker([point.latitude, point.longitude], {
@@ -1820,45 +1521,30 @@ function renderCriticalMarkers(criticalPoints) {
 }
 
 /**
- * Initialize emergency panel event handlers including drag functionality
+ * Initialize emergency panel event handlers
+ */
+/**
+ * Initialize emergency panel event handlers
  */
 function initEmergencyPanel() {
   const panel = document.getElementById("emergencyPanel");
+  const toggleBar = document.getElementById("emergencyToggleBar");
+  const arrow = document.getElementById("emergencyArrow");
   const header = document.querySelector(".emergency-header");
-  const minimizeBtn = document.getElementById("emergencyMinimize");
-  const collapseBtn = document.getElementById("emergencyCollapse");
   const toggleBtn = document.getElementById("toggleEmergencyPanel");
 
-  if (!panel) return;
+  if (!panel || !toggleBar) return;
 
   // Track panel visibility state
   let isPanelVisible = true;
 
-  // Collapse button - collapses content while keeping header visible
-  if (collapseBtn) {
-    collapseBtn.addEventListener("click", (e) => {
-      e.stopPropagation();  // Don't trigger drag
-      panel.classList.toggle("collapsed");
-
-      // Rotate the icon to indicate state
-      const icon = collapseBtn.querySelector("i");
-      if (icon) {
-        if (panel.classList.contains("collapsed")) {
-          icon.style.transform = "rotate(180deg)";
-        } else {
-          icon.style.transform = "rotate(0deg)";
-        }
-      }
-    });
-  }
-
-  // Minimize button - hides the entire panel
-  if (minimizeBtn) {
-    minimizeBtn.addEventListener("click", (e) => {
-      e.stopPropagation();  // Don't trigger drag
-      panel.classList.toggle("minimized");
-    });
-  }
+  toggleBar.addEventListener("click", () => {
+    const isHidden = panel.classList.toggle("hidden");
+    if (arrow) {
+      arrow.style.transform = isHidden ? "" : "rotate(180deg)";
+    }
+    console.log(`[TRIAGE] Emergency radar ${isHidden ? "collapsed" : "expanded"}`);
+  });
 
   // Toggle button in control panel
   if (toggleBtn) {
@@ -1884,48 +1570,33 @@ function initEmergencyPanel() {
     let initialLeft, initialTop;
 
     header.addEventListener("mousedown", (e) => {
-      // Don't drag if clicking on buttons
       if (e.target.closest("button")) return;
-
       isDragging = true;
       panel.classList.add("dragging");
-
-      // Get current position
       const rect = panel.getBoundingClientRect();
       initialLeft = rect.left;
       initialTop = rect.top;
-
-      // Record mouse start position
       startX = e.clientX;
       startY = e.clientY;
-
-      // Remove the centering transform for accurate positioning
       panel.style.transform = "none";
-      panel.style.left = `${initialLeft  }px`;
-      panel.style.top = `${initialTop  }px`;
-
+      panel.style.left = `${initialLeft}px`;
+      panel.style.top = `${initialTop}px`;
       e.preventDefault();
     });
 
     document.addEventListener("mousemove", (e) => {
       if (!isDragging) return;
-
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
-
       let newLeft = initialLeft + deltaX;
       let newTop = initialTop + deltaY;
-
-      // Boundary constraints (keep panel on screen)
       const panelRect = panel.getBoundingClientRect();
       const maxLeft = window.innerWidth - panelRect.width;
-      const maxTop = window.innerHeight - 50;  // Keep at least header visible
-
+      const maxTop = window.innerHeight - 50;
       newLeft = Math.max(0, Math.min(newLeft, maxLeft));
       newTop = Math.max(0, Math.min(newTop, maxTop));
-
-      panel.style.left = `${newLeft  }px`;
-      panel.style.top = `${newTop  }px`;
+      panel.style.left = `${newLeft}px`;
+      panel.style.top = `${newTop}px`;
     });
 
     document.addEventListener("mouseup", () => {
@@ -1938,41 +1609,33 @@ function initEmergencyPanel() {
     // Touch support for mobile
     header.addEventListener("touchstart", (e) => {
       if (e.target.closest("button")) return;
-
       isDragging = true;
       panel.classList.add("dragging");
-
       const touch = e.touches[0];
       const rect = panel.getBoundingClientRect();
       initialLeft = rect.left;
       initialTop = rect.top;
       startX = touch.clientX;
       startY = touch.clientY;
-
       panel.style.transform = "none";
-      panel.style.left = `${initialLeft  }px`;
-      panel.style.top = `${initialTop  }px`;
+      panel.style.left = `${initialLeft}px`;
+      panel.style.top = `${initialTop}px`;
     }, { passive: true });
 
     document.addEventListener("touchmove", (e) => {
       if (!isDragging) return;
-
       const touch = e.touches[0];
       const deltaX = touch.clientX - startX;
       const deltaY = touch.clientY - startY;
-
       let newLeft = initialLeft + deltaX;
       let newTop = initialTop + deltaY;
-
       const panelRect = panel.getBoundingClientRect();
       const maxLeft = window.innerWidth - panelRect.width;
       const maxTop = window.innerHeight - 50;
-
       newLeft = Math.max(0, Math.min(newLeft, maxLeft));
       newTop = Math.max(0, Math.min(newTop, maxTop));
-
-      panel.style.left = `${newLeft  }px`;
-      panel.style.top = `${newTop  }px`;
+      panel.style.left = `${newLeft}px`;
+      panel.style.top = `${newTop}px`;
     }, { passive: true });
 
     document.addEventListener("touchend", () => {
@@ -2325,53 +1988,60 @@ function renderInsightsCards(insights) {
     return;
   }
 
-  container.innerHTML = insights.cards.map((card, index) => `
+  container.innerHTML = insights.cards.map((card, index) => {
+    const isCritical = card.type.includes("critical") || card.badge?.includes("CRITICAL");
+    const priorityColor = isCritical ? "#ef4444" : "#3b82f6";
+    
+    return `
         <div class="insight-card ${card.type}" 
              data-card-index="${index}" 
              ${card.location ? `data-has-location="true" data-lat="${card.location.lat}" data-lng="${card.location.lng}" data-zoom="${card.location.zoom}"` : ""}>
             
-            <!-- Zone Badge Header -->
-            ${card.zoneBadge ? `
-            <div class="card-zone-header">
-                <span class="zone-badge">
-                    <i class="fas fa-map-marker-alt"></i> ${card.zoneBadge}
-                </span>
-                ${card.location ? `<i class="fas fa-crosshairs card-location-icon" title="Navigate to location"></i>` : ""}
-            </div>
-            ` : ""}
+            <div class="tactical-line-top"></div>
             
-            <!-- Alert Type & Category -->
-            <div class="insight-header-row">
-                <span class="insight-badge ${card.type}">${card.badge}</span>
-                <span class="insight-title">${card.title}</span>
-                ${!card.zoneBadge && card.location ? `<i class="fas fa-crosshairs card-location-icon" title="Navigate to location"></i>` : ""}
+            <div class="insight-status-strip" style="background: ${priorityColor}"></div>
+
+            <!-- Header: Zone & Location -->
+            <div class="insight-header-main">
+                <div class="insight-zone-row">
+                    <span class="tactical-label">SECTOR:</span>
+                    <span class="tactical-value">${card.zoneBadge || "GLOBAL"}</span>
+                    ${card.location ? `<i class="fas fa-crosshairs pulse-slow" title="Navigate"></i>` : ""}
+                </div>
+                <div class="insight-alert-row">
+                     <span class="priority-led ${isCritical ? "led-red" : "led-blue"}"></span>
+                     <span class="insight-badge ${card.type}">${card.badge}</span>
+                </div>
             </div>
+
+            <h3 class="insight-main-title">${card.title}</h3>
             
-            <!-- Description -->
             <p class="insight-description">${card.description}</p>
             
-            <!-- Dispatch Action Button (Human Authority Emphasized) -->
-            ${card.action ? `
-                ${card.dispatchUnit ? `
-                <div class="dispatch-section">
-                    <div class="dispatch-unit-info">
-                        <i class="fas fa-truck"></i>
-                        <span>Suggested: <strong>${card.dispatchUnit}</strong></span>
-                    </div>
-                    <button class="dispatch-btn" data-zone="${card.zoneBadge || "Unknown"}">
-                        <i class="fas fa-clipboard-check"></i>
-                        REVIEW & DISPATCH
-                    </button>
-                </div>
-                ` : `
-                <div class="insight-action">
-                    <i class="fas fa-arrow-right"></i>
-                    ${card.action}
-                </div>
-                `}
-            ` : ""}
+            <!-- Metadata Grid -->
+            <div class="tactical-meta-grid">
+                 ${card.dispatchUnit ? `
+                 <div class="meta-item-box">
+                    <span class="box-label">RECOM_UNIT</span>
+                    <span class="box-value">${card.dispatchUnit}</span>
+                 </div>
+                 ` : ""}
+                 <div class="meta-item-box">
+                    <span class="box-label">STATUS</span>
+                    <span class="box-value">ANALYZED</span>
+                 </div>
+            </div>
+
+            <!-- Action Area -->
+            <div class="insight-action-area">
+                <button class="dispatch-btn tactical-button-glow" data-zone="${card.zoneBadge || "Unknown"}">
+                    <span class="btn-scan-line"></span>
+                    <i class="fas fa-satellite-dish"></i>
+                    AUTHENTICATE & DISPATCH
+                </button>
+            </div>
         </div>
-    `).join("");
+    `}).join("");
 
   // Add click handlers to cards with location data
   attachCardClickHandlers();
@@ -2634,53 +2304,18 @@ function toggleClusters() {
  * Handles: Heatmap toggle, Clusters toggle, Emergency Panel
  */
 function initMapLayersDropdown() {
-  const dropdownBtn = document.getElementById("mapLayersToggle");
-  const dropdownMenu = document.getElementById("layersDropdownMenu");
   const heatmapSwitch = document.getElementById("heatmapSwitch");
   const clustersSwitch = document.getElementById("clustersSwitch");
-  const emergencyItem = document.getElementById("emergencyPanelItem");
+  const markersToggle = document.getElementById("markersToggle");
+  const emergencyMarkersToggle = document.getElementById("emergencyMarkersToggle");
+  const btnCycleTiles = document.getElementById("btn-cycle-tiles");
 
-  if (!dropdownBtn || !dropdownMenu) {
-    console.warn("[MAP LAYERS] Dropdown elements not found");
-    return;
-  }
-
-  console.log("[MAP LAYERS v4.1] Initializing consolidated dropdown");
-
-  // Toggle dropdown visibility
-  dropdownBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isOpen = dropdownMenu.classList.contains("show");
-
-    if (isOpen) {
-      dropdownMenu.classList.remove("show");
-      dropdownBtn.classList.remove("active");
-    } else {
-      dropdownMenu.classList.add("show");
-      dropdownBtn.classList.add("active");
-    }
-  });
-
-  // Close dropdown when clicking outside
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".map-layers-dropdown")) {
-      dropdownMenu.classList.remove("show");
-      dropdownBtn.classList.remove("active");
-    }
-  });
+  console.log("[MAP LAYERS] Initializing tactical HUD listeners");
 
   // Heatmap toggle via switch
   if (heatmapSwitch) {
     heatmapSwitch.addEventListener("change", () => {
       toggleHeatmapFromDropdown(heatmapSwitch.checked);
-    });
-
-    // Also allow clicking anywhere on the item row
-    document.getElementById("toggleHeatmapItem").addEventListener("click", (e) => {
-      if (e.target.tagName !== "INPUT" && e.target.tagName !== "LABEL") {
-        heatmapSwitch.checked = !heatmapSwitch.checked;
-        toggleHeatmapFromDropdown(heatmapSwitch.checked);
-      }
     });
   }
 
@@ -2689,29 +2324,38 @@ function initMapLayersDropdown() {
     clustersSwitch.addEventListener("change", () => {
       toggleClustersFromDropdown(clustersSwitch.checked);
     });
+  }
 
-    // Also allow clicking anywhere on the item row
-    document.getElementById("toggleClustersItem").addEventListener("click", (e) => {
-      if (e.target.tagName !== "INPUT" && e.target.tagName !== "LABEL") {
-        clustersSwitch.checked = !clustersSwitch.checked;
-        toggleClustersFromDropdown(clustersSwitch.checked);
+  // Individual Markers toggle
+  if (markersToggle) {
+    markersToggle.addEventListener("change", () => {
+      if (simulationEngine) {
+        if (markersToggle.checked) {
+          simulationEngine.showBackgroundMarkers();
+        } else {
+          simulationEngine.hideBackgroundMarkers();
+        }
       }
     });
   }
 
-  // Emergency Panel toggle
-  if (emergencyItem) {
-    emergencyItem.addEventListener("click", () => {
-      // Close dropdown
-      dropdownMenu.classList.remove("show");
-      dropdownBtn.classList.remove("active");
-
-      // Toggle emergency panel visibility
-      toggleEmergencyPanel();
+  // Emergency Markers toggle
+  if (emergencyMarkersToggle) {
+    emergencyMarkersToggle.addEventListener("change", () => {
+      console.log("[HUD] Toggle emergencies:", emergencyMarkersToggle.checked);
+      const emMarkers = document.querySelectorAll(".emergency-marker-container");
+      emMarkers.forEach(m => m.style.display = emergencyMarkersToggle.checked ? "block" : "none");
     });
   }
 
-  console.log("[MAP LAYERS v4.1] Dropdown initialized successfully");
+  // v4.6 Tile Switcher Listener
+  if (btnCycleTiles) {
+    btnCycleTiles.addEventListener("click", () => {
+      if (typeof window.cycleMapTiles === "function") {
+        window.cycleMapTiles();
+      }
+    });
+  }
 }
 
 /**
@@ -4575,10 +4219,16 @@ async function loadFullSimulation() {
     console.log("[PRODUCTION] Starting full city analysis...");
 
     // Get all complaints
-    const allData = simulationEngine.complaints;
+    const allData = (simulationEngine && simulationEngine.complaints) ? simulationEngine.complaints : [];
 
     if (!allData || allData.length === 0) {
-      throw new Error("No data loaded");
+      console.warn("[PRODUCTION] No data available for analysis. Aborting stream update.");
+      // Clear UI or show empty state if needed
+      updateStatsDisplay({
+        stats: { totalcomplaints: 0, totalClusters: 0, criticalHotspots: 0, efficiencyScore: 0 }
+      });
+      renderInsightsCards({ cards: [] });
+      return;
     }
 
     // Apply category filter
@@ -4776,349 +4426,7 @@ async function loadFullSimulation() {
   }
 }
 
-// ==================== COMPLAINT SEARCH FEATURE ====================
 
-/**
- * Initialize the complaint search functionality.
- * Allows searching by complaint ID and locates them on the map.
- */
-function initializecomplaintSearch() {
-  const searchInput = document.getElementById("complaintSearch");
-  const searchBtn = document.getElementById("searchBtn");
-  const clearBtn = document.getElementById("searchClearBtn");
-  const dropdown = document.getElementById("searchResultsDropdown");
-
-  if (!searchInput || !searchBtn || !dropdown) {
-    console.warn("[SEARCH] Search elements not found");
-    return;
-  }
-
-  let searchTimeout = null;
-  let selectedIndex = -1;
-
-  // Live search as user types
-  searchInput.addEventListener("input", (e) => {
-    const query = e.target.value.trim();
-
-    if (searchTimeout) clearTimeout(searchTimeout);
-
-    if (query.length < 2) {
-      hideSearchDropdown();
-      return;
-    }
-
-    searchTimeout = setTimeout(() => {
-      performSearch(query);
-    }, 200);
-  });
-
-  // Search button click
-  searchBtn.addEventListener("click", () => {
-    const query = searchInput.value.trim();
-    if (query) {
-      const results = searchcomplaints(query);
-      if (results.length === 1) {
-        locatecomplaint(results[0]);
-      } else if (results.length > 1) {
-        performSearch(query);
-      } else {
-        showSearchToast("No complaint found with that ID", "error");
-      }
-    }
-  });
-
-  // Enter key to search
-  searchInput.addEventListener("keydown", (e) => {
-    const items = dropdown.querySelectorAll(".search-result-item");
-
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (selectedIndex >= 0 && items[selectedIndex]) {
-        items[selectedIndex].click();
-      } else {
-        searchBtn.click();
-      }
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-      updateSelectedItem(items);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      selectedIndex = Math.max(selectedIndex - 1, 0);
-      updateSelectedItem(items);
-    } else if (e.key === "Escape") {
-      hideSearchDropdown();
-      searchInput.blur();
-    }
-  });
-
-  // Clear button
-  clearBtn.addEventListener("click", () => {
-    searchInput.value = "";
-    hideSearchDropdown();
-    clearSearchHighlight();
-    searchInput.focus();
-  });
-
-  // Click outside to close dropdown
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".search-container")) {
-      hideSearchDropdown();
-    }
-  });
-
-  // Focus shows dropdown if there are results
-  searchInput.addEventListener("focus", () => {
-    const query = searchInput.value.trim();
-    if (query.length >= 2) {
-      performSearch(query);
-    }
-  });
-
-  console.log("[SEARCH] complaint search initialized");
-}
-
-/**
- * Search complaints by ID (partial match).
- */
-function searchcomplaints(query) {
-  if (!simulationEngine || !simulationEngine.complaints) {
-    return [];
-  }
-
-  const normalizedQuery = query.toLowerCase();
-
-  return simulationEngine.complaints.filter(complaint => {
-    const id = (complaint.id || "").toLowerCase();
-    const userId = (complaint.user_id || "").toLowerCase();
-    return id.includes(normalizedQuery) || userId.includes(normalizedQuery);
-  });
-}
-
-/**
- * Perform search and show dropdown results.
- */
-function performSearch(query) {
-  const dropdown = document.getElementById("searchResultsDropdown");
-  const results = searchcomplaints(query);
-
-  if (results.length === 0) {
-    dropdown.innerHTML = `
-            <div class="search-no-results">
-                <i class="fas fa-search"></i>
-                <p>No complaints found matching "${sanitizeHTML(query)}"</p>
-            </div>
-        `;
-    showSearchDropdown();
-    return;
-  }
-
-  // Limit to 10 results for performance
-  const limitedResults = results.slice(0, 10);
-
-  dropdown.innerHTML = limitedResults.map((complaint, index) => {
-    const barangay = getJurisdiction(complaint.latitude, complaint.longitude);
-    const timeAgo = getRelativeTime(complaint.timestamp);
-
-    return `
-            <div class="search-result-item" data-id="${sanitizeHTML(complaint.id)}" data-index="${index}">
-                <div class="search-result-id">
-                    <i class="fas fa-fingerprint"></i> ${sanitizeHTML(complaint.id)}
-                </div>
-                <div class="search-result-desc">${sanitizeHTML(complaint.description || "No description")}</div>
-                <div class="search-result-meta">
-                    <span><i class="fas fa-tag"></i> ${sanitizeHTML(complaint.category)}</span>
-                    <span><i class="fas fa-map-marker-alt"></i> ${barangay}</span>
-                    <span><i class="fas fa-clock"></i> ${timeAgo}</span>
-                </div>
-            </div>
-        `;
-  }).join("");
-
-  if (results.length > 10) {
-    dropdown.innerHTML += `
-            <div class="search-no-results" style="padding: 10px; font-size: 11px;">
-                <i class="fas fa-info-circle"></i> Showing 10 of ${results.length} results. Type more to narrow down.
-            </div>
-        `;
-  }
-
-  // Add click handlers to results
-  dropdown.querySelectorAll(".search-result-item").forEach(item => {
-    item.addEventListener("click", () => {
-      const {id} = item.dataset;
-      const complaint = simulationEngine.complaints.find(c => c.id === id);
-      if (complaint) {
-        locatecomplaint(complaint);
-      }
-    });
-  });
-
-  showSearchDropdown();
-}
-
-/**
- * Locate a complaint on the map.
- */
-function locatecomplaint(complaint) {
-  if (!complaint || !map) return;
-
-  const { latitude, longitude, id, description, category } = complaint;
-
-  // Clear previous highlight
-  clearSearchHighlight();
-
-  // Hide dropdown
-  hideSearchDropdown();
-
-  // Update search input with found ID
-  document.getElementById("complaintSearch").value = id;
-
-  // Fly to location
-  map.flyTo([latitude, longitude], 18, {
-    duration: 1.2,
-    easeLinearity: 0.25
-  });
-
-  // Create highlight marker
-  const highlightIcon = L.divIcon({
-    className: "search-highlight-icon",
-    html: `
-            <div class="search-highlight-marker">
-                <div style="
-                    width: 50px; 
-                    height: 50px; 
-                    background: rgba(6, 182, 212, 0.3); 
-                    border: 3px solid #06b6d4; 
-                    border-radius: 50%; 
-                    animation: search-pulse 1s ease-out infinite;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                ">
-                    <i class="fas fa-crosshairs" style="color: #06b6d4; font-size: 20px;"></i>
-                </div>
-            </div>
-        `,
-    iconSize: [50, 50],
-    iconAnchor: [25, 25]
-  });
-
-  searchHighlightMarker = L.marker([latitude, longitude], {
-    icon: highlightIcon,
-    zIndexOffset: 2000
-  }).addTo(map);
-
-  // Create popup with complaint details
-  const barangay = getJurisdiction(latitude, longitude);
-  const popupContent = `
-        <div style="min-width: 280px; max-width: 350px;">
-            <div style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; padding: 12px 16px; margin: -13px -20px 12px -20px; border-radius: 4px 4px 0 0;">
-                <div style="font-size: 14px; font-weight: 700;">
-                    <i class="fas fa-search"></i> SEARCH RESULT
-                </div>
-            </div>
-            
-            <div style="margin-bottom: 12px;">
-                <div style="color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
-                    complaint ID
-                </div>
-                <div style="font-family: 'Courier New', monospace; color: #06b6d4; font-weight: 600; font-size: 11px; word-break: break-all;">
-                    ${sanitizeHTML(id)}
-                </div>
-            </div>
-            
-            <div style="margin-bottom: 12px;">
-                <div style="color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
-                    Description
-                </div>
-                <div style="background: #f3f4f6; padding: 10px; border-radius: 6px; border-left: 3px solid #06b6d4; font-style: italic; color: #374151; line-height: 1.4; font-size: 13px;">
-                    "${sanitizeHTML(description) || "No description provided"}"
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
-                <div>
-                    <span style="color: #666;">Category:</span><br>
-                    <strong style="color: #374151;">${sanitizeHTML(category)}</strong>
-                </div>
-                <div>
-                    <span style="color: #666;">Location:</span><br>
-                    <strong style="color: #374151;">${barangay}</strong>
-                </div>
-                <div>
-                    <span style="color: #666;">User ID:</span><br>
-                    <strong style="color: #374151; font-size: 11px;">${sanitizeHTML(complaint.user_id || "Anonymous")}</strong>
-                </div>
-                <div>
-                    <span style="color: #666;">Status:</span><br>
-                    <strong style="color: #374151;">${sanitizeHTML(complaint.status || "Pending")}</strong>
-                </div>
-            </div>
-            
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #666;">
-                <i class="fas fa-map-pin"></i> ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
-            </div>
-        </div>
-    `;
-
-  searchHighlightMarker.bindPopup(popupContent, {
-    maxWidth: 350,
-    className: "search-result-popup"
-  });
-
-  // Open popup after flying
-  setTimeout(() => {
-    searchHighlightMarker.openPopup();
-  }, 1200);
-
-  // Show success toast
-  showSearchToast(`Located: ${category} complaint in ${barangay}`, "success");
-
-  console.log(`[SEARCH] Located complaint: ${id}`);
-}
-
-/**
- * Clear the search highlight marker.
- */
-function clearSearchHighlight() {
-  if (searchHighlightMarker && map) {
-    map.removeLayer(searchHighlightMarker);
-    searchHighlightMarker = null;
-  }
-}
-
-/**
- * Show the search dropdown.
- */
-function showSearchDropdown() {
-  const dropdown = document.getElementById("searchResultsDropdown");
-  if (dropdown) {
-    dropdown.classList.add("active");
-  }
-}
-
-/**
- * Hide the search dropdown.
- */
-function hideSearchDropdown() {
-  const dropdown = document.getElementById("searchResultsDropdown");
-  if (dropdown) {
-    dropdown.classList.remove("active");
-  }
-}
-
-/**
- * Update selected item in dropdown for keyboard navigation.
- */
-function updateSelectedItem(items) {
-  items.forEach((item, index) => {
-    item.classList.toggle("selected", index === selectedIndex);
-    if (index === selectedIndex) {
-      item.scrollIntoView({ block: "nearest" });
-    }
-  });
-}
 
 // Track selected index for keyboard navigation
 const selectedIndex = -1;
@@ -5152,6 +4460,19 @@ function showSearchToast(message, type = "success") {
     toast.classList.remove("active");
     setTimeout(() => toast.remove(), 400);
   }, 3000);
+}
+
+/**
+ * Minimal command center collapse logic
+ * v4.0: Standardized for tactical HUD
+ */
+function collapseCommandCenter() {
+  const panel = document.getElementById("hud-left");
+  if (panel && panel.classList.contains("collapsed") === false) {
+    const toggleBtn = document.querySelector(".hud-toggle-btn");
+    if (toggleBtn) toggleBtn.click(); // Trigger the existing logic if available
+    else panel.classList.add("collapsed");
+  }
 }
 
 // ==================== EVENT LISTENERS ====================
@@ -5244,14 +4565,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 100);
   });
 
-  // ==================== COMPLAINT SEARCH FEATURE ====================
-  initializecomplaintSearch();
+  // v4.6: Tactical Authenticate & Dispatch (Delegated)
+  document.getElementById("insightsContent").addEventListener("click", (e) => {
+    const btn = e.target.closest(".dispatch-btn");
+    if (btn) {
+      // Capture context from the card
+      const card = btn.closest(".insight-card");
+      const zone = card ? card.querySelector(".mission-id")?.textContent : "Sector Alpha";
+      const task = card ? card.querySelector(".task-label")?.textContent : "General Response";
+      
+      console.log(`[DISPATCH] Authenticating for zone: ${zone}`);
+      if (typeof window.showToast === "function") {
+        window.showToast(`Tactical Dispatch Authenticated for ${zone}: ${task}`, "success");
+      } else {
+        alert(`Tactical Dispatch Authenticated for ${zone}:\n${task}`);
+      }
+    }
+  });
 
   if (typeof loadNLPDictionaries === "function") {
     setInterval(() => {
       loadNLPDictionaries(true).catch(() => { });
     }, 60000);
   }
+
+  // ==================== TACTICAL CLOCK (v4.6) ====================
+  function updateTacticalClock() {
+    const clockEl = document.getElementById("dashboard-clock");
+    if (!clockEl) return;
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
+    
+    clockEl.textContent = `SYSTEM_TIME: [${timeString}]`;
+  }
+  
+  updateTacticalClock();
+  setInterval(updateTacticalClock, 1000);
+
+  // v3.9.5: Initial Data Load with tactical delay to ensure engine stability
+  setTimeout(() => {
+    console.log("[PRODUCTION] Loading initial tactical stream...");
+    loadFullSimulation().catch(e => console.error("[INIT] Load failed:", e));
+  }, 500);
 
   console.log("[PRODUCTION] Dashboard v3.4.1 ready! (UI Optimized)");
 });
@@ -5261,27 +4622,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 window.applyGlobalFilters = function (filters) {
   console.log("[FILTER] Applying global filters:", filters);
 
-  // Update global state
-  // Use 'undefined' check to allow clearing filters with '' or null
   if (filters.start_date !== undefined) currentFilterStartDate = filters.start_date;
   if (filters.end_date !== undefined) currentFilterEndDate = filters.end_date;
-
   if (filters.office !== undefined) currentFilterOffice = filters.office;
   if (filters.category !== undefined) currentFilterCategory = filters.category;
   if (filters.subcategory !== undefined) currentFilterSubcategory = filters.subcategory;
 
-  // Log the new state
-  console.log("[FILTER] valid state:", {
-    start: currentFilterStartDate,
-    end: currentFilterEndDate,
-    office: currentFilterOffice,
-    cat: currentFilterCategory,
-    sub: currentFilterSubcategory
-  });
-
-  if (typeof simulationEngine !== "undefined" && simulationEngine.complaints && simulationEngine.complaints.length > 0) {
-    loadFullSimulation();
-  }
+  // Always force reload to ensure filters are respected even if complaints were empty
+  loadFullSimulation();
 };
 
 // Sidebars handled by heatmap.html inline script or other page-specific scripts to avoid conflicts.

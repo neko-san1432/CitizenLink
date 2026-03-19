@@ -33,10 +33,10 @@ class NotificationController {
       const userId = req.user.id;
       const { limit = 50, offset = 0 } = req.query;
       const { data: notifications, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
-        .eq("read", false)
+        .eq("is_read", false)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
       if (error) {
@@ -106,7 +106,7 @@ class NotificationController {
       const userId = req.user.id;
       const { limit = 20, offset = 0 } = req.query;
       const { data: notifications, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
@@ -185,10 +185,10 @@ class NotificationController {
       const userId = req.user.id;
       // Get all unread notifications to apply deduplication
       const { data: notifications, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
-        .eq("read", false);
+        .eq("is_read", false);
       if (error) {
         console.error("[NOTIFICATION] Error fetching notification count:", error);
         return res.status(500).json({
@@ -234,8 +234,8 @@ class NotificationController {
       const { id } = req.params;
       const userId = req.user.id;
       const { data, error } = await supabase
-        .from("notification")
-        .update({ read: true, read_at: new Date().toISOString() })
+        .from("notifications")
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq("id", id)
         .eq("user_id", userId)
         .select()
@@ -272,10 +272,10 @@ class NotificationController {
     try {
       const userId = req.user.id;
       const { error } = await supabase
-        .from("notification")
-        .update({ read: true, read_at: new Date().toISOString() })
+        .from("notifications")
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq("user_id", userId)
-        .eq("read", false);
+        .eq("is_read", false);
       if (error) {
         console.error("[NOTIFICATION] Error marking all notifications as read:", error);
         return res.status(500).json({
