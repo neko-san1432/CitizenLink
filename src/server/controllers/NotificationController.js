@@ -36,7 +36,7 @@ class NotificationController {
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
-        .eq("read", false)
+        .eq("is_read", false)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
       if (error) {
@@ -188,7 +188,7 @@ class NotificationController {
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
-        .eq("read", false);
+        .eq("is_read", false);
       if (error) {
         console.error("[NOTIFICATION] Error fetching notification count:", error);
         return res.status(500).json({
@@ -235,7 +235,11 @@ class NotificationController {
       const userId = req.user.id;
       const { data, error } = await supabase
         .from("notifications")
+<<<<<<< HEAD
         .update({ read: true, read_at: new Date().toISOString() })
+=======
+        .update({ is_read: true, read_at: new Date().toISOString() })
+>>>>>>> 722d8eaef5491b7586c53bfd91e1cf75a094d29d
         .eq("id", id)
         .eq("user_id", userId)
         .select()
@@ -273,9 +277,13 @@ class NotificationController {
       const userId = req.user.id;
       const { error } = await supabase
         .from("notifications")
+<<<<<<< HEAD
         .update({ read: true, read_at: new Date().toISOString() })
+=======
+        .update({ is_read: true, read_at: new Date().toISOString() })
+>>>>>>> 722d8eaef5491b7586c53bfd91e1cf75a094d29d
         .eq("user_id", userId)
-        .eq("read", false);
+        .eq("is_read", false);
       if (error) {
         console.error("[NOTIFICATION] Error marking all notifications as read:", error);
         return res.status(500).json({

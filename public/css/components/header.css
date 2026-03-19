@@ -1253,3 +1253,101 @@ html.dark .notification-btn:hover,
 html.dark .profile-btn:hover {
   color: #ffffff;
 }
+
+/* ==========================================================================
+   TACTICAL MIRROR MODE: FLOATING PILL HEADER
+   Applied when <body> has .tactical-mode class
+   ========================================================================== */
+
+body.tactical-mode .header-container {
+  top: 1rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 92vw !important;
+  max-width: 1400px;
+  height: 54px !important;
+  min-height: 54px !important;
+  max-height: 54px !important;
+  border-radius: 99px !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  padding: 0 1.5rem !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+
+body.tactical-mode .header-container:hover {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.tactical-mode .header-content {
+  padding: 0 !important;
+  height: 100% !important;
+}
+
+body.tactical-mode .brand-text {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: #f8fafc !important;
+  font-size: 1.15rem !important;
+}
+
+body.tactical-mode .dashboard-clock {
+  display: flex !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 99px !important;
+  padding: 0.4rem 1rem !important;
+  height: 32px !important;
+  font-family: 'Monaco', 'Consolas', monospace !important;
+  font-size: 0.75rem !important;
+  color: #3b82f6 !important;
+  letter-spacing: 0.05em !important;
+  align-items: center !important;
+}
+
+body.tactical-mode .notification-btn,
+body.tactical-mode .profile-btn,
+body.tactical-mode .theme-toggle {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  width: 38px !important;
+  height: 38px !important;
+  color: #94a3b8 !important;
+  transition: all 0.2s !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.tactical-mode .notification-btn:hover,
+body.tactical-mode .profile-btn:hover,
+body.tactical-mode .theme-toggle:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  transform: translateY(-2px) !important;
+}
+
+body.tactical-mode .brand-icon {
+  width: 32px !important;
+  height: 32px !important;
+  filter: drop-shadow(0 0 8px #3b82f6) !important;
+}
+
+body.tactical-mode .header-left {
+  gap: 1.5rem !important;
+}
+
+body.tactical-mode .header-right {
+  gap: 0.75rem !important;
+}

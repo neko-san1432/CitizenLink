@@ -1,0 +1,879 @@
+/* 
+ * Tactical Mirror: Heatmap Design System
+ * Focus: Immersive, Glassmorphic, Modern, High Contrast
+ */
+
+:root {
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --accent-blue: #3b82f6;
+    --accent-indigo: #6366f1;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --radius-xl: 1rem;
+    --radius-lg: 0.75rem;
+}
+
+/* Base Fullscreen Layout */
+.app-container.tactical-view {
+    padding-top: 0 !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden;
+    position: relative;
+    background: #020617;
+}
+
+#map.tactical-map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    background: #020617;
+}
+
+/* HUD System */
+.tactical-hud {
+    position: absolute;
+    z-index: 100;
+    pointer-events: none; /* Allow clicks to pass through to map if not on a child */
+}
+
+.tactical-hud * {
+    pointer-events: auto; /* Re-enable for children */
+}
+
+/* Glass Card Utility */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-shadow);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 48px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* HUD TOP BAR */
+#hud-top {
+    top: 5rem; /* Move down to clear main header (56px) */
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 400px;
+    max-width: 90vw;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.5rem;
+}
+
+.hud-search-container {
+    flex: 1;
+    position: relative;
+}
+
+.hud-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: 0.625rem 1rem 0.625rem 2.5rem;
+    color: white;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.hud-input:focus {
+    border-color: var(--accent-blue);
+}
+
+.hud-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.hud-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.hud-btn-primary {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.hud-btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.hud-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.hud-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* HUD LEFT WING (Layers) */
+#hud-left {
+    left: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    width: 64px;
+    align-items: center;
+}
+
+.layer-toggle {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.layer-toggle:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.layer-toggle.active {
+    color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.layer-tooltip {
+    position: absolute;
+    left: 100%;
+    margin-left: 1rem;
+    background: #0f172a;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.layer-toggle:hover .layer-tooltip {
+    opacity: 1;
+}
+
+/* HUD RIGHT WING (Intelligence) */
+#hud-right {
+    right: 1.5rem;
+    top: 5rem; /* Match hud-top */
+    bottom: 5rem;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    overflow-y: auto;
+    pointer-events: auto !important;
+}
+
+.intelligence-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.625rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 0.5rem;
+}
+
+.card-header button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.card-header button:hover {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: var(--accent-blue);
+    color: white;
+}
+
+.card-title {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.card-title i {
+    color: var(--accent-blue);
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.metric-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metric-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+}
+
+.metric-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* HUD BOTTOM (Emergency) */
+#hud-bottom {
+    bottom: 1.5rem;
+    left: 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.emergency-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+}
+
+.emergency-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--accent-rose);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent-rose);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+}
+
+/* Scrollbar styling for HUD Right */
+#hud-right::-webkit-scrollbar {
+    width: 4px;
+}
+#hud-right::-webkit-scrollbar-track {
+    background: transparent;
+}
+#hud-right::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+#categoryBars > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+#categoryBars > div:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(2px);
+}
+
+#categoryBars span:first-child {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+#categoryBars span:last-child {
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 0.85rem;
+}
+
+/* TACTICAL INSIGHT CARDS (Mission Control Style) */
+.insight-card {
+    position: relative;
+    background: rgba(15, 23, 42, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    margin-bottom: 1rem !important;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.insight-card:hover {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    transform: translateY(-2px);
+}
+
+.insight-status-strip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    opacity: 0.8;
+}
+
+.tactical-line-top {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(to left, rgba(59, 130, 246, 0.5), transparent);
+}
+
+.insight-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.insight-zone-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tactical-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(148, 163, 184, 0.6);
+    letter-spacing: 0.05em;
+}
+
+.tactical-value {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+}
+
+.insight-alert-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* LED Status Lights */
+.priority-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.led-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+.led-blue { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+
+.priority-led::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    opacity: 0.3;
+    animation: ledPulse 2s infinite;
+}
+
+@keyframes ledPulse {
+    0% { transform: scale(1); opacity: 0.3; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+.insight-main-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.insight-description {
+    font-size: 0.8rem !important;
+    line-height: 1.5 !important;
+    color: #94a3b8 !important;
+    margin-bottom: 1rem !important;
+}
+
+.insight-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.insight-badge.critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Tactical Meta Grid */
+.tactical-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.meta-item-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.box-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(148, 163, 184, 0.5);
+    margin-bottom: 2px;
+}
+
+.box-value {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Tactical Dispatch Button */
+.dispatch-btn {
+    position: relative;
+    width: 100%;
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: #3b82f6 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-weight: 700 !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.75rem !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.dispatch-btn:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-scan-line {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+    transform: skewX(-25deg);
+    animation: scanLine 3s infinite;
+}
+
+@keyframes scanLine {
+    0% { left: -100%; }
+    100% { left: 150%; }
+}
+
+/* Tactical Card Header & Modernized Metrics */
+.tactical-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-led-active {
+    width: 6px;
+    height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+}
+
+.tactical-header-prefix {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent-blue);
+    margin-right: 0.5rem;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+}
+
+.card-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.02em !important;
+    font-size: 0.85rem !important;
+    color: var(--text-primary) !important;
+    margin: 0 !important;
+}
+
+.tactical-refresh-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    color: rgba(148, 163, 184, 0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tactical-refresh-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: rotate(90deg);
+}
+
+.pulse-fast {
+    animation: ledPulseFast 1s infinite alternate;
+}
+
+@keyframes ledPulseFast {
+    0% { opacity: 0.5; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Metric Items Modernized */
+.metric-grid {
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.metric-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.metric-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.metric-value {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    margin-bottom: 2px !important;
+}
+
+.metric-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px !important;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.5) !important;
+    letter-spacing: 0.05em;
+}
+
+/* Fix HUD Top to clear the new floating header */
+#hud-top {
+    top: 5.5rem; /* Adjusted for tighter gap */
+}
+
+/* Offset Leaflet Zoom Controls to clear floating header */
+.leaflet-top.leaflet-left {
+    top: 5rem !important;
+    left: 1.5rem !important;
+}
+
+.leaflet-control-zoom {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.leaflet-control-zoom-in, .leaflet-control-zoom-out {
+    background: transparent !important;
+    color: white !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* HUD Section Collapsibility */
+.intelligence-card {
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    max-height: 800px;
+    overflow: hidden;
+}
+
+.intelligence-card.collapsed {
+    flex: 0 0 auto !important;
+    max-height: 52px !important; /* Header height offset */
+    margin-bottom: 0.5rem;
+}
+
+.section-toggle-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    color: rgba(148, 163, 184, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.section-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.section-toggle-btn i {
+    transition: transform 0.3s;
+}
+
+/* Tactical Multiselect Dropdown */
+.multiselect-dropdown {
+    background: rgba(15, 23, 42, 0.9) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
+    border-radius: 8px;
+}
+
+.options-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.options-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==================== TACTICAL MARKERS ==================== */
+
+/* PRIORITY MARKER (Live Individual) */
+.priority-marker-container {
+    pointer-events: auto;
+}
+
+.priority-complaint-marker {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.priority-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--marker-color);
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--marker-color);
+}
+
+.priority-label {
+    position: absolute;
+    top: -20px;
+    background: var(--marker-color);
+    color: white;
+    font-size: 8px;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 2px;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.2s;
+}
+
+.priority-complaint-marker:hover .priority-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* EMERGENCY MARKER (High Intensity) */
+.emergency-pulse-marker {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emergency-marker-inner {
+    width: 30px;
+    height: 30px;
+    background: #dc2626;
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    z-index: 2;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
+}
+
+.emergency-core {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(220, 38, 38, 0.4);
+    border-radius: 50%;
+    animation: emergencyPulse 1.5s infinite;
+    z-index: 1;
+}
+
+@keyframes emergencyPulse {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* Emergency Variations */
+.emergency-pulse-marker.fire .emergency-marker-inner { background: #ef4444; }
+.emergency-pulse-marker.flood .emergency-marker-inner { background: #3b82f6; }
+.emergency-pulse-marker.crime .emergency-marker-inner { background: #8b5cf6; }
+.emergency-pulse-marker.accident .emergency-marker-inner { background: #f97316; }
+
+/* REFINED EMERGENCY RADAR */
+#emergencyPanel {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(244, 63, 94, 0.2) !important;
+}
+
+#emergencyPanel:not(.hidden) {
+    display: block !important;
+    animation: slideUpFade 0.3s forwards;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+

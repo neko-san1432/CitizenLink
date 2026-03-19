@@ -207,7 +207,7 @@ async function checkForNewNotifications() {
         // Re-render notifications
         renderNotifications();
         updateNotificationCount(
-          notificationState.notifications.filter((n) => !n.read).length
+          notificationState.notifications.filter((n) => !n.is_read).length
         );
         // Show a subtle indicator that new notifications were added
         showNewNotificationIndicator();
@@ -279,7 +279,7 @@ async function loadNotifications(reset = false, showLoading = true) {
       renderNotifications();
       updateShowMoreButton();
       updateNotificationCount(
-        notificationState.notifications.filter((n) => !n.read).length
+        notificationState.notifications.filter((n) => !n.is_read).length
       );
       // Mark first load as complete
       notificationState.isFirstLoad = false;
@@ -309,7 +309,7 @@ async function fetchNotifications(page, limit) {
     const formattedNotifications = response.notifications.map((notif) => ({
       ...notif,
       time: formatRelativeTime(notif.created_at),
-      read: notif.read,
+      is_read: notif.is_read,
     }));
     return {
       success: true,
@@ -390,9 +390,9 @@ function createNotificationItemHtml(notification, index) {
   }
 
   const linkAttr = notification.link ? `data-link="${notification.link}"` : "";
-  const isNew = index < 3 && !notification.read;
+  const isNew = index < 3 && !notification.is_read;
   const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : "";
-  const readClass = notification.read ? "read" : "";
+  const readClass = notification.is_read ? "read" : "";
   const newClass = isNew ? "new-notification" : "";
   const cursorStyle = notification.link ? "pointer" : "default";
 
@@ -464,7 +464,7 @@ async function markAllNotificationsAsRead() {
     if (response.success) {
       // Update local state
       notificationState.notifications.forEach((notification) => {
-        notification.read = true;
+        notification.is_read = true;
       });
       renderNotifications();
       updateNotificationCount(0);
