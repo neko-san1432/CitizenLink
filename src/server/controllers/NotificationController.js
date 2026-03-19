@@ -33,7 +33,7 @@ class NotificationController {
       const userId = req.user.id;
       const { limit = 50, offset = 0 } = req.query;
       const { data: notifications, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .eq("read", false)
@@ -106,7 +106,7 @@ class NotificationController {
       const userId = req.user.id;
       const { limit = 20, offset = 0 } = req.query;
       const { data: notifications, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
@@ -185,7 +185,7 @@ class NotificationController {
       const userId = req.user.id;
       // Get all unread notifications to apply deduplication
       const { data: notifications, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .eq("read", false);
@@ -234,7 +234,7 @@ class NotificationController {
       const { id } = req.params;
       const userId = req.user.id;
       const { data, error } = await supabase
-        .from("notification")
+        .from("notifications")
         .update({ read: true, read_at: new Date().toISOString() })
         .eq("id", id)
         .eq("user_id", userId)
@@ -272,7 +272,7 @@ class NotificationController {
     try {
       const userId = req.user.id;
       const { error } = await supabase
-        .from("notification")
+        .from("notifications")
         .update({ read: true, read_at: new Date().toISOString() })
         .eq("user_id", userId)
         .eq("read", false);

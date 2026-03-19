@@ -3,8 +3,6 @@ const { NOTIFICATION_TYPES, _NOTIFICATION_PRIORITY } = require("../../src/shared
 describe("Notification System", () => {
   let notificationService;
   let notificationController;
-  let notificationService;
-  let notificationController;
   let mockSupabase;
   let mockDatabase;
   let mockReq;
@@ -105,7 +103,7 @@ describe("Notification System", () => {
 
         expect(result.success).toBe(true);
         expect(result.notification).toEqual(mockData);
-        expect(mockSupabase.from).toHaveBeenCalledWith("notification");
+        expect(mockSupabase.from).toHaveBeenCalledWith("notifications");
         expect(mockSupabase.insert).toHaveBeenCalled();
       });
 
