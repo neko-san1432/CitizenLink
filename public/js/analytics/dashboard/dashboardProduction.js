@@ -1753,7 +1753,7 @@ function generateSmartInsights(clusters, noise, allData) {
         icon: "map-marker-slash",
         location: { lat: location.lat, lng: location.lng, zoom: zoom + 1 },
         clusterId: idx,
-        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, anomaly: true }
+        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, anomaly: true, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || 'Untitled', category: p.subcategory || p.category, status: p.workflow_status || p.status || 'submitted', submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
       });
     }
 
@@ -1770,7 +1770,7 @@ function generateSmartInsights(clusters, noise, allData) {
         icon: "exclamation-circle",
         location: { lat: location.lat, lng: location.lng, zoom },
         clusterId: idx,
-        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay }
+        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || 'Untitled', category: p.subcategory || p.category, status: p.workflow_status || p.status || 'submitted', submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
       });
     }
     // LOGIC 2: Warning - Standard Zones
@@ -1786,7 +1786,7 @@ function generateSmartInsights(clusters, noise, allData) {
         icon: "exclamation-triangle",
         location: { lat: location.lat, lng: location.lng, zoom },
         clusterId: idx,
-        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay }
+        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || 'Untitled', category: p.subcategory || p.category, status: p.workflow_status || p.status || 'submitted', submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
       });
     }
 
@@ -1974,6 +1974,146 @@ function updateStatsDisplay(insights) {
   if (advEl) advEl.textContent = insights.stats.advisories ?? "--";
 }
 
+/**
+ * v4.7: Show Dispatch Modal with list of complaints in a cluster
+ * Opens a dark-themed modal listing all complaints so the user can pick one to review/update.
+ */
+function showDispatchModal(zone, clusterTitle, complaintIds, cardIndex) {
+  // Remove any existing modal first
+  const existingModal = document.getElementById("dispatch-modal");
+  if (existingModal) existingModal.remove();
+
+  // Build complaint items HTML
+  const itemsHtml = complaintIds.map((id, i) => `
+    <div class="dispatch-item" style="
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; background: rgba(255,255,255,0.03);
+      transition: all 0.2s ease; cursor: pointer;
+    " onmouseenter="this.style.background='rgba(59,130,246,0.1)';this.style.borderColor='rgba(59,130,246,0.3)'"
+       onmouseleave="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.08)'"
+       onclick="window.open('/complaint-details/${id}', '_blank')">
+      <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+        <div style="
+          width: 32px; height: 32px; border-radius: 8px;
+          background: rgba(59,130,246,0.15); display: flex;
+          align-items: center; justify-content: center;
+          font-size: 11px; font-weight: 800; color: #60a5fa; flex-shrink: 0;
+        ">${i + 1}</div>
+        <div style="min-width: 0; flex: 1;">
+          <div style="font-size: 11px; font-weight: 700; color: #e2e8f0; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            COMPLAINT #${id.substring(0, 8).toUpperCase()}
+          </div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+            Click to view details & update status
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+        <button style="
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          color: white; border: none; padding: 6px 14px;
+          border-radius: 6px; font-size: 10px; font-weight: 700;
+          cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;
+        " onclick="event.stopPropagation(); window.open('/complaint-details/${id}', '_blank')">
+          <i class="fas fa-external-link-alt" style="margin-right: 4px;"></i>View & Update
+        </button>
+      </div>
+    </div>
+  `).join("");
+
+  // Create modal
+  const modal = document.createElement("div");
+  modal.id = "dispatch-modal";
+  modal.style.cssText = `
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+    animation: fadeIn 0.2s ease;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(145deg, #0f172a, #1e293b);
+      width: 520px; max-height: 80vh; border-radius: 16px;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+      animation: slideUp 0.25s ease;
+    ">
+      <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      </style>
+
+      <!-- Header -->
+      <div style="padding: 20px 24px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; animation: pulse 2s infinite;"></span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #3b82f6;">
+                DISPATCH QUEUE
+              </span>
+            </div>
+            <h3 style="margin: 0; color: #f1f5f9; font-size: 16px; font-weight: 700;">
+              ${clusterTitle}
+            </h3>
+            <p style="margin: 4px 0 0; font-size: 11px; color: #64748b;">
+              <i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>${zone} &bull; ${complaintIds.length} complaints in cluster
+            </p>
+          </div>
+          <button id="dispatch-modal-close" style="
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8; width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 14px; transition: all 0.2s;
+          " onmouseenter="this.style.background='rgba(239,68,68,0.15)';this.style.color='#ef4444'"
+             onmouseleave="this.style.background='rgba(255,255,255,0.05)';this.style.color='#94a3b8'">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Complaint List -->
+      <div style="padding: 16px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; flex: 1;">
+        <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 4px;">
+          Select a complaint to review & update status
+        </div>
+        ${itemsHtml}
+      </div>
+
+      <!-- Footer -->
+      <div style="padding: 12px 24px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: flex-end;">
+        <button id="dispatch-modal-cancel" style="
+          padding: 8px 20px; border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.05); color: #94a3b8;
+          border-radius: 8px; cursor: pointer; font-size: 11px;
+          font-weight: 600; transition: all 0.2s;
+        " onmouseenter="this.style.background='rgba(255,255,255,0.1)'"
+           onmouseleave="this.style.background='rgba(255,255,255,0.05)'">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close handlers
+  const closeModal = () => modal.remove();
+  document.getElementById("dispatch-modal-close").addEventListener("click", closeModal);
+  document.getElementById("dispatch-modal-cancel").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener("keydown", function escHandler(e) {
+    if (e.key === "Escape") {
+      closeModal();
+      document.removeEventListener("keydown", escHandler);
+    }
+  });
+}
+
 function renderInsightsCards(insights) {
   const container = document.getElementById("insightsContent");
 
@@ -1995,6 +2135,7 @@ function renderInsightsCards(insights) {
     return `
         <div class="insight-card ${card.type}" 
              data-card-index="${index}" 
+             ${card.rawData?.complaintIds ? `data-complaint-ids="${card.rawData.complaintIds.join(',')}"` : ""}
              ${card.location ? `data-has-location="true" data-lat="${card.location.lat}" data-lng="${card.location.lng}" data-zoom="${card.location.zoom}"` : ""}>
             
             <div class="tactical-line-top"></div>
@@ -4225,7 +4366,15 @@ async function loadFullSimulation() {
       console.warn("[PRODUCTION] No data available for analysis. Aborting stream update.");
       // Clear UI or show empty state if needed
       updateStatsDisplay({
-        stats: { totalcomplaints: 0, totalClusters: 0, criticalHotspots: 0, efficiencyScore: 0 }
+        stats: { 
+          totalcomplaints: 0, 
+          totalClusters: 0, 
+          criticalHotspots: 0, 
+          efficiencyScore: 0,
+          activeIncidents: 0,
+          historyLogs: 0,
+          advisories: 0
+        }
       });
       renderInsightsCards({ cards: [] });
       return;
@@ -4565,21 +4714,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 100);
   });
 
-  // v4.6: Tactical Authenticate & Dispatch (Delegated)
+  // v4.7: Tactical Authenticate & Dispatch → Complaint Details Navigation
   document.getElementById("insightsContent").addEventListener("click", (e) => {
     const btn = e.target.closest(".dispatch-btn");
     if (btn) {
-      // Capture context from the card
+      e.stopPropagation(); // Prevent card click from also firing
       const card = btn.closest(".insight-card");
-      const zone = card ? card.querySelector(".mission-id")?.textContent : "Sector Alpha";
-      const task = card ? card.querySelector(".task-label")?.textContent : "General Response";
-      
-      console.log(`[DISPATCH] Authenticating for zone: ${zone}`);
-      if (typeof window.showToast === "function") {
-        window.showToast(`Tactical Dispatch Authenticated for ${zone}: ${task}`, "success");
-      } else {
-        alert(`Tactical Dispatch Authenticated for ${zone}:\n${task}`);
+      if (!card) return;
+
+      const cardIndex = parseInt(card.dataset.cardIndex);
+      const complaintIdsStr = card.dataset.complaintIds || "";
+      const complaintIds = complaintIdsStr ? complaintIdsStr.split(",").filter(Boolean) : [];
+      const zone = card.querySelector(".tactical-value")?.textContent || "Unknown Sector";
+      const title = card.querySelector(".insight-main-title")?.textContent || "Cluster";
+
+      console.log(`[DISPATCH] Opening complaint list for zone: ${zone}, ${complaintIds.length} complaints`);
+
+      if (complaintIds.length === 0) {
+        if (typeof window.showToast === "function") {
+          window.showToast("No complaint IDs available for this cluster", "warning");
+        } else {
+          alert("No complaint IDs available for this cluster.");
+        }
+        return;
       }
+
+      // Single complaint → navigate directly
+      if (complaintIds.length === 1) {
+        window.open(`/complaint-details/${complaintIds[0]}`, "_blank");
+        return;
+      }
+
+      // Multiple complaints → show list modal
+      showDispatchModal(zone, title, complaintIds, cardIndex);
     }
   });
 

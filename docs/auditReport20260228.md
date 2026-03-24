@@ -1,7 +1,7 @@
 # DRIMS System Audit & Remediation Report
 
 **Date:** 2026-02-28  
-**Workspace:** `C:\Users\Neko-san\Documents\projects\CitizenLink`
+**Workspace:** `C:\Users\Neko-san\Documents\projects\D.R.I.M.S.`
 
 ## 1) Request Outcome
 

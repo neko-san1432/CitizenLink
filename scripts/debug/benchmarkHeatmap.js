@@ -1,6 +1,6 @@
 /**
  * Heatmap Performance Benchmark
- * CitizenLink / DRIMS — February 2026
+ * D.R.I.M.S. / DRIMS — February 2026
  *
  * Measures the CPU and allocation cost of each hot-path fix.
  * Run with: node scripts/benchmarkHeatmap.js
@@ -59,7 +59,7 @@ function makeSizes() {
 }
 
 console.log("\n╔═══════════════════════════════════════════════╗");
-console.log("║  CitizenLink Heatmap Performance Benchmark    ║");
+console.log("║  D.R.I.M.S. Heatmap Performance Benchmark    ║");
 console.log("╚═══════════════════════════════════════════════╝");
 
 // ---- Spread vs loop (n=1 000 for representative data) -----------------------

@@ -8328,7 +8328,7 @@ async function loadNLPDictionaries(forceReload = false) {
       }
     }
 
-    if (taxonomyCache && window.DRIMSBrainConfig && window.DRIMSBrainConfig.dictionaries) {
+    if (window.DRIMSBrainConfig && window.DRIMSBrainConfig.dictionaries) {
       NLP_DICTIONARIES = window.DRIMSBrainConfig.dictionaries;
       NLP_DICTIONARY_LOADED = true;
       buildDictionaryIndices();

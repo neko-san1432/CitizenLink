@@ -1,6 +1,6 @@
-# CitizenLink / DRIMS — Documentation
+# D.R.I.M.S. / DRIMS — Documentation
 
-This folder contains technical documentation for the CitizenLink system.
+This folder contains technical documentation for the D.R.I.M.S. system.
 
 ## Structure
 

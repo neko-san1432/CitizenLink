@@ -127,7 +127,7 @@ export const AdvancedFeatures = {
                 </div>
             </div>
 
-            <div class="insights-content custom-scroll p-4 space-y-4" id="insightsContent">
+            <div class="insights-content custom-scroll p-4 space-y-4" id="advancedInsightsContent">
                 <div class="text-center py-8 text-gray-400">
                     <i class="fas fa-circle-notch fa-spin mb-2"></i>
                     <p class="text-xs">Analyzing spatial data...</p>

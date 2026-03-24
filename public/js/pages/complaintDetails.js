@@ -814,7 +814,7 @@ export class complaintDetails {
     if (intel.auto_categorized || (intel.method === "nlp" && nlpCategory)) {
       html += `
         <div class="text-xs text-gray-400 mt-2 italic flex items-center gap-1">
-          <i class="fas fa-robot text-[10px]"></i> Auto-categorized by CitizenLink NLP
+          <i class="fas fa-robot text-[10px]"></i> Auto-categorized by D.R.I.M.S. NLP
         </div>
       `;
     }

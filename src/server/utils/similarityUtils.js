@@ -3,7 +3,7 @@
  * Implements the 3-Layer Filter Architecture
  *
  * v5.0: THESIS-VALIDATED ADAPTIVE DBSCAN PARAMETERS
- * @thesis-feature Synchronized with CitizenLink_Simulated_System
+ * @thesis-feature Synchronized with D.R.I.M.S._Simulated_System
  *
  * CRITICAL: Parameters derived from Thesis K-Distance Graphs
  *

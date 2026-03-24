@@ -891,9 +891,9 @@
 
 .dark .menu-toggle:hover,
 .dark .header-action:hover {
-  background: var(--gray-600);
-  border-color: var(--gray-500);
-  color: var(--gray-200);
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
 }
 
 .dark .brand-logo {
@@ -980,8 +980,8 @@ html.dark .header-action {
 
 html.dark .menu-toggle:hover,
 html.dark .header-action:hover {
-  background: var(--gray-700);
-  border-color: var(--gray-600);
+  background: var(--gray-200);
+  border-color: var(--gray-300);
   color: #ffffff;
 }
 
@@ -1079,8 +1079,8 @@ html.dark .profile-btn {
 html.dark .notification-btn:hover,
 .dark .profile-btn:hover,
 html.dark .profile-btn:hover {
-  background: var(--gray-700);
-  border-color: var(--gray-600);
+  background: var(--gray-200);
+  border-color: var(--gray-300);
   color: #ffffff;
   box-shadow: none;
 }
@@ -1315,6 +1315,8 @@ body.tactical-mode .dashboard-clock {
   align-items: center !important;
 }
 
+body.tactical-mode .menu-toggle,
+body.tactical-mode .header-action,
 body.tactical-mode .notification-btn,
 body.tactical-mode .profile-btn,
 body.tactical-mode .theme-toggle {
@@ -1329,6 +1331,8 @@ body.tactical-mode .theme-toggle {
   justify-content: center !important;
 }
 
+body.tactical-mode .menu-toggle:hover,
+body.tactical-mode .header-action:hover,
 body.tactical-mode .notification-btn:hover,
 body.tactical-mode .profile-btn:hover,
 body.tactical-mode .theme-toggle:hover {

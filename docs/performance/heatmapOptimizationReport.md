@@ -1,6 +1,6 @@
 # Heatmap Performance Optimization Report
 
-**Project:** CitizenLink / DRIMS  
+**Project:** D.R.I.M.S. / DRIMS  
 **Date:** 2026-02-28  
 **Scope:** `src/client/components/map/heatmapVisualization.js` · `src/server/services/complaintService.js`  
 **Benchmark script:** `scripts/benchmarkHeatmap.js`

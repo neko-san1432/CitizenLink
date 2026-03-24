@@ -258,16 +258,16 @@
     <script type="module" src="../../js/auth/authChecker.js"></script>
     <script type="module" src="../../js/auth/roleToggle.js"></script>
     <script type="module" src="../../js/components/toast.js"></script>
-    <script type="module" src="../../js/services/toastnotificationService.js"></script>
+    <script type="module" src="../../js/services/toastNotificationService.js"></script>
     <script type="module" src="../../js/components/slidingPanel.js?v=20260301"></script>
     <!-- CACHE BUSTER v7 -->
     <script type="module" src="../../js/coordinator/reviewQueue.js?v=7"></script>
 
     <script type="module">
-      import toastnotificationService from "../../js/services/toastnotificationService.js";
-      toastnotificationService.startListening();
+      import toastNotificationService from "../../js/services/toastNotificationService.js";
+      toastNotificationService.startListening();
       window.addEventListener("beforeunload", () => {
-        toastnotificationService.stopListening();
+        toastNotificationService.stopListening();
       });
     </script>
     <div id="sliding-panel-container"></div>

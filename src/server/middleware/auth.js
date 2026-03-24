@@ -161,7 +161,9 @@ const authenticateUser = async (req, res, next) => {
 
     // STRICT MODE CHECK: Enforce 3-role system if legacy roles are disabled
     if (process.env.ENABLE_LEGACY_ROLES === "false") {
-      const normalizedRole = userRole.toLowerCase();
+      const normalizedRole = (userRole.toLowerCase().startsWith("lgu-") || userRole.toLowerCase() === "complaint-coordinator")
+        ? "lgu"
+        : userRole.toLowerCase();
 
       // Allow if role is explicitly in ALLOWED_ROLES
       // OR if it's an LGU role (starts with 'lgu') but NOT one of the restricted legacy ones

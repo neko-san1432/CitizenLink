@@ -235,11 +235,7 @@ class NotificationController {
       const userId = req.user.id;
       const { data, error } = await supabase
         .from("notifications")
-<<<<<<< HEAD
-        .update({ read: true, read_at: new Date().toISOString() })
-=======
         .update({ is_read: true, read_at: new Date().toISOString() })
->>>>>>> 722d8eaef5491b7586c53bfd91e1cf75a094d29d
         .eq("id", id)
         .eq("user_id", userId)
         .select()
@@ -277,11 +273,7 @@ class NotificationController {
       const userId = req.user.id;
       const { error } = await supabase
         .from("notifications")
-<<<<<<< HEAD
-        .update({ read: true, read_at: new Date().toISOString() })
-=======
         .update({ is_read: true, read_at: new Date().toISOString() })
->>>>>>> 722d8eaef5491b7586c53bfd91e1cf75a094d29d
         .eq("user_id", userId)
         .eq("is_read", false);
       if (error) {

@@ -102,6 +102,18 @@ const setupMiddleware = (app) => {
     );
   });
 
+  // Dynamic route for NLP dictionaries (extracted from brainConfig.json)
+  app.get(["/nlp_dictionaries.json", "/assets/data/nlp_dictionaries.json"], (req, res) => {
+    try {
+      const fs = require("fs");
+      const configPath = path.join(config.rootDir, "public", "assets", "json", "brainConfig.json");
+      const brainConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      res.json(brainConfig.dictionaries || {});
+    } catch (e) {
+      res.status(404).json({ error: "Dictionary not found" });
+    }
+  });
+
   // Serve static files with proper paths
   // Root public directory (for files like favicon, robots.txt, etc.)
   app.use(express.static(path.join(config.rootDir, "public")));

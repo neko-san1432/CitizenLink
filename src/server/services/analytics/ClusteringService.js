@@ -12,7 +12,7 @@ const {
  * clusteringService v5.0
  * Implements Thesis-Validated Adaptive DBSCAN clustering for complaint analytics.
  *
- * SYNCHRONIZED with CitizenLink_Simulated_System
+ * SYNCHRONIZED with D.R.I.M.S._Simulated_System
  *
  * Key Changes in v5.0:
  * - Imports ADAPTIVE_EPSILON/ADAPTIVE_MINPTS from similarityUtils.js
