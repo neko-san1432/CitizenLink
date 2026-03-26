@@ -1,10 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const ClusteringService = require('../services/ClusteringService');
-const AlertService = require('../services/AlertService');
-const InsightService = require('../services/InsightService');
-const ReportService = require('../services/ReportService'); // Will be implemented next
-const { isAuthenticated, requireRole } = require('../middleware/authMiddleware'); // Assuming these exist
+const ClusteringService = require("../services/ClusteringService");
+const AlertService = require("../services/AlertService");
+const InsightService = require("../services/InsightService");
+const ReportService = require("../services/ReportService"); // Will be implemented next
+const { isAuthenticated, requireRole } = require("../middleware/authMiddleware"); // Assuming these exist
 
 // Middleware to check authentication
 router.use(isAuthenticated);
@@ -14,14 +14,14 @@ router.use(isAuthenticated);
  * @desc Get all active clusters (DBSCAN)
  * @access Coordinator
  */
-router.get('/clusters', requireRole(['complaint-coordinator', 'admin', 'lgu-admin']), async (req, res) => {
-    try {
-        const result = await ClusteringService.generateClusters();
-        res.json({ success: true, clusters: result.clusters });
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch clusters' });
-    }
+router.get("/clusters", requireRole(["complaint-coordinator", "admin", "lgu-admin"]), async (req, res) => {
+  try {
+    const result = await ClusteringService.generateClusters();
+    res.json({ success: true, clusters: result.clusters });
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch clusters" });
+  }
 });
 
 /**
@@ -29,14 +29,14 @@ router.get('/clusters', requireRole(['complaint-coordinator', 'admin', 'lgu-admi
  * @desc Get system-wide alerts
  * @access Coordinator, LGU Admin
  */
-router.get('/alerts', requireRole(['complaint-coordinator', 'admin', 'lgu-admin']), async (req, res) => {
-    try {
-        const alerts = await AlertService.generateAlerts();
-        res.json({ success: true, alerts });
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
-    }
+router.get("/alerts", requireRole(["complaint-coordinator", "admin", "lgu-admin"]), async (req, res) => {
+  try {
+    const alerts = await AlertService.generateAlerts();
+    res.json({ success: true, alerts });
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch alerts" });
+  }
 });
 
 /**
@@ -44,14 +44,14 @@ router.get('/alerts', requireRole(['complaint-coordinator', 'admin', 'lgu-admin'
  * @desc Get aggregated global insights
  * @access Coordinator
  */
-router.get('/insights/coordinator', requireRole(['complaint-coordinator', 'admin']), async (req, res) => {
-    try {
-        const insights = await InsightService.getDashboardInsights('coordinator');
-        res.json({ success: true, data: insights });
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ success: false, message: 'Failed to generate coordinator insights' });
-    }
+router.get("/insights/coordinator", requireRole(["complaint-coordinator", "admin"]), async (req, res) => {
+  try {
+    const insights = await InsightService.getDashboardInsights("coordinator");
+    res.json({ success: true, data: insights });
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ success: false, message: "Failed to generate coordinator insights" });
+  }
 });
 
 /**
@@ -59,63 +59,63 @@ router.get('/insights/coordinator', requireRole(['complaint-coordinator', 'admin
  * @desc Get department-specific insights
  * @access LGU Admin
  */
-router.get('/insights/department/:deptId', requireRole(['lgu-admin', 'admin']), async (req, res) => {
-    try {
-        // Security check: Ensure LGU admin belongs to requested dept (unless super admin)
-        // Ignoring for now to keep it simple, but strictly should check req.user.department
+router.get("/insights/department/:deptId", requireRole(["lgu-admin", "admin"]), async (req, res) => {
+  try {
+    // Security check: Ensure LGU admin belongs to requested dept (unless super admin)
+    // Ignoring for now to keep it simple, but strictly should check req.user.department
 
-        const insights = await InsightService.getDashboardInsights('lgu-admin', req.params.deptId);
-        res.json({ success: true, data: insights });
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ success: false, message: 'Failed to generate department insights' });
-    }
+    const insights = await InsightService.getDashboardInsights("lgu-admin", req.params.deptId);
+    res.json({ success: true, data: insights });
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ success: false, message: "Failed to generate department insights" });
+  }
 });
 
 // EXPORT ROUTES
-router.get('/export/pdf', async (req, res) => {
-    try {
-        const { type = 'executive', dateFrom, dateTo, deptId } = req.query;
-        // Default to today if dates missing
-        const from = dateFrom || new Date().toISOString().split('T')[0];
-        const to = dateTo || new Date().toISOString().split('T')[0];
-        const role = 'coordinator'; // Allow overriding via req.user.role in real app
+router.get("/export/pdf", async (req, res) => {
+  try {
+    const { type = "executive", dateFrom, dateTo, deptId } = req.query;
+    // Default to today if dates missing
+    const from = dateFrom || new Date().toISOString().split("T")[0];
+    const to = dateTo || new Date().toISOString().split("T")[0];
+    const role = "coordinator"; // Allow overriding via req.user.role in real app
 
-        const start = Date.now();
-        const pdfBuffer = await ReportService.generatePDF(type, role, from, to, deptId);
+    const start = Date.now();
+    const pdfBuffer = await ReportService.generatePDF(type, role, from, to, deptId);
 
-        console.log(`[EXPORT] PDF generated in ${Date.now() - start}ms`);
+    console.log(`[EXPORT] PDF generated in ${Date.now() - start}ms`);
 
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="CitizenLink_${type}_Report_${to}.pdf"`,
-            'Content-Length': pdfBuffer.length
-        });
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="CitizenLink_${type}_Report_${to}.pdf"`,
+      "Content-Length": pdfBuffer.length
+    });
 
-        res.send(pdfBuffer);
+    res.send(pdfBuffer);
 
-    } catch (error) {
-        console.error('Export Error:', error);
-        res.status(500).json({ success: false, message: 'Failed to generate PDF report' });
-    }
+  } catch (error) {
+    console.error("Export Error:", error);
+    res.status(500).json({ success: false, message: "Failed to generate PDF report" });
+  }
 });
 
-router.get('/export/csv', async (req, res) => {
-    try {
-        const { dateFrom, dateTo, deptId } = req.query;
-        const role = 'coordinator';
+router.get("/export/csv", async (req, res) => {
+  try {
+    const { dateFrom, dateTo, deptId } = req.query;
+    const role = "coordinator";
 
-        res.set({
-            'Content-Type': 'text/csv',
-            'Content-Disposition': `attachment; filename="complaints_data_${new Date().toISOString().split('T')[0]}.csv"`
-        });
+    res.set({
+      "Content-Type": "text/csv",
+      "Content-Disposition": `attachment; filename="complaints_data_${new Date().toISOString().split("T")[0]}.csv"`
+    });
 
-        await ReportService.generateCSV(res, role, deptId);
+    await ReportService.generateCSV(res, role, deptId);
 
-    } catch (error) {
-        console.error('Export Error:', error);
-        if (!res.headersSent) res.status(500).json({ success: false, message: 'Failed to generate CSV' });
-    }
+  } catch (error) {
+    console.error("Export Error:", error);
+    if (!res.headersSent) res.status(500).json({ success: false, message: "Failed to generate CSV" });
+  }
 });
 
 module.exports = router;
