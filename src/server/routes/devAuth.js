@@ -11,10 +11,26 @@ const ALLOWED_ROLES = ["citizen", "lgu", "superAdmin"];
 
 router.post("/login", async (req, res) => {
   try {
-    if (config.env !== "development") {
+    // SEC-AUDIT FIX: Multiple safeguard checks for dev auth protection
+    const isDevEnv = config.env === "development" && process.env.NODE_ENV === "development";
+    const hostname = req.hostname || req.get("host")?.split(":")[0] || "";
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "0.0.0.0";
+    const requestIp = req.ip || req.connection.remoteAddress || "";
+    const isLocalRequest = requestIp === "127.0.0.1" || requestIp === "::1" || requestIp === "::ffff:127.0.0.1";
+
+    if (!isDevEnv) {
       return res.status(403).json({
         success: false,
         error: "Dev login only available in development mode"
+      });
+    }
+
+    // Additional check: block if not localhost AND not local request
+    if (!isLocalhost && !isLocalRequest) {
+      console.warn(`[DEV AUTH] Blocked remote access attempt from IP: ${requestIp}`);
+      return res.status(403).json({
+        success: false,
+        error: "Dev login only accessible from localhost in development"
       });
     }
 
@@ -48,7 +64,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const user = authData.user;
+    const {user} = authData;
     const metadata = user.user_metadata || {};
     const userRole = metadata.role || "citizen";
 
@@ -82,7 +98,7 @@ router.post("/login", async (req, res) => {
     console.error("[DEV LOGIN] Error:", error);
     res.status(500).json({
       success: false,
-      error: "Dev login failed: " + error.message
+      error: `Dev login failed: ${  error.message}`
     });
   }
 });

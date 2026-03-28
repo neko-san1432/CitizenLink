@@ -2,9 +2,14 @@ const crypto = require("crypto");
 const _cookieParser = require("cookie-parser");
 
 // CSRF secret key (should be in environment variable in production)
-// SEC-25 FIX: Warn if CSRF_SECRET is not set (tokens invalidate on restart)
+// SEC-AUDIT FIX: Require CSRF_SECRET in production, warn in development
+const isProduction = process.env.NODE_ENV === "production";
 if (!process.env.CSRF_SECRET) {
-  console.warn("[CSRF] WARNING: CSRF_SECRET env var not set. Tokens will be invalidated on server restart. Set CSRF_SECRET in .env for persistence.");
+  if (isProduction) {
+    throw new Error("[CSRF] FATAL: CSRF_SECRET environment variable is required in production. Set CSRF_SECRET in .env with a secure 32-byte hex string.");
+  } else {
+    console.warn("[CSRF] WARNING: CSRF_SECRET env var not set. Tokens will be invalidated on server restart. Set CSRF_SECRET in .env for persistence.");
+  }
 }
 const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString("hex");
 

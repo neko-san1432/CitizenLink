@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Check if dev endpoint exists by making a probe request
       const probeResponse = await fetch("/api/dev/login", { method: "OPTIONS" });
-      
+
       // If we get a 404 or method not allowed, dev mode is not enabled
       if (!probeResponse.ok) {
         console.log("[DEV] Dev login not available");
@@ -47,12 +47,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const devButtons = document.querySelectorAll(".dev-login-btn");
       devButtons.forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const role = btn.dataset.role;
+          const {role} = btn.dataset;
           const statusEl = document.getElementById("dev-login-status");
-          
+
           btn.disabled = true;
           btn.textContent = "Logging in...";
-          
+
           try {
             const response = await fetch("/api/dev/login", {
               method: "POST",
@@ -66,12 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
               if (statusEl) statusEl.textContent = "✓ Logged in! Redirecting...";
               window.location.href = data.redirect;
             } else {
-              if (statusEl) statusEl.textContent = "✗ " + data.error;
+              if (statusEl) statusEl.textContent = `✗ ${  data.error}`;
               btn.disabled = false;
               btn.textContent = btn.dataset.role === "citizen" ? "Citizen" : btn.dataset.role === "lgu" ? "LGU" : "Super Admin";
             }
           } catch (error) {
-            if (statusEl) statusEl.textContent = "✗ Error: " + error.message;
+            if (statusEl) statusEl.textContent = `✗ Error: ${  error.message}`;
             btn.disabled = false;
             btn.textContent = btn.dataset.role === "citizen" ? "Citizen" : btn.dataset.role === "lgu" ? "LGU" : "Super Admin";
           }

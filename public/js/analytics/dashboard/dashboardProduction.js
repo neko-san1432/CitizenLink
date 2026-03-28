@@ -26,7 +26,7 @@
 
 let map;
 let simulationEngine;
-let heatmapLayer = null;
+const heatmapLayer = null;
 let currentClusters = [];
 let currentNoisePoints = [];
 let currentFilterCategory = "all";
@@ -46,9 +46,9 @@ let categoryColors = {};
  */
 async function loadCategoryColors() {
   try {
-    const response = await fetch('/assets/json/categoriesSubcategories.json');
+    const response = await fetch("/assets/json/categoriesSubcategories.json");
     const data = await response.json();
-    
+
     // Extract colors from categories
     categoryColors = {};
     for (const [category, info] of Object.entries(data.categories)) {
@@ -56,11 +56,11 @@ async function loadCategoryColors() {
         categoryColors[category] = info.color;
       }
     }
-    
-    console.log('[CATEGORY_COLORS] Loaded:', Object.keys(categoryColors).length, 'categories');
+
+    console.log("[CATEGORY_COLORS] Loaded:", Object.keys(categoryColors).length, "categories");
     return categoryColors;
   } catch (error) {
-    console.error('[CATEGORY_COLORS] Failed to load:', error);
+    console.error("[CATEGORY_COLORS] Failed to load:", error);
     return {};
   }
 }
@@ -201,13 +201,45 @@ function initServerSync() {
  */
 async function fetchServercomplaints(apiEndpoint, options = {}) {
   try {
-    const response = await fetch(apiEndpoint);
+    // Build query parameters for data filtering
+    const url = new URL(apiEndpoint, window.location.origin);
+    if (currentFilterStartDate) url.searchParams.append("startDate", currentFilterStartDate);
+    if (currentFilterEndDate) url.searchParams.append("endDate", currentFilterEndDate);
+    if (currentFilterOffice && currentFilterOffice !== "all") {
+        url.searchParams.append("department", currentFilterOffice);
+    }
+    // v4.5.5: Support multi-category filtering on server
+    if (currentFilterCategory && currentFilterCategory !== "all") {
+        if (Array.isArray(currentFilterCategory)) {
+            currentFilterCategory.forEach(cat => url.searchParams.append("category", cat));
+        } else {
+            url.searchParams.append("category", currentFilterCategory);
+        }
+    }
+
+    console.log(`[SERVER] Syncing with filters:`, url.searchParams.toString());
+
+    const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const result = await response.json();
 
-    if (result.success && result.complaints.length > 0) {
-      console.log(`[DEBUG-FETCH] Received ${result.complaints.length} complaints from server`);
+    if (result.success) {
+      const count = result.complaints?.length || 0;
+      console.log(`%c[DATA SYNC] Retrieved ${count} records from server.`, "color: #00ff00; font-weight: bold;");
+      console.log(`[FILTERS] Active:`, { 
+        startDate: currentFilterStartDate, 
+        endDate: currentFilterEndDate,
+        categories: currentFilterCategory,
+        office: currentFilterOffice 
+      });
+      
+      // DEBUG: Log the first and last record dates
+      if (result.complaints.length > 0) {
+          const first = result.complaints[0];
+          console.log(`[FETCH] First record date:`, first.submitted_at || first.timestamp);
+      }
+
       const newcomplaints = result.complaints.filter(servercomplaint => {
         return !simulationEngine.complaints.some(c => c.id === servercomplaint.id);
       });
@@ -223,6 +255,13 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
         } else {
           newcomplaints.forEach(c => handleNewServercomplaint(c));
         }
+      }
+    } else if (result.success && result.complaints.length === 0) {
+      console.log("[SERVER] No complaints found for current filters.");
+      // If we were expecting data but got none, clear the existing data
+      if (!options.silent) {
+        simulationEngine.complaints = [];
+        loadFullSimulation().catch(() => { });
       }
     }
   } catch (error) {
@@ -1079,11 +1118,11 @@ function initMap() {
     currentBaseLayer = baseLayers[layerKeys[currentLayerIndex]];
     currentBaseLayer.addTo(map);
     currentBaseLayer.bringToBack();
-    
+
     // Update HUD tooltip if needed
     const tooltip = document.querySelector("#btn-cycle-tiles .layer-tooltip");
     if (tooltip) tooltip.textContent = `Mode: ${layerKeys[currentLayerIndex]}`;
-    
+
     console.log(`[MAP] Switched to ${layerKeys[currentLayerIndex]}`);
     return layerKeys[currentLayerIndex];
   };
@@ -1563,6 +1602,7 @@ function initEmergencyPanel() {
     });
   }
 
+
   // ==================== DRAGGABLE FUNCTIONALITY ====================
   if (header) {
     let isDragging = false;
@@ -1753,7 +1793,7 @@ function generateSmartInsights(clusters, noise, allData) {
         icon: "map-marker-slash",
         location: { lat: location.lat, lng: location.lng, zoom: zoom + 1 },
         clusterId: idx,
-        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, anomaly: true, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || 'Untitled', category: p.subcategory || p.category, status: p.workflow_status || p.status || 'submitted', submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
+        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, anomaly: true, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || "Untitled", category: p.subcategory || p.category, status: p.workflow_status || p.status || "submitted", submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
       });
     }
 
@@ -1770,7 +1810,7 @@ function generateSmartInsights(clusters, noise, allData) {
         icon: "exclamation-circle",
         location: { lat: location.lat, lng: location.lng, zoom },
         clusterId: idx,
-        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || 'Untitled', category: p.subcategory || p.category, status: p.workflow_status || p.status || 'submitted', submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
+        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || "Untitled", category: p.subcategory || p.category, status: p.workflow_status || p.status || "submitted", submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
       });
     }
     // LOGIC 2: Warning - Standard Zones
@@ -1786,11 +1826,11 @@ function generateSmartInsights(clusters, noise, allData) {
         icon: "exclamation-triangle",
         location: { lat: location.lat, lng: location.lng, zoom },
         clusterId: idx,
-        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || 'Untitled', category: p.subcategory || p.category, status: p.workflow_status || p.status || 'submitted', submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
+        rawData: { count: size, category: dominantCategory, zoneName, barangay: detectedBarangay, complaintIds: cluster.map(p => p.id).filter(Boolean), complaints: cluster.map(p => ({ id: p.id, title: p.title || p.description?.substring(0, 60) || "Untitled", category: p.subcategory || p.category, status: p.workflow_status || p.status || "submitted", submitted_at: p.submitted_at || p.created_at })).filter(p => p.id) }
       });
     }
 
-    });
+  });
 
   // SUMMARY CARD: System Performance Report
   if (allData.length > 0 && clusters.length > 0) {
@@ -2131,11 +2171,11 @@ function renderInsightsCards(insights) {
   container.innerHTML = insights.cards.map((card, index) => {
     const isCritical = card.type.includes("critical") || card.badge?.includes("CRITICAL");
     const priorityColor = isCritical ? "#ef4444" : "#3b82f6";
-    
+
     return `
         <div class="insight-card ${card.type}" 
              data-card-index="${index}" 
-             ${card.rawData?.complaintIds ? `data-complaint-ids="${card.rawData.complaintIds.join(',')}"` : ""}
+             ${card.rawData?.complaintIds ? `data-complaint-ids="${card.rawData.complaintIds.join(",")}"` : ""}
              ${card.location ? `data-has-location="true" data-lat="${card.location.lat}" data-lng="${card.location.lng}" data-zoom="${card.location.zoom}"` : ""}>
             
             <div class="tactical-line-top"></div>
@@ -2182,7 +2222,7 @@ function renderInsightsCards(insights) {
                 </button>
             </div>
         </div>
-    `}).join("");
+    `;}).join("");
 
   // Add click handlers to cards with location data
   attachCardClickHandlers();
@@ -2298,13 +2338,13 @@ function createHeatmap(data) {
 
   // Build heatmap data grouped by category
   const categoryData = {};
-  
+
   data.filter(p => p.latitude && p.longitude).forEach(p => {
     const category = p.category || "Others";
     if (!categoryData[category]) {
       categoryData[category] = [];
     }
-    
+
     // Intensity based on priority
     let intensity = 0.5;
     const upperCat = category.toUpperCase();
@@ -2315,22 +2355,22 @@ function createHeatmap(data) {
     } else if (upperCat.includes("HEALTH") || upperCat.includes("UTILITY")) {
       intensity = 0.6;
     }
-    
+
     categoryData[category].push([p.latitude, p.longitude, intensity]);
   });
 
   // Create a separate heat layer for each category
   Object.entries(categoryData).forEach(([category, points]) => {
     if (points.length === 0) return;
-    
+
     const color = categoryColors[category] || "#3b82f6"; // Default blue
-    
+
     // Convert category color to heatmap gradient
     const gradient = {
-      0.0: color + "00", // Transparent
-      0.3: color + "40", // 25% opacity
-      0.5: color + "80", // 50% opacity
-      0.7: color + "cc", // 80% opacity
+      0.0: `${color  }00`, // Transparent
+      0.3: `${color  }40`, // 25% opacity
+      0.5: `${color  }80`, // 50% opacity
+      0.7: `${color  }cc`, // 80% opacity
       1.0: color         // Full color
     };
 
@@ -2353,15 +2393,13 @@ function toggleHeatmap() {
 
   // Toggle all category heat layers
   const anyShown = Object.values(categoryHeatLayers).some(layer => layer && map.hasLayer(layer));
-  
+
   Object.values(categoryHeatLayers).forEach(layer => {
     if (!layer) return;
-    
+
     if (anyShown) {
       if (map.hasLayer(layer)) map.removeLayer(layer);
-    } else {
-      if (!map.hasLayer(layer)) map.addLayer(layer);
-    }
+    } else if (!map.hasLayer(layer)) map.addLayer(layer);
   });
 
   if (anyShown) {
@@ -2507,14 +2545,14 @@ function toggleHeatmapFromDropdown(show) {
   // Toggle all category heat layers
   Object.entries(categoryHeatLayers).forEach(([category, layer]) => {
     if (!layer) return;
-    
+
     if (show && !map.hasLayer(layer)) {
       map.addLayer(layer);
     } else if (!show && map.hasLayer(layer)) {
       map.removeLayer(layer);
     }
   });
-  
+
   if (show && Object.keys(categoryHeatLayers).length > 0) {
     console.log("[HEATMAP] Shown via dropdown");
   } else if (!show) {
@@ -2540,11 +2578,11 @@ function toggleClustersFromDropdown(show) {
   clustersVisible = show;
 
   // Get noise markers (those with noise-marker-container class)
-  const noiseMarkers = simulationEngine.spotlightMarkers.filter(m => 
-    m.options?.className?.includes('noise-marker-container')
+  const noiseMarkers = simulationEngine.spotlightMarkers.filter(m =>
+    m.options?.className?.includes("noise-marker-container")
   );
-  const clusterMarkers = simulationEngine.spotlightMarkers.filter(m => 
-    !m.options?.className?.includes('noise-marker-container')
+  const clusterMarkers = simulationEngine.spotlightMarkers.filter(m =>
+    !m.options?.className?.includes("noise-marker-container")
   );
 
   if (clustersVisible) {
@@ -4340,15 +4378,10 @@ async function loadFullSimulation() {
   const statusIndicator = document.getElementById("statusIndicator");
   const loadButton = document.getElementById("loadCityData");
 
-  // Invalidate the intelligence panel cache — stale results must not
-  // persist across dataset refreshes.
   window.mapIntelligencePanel?.invalidateCache();
-
-  // v4.0.1: Clear any temporary live markers before re-rendering
   clearLiveMarkers();
 
   try {
-    // Show loading state
     if (loadingOverlay) loadingOverlay.classList.add("active");
     if (statusIndicator) {
       statusIndicator.classList.add("processing");
@@ -4359,222 +4392,121 @@ async function loadFullSimulation() {
 
     console.log("[PRODUCTION] Starting full city analysis...");
 
-    // Get all complaints
     const allData = (simulationEngine && simulationEngine.complaints) ? simulationEngine.complaints : [];
+    console.log("[DEBUG] allData count:", allData.length);
 
     if (!allData || allData.length === 0) {
-      console.warn("[PRODUCTION] No data available for analysis. Aborting stream update.");
-      // Clear UI or show empty state if needed
+      console.warn("[PRODUCTION] No data available for analysis.");
       updateStatsDisplay({
-        stats: { 
-          totalcomplaints: 0, 
-          totalClusters: 0, 
-          criticalHotspots: 0, 
-          efficiencyScore: 0,
-          activeIncidents: 0,
-          historyLogs: 0,
-          advisories: 0
-        }
+        stats: { totalcomplaints: 0, totalClusters: 0, criticalHotspots: 0, efficiencyScore: 0, activeIncidents: 0, historyLogs: 0, advisories: 0 }
       });
       renderInsightsCards({ cards: [] });
       return;
     }
 
-    // Apply category filter
+    // 1. Filtering Logic
     let filteredData = allData;
 
-    // 1. Category Filter
-    if (Array.isArray(currentFilterCategory)) {
-      if (!currentFilterCategory.includes("all")) {
-        filteredData = filteredData.filter(p => currentFilterCategory.includes(p.category));
-      }
-    } else if (currentFilterCategory !== "all") {
+    // A. Category Filter
+    if (Array.isArray(currentFilterCategory) && !currentFilterCategory.includes("all")) {
+      filteredData = filteredData.filter(p => currentFilterCategory.includes(p.category));
+    } else if (typeof currentFilterCategory === "string" && currentFilterCategory !== "all") {
       filteredData = filteredData.filter(p => p.category === currentFilterCategory);
     }
 
-    // 2. Subcategory Filter
-    if (Array.isArray(currentFilterSubcategory)) {
-      if (!currentFilterSubcategory.includes("all")) {
-        filteredData = filteredData.filter(p => currentFilterSubcategory.includes(p.subcategory || p.category));
-      }
-    } else if (currentFilterSubcategory && currentFilterSubcategory !== "all") {
-      filteredData = filteredData.filter(p => (p.subcategory || p.category) === currentFilterSubcategory);
-    }
-
-    // 3. Office/department Filter
-    if (Array.isArray(currentFilterOffice)) {
-      if (!currentFilterOffice.includes("all")) {
-        filteredData = filteredData.filter(p => {
-          const dept = p.department || "";
-          const depts = p.departments || [];
-          // Check if any of the selected offices match
-          return currentFilterOffice.includes(dept) ||
-                        (Array.isArray(depts) && depts.some(d => currentFilterOffice.includes(d)));
-        });
-      }
-    } else if (currentFilterOffice && currentFilterOffice !== "all") {
+    // B. Office/Department Filter
+    if (Array.isArray(currentFilterOffice) && !currentFilterOffice.includes("all")) {
       filteredData = filteredData.filter(p => {
-        // Check primary department assignment
         const dept = p.department || "";
-        if (dept === currentFilterOffice) return true;
-
-        // Check multi-department array
-        if (p.departments && Array.isArray(p.departments) && p.departments.includes(currentFilterOffice)) return true;
-
-        return false;
+        const depts = Array.isArray(p.departments) ? p.departments : [];
+        return currentFilterOffice.includes(dept) || depts.some(d => currentFilterOffice.includes(d));
       });
     }
 
-    // 4. Date Range Filter
-    // 4. Date Range Filter
-    // 4. Date Range Filter
+    // C. Date Range Filter (Numerical Robustness)
     if (currentFilterStartDate || currentFilterEndDate) {
-      console.log("--- DATE FILTER ACTIVE ---");
-      console.log("Inputs:", { Start: currentFilterStartDate, End: currentFilterEndDate });
-
+      const filterStartTs = currentFilterStartDate ? new Date(currentFilterStartDate + "T00:00:00").getTime() : 0;
+      const filterEndTs = currentFilterEndDate ? new Date(currentFilterEndDate + "T23:59:59").getTime() : Infinity;
+      
       filteredData = filteredData.filter(p => {
-        const rawDate =
-                    p.timestamp ||
-                    p.submittedAt ||
-                    p.submitted_at ||
-                    p.created_at ||
-                    p.createdAt ||
-                    p.updated_at ||
-                    p.updatedAt;
-        if (!rawDate) {
-          console.warn("[FILTER-WARN] Record missing date:", p.id);
-          return false;
-        }
-
-        const recordDate = new Date(rawDate);
-        // Use UTC Date string (YYYY-MM-DD) to match the raw database value
-        // This prevents "Day Shift" where late UTC records become the next day in Local Time
-        // and thus disappear from the expected filter range.
-        const recordDateStr = recordDate.toISOString().split("T")[0];
-
-        const valid = true;
-
-        if (currentFilterStartDate && recordDateStr < currentFilterStartDate) return false;
-
-        if (currentFilterEndDate && recordDateStr > currentFilterEndDate) return false;
-
-
-        return valid;
+        const rawDate = p.timestamp || p.submittedAt || p.submitted_at || p.created_at || p.createdAt;
+        if (!rawDate) return false;
+        const recordTs = new Date(rawDate).getTime();
+        return recordTs >= filterStartTs && recordTs <= filterEndTs;
       });
       console.log(`[FILTER] Date range applied. Remaining records: ${filteredData.length}`);
     }
 
-    // Filter background markers to show only selected category
-    // Note: simulationEngine.filterBackgroundMarkersByCategory only handles main category
-    // We might need to enhance it later, but for now this is consistent
-    simulationEngine.filterBackgroundMarkersByCategory(currentFilterCategory);
+    // 2. Synchronize Layers
+    // Show background points for the filtered set
+    simulationEngine.filterBackgroundMarkersByCategory(currentFilterCategory, {
+        startDate: currentFilterStartDate,
+        endDate: currentFilterEndDate
+    });
 
-    // Update progress
     const loadingProgressEl = document.getElementById("loadingProgress");
-    if (loadingProgressEl) {
-      loadingProgressEl.textContent = `Analyzing ${filteredData.length} complaints...`;
-    }
+    if (loadingProgressEl) loadingProgressEl.textContent = `Analyzing ${filteredData.length} complaints...`;
 
-    // ================================================================
-    // CRITICAL TRIAGE SYSTEM: Extract emergencies BEFORE clustering
-    // ================================================================
-    console.log("[TRIAGE] Extracting critical emergencies...");
+    // 3. Extraction & Triage
     const { criticalPoints, standardPoints } = window.extractCriticalPoints
       ? window.extractCriticalPoints(filteredData)
       : { criticalPoints: [], standardPoints: filteredData };
 
-    // Render Emergency Panel with critical points
     renderEmergencyPanel(criticalPoints);
-
-    // Render pulsing markers for critical points on map
     renderCriticalMarkers(criticalPoints);
 
-    console.log(`[TRIAGE] ${criticalPoints.length} emergencies extracted, ${standardPoints.length} standard points remain`);
-
-    // ================================================================
-    // Run DBSCAN++ clustering ONLY on standard (non-critical) points
-    // This prevents emergencies from being merged into Pothole clusters!
-    // ================================================================
-    console.log("[DBSCAN++] Running automated clustering on standard points...");
+    // 4. Clustering (Forced MIN_PTS 1 for Heatmap Visibility)
     const clusteringResult = clustercomplaints(standardPoints, {
       MIN_PTS: 1,
+      USE_ADAPTIVE_MINPTS: false,
       ENABLE_LOGGING: true
     });
 
     currentClusters = clusteringResult.clusters;
     currentNoisePoints = clusteringResult.noise;
 
-    console.log("[RESULT]", currentClusters.length, "clusters detected");
-    console.log("[RESULT]", currentNoisePoints.length, "noise points");
-
-    // Generate smart insights (pass original filteredData for accurate stats)
-    const insights = generateSmartInsights(
-      currentClusters,
-      currentNoisePoints,
-      filteredData  // Use full data for stats
-    );
-
-    // Add emergency count to insights stats
+    // 5. Analytics & UI
+    const insights = generateSmartInsights(currentClusters, currentNoisePoints, filteredData);
     insights.stats.activeEmergencies = criticalPoints.length;
 
-    // Update UI
     updateStatsDisplay(insights);
     renderInsightsCards(insights);
     renderCategoryDistribution(filteredData);
-
-    // Visualize clusters
+    
+    // Visualization
     visualizeClusters(currentClusters);
-
-    // FEATURE 1: Visualize noise points (unclustered) with clickable popups
     visualizeNoisePoints(currentNoisePoints);
-
-    // Create heatmap
     createHeatmap(filteredData);
 
-    // Success state
-    if (statusIndicator) {
-      statusIndicator.classList.remove("processing");
-      statusIndicator.classList.remove("error");
-      const statusSpan = statusIndicator.querySelector("span");
-      if (statusSpan) statusSpan.textContent = "Analysis Complete";
-    }
-
-    // ================================================================
-    // SHARED STATE: Export data for Analytics Dashboard inheritance
-    // This allows the Analytics tab to use the exact same processed data
-    // ================================================================
+    // Handover to Analytics
     try {
       const transferPackage = {
         timestamp: Date.now(),
         source: "dashboardProduction",
-        complaints: simulationEngine.complaints, // Includes all NLP tags and live data
+        complaints: simulationEngine.complaints,
         stats: insights.stats,
         generated_at: new Date().toISOString()
       };
-
-      // Use localStorage for cross-tab communication
       localStorage.setItem("DRIMS_analytics_handover", JSON.stringify(transferPackage));
-      console.log(`[HANDOVER] 📤 Data exported for Analytics inheritance (${simulationEngine.complaints.length} records)`);
-    } catch (storageError) {
-      console.warn("[HANDOVER] Failed to export data to Analytics (likely QuotaExceeded):", storageError);
-    }
+    } catch (e) { console.warn("Analytics handover failed", e); }
 
-    console.log("[PRODUCTION] Analysis complete!");
-
-  } catch (error) {
-    console.error("[ERROR]", error);
     if (statusIndicator) {
-      statusIndicator.classList.add("error");
+      statusIndicator.classList.remove("processing");
       const statusSpan = statusIndicator.querySelector("span");
-      if (statusSpan) statusSpan.textContent = "Error";
+      if (statusSpan) statusSpan.textContent = "Analysis Complete";
     }
-    alert(`Failed to load city data: ${  error.message}`);
+  } catch (error) {
+    console.error("[PRODUCTION] Analysis failed:", error);
+    if (statusIndicator) {
+        statusIndicator.classList.add("error");
+        const statusSpan = statusIndicator.querySelector("span");
+        if (statusSpan) statusSpan.textContent = "Analysis Failed";
+    }
   } finally {
     if (loadingOverlay) loadingOverlay.classList.remove("active");
     if (loadButton) loadButton.disabled = false;
   }
 }
-
 
 
 // Track selected index for keyboard navigation
@@ -4628,6 +4560,18 @@ function collapseCommandCenter() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[PRODUCTION] Initializing City Analytics Dashboard...");
+
+  // Set default filters to today's date (Local Time)
+  const today = new Date().toLocaleDateString("en-CA");
+  currentFilterStartDate = today;
+  currentFilterEndDate = today;
+  console.log(`[FILTER] Initializing default date range (local): ${today} to ${today}`);
+
+  // Sync HUD inputs if present
+  const startInput = document.getElementById("filter-start-date");
+  const endInput = document.getElementById("filter-end-date");
+  if (startInput) startInput.value = today;
+  if (endInput) endInput.value = today;
 
   // Load category colors for heatmap
   await loadCategoryColors();
@@ -4760,18 +4704,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   function updateTacticalClock() {
     const clockEl = document.getElementById("dashboard-clock");
     if (!clockEl) return;
-    
+
     const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', { 
-        hour12: false, 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
+    const timeString = now.toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
     });
-    
+
     clockEl.textContent = `SYSTEM_TIME: [${timeString}]`;
   }
-  
+
   updateTacticalClock();
   setInterval(updateTacticalClock, 1000);
 
@@ -4786,7 +4730,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // ==================== GLOBAL FILTER BRIDGE ====================
 // Bridge function to allow external modules (like heatmap.html) to trigger filters
-window.applyGlobalFilters = function (filters) {
+window.applyGlobalFilters = async function (filters) {
   console.log("[FILTER] Applying global filters:", filters);
 
   if (filters.start_date !== undefined) currentFilterStartDate = filters.start_date;
@@ -4795,7 +4739,27 @@ window.applyGlobalFilters = function (filters) {
   if (filters.category !== undefined) currentFilterCategory = filters.category;
   if (filters.subcategory !== undefined) currentFilterSubcategory = filters.subcategory;
 
-  // Always force reload to ensure filters are respected even if complaints were empty
+  // v3.9.5: Re-fetch data from server with new filters
+  const API_ENDPOINT = `/api/brain/complaints`;
+  console.log("[FILTER] Re-fetching data from server with filters...");
+  
+  // Clear existing local complaints to ensure fresh sync
+  if (window.simulationEngine) {
+    console.log("[FILTER] Clearing local complaints before sync...");
+    window.simulationEngine.complaints = [];
+    if (window.simulationEngine.backgroundMarkers) {
+        window.simulationEngine.backgroundMarkers.clearLayers();
+    }
+  }
+  
+  // v4.5.7: Use silent sync to avoid flooding the map with individual 
+  // markers during a full dataset refresh. loadFullSimulation will handle everything.
+  await fetchServercomplaints(API_ENDPOINT, { silent: true });
+
+  console.log("[FILTER] Sync complete. Current complaints count:", window.simulationEngine?.complaints?.length);
+
+  // Ensure loadFullSimulation is only called once after sync
+  if (autoReloadTimer) clearTimeout(autoReloadTimer);
   loadFullSimulation();
 };
 

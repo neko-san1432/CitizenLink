@@ -6902,15 +6902,26 @@ class SimulationEngine {
     });
     this.backgroundMarkers.clear();
 
-    // Step 2: Get complaints to display
-    let complaintsToShow;
-    if (category === "all") {
-      complaintsToShow = this.complaints.filter(c => c.latitude != null && c.longitude != null);
-    } else {
-      complaintsToShow = this.complaints.filter(c =>
-        c.category === category && c.latitude != null && c.longitude != null
-      );
-    }
+    // v4.5.9: Synchronize background markers with total filter range (category + date)
+    const { startDate, endDate } = options || {};
+    const startTs = startDate ? new Date(startDate + "T00:00:00").getTime() : 0;
+    const endTs = endDate ? new Date(endDate + "T23:59:59").getTime() : Infinity;
+
+    const complaintsToShow = this.complaints.filter(c => {
+      if (c.latitude == null || c.longitude == null) return false;
+      
+      // Category filter
+      if (category !== "all" && c.category !== category) return false;
+      
+      // Date filter
+      const rawDate = c.timestamp || c.submittedAt || c.submitted_at || c.created_at || c.createdAt;
+      if (rawDate) {
+        const ts = new Date(rawDate).getTime();
+        if (ts < startTs || ts > endTs) return false;
+      }
+
+      return true;
+    });
 
     _NLP_DEBUG && console.log(`[FILTER] complaints to show: ${complaintsToShow.length}`);
 

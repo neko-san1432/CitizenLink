@@ -54,7 +54,7 @@ class ComplaintController {
   async getCoordinatorStats(req, res) {
     try {
       const stats = await this.complaintService.getcomplaintStats(req.user);
-      
+
       // Map to dashboard expected format
       const dashboardStats = {
         incoming: stats.byStatus?.submitted || 0,

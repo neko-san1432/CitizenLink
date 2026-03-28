@@ -308,24 +308,24 @@ async function loadcomplaintData() {
 
     // Setup date picker constraints based on loaded complaint data
     setupDatePickerConstraints();
-
     // Default to showing only Today's complaints
-    // const dateStart = document.getElementById("date-range-start");
-    // const dateEnd = document.getElementById("date-range-end");
-    // if (dateStart && dateEnd) {
-    //   const today = new Date();
-    //   // Handle timezone offset to ensure we get the correct local date string
-    //   const offset = today.getTimezoneOffset() * 60000; // offset in milliseconds
-    //   const localToday = new Date(today.getTime() - offset);
-    //   const todayStr = localToday.toISOString().split("T")[0];
+    const dateStart = document.getElementById("date-range-start");
+    const dateEnd = document.getElementById("date-range-end");
+    if (dateStart && dateEnd) {
+      const today = new Date();
+      // Handle timezone offset to ensure we get the correct local date string (YYYY-MM-DD)
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayStr = `${year}-${month}-${day}`;
 
-    //   dateStart.value = todayStr;
-    //   dateEnd.value = todayStr;
+      dateStart.value = todayStr;
+      dateEnd.value = todayStr;
 
-    //   // Update constraints for the selected dates
-    //   updateDatePickerConstraints(todayStr, todayStr);
-    //   // console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
-    // }
+      // Update constraints for the selected dates
+      updateDatePickerConstraints(todayStr, todayStr);
+      console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
+    }
 
     // REMOVED: Redundant initial heatmap creation
     // applyFiltersAndUpdate() below will create the heatmap with the "Today" filter applied

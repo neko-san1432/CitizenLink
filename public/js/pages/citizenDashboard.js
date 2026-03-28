@@ -47,12 +47,12 @@ async function loadDashboardData() {
 
     // Fetch statistics for recent activity
     const statsRes = await fetch("/api/complaints/my-statistics");
-    
+
     if (statsRes.ok) {
       const statsJson = await statsRes.json();
       if (statsJson.success) {
         // Filter activity by timeframe
-        const filteredActivity = filterActivityByTimeframe(statsJson.data.recentActivity || [], 'all');
+        const filteredActivity = filterActivityByTimeframe(statsJson.data.recentActivity || [], "all");
         updateActivity(filteredActivity);
       }
     }
@@ -69,10 +69,10 @@ async function loadDashboardData() {
 
 function filterActivityByTimeframe(activities, timeframe) {
   if (timeframe === "all") return activities;
-  
+
   const now = new Date();
   let startDate;
-  
+
   switch (timeframe) {
     case "7days":
       startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -86,7 +86,7 @@ function filterActivityByTimeframe(activities, timeframe) {
     default:
       return activities;
   }
-  
+
   return activities.filter(a => new Date(a.submitted_at) >= startDate);
 }
 
@@ -210,9 +210,9 @@ function updateActivity(complaints) {
          </div>
        </div>
     `;
-        }
-      )
-      .join("");
+      }
+    )
+    .join("");
 }
 
 function updateOngoingResolution(complaints) {
@@ -230,7 +230,7 @@ function updateOngoingResolution(complaints) {
     .map((c) => {
       const status = c.status || c.workflow_status || "In Progress";
       const desc = c.description || c.category || "Complaint";
-      
+
       return `
         <div class="flex-shrink-0 w-[280px] p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md transition-all cursor-pointer" onclick="window.location.href='/complaint/${c.id}'">
           <div class="flex items-start justify-between mb-2">
@@ -239,7 +239,7 @@ function updateOngoingResolution(complaints) {
             </span>
             <span class="text-xs text-gray-400">${c.category_name || c.category || "General"}</span>
           </div>
-          <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(desc.substring(0, 50))}${desc.length > 50 ? '...' : ''}</p>
+          <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(desc.substring(0, 50))}${desc.length > 50 ? "..." : ""}</p>
           <p class="text-xs text-gray-500 mt-1">Submitted: ${new Date(c.submitted_at || c.created_at).toLocaleDateString()}</p>
         </div>
       `;

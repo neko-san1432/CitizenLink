@@ -124,7 +124,7 @@ class ComplaintRepository {
         query = query.eq("workflow_status", status);
       }
       if (type) {
-        query = query.eq("type", type);
+        query = query.eq("category", type);
       }
       // First get the count without range, applying same filters
       let countQuery = client
@@ -135,7 +135,7 @@ class ComplaintRepository {
         countQuery = countQuery.eq("workflow_status", status);
       }
       if (type) {
-        countQuery = countQuery.eq("type", type);
+        countQuery = countQuery.eq("category", type);
       }
       const { count: totalCount, error: countError } = await countQuery;
       if (countError) {
@@ -267,7 +267,7 @@ class ComplaintRepository {
       }
     }
     if (type) {
-      query = query.eq("type", type);
+      query = query.eq("category", type);
     }
     if (department) {
       query = query.contains("departments", [department]);
@@ -522,9 +522,9 @@ class ComplaintRepository {
     try {
       const client = Database.getServiceClient();
       let query = client.from("complaints").select("workflow_status, priority, category");
-      
+
       const { department, startDate, endDate } = filters;
-      
+
       if (department) {
         if (Array.isArray(department)) {
           query = query.contains("departments", department);
@@ -532,7 +532,7 @@ class ComplaintRepository {
           query = query.contains("departments", [department]);
         }
       }
-      
+
       if (startDate) {
         query = query.gte("submitted_at", startDate);
       }
@@ -554,7 +554,7 @@ class ComplaintRepository {
         const status = c.workflow_status || "unknown";
         const priority = c.priority || "medium";
         const category = c.category || "General";
-        
+
         stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
         stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
         stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
@@ -620,7 +620,8 @@ class ComplaintRepository {
         query = query.lte("submitted_at", end.toISOString());
       }
 
-      const { data, error } = await query;
+      // v4.5.3: Explicitly increase limit to 10000 for heatmap clustering
+      const { data, error } = await query.limit(10000);
       if (error) throw error;
 
       // Filter by department in-memory (department_r is an array field)
@@ -695,12 +696,12 @@ class ComplaintRepository {
         stats.byStatus[c.workflow_status] = (stats.byStatus[c.workflow_status] || 0) + 1;
         stats.byConfirmationStatus[c.confirmation_status] = (stats.byConfirmationStatus[c.confirmation_status] || 0) + 1;
         stats.byPriority[c.priority] = (stats.byPriority[c.priority] || 0) + 1;
-        
+
         const cat = getCategoryName(c.category);
         stats.categoryCounts[cat] = (stats.categoryCounts[cat] || 0) + 1;
       });
 
-      const sortedByDate = [...complaints].sort((a, b) => 
+      const sortedByDate = [...complaints].sort((a, b) =>
         new Date(b.submitted_at) - new Date(a.submitted_at)
       );
 
@@ -713,7 +714,7 @@ class ComplaintRepository {
           .in("complaint_id", complaintIds)
           .order("created_at", { ascending: false })
           .limit(20);
-        
+
         if (historyRes.data && historyRes.data.length > 0) {
           const complaintMap = new Map(complaints.map(c => [c.id, c]));
           statusChanges = historyRes.data.map(h => {

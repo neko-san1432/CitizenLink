@@ -71,37 +71,47 @@ const authenticateUser = async (req, res, next) => {
 
     if (sessionsInvalidatedAt || passwordChangedAt) {
       // Decode JWT token to get issued-at time (iat claim)
+      // SECURITY: Only decode after Supabase verification - payload is trusted at this point
       try {
         const tokenParts = token.split(".");
         if (tokenParts.length === 3) {
-          const payload = JSON.parse(
-            Buffer.from(tokenParts[1], "base64").toString()
-          );
-          const tokenIssuedAt = payload.iat
-            ? new Date(payload.iat * 1000)
-            : null;
-          const invalidationTime = sessionsInvalidatedAt || passwordChangedAt;
+          // Validate base64 encoding before decoding
+          const payloadBase64 = tokenParts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const paddedPayload = payloadBase64.padRight(payloadBase64.length + ((4 - payloadBase64.length % 4) % 4), "=");
 
-          if (
-            tokenIssuedAt &&
-            invalidationTime &&
-            new Date(invalidationTime) > tokenIssuedAt
-          ) {
-            res.clearCookie("sb_access_token");
+          let payload;
+          try {
+            payload = JSON.parse(Buffer.from(paddedPayload, "base64").toString("utf-8"));
+          } catch (decodeErr) {
+            console.warn("[AUTH] Failed to parse JWT payload:", decodeErr.message);
+            payload = null;
+          }
+
+          if (payload && typeof payload.iat === "number") {
+            const tokenIssuedAt = new Date(payload.iat * 1000);
+            const invalidationTime = sessionsInvalidatedAt || passwordChangedAt;
+
             if (
-              req.originalUrl.startsWith("/api/") ||
-              req.path.startsWith("/api/")
+              tokenIssuedAt &&
+              invalidationTime &&
+              new Date(invalidationTime) > tokenIssuedAt
             ) {
-              return res.status(401).json({
-                success: false,
-                error: "Session invalidated. Please login again.",
-              });
+              res.clearCookie("sb_access_token");
+              if (
+                req.originalUrl.startsWith("/api/") ||
+                req.path.startsWith("/api/")
+              ) {
+                return res.status(401).json({
+                  success: false,
+                  error: "Session invalidated. Please login again.",
+                });
+              }
+              return res.redirect(
+                `/login?message=${encodeURIComponent(
+                  "Session invalidated. Please login again"
+                )}&type=error`
+              );
             }
-            return res.redirect(
-              `/login?message=${encodeURIComponent(
-                "Session invalidated. Please login again"
-              )}&type=error`
-            );
           }
         }
       } catch (jwtErr) {

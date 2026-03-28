@@ -47,6 +47,14 @@ router.get(
           ? String(req.query.includeResolved).toLowerCase() === "true"
           : true;
 
+      console.log(`[BRAIN-API] Fetching complaints. Filters:`, {
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
+        category: req.query.category,
+        department: req.query.department,
+        includeResolved
+      });
+
       const filters = {
         status: req.query.status,
         confirmationStatus: req.query.confirmationStatus,
@@ -66,6 +74,12 @@ router.get(
           : [];
       const complaints = rows.map(mapBodyRowToBraincomplaint);
 
+      console.log(`[BRAIN API] Retrieved ${complaints.length} complaints with filters:`, {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        category: filters.category,
+        office: filters.department
+      });
 
       res.json({
         success: true,

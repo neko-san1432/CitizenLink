@@ -438,6 +438,9 @@
                     dropdown.classList.toggle('hidden');
                 });
 
+                // v4.5.6: Prevent dropdown from closing when clicking inside (e.g., selecting items)
+                dropdown.addEventListener('click', (e) => e.stopPropagation());
+
                 document.addEventListener('click', () => dropdown.classList.add('hidden'));
 
                 const updateSelect = () => {
@@ -456,11 +459,11 @@
                 };
 
                 const renderOptions = () => {
-                    optionsList.innerHTML = Array.from(select.options).filter(o => o.value !== 'all').map(opt => `
-                        <label class="flex items-center gap-2 text-[10px] cursor-pointer hover:bg-white/5 p-1 rounded transition-all">
-                            <input type="checkbox" value="${opt.value}" checked> ${opt.textContent}
+                    optionsList.innerHTML = select.options.length > 0 ? Array.from(select.options).map(opt => `
+                        <label class="flex items-center gap-2 text-[10px] cursor-pointer hover:bg-white/5 p-1 rounded transition-all" onclick="event.stopPropagation()">
+                            <input type="checkbox" value="${opt.value}" ${opt.selected ? 'checked' : ''} onclick="event.stopPropagation()"> ${opt.textContent}
                         </label>
-                    `).join('');
+                    `).join('') : '<div class="text-[10px] text-white/40 p-2">No categories available</div>';
 
                     optionsList.querySelectorAll('input').forEach(i => {
                         i.addEventListener('change', () => {
@@ -483,6 +486,18 @@
             };
 
             setupHudMultiselect('filter-category', 'ui-filter-category', 'Select Categories');
+
+            // Enable Apply button when dates change
+            const dateInputs = ['filter-start-date', 'filter-end-date'];
+            dateInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', () => {
+                        const applyBtn = document.getElementById('apply-filters-btn');
+                        if (applyBtn) applyBtn.disabled = false;
+                    });
+                }
+            });
 
             // Apply Filters Button
             const applyFiltersBtn = document.getElementById('apply-filters-btn');

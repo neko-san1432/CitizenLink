@@ -19,7 +19,7 @@ function loadDigosBoundary() {
   }
 
   try {
-    const boundaryPath = path.join(__dirname, "../public/assets/json/digosCityBoundary.json");
+    const boundaryPath = path.join(__dirname, "../../public/assets/json/digosCityBoundary.json");
     const boundaryData = fs.readFileSync(boundaryPath, "utf8");
     const boundary = JSON.parse(boundaryData);
     boundaryCache = boundary;

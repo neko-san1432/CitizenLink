@@ -89,7 +89,7 @@ class ComplaintAssignmentRepository {
   async findBycomplaintIds(complaintIds) {
     const { data, error } = await this.supabase
       .from(this.table)
-      .select("assigned_to, status, assigned_at, assigned_by, department_id")
+      .select("complaint_id, assigned_to, status, assigned_at, assigned_by, department_id")
       .in("complaint_id", complaintIds);
     if (error) throw error;
     return data || [];
