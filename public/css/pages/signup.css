@@ -29,6 +29,7 @@
   background-position: center;
   background-repeat: no-repeat;
   z-index: -2;
+  pointer-events: none;
 }
 
 .grid-overlay {
@@ -42,6 +43,7 @@
   background-size: 40px 40px;
   z-index: -1;
   mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+  pointer-events: none;
 }
 
 /* Navigation */

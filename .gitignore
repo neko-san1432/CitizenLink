@@ -13,3 +13,8 @@ storage/ai_cache/
 # Application logs
 log.txt
 secrets-found.txt
+
+# Dev HTTPS certs (never commit private keys)
+certs/*.pem
+certs/*.key
+certs/*.crt

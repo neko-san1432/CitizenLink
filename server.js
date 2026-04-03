@@ -35,7 +35,7 @@ const DRIMSApp = require("./src/server/app");
 
 const app = new DRIMSApp();
 console.log("🔄 Starting server on port", config.port);
-app.start(config.port).then(() => {
+app.start(config.port, config.host).then(() => {
   // Start the automated reporting scheduler
   const schedulerService = require("./src/server/services/SchedulerService");
   schedulerService.start();

@@ -489,7 +489,9 @@ body {
   background: var(--card-bg);
   border-radius: 12px;
   box-shadow: var(--shadow);
-  overflow: auto
+  overflow: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {

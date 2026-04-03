@@ -30,6 +30,19 @@ export const retrieveUserRole = async () => {};
 let loginCaptchaWidgetId = null;
 let registerCaptchaWidgetId = null;
 let siteKey = "";
+
+function isLocalOrLanHost(hostname = "") {
+  const host = String(hostname || "").trim();
+  if (!host) return false;
+  if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0") return true;
+  if (host.endsWith(".local")) return true;
+  // Private IPv4 ranges (LAN testing)
+  if (/^10\./.test(host)) return true;
+  if (/^192\.168\./.test(host)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(host)) return true;
+  return false;
+}
+
 // Fetch CAPTCHA key securely from server
 async function getCaptchaKey() {
   try {
@@ -43,10 +56,7 @@ async function getCaptchaKey() {
 }
 async function renderCaptchaWidgetsIfAny() {
   // Skip reCAPTCHA in development mode
-  if (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-  ) {
+  if (isLocalOrLanHost(window.location.hostname)) {
     // console.log removed for security
     return;
   }
@@ -59,12 +69,15 @@ async function renderCaptchaWidgetsIfAny() {
   window.grecaptcha.ready(() => {
     const loginEl = document.getElementById("login-captcha");
     if (loginEl && loginCaptchaWidgetId === null) {
+      // Ensure user can see/complete captcha when required
+      loginEl.style.display = "block";
       loginCaptchaWidgetId = window.grecaptcha.render(loginEl, {
         sitekey: siteKey,
       });
     }
     const regEl = document.getElementById("register-captcha");
     if (regEl && registerCaptchaWidgetId === null) {
+      regEl.style.display = "block";
       registerCaptchaWidgetId = window.grecaptcha.render(regEl, {
         sitekey: siteKey,
       });
@@ -76,10 +89,7 @@ renderCaptchaWidgetsIfAny();
 setTimeout(renderCaptchaWidgetsIfAny, 500);
 async function verifyCaptchaOrFail(widgetId) {
   // Skip reCAPTCHA verification in development mode
-  if (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-  ) {
+  if (isLocalOrLanHost(window.location.hostname)) {
     // console.log removed for security
     return { ok: true };
   }

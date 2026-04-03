@@ -17,10 +17,18 @@
     />
     <style>
       #digos-map {
-        height: 650px;
+        height: 55vh;
+        max-height: 650px;
+        min-height: 320px;
         width: 100%;
         border-radius: 12px;
         z-index: 1;
+      }
+
+      @supports (height: 100dvh) {
+        #digos-map {
+          height: 55dvh;
+        }
       }
       /* Fix for leaflet z-index in premium cards */
       .leaflet-pane {
@@ -34,11 +42,13 @@
   </head>
   <body>
     <div class="app-container">
-      <div class="header-container"></div>
       <div id="sidebar" class="collapsible"></div>
 
-      <div id="app" class="collapsible main-content-wrapper">
-        <div class="complaint-wizard-container">
+      <div id="app" class="collapsible" style="display: flex; flex-direction: column;">
+        <div class="header-container"></div>
+
+        <div class="dashboard-main-wrapper main-content-wrapper" style="display: flex; flex-direction: column; flex: 1;">
+          <div class="complaint-wizard-container">
           <!-- Page Header -->
           <div class="page-header">
             <h1 class="page-title">Digos City Barangay Map</h1>
@@ -81,6 +91,7 @@
                 the Barangay name.</span
               >
             </div>
+          </div>
           </div>
         </div>
       </div>

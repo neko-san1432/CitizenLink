@@ -47,21 +47,54 @@
 
           <div class="step-indicator active">
             <div class="step-number">1</div>
-            <div class="step-label">Details</div>
+            <div class="step-label">Basic Info</div>
           </div>
           <div class="step-indicator">
             <div class="step-number">2</div>
-            <div class="step-label">Location</div>
+            <div class="step-label">Details</div>
           </div>
           <div class="step-indicator">
             <div class="step-number">3</div>
-            <div class="step-label">Basic Info</div>
+            <div class="step-label">Location</div>
           </div>
         </div>
 
         <form id="complaintForm" class="complaint-form wizard-mode">
-          <!-- STEP 1: Details (Formerly Step 3) -->
-          <div id="step-details" class="form-step active">
+          <!-- STEP 1: Basic Information -->
+          <div id="step-basic" class="form-step active">
+            <div class="form-section card-glass">
+              <div class="section-header">
+                <div class="section-icon">📝</div>
+                <h3>Basic Information</h3>
+              </div>
+
+              <div class="form-grid">
+                <input type="hidden" id="complaintTitle" name="complaintTitle" />
+
+                <div class="form-group required-field">
+                  <label for="complaintCategory">Category <span class="required">*</span></label>
+                  <div class="select-wrapper">
+                    <select id="complaintCategory" name="complaintCategory" class="premium-select" required>
+                      <option value="">Select Category</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group required-field">
+                  <label for="complaintSubcategory">Subcategory <span class="required">*</span></label>
+                  <div class="select-wrapper">
+                    <select id="complaintSubcategory" name="complaintSubcategory" class="premium-select" required>
+                      <option value="">Select Subcategory</option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Details -->
+          <div id="step-details" class="form-step">
             <div class="form-section card-glass">
               <div class="section-header">
                 <div class="section-icon">📎</div>
@@ -69,22 +102,12 @@
               </div>
 
               <div class="form-group required-field">
-                <div style="
-                          display: flex;
-                          justify-content: space-between;
-                          align-items: center;
-                          margin-bottom: 0.5rem;
-                        ">
-                  <label for="description" style="margin-bottom: 0">Description <span class="required">*</span></label>
-                  <span class="input-hint" style="
-                            font-size: 0.75rem;
-                            color: #6b7280;
-                            font-style: italic;
-                            margin-left: 8px;
-                          ">(For Taglish/Bisayish, select the main language
+                <div class="description-header-row">
+                  <label for="description">Description <span class="required">*</span></label>
+                  <span class="input-hint description-hint">(For Taglish/Bisayish, select the main language
                     used)</span>
 
-                  <div class="voice-controls" style="display: flex; gap: 0.5rem; align-items: center">
+                  <div class="voice-controls">
                     <select id="voiceLanguage" class="premium-select-small" style="
                               padding: 4px 8px;
                               border-radius: 6px;
@@ -152,7 +175,7 @@
             </div>
           </div>
 
-          <!-- STEP 2: Location -->
+          <!-- STEP 3: Location -->
           <div id="step-location" class="form-step">
             <div class="form-section card-glass sticky-section">
               <div class="section-header">
@@ -167,6 +190,10 @@
                   <input type="hidden" id="longitude" name="longitude" />
                 </div>
 
+                <button type="button" id="btn-auto-locate" class="btn btn-secondary w-full auto-locate-btn">
+                  📍 Auto locate
+                </button>
+
                 <div class="form-group location-input-group required-field">
                   <label for="location">Pinned Address <span class="required">*</span></label>
                   <div class="input-with-icon">
@@ -177,39 +204,6 @@
                   <small class="form-hint">Move the map pin to update address.</small>
                 </div>
                 <!-- Duplicate Warning Container gets appended here by JS -->
-              </div>
-            </div>
-          </div>
-
-          <!-- STEP 3: Basic Information (Formerly Step 1) -->
-          <div id="step-basic" class="form-step">
-            <div class="form-section card-glass">
-              <div class="section-header">
-                <div class="section-icon">📝</div>
-                <h3>Basic Information</h3>
-              </div>
-
-              <div class="form-grid">
-                <input type="hidden" id="complaintTitle" name="complaintTitle" />
-
-                <div class="form-group required-field">
-                  <label for="complaintCategory">Category <span class="required">*</span></label>
-                  <div class="select-wrapper">
-                    <select id="complaintCategory" name="complaintCategory" class="premium-select" required>
-                      <option value="">Select Category</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-group required-field">
-                  <label for="complaintSubcategory">Subcategory <span class="required">*</span></label>
-                  <div class="select-wrapper">
-                    <select id="complaintSubcategory" name="complaintSubcategory" class="premium-select" required>
-                      <option value="">Select Subcategory</option>
-                    </select>
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>

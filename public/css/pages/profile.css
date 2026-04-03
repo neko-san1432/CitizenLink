@@ -1,15 +1,42 @@
 /* profile Revamp V2 - Viewport Fitted */
+/*
+  Profile page scroll strategy:
+  Use the normal document (html/body) scroll instead of the app shell (#app)
+  to avoid a nested "internal container" scrollbar and the right-side gutter/indicator.
+*/
+html,
+body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+.app-container {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+#app {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* If header.js injects a dashboard wrapper, ensure it doesn't become the scroll owner */
+#app .dashboard-main-wrapper {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
 .profile-page-container {
-  height: calc(100vh - 64px);
-  /* Adjust for header height */
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 1.5rem;
   padding: 1.5rem;
   padding-top: 5rem;
   /* Fix Header Overlap */
-  overflow: hidden;
-  /* Prevent global scroll */
+  overflow-x: hidden;
 }
 
 /* Custom Scrollbar Styling */
@@ -40,9 +67,6 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 2rem;
-  overflow-y: auto;
-  /* Allow scroll if content is too tall */
-  height: 100%;
 }
 
 .profile-avatar-section {
@@ -120,11 +144,9 @@
 .profile-main-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
   padding: 0;
   /* Content padding handled inside */
-  overflow: hidden;
-  /* Ensure this container itself doesn't scroll */
+  overflow: visible;
 }
 
 .profile-main-header {
@@ -139,9 +161,6 @@
 }
 
 .activity-list-container {
-  flex: 1;
-  overflow-y: auto;
-  /* Only this area scrolls */
   padding: 1.5rem;
 }
 
@@ -185,18 +204,23 @@
 @media (max-width: 1024px) {
   .profile-page-container {
     grid-template-columns: 1fr;
-    height: auto;
-    overflow-y: auto;
-    /* Restore global scroll on mobile */
+    padding: 1rem;
+    padding-top: 1rem;
   }
 
   .profile-sidebar {
     height: auto;
+    overflow: visible;
   }
 
   .profile-main-content {
-    height: 600px;
-    /* Fixed height for list on mobile */
+    height: auto;
+    overflow: visible;
+  }
+
+  .activity-list-container {
+    overflow: visible;
+    padding: 1rem;
   }
 }
 
@@ -218,6 +242,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+@media (max-width: 640px) {
+  .profile-header-section {
+    padding: 1rem;
+  }
+
+  .profile-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .profile-identity-group {
+    width: 100%;
+    gap: 1rem;
+  }
+
+  .profile-header-actions {
+    width: 100%;
+  }
+
+  .profile-header-actions .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .profile-identity-group {
@@ -317,13 +367,11 @@
   border-color: #6366f1;
 }
 
-/* Fix Layout Overlap */
-.profile-page-container {
-  /* Ensure it doesn't go under header if header is fixed */
-  margin-top: 0;
-  padding-top: 2rem;
-  height: calc(100vh - 80px);
-  /* Adjust for header if needed */
+/* Desktop: keep grid layout without forcing a fixed viewport-height container */
+@media (min-width: 1025px) {
+  .profile-page-container {
+    margin-top: 0;
+  }
 }
 
 /* Adjust Sidebar Glass in Dark Mode */

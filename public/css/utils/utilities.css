@@ -65,6 +65,13 @@
 .gap-10 { gap: var(--space-10); }
 .gap-12 { gap: var(--space-12); }
 
+/* Space Between (Tailwind-like) */
+.space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-1); }
+.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-2); }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-3); }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-4); }
+.space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-6); }
+
 /* Padding */
 .p-0 { padding: 0; }
 .p-1 { padding: var(--space-1); }
@@ -128,6 +135,10 @@
 .h-full { height: 100%; }
 .h-auto { height: auto; }
 .h-screen { height: 100vh; }
+
+@supports (height: 100dvh) {
+  .h-screen { height: 100dvh; }
+}
 
 .min-w-0 { min-width: 0; }
 .max-w-full { max-width: 100%; }
@@ -246,7 +257,7 @@
 .overflow-auto { overflow: auto; }
 .overflow-hidden { overflow: hidden; }
 .overflow-visible { overflow: visible; }
-.overflow-x-auto { overflow-x: auto; }
+.overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .overflow-y-auto { overflow-y: auto; }
 
 /* Transitions */

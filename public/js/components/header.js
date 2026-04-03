@@ -465,6 +465,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const isMapView = window.location.pathname.includes("heatmap") || window.location.pathname.includes("map");
 
       if (appContainer && headerContainer && appContainer.parentNode && !isMapView) {
+        const ensureDashboardWrapper = () => {
+          const hasWrapper = Array.from(appContainer.children).some(
+            (el) => el.classList && el.classList.contains("dashboard-main-wrapper")
+          );
+          if (hasWrapper) return;
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "dashboard-main-wrapper";
+          wrapper.style.display = "flex";
+          wrapper.style.flexDirection = "column";
+          wrapper.style.flex = "1";
+          wrapper.style.overflowY = "auto";
+          // For legacy non-dashboard pages, we supply generic padding to mimic dashboard-common.css margins
+          wrapper.style.padding = "var(--space-6)";
+
+          Array.from(appContainer.childNodes).forEach((node) => {
+            if (node !== headerContainer) {
+              wrapper.appendChild(node);
+            }
+          });
+          appContainer.appendChild(wrapper);
+        };
+
         // Check if header is outside app (legacy layout)
         if (headerContainer.parentNode !== appContainer) {
           // 1. Give app flex props
@@ -479,23 +502,15 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           // 3. Wrap remaining app children in the scrollable wrapper
-          const wrapper = document.createElement("div");
-          wrapper.className = "dashboard-main-wrapper";
-          wrapper.style.display = "flex";
-          wrapper.style.flexDirection = "column";
-          wrapper.style.flex = "1";
-          wrapper.style.overflowY = "auto";
-          // For legacy non-dashboard pages, we supply generic padding to mimic dashboard-common.css margins
-          wrapper.style.padding = "var(--space-6)";
-
-          // Move everything EXCEPT the newly inserted header into the wrapper
-          Array.from(appContainer.childNodes).forEach(node => {
-            if (node !== headerContainer) {
-              wrapper.appendChild(node);
-            }
-          });
-          appContainer.appendChild(wrapper);
+          ensureDashboardWrapper();
           console.log("Dynamically applied flex layout wrapper.");
+        } else {
+          // Header already inside #app; ensure the scroll wrapper exists for consistent scrolling.
+          if (!appContainer.style.display) {
+            appContainer.style.display = "flex";
+            appContainer.style.flexDirection = "column";
+          }
+          ensureDashboardWrapper();
         }
       }
       initializeThemeToggle();
