@@ -22,6 +22,16 @@
   overflow: hidden;
 }
 
+/* Mobile: dropdowns should not force 320px+ widths */
+@media (max-width: 480px) {
+  .header-dropdown,
+  .profile-panel {
+    min-width: 0;
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+}
+
 .header-dropdown.show {
   opacity: 1;
   visibility: visible;

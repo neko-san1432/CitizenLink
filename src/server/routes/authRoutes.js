@@ -99,7 +99,14 @@ router.post(
           error: "Email is required",
         });
       }
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const useHttps = process.env.USE_HTTPS === "true" || process.env.USE_HTTPS === "1";
+      const explicitFrontendUrl = process.env.FRONTEND_URL;
+      const requestBaseUrl = `${useHttps ? "https" : req.protocol}://${req.get("host")}`;
+      let frontendUrl = explicitFrontendUrl || requestBaseUrl;
+      if (useHttps && frontendUrl.startsWith("http://")) {
+        frontendUrl = `https://${frontendUrl.slice("http://".length)}`;
+      }
+      frontendUrl = frontendUrl.replace(/\/$/, "");
       const redirectTo = `${frontendUrl}/reset-password`;
       // resetPasswordForEmail requires the anon key, not the service role key
       // Create a client with the anon key for this operation

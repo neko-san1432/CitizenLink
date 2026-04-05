@@ -30,22 +30,48 @@ const setupMiddleware = (app) => {
 
   // Body parsing middleware (before rate limiting to allow proper request inspection)
   // SEC-10 FIX: Restrict CORS to known origins
+  // IMPORTANT: Scope CORS to /api only so static assets (/js, /css) are never blocked.
+  const isProduction = process.env.NODE_ENV === "production";
   const allowedOrigins = [
     `http://localhost:${config.port}`,
     `http://127.0.0.1:${config.port}`,
-    process.env.PRODUCTION_URL
+    process.env.PRODUCTION_URL,
   ].filter(Boolean);
-  app.use(cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (server-to-server, Postman, same-origin)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true
-  }));
+
+  const isDevLanOrigin = (origin) => {
+    try {
+      const url = new URL(String(origin));
+      const host = url.hostname;
+      // local hostnames
+      if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0") return true;
+      if (host.endsWith(".local")) return true;
+      // private IPv4 ranges (LAN testing)
+      if (/^10\./.test(host)) return true;
+      if (/^192\.168\./.test(host)) return true;
+      if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(host)) return true;
+      return false;
+    } catch (_e) {
+      return false;
+    }
+  };
+
+  app.use(
+    "/api",
+    cors({
+      origin: (origin, callback) => {
+        // Allow requests with no origin (server-to-server, curl, same-origin navigation)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+
+        // Development convenience: allow private LAN origins so phone testing works.
+        if (!isProduction && isDevLanOrigin(origin)) return callback(null, true);
+
+        return callback(new Error("Not allowed by CORS"));
+      },
+      credentials: true,
+    })
+  );
   // SEC-23 FIX: Reduce default body limit to 1MB (upload routes override per-route)
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ extended: true, limit: "1mb" }));

@@ -564,7 +564,22 @@ class ComplaintRepository {
         query = query.lte("submitted_at", endDate);
       }
 
-      const { data, error } = await query;
+      let data;
+      let error;
+      ({ data, error } = await query);
+
+      // Back-compat: some DBs may not have complaints.category
+      if (
+        error &&
+        typeof error.message === "string" &&
+        error.message.toLowerCase().includes("column complaints.category does not exist")
+      ) {
+        ({ data, error } = await client
+          .from("complaints")
+          .select("workflow_status, priority")
+        );
+      }
+
       if (error) throw error;
 
       const stats = {
@@ -711,7 +726,54 @@ class ComplaintRepository {
       }
 
       // v4.5.3: Explicitly increase limit to 25000 for heatmap clustering
-      const { data, error } = await query.limit(25000);
+      let data;
+      let error;
+      ({ data, error } = await query.limit(25000));
+
+      // Back-compat: some DBs may not have complaints.category/subcategory
+      if (
+        error &&
+        typeof error.message === "string" &&
+        (error.message.toLowerCase().includes("column complaints.category does not exist") ||
+          error.message.toLowerCase().includes("column complaints.subcategory does not exist"))
+      ) {
+        // Retry without category/subcategory filters and fields
+        query = client
+          .from("complaints")
+          .select("id, latitude, longitude, priority, workflow_status, confirmation_status, departments, submitted_at")
+          .not("latitude", "is", null)
+          .not("longitude", "is", null);
+
+        if (!includeResolved) {
+          query = query.not("workflow_status", "in", '("completed","cancelled")');
+        }
+
+        if (status && status.length > 0) {
+          query = query.in("workflow_status", status);
+        }
+
+        if (confirmationStatus && confirmationStatus.length > 0) {
+          query = query.in("confirmation_status", confirmationStatus);
+        }
+
+        // Note: category/subcategory filters are skipped because columns are missing.
+
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          query = query.gte("submitted_at", start.toISOString());
+        }
+
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          query = query.lte("submitted_at", end.toISOString());
+        }
+
+        ({ data, error } = await query.limit(25000));
+      }
+
+
       if (error) throw error;
 
       // Filter by department in-memory (departments is an array column)
@@ -725,6 +787,7 @@ class ComplaintRepository {
       }
 
       // Resolve UUID-based category/subcategory values to names
+      // If category/subcategory columns are absent, this method should be a no-op.
       const resolvedResults = await this._resolveCategoryNames(results);
 
       // Remap to lat/lng fields for consistency with existing frontend contract
@@ -755,10 +818,30 @@ class ComplaintRepository {
     try {
       const client = Database.getServiceClient();
 
-      const { data: complaints, error } = await client
+      let complaints;
+      let error;
+      ({ data: complaints, error } = await client
         .from("complaints")
         .select("id, workflow_status, confirmation_status, submitted_at, priority, category_id, description")
-        .eq("submitted_by", userId);
+        .eq("submitted_by", userId));
+
+      // Back-compat: some DBs may not have complaints.category
+      if (
+        error &&
+        typeof error.message === "string" &&
+        error.message.toLowerCase().includes("column complaints.category does not exist")
+      ) {
+        ({ data: complaints, error } = await client
+          .from("complaints")
+          .select("id, workflow_status, confirmation_status, submitted_at, priority, description")
+          .eq("submitted_by", userId));
+
+        // Ensure downstream logic can treat category as missing
+        if (Array.isArray(complaints)) {
+          complaints = complaints.map(c => ({ ...c, category: null }));
+        }
+      }
+
 
       if (error) throw error;
 

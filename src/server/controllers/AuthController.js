@@ -510,7 +510,14 @@ class AuthController {
       }
 
       // Send password reset email - user will enter new password on confirmation page
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+      const useHttps = process.env.USE_HTTPS === "true" || process.env.USE_HTTPS === "1";
+      const explicitFrontendUrl = process.env.FRONTEND_URL;
+      const requestBaseUrl = `${useHttps ? "https" : req.protocol}://${req.get("host")}`;
+      let frontendUrl = explicitFrontendUrl || requestBaseUrl;
+      if (useHttps && frontendUrl.startsWith("http://")) {
+        frontendUrl = `https://${frontendUrl.slice("http://".length)}`;
+      }
+      frontendUrl = frontendUrl.replace(/\/$/, "");
       const redirectUrl = logoutAllDevices
         ? `${frontendUrl}/confirm-password-change?logout_all_devices=true`
         : `${frontendUrl}/confirm-password-change`;
@@ -550,8 +557,7 @@ class AuthController {
     try {
       // Redirect to client-side confirmation page
       // The client will extract the token from URL hash and handle password entry
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
-      res.redirect(`${frontendUrl}/confirm-password-change${req.url}`);
+      res.redirect(`/confirm-password-change${req.url}`);
     } catch (error) {
       console.error("Confirm password change error:", error);
       res.status(500).json({

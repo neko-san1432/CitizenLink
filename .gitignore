@@ -18,3 +18,7 @@ standalone-map-viewer/
 
 # Ignore Windows NUL device file
 nul
+# Dev HTTPS certs (never commit private keys)
+certs/*.pem
+certs/*.key
+certs/*.crt

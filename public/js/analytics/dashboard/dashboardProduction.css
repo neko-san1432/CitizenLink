@@ -3047,6 +3047,19 @@ body {
     overflow: hidden;
 }
 
+@media (max-width: 768px) {
+    .leaflet-popup-content {
+        width: calc(100vw - 32px) !important;
+        min-width: 0 !important;
+    }
+
+    .complaint-popup-v2 {
+        width: calc(100vw - 32px);
+        min-width: 0;
+        max-width: calc(100vw - 32px);
+    }
+}
+
 /* Header v2 - Full Width */
 .popup-header-v2 {
     display: flex;

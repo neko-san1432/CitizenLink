@@ -7,11 +7,16 @@ class ToastManager {
     this.init();
   }
   init() {
-    // Create toast container if it doesn't exist
-    this.container = document.getElementById("toast");
+    // Reuse existing toast containers created in templates, else create one.
+    // Preferred template id: "toast-container" (many pages include it).
+    // Back-compat id: "toast" (older implementation).
+    this.container =
+      document.getElementById("toast-container") ||
+      document.getElementById("toast");
+
     if (!this.container) {
       this.container = document.createElement("div");
-      this.container.id = "toast";
+      this.container.id = "toast-container";
       this.container.className = "toast-container";
       document.body.appendChild(this.container);
     }
@@ -36,25 +41,57 @@ class ToastManager {
     toast.className = `toast toast-${type}`;
     const icon = this.getIcon(type);
     const title = this.getTitle(type);
-    toast.innerHTML = `
-      <div class="toast-content">
-        <div class="toast-icon">${icon}</div>
-        <div class="toast-body">
-          <div class="toast-title">${title}</div>
-          <div class="toast-message">${message}</div>
-        </div>
-        <button class="toast-close">
+
+    const content = document.createElement("div");
+    content.className = "toast-content";
+
+    const iconEl = document.createElement("div");
+    iconEl.className = "toast-icon";
+    // Icon is controlled markup (not user-provided)
+    iconEl.innerHTML = icon;
+
+    const bodyEl = document.createElement("div");
+    bodyEl.className = "toast-body";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "toast-title";
+    titleEl.textContent = title;
+
+    const messageEl = document.createElement("div");
+    messageEl.className = "toast-message";
+    // Message can be derived from server/user content; never inject as HTML.
+    messageEl.textContent = message ?? "";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "toast-close";
+    closeBtn.setAttribute("aria-label", "Dismiss notification");
+    closeBtn.innerHTML = `
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-        </button>
-      </div>
-      <div class="toast-progress"></div>
-    `;
-    // Add click to dismiss either anywhere or specifically on the close button
-    toast.addEventListener("click", (e) => {
-      // Removing regardless of where you click, or specifically on close
+        `;
+
+    bodyEl.appendChild(titleEl);
+    bodyEl.appendChild(messageEl);
+
+    content.appendChild(iconEl);
+    content.appendChild(bodyEl);
+    content.appendChild(closeBtn);
+
+    const progress = document.createElement("div");
+    progress.className = "toast-progress";
+
+    toast.appendChild(content);
+    toast.appendChild(progress);
+
+    // Keep existing UX: clicking the toast dismisses it.
+    toast.addEventListener("click", () => {
+      this.remove(toast);
+    });
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       this.remove(toast);
     });
     return toast;

@@ -134,33 +134,41 @@ export function initProgressiveForm() {
       }
     });
 
-    // Custom validations
-    if (stepIndex === 2) { // Basic Info
+    // Custom validations (based on step id, not brittle indexes)
+    if (step.id === "step-basic") {
       const cat = document.getElementById("complaintCategory");
       const subcat = document.getElementById("complaintSubcategory");
 
-      if (!cat.value || !subcat.value) {
+      if (cat && (!cat.value || !cat.value.trim())) {
         isValid = false;
-        // Highlight or show toast
-        // For simplicity, rely on html5 reportValidity above if they are required
-        // But Selects sometimes don't trigger reportValidity nicely if custom styled
+        if (!firstError) firstError = cat;
+      }
+
+      if (subcat && (!subcat.value || !subcat.value.trim())) {
+        isValid = false;
+        if (!firstError) firstError = subcat;
+      }
+
+      if (!isValid) {
+        showMessage("warning", "Please select a category and subcategory.");
       }
     }
 
-    if (stepIndex === 1) { // Location
-      const location = document.getElementById("location");
-      if (!location.value) {
-        isValid = false;
-        // Toast
-        showMessage("warning", "Please pin a location on the map.");
-      }
-    }
-
-    if (stepIndex === 0) { // Details (Now Step 1)
+    if (step.id === "step-details") {
       const desc = document.getElementById("description");
-      if (!desc.value.trim()) {
+      if (desc && !desc.value.trim()) {
         isValid = false;
+        if (!firstError) firstError = desc;
         desc.reportValidity();
+      }
+    }
+
+    if (step.id === "step-location") {
+      const location = document.getElementById("location");
+      if (location && !location.value) {
+        isValid = false;
+        showMessage("warning", "Please pin a location on the map.");
+        if (!firstError) firstError = location;
       }
     }
 

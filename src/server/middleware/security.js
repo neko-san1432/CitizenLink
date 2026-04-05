@@ -2,6 +2,7 @@ const helmet = require("helmet");
 
 // Content Security Policy configuration
 const cspConfig = {
+  useDefaults: false,
   directives: {
     defaultSrc: ["'self'"],
     styleSrc: [
@@ -74,9 +75,6 @@ const cspConfig = {
 // Add upgrade-insecure-requests only in production
 if (process.env.NODE_ENV === "production") {
   cspConfig.directives.upgradeInsecureRequests = [];
-} else {
-  // Explicitly remove upgrade-insecure-requests in development
-  delete cspConfig.directives.upgradeInsecureRequests;
 }
 // Enhanced security headers using helmet
 const securityHeaders = helmet({

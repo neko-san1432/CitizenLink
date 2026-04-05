@@ -10,6 +10,20 @@
   overflow: hidden;
 }
 
+@supports (height: 100dvh) {
+  .dashboard-grid-logs {
+    height: calc(100dvh - 180px);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid-logs {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+}
+
 .log-sidebar {
   min-height: 0; /* Enable scroll inside child */
   display: flex;
@@ -29,6 +43,12 @@
   grid-template-columns: repeat(3, 1fr); /* Force 3 columns */
   gap: 1.5rem;
   flex-shrink: 0; /* Keep KPIs visible */
+}
+
+@media (max-width: 768px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-card {
@@ -102,6 +122,13 @@
   gap: 1.5rem;
   min-height: 0; /* Important for scroll behavior */
   height: 100%;
+}
+
+@media (max-width: 768px) {
+  .logs-split-view {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
 }
 
 /* Common Section Styles */

@@ -555,7 +555,7 @@ class ComplaintController {
    */
   async checkDuplicates(req, res) {
     // Feature Flag Check
-    const config = require("../config/app");
+    const config = require("../../../config/app");
     if (!config.features || !config.features.duplicateDetection) {
       return res.json({ success: true, data: [] });
     }
