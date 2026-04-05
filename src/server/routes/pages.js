@@ -34,7 +34,7 @@ const getDashboardPath = (userRole) => {
       config.rootDir,
       "views",
       "pages",
-      "super-admin",
+      "superAdmin",
       "dashboard.html"
     ),
   };
@@ -269,7 +269,7 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "lgu-admin",
+        "lguAdmin",
         "assignments.html"
       )
     );
@@ -323,7 +323,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lgu-admin", "publish.html")
+      path.join(config.rootDir, "views", "pages", "lguAdmin", "publish.html")
     );
   }
 );
@@ -333,7 +333,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lgu-admin", "reports.html")
+      path.join(config.rootDir, "views", "pages", "lguAdmin", "reports.html")
     );
   }
 );
@@ -386,8 +386,8 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "super-admin",
-        "server-logs.html"
+        "superAdmin",
+        "serverLogs.html"
       )
     );
   }

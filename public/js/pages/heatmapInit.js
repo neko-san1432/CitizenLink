@@ -360,8 +360,112 @@ async function loadcomplaintData() {
       window.AdvancedFeatures.renderEmergencyPanel(criticalItems);
       window.AdvancedFeatures.renderCriticalMarkers(criticalItems);
     }
+
+    // [CACHE] Start 30-second background refresh
+    startBackgroundRefresh();
   } catch (error) {
     console.error("[HEATMAP] Failed to load data:", error);
+  }
+}
+
+// [CACHE] Background refresh function
+let backgroundRefreshInterval = null;
+const REFRESH_INTERVAL_MS = 30000;
+
+async function refreshComplaintData() {
+  try {
+    console.log("[HEATMAP] Refreshing complaint data from server with current filters...");
+    
+    // Get current filters to send to server
+    const filters = getCurrentFilterParams();
+    console.log("[HEATMAP] Using filters:", filters);
+    
+    // Fetch fresh data from server (which now uses cache)
+    const apiClientModule = await import("../../js/config/apiClient.js");
+    const apiClient = apiClientModule.default;
+    
+    const { data, error } = await apiClient.get("/api/complaints/locations", {
+      params: filters
+    });
+    
+    if (error) {
+      console.warn("[HEATMAP] Refresh failed:", error);
+      return;
+    }
+    
+    const newComplaints = data?.data || data || [];
+    console.log(`[HEATMAP] Refreshed: ${newComplaints.length} complaints`);
+    
+    // Update heatmapViz with new data
+    if (heatmapViz && newComplaints.length > 0) {
+      heatmapViz.allcomplaintData = newComplaints;
+      heatmapViz.complaintData = newComplaints;
+      
+      // Recreate layers with new data
+      heatmapViz.createHeatmapLayer();
+      heatmapViz.createMarkerLayer();
+      
+      // Apply current filters and visibility
+      const currentZoom = map ? map.getZoom() : 11;
+      updateZoomBasedVisibility(currentZoom);
+      updateStatistics();
+    }
+  } catch (error) {
+    console.error("[HEATMAP] Background refresh error:", error);
+  }
+}
+
+// Helper function to get current filter parameters
+function getCurrentFilterParams() {
+  const params = {
+    includeResolved: document.getElementById("include-resolved")?.checked ?? true
+  };
+  
+  // Get status filters
+  const statusValues = getCheckedValues("status-checkbox");
+  if (statusValues.length > 0) {
+    params.status = statusValues.join(",");
+  }
+  
+  // Get category filters
+  const categoryValues = getCheckedValues("category-checkbox");
+  if (categoryValues.length > 0) {
+    params.category = categoryValues.join(",");
+  }
+  
+  // Get department filters
+  const departmentValues = getCheckedValues("department-checkbox");
+  if (departmentValues.length > 0) {
+    params.department = departmentValues.join(",");
+  }
+  
+  // Get date range
+  const startDate = document.getElementById("date-range-start")?.value;
+  const endDate = document.getElementById("date-range-end")?.value;
+  
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  
+  return params;
+}
+
+function startBackgroundRefresh() {
+  if (backgroundRefreshInterval) {
+    clearInterval(backgroundRefreshInterval);
+  }
+  
+  backgroundRefreshInterval = setInterval(() => {
+    refreshComplaintData();
+  }, REFRESH_INTERVAL_MS);
+  
+  console.log(`[HEATMAP] Background refresh started (${REFRESH_INTERVAL_MS}ms interval)`);
+}
+
+function stopBackgroundRefresh() {
+  if (backgroundRefreshInterval) {
+    clearInterval(backgroundRefreshInterval);
+    backgroundRefreshInterval = null;
+    console.log("[HEATMAP] Background refresh stopped");
   }
 }
 

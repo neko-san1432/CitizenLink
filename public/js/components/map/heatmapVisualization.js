@@ -473,9 +473,11 @@ class HeatmapVisualization {
       const apiClientModule = await import("../../config/apiClient.js");
       const apiClient = apiClientModule.default;
       // console.log removed for security
+      console.log("[HEATMAP] API Request:", `/api/complaints/locations?${queryParams}`);
       const result = await apiClient.get(
         `/api/complaints/locations?${queryParams}`
       );
+      console.log("[HEATMAP] API Response:", result);
       // Backend service already returns data with lat/lng fields correctly formatted
       const raw = Array.isArray(result.data) ? result.data : [];
       // console.log removed for security
@@ -1049,8 +1051,8 @@ class HeatmapVisualization {
         const departmentArray = Array.isArray(effectiveFilters.department)
           ? effectiveFilters.department
           : [effectiveFilters.department];
-        // Check departments array (from department_r)
-        const complaintDepts = complaint.departments || [];
+        // Normalize complaint departments so both arrays and comma-separated values work
+        const complaintDepts = this.getcomplaintdepartments(complaint);
 
         // Debug logging
 
@@ -1065,7 +1067,7 @@ class HeatmapVisualization {
           const filterDeptUpper = String(filterDept || "")
             .toUpperCase()
             .trim();
-          return complaintdepartments.some((complaintDept) => {
+          return complaintDepts.some((complaintDept) => {
             const complaintDeptUpper = String(complaintDept || "")
               .toUpperCase()
               .trim();
@@ -1745,8 +1747,7 @@ class HeatmapVisualization {
 
       // Check if complaint is assigned to user's department
       const complaintdepartment = complaint.department?.toUpperCase();
-      const complaintdepartments = complaint.departments || [];
-      const secondarydepartments = complaint.secondarydepartments || [];
+      const complaintdepartments = this.getcomplaintdepartments(complaint);
 
       // Check primary department
       if (complaintdepartment === userdepartment) {
@@ -1756,12 +1757,6 @@ class HeatmapVisualization {
 
       // Check if user's department is in the departments array
       if (complaintdepartments.includes(userdepartment)) {
-        // console.log removed for security
-        return true;
-      }
-
-      // Check if user's department is in secondary departments
-      if (secondarydepartments.includes(userdepartment)) {
         // console.log removed for security
         return true;
       }

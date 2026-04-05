@@ -26,6 +26,9 @@ class ComplaintController {
       token
     );
 
+    // Store for cache update (used by route middleware)
+    res.locals.complaint = complaint;
+
     const response = {
       success: true,
       data: complaint,
@@ -44,6 +47,8 @@ class ComplaintController {
         workflow_status: complaint.workflow_status,
       };
     }
+
+
 
     res.status(201).json(response);
   }
@@ -213,6 +218,8 @@ class ComplaintController {
       user.id
     );
 
+
+
     res.json({
       success: true,
       data: complaint,
@@ -267,6 +274,8 @@ class ComplaintController {
       },
       userId
     );
+
+
 
     return res.json({ success: true, data: updated });
   }
@@ -535,6 +544,9 @@ class ComplaintController {
     const { user } = req;
 
     const result = await this.complaintService.upvotecomplaint(id, user.id);
+    
+
+    
     res.json(result);
   }
 
@@ -646,6 +658,8 @@ class ComplaintController {
       files
     );
 
+
+
     res.json({
       success: true,
       message: "Assignment marked as complete successfully",
@@ -667,6 +681,8 @@ class ComplaintController {
       confirmed,
       feedback
     );
+
+
 
     res.json({
       success: true,

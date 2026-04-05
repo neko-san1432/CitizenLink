@@ -737,6 +737,19 @@ Full report: [docs/performance/heatmap-optimization-report.md](docs/performance/
 
 ---
 
+## 🚀 Scalability & Future-Proofing
+
+### Handling 100,000+ Complaints
+
+As the database grows beyond 25,000+ records, the "Download Everything" strategy for the heatmap will reach its limit. The following architectural shifts are recommended for long-term scalability:
+
+1. **Viewport Filtering (Bounding Box)**: Instead of fetching the entire city's data, the client should send the map's current coordinates (Bounding Box) to the API. Supabase/PostGIS can then return only the records visible on the user's screen.
+2. **Server-Side Clustering**: For zoomed-out views, the server should pre-calculate clusters and send a single "summary" point instead of thousands of individual records. This prevents browser memory exhaustion.
+3. **Spatial Indexing (PostGIS)**: Utilize PostgreSQL's `SP-GiST` or `GiST` indexes on the coordinate columns to keep spatial queries (like "find all points in this box") performing in milliseconds, even with millions of rows.
+4. **Current "Safety Valve"**: The system currently implements a **25,000-row limit** in `ComplaintRepository.js` and a matching `max_rows` setting in Supabase to ensure stable performance for the current dataset (~20k rows).
+
+---
+
 ## 👨‍💻 Development Team
 
 > **Note**: For a chronological history of changes, see [docs/implementationLog.md](docs/implementationLog.md).

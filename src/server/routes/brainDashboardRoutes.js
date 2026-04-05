@@ -7,6 +7,10 @@ const path = require("path");
 
 const router = express.Router();
 
+// Simple 30-second TTL cache to avoid redundant DB hits from concurrent polling
+let _ttlCache = { data: null, filters: null, expiresAt: 0 };
+const TTL_MS = 30 * 1000;
+
 function mapBodyRowToBraincomplaint(row) {
   const description =
     row.description ||
@@ -41,19 +45,10 @@ router.get(
   ]),
   async (req, res) => {
     try {
-      const complaintService = new ComplaintService();
       const includeResolved =
         req.query.includeResolved !== undefined
           ? String(req.query.includeResolved).toLowerCase() === "true"
           : true;
-
-      console.log(`[BRAIN-API] Fetching complaints. Filters:`, {
-        startDate: req.query.startDate,
-        endDate: req.query.endDate,
-        category: req.query.category,
-        department: req.query.department,
-        includeResolved
-      });
 
       const filters = {
         status: req.query.status,
@@ -66,25 +61,42 @@ router.get(
         includeResolved,
       };
 
-      const result = await complaintService.getcomplaintLocations(filters);
-      const rows = Array.isArray(result)
-        ? result
-        : Array.isArray(result?.data)
-          ? result.data
-          : [];
-      const complaints = rows.map(mapBodyRowToBraincomplaint);
-
-      console.log(`[BRAIN API] Retrieved ${complaints.length} complaints with filters:`, {
+      console.log(`[BRAIN-API] Fetching complaints. Filters:`, {
         startDate: filters.startDate,
         endDate: filters.endDate,
         category: filters.category,
-        office: filters.department
+        department: filters.department,
+        includeResolved
       });
+
+      // Check TTL cache — reuse if same filters and not expired
+      const filterKey = JSON.stringify(filters);
+      let complaints;
+
+      if (_ttlCache.data && _ttlCache.filters === filterKey && Date.now() < _ttlCache.expiresAt) {
+        complaints = _ttlCache.data;
+        console.log(`[BRAIN-API] TTL cache hit: ${complaints.length} complaints`);
+      } else {
+        // Direct query via ComplaintService
+        const complaintService = new ComplaintService();
+        const result = await complaintService.getcomplaintLocations(filters);
+        complaints = Array.isArray(result)
+          ? result
+          : Array.isArray(result?.data)
+            ? result.data
+            : [];
+        
+        // Update TTL cache
+        _ttlCache = { data: complaints, filters: filterKey, expiresAt: Date.now() + TTL_MS };
+        console.log(`[BRAIN-API] DB query: ${complaints.length} complaints (cached for ${TTL_MS / 1000}s)`);
+      }
+
+      const mappedComplaints = complaints.map(mapBodyRowToBraincomplaint);
 
       res.json({
         success: true,
-        count: complaints.length,
-        complaints,
+        count: mappedComplaints.length,
+        complaints: mappedComplaints,
       });
     } catch (error) {
       res.status(500).json({

@@ -35,6 +35,7 @@ let currentFilterOffice = "all";
 let currentFilterStartDate = null;
 let currentFilterEndDate = null;
 let clustersVisible = true; // Track cluster visibility state
+let currentVisualizationMode = "clusters";
 
 // Category colors for heatmap
 let categoryColors = {};
@@ -155,19 +156,29 @@ function clearLiveMarkers() {
 /**
  * Initialize server-side sync with Server-Sent Events
  */
+let pollingInterval = null;
+const API_ENDPOINT = `/api/brain/complaints`;
+
 function initServerSync() {
   const SSE_ENDPOINT = `/api/brain/stream`;
-  const API_ENDPOINT = `/api/brain/complaints`;
 
-  // Fetch existing complaints on load
-  fetchServercomplaints(API_ENDPOINT, { silent: true });
+  // Fetch existing complaints on load and trigger analysis
+  fetchServercomplaints(API_ENDPOINT, { silent: true }).then(() => {
+    console.log("[INIT] Initial sync complete. Triggering first analysis...");
+    loadFullSimulation();
+  });
 
-  // Connect to SSE for real-time updates
+  // Start polling fallback (will be used if SSE fails)
+  startPolling();
+
+  // Try SSE for real-time updates (will fail due to auth, so polling will be used)
   try {
     const eventSource = new EventSource(SSE_ENDPOINT);
 
     eventSource.onopen = () => {
       console.log("[SSE] ✅ Connected to live complaint stream");
+      // Stop polling if SSE works
+      stopPolling();
     };
 
     eventSource.onmessage = (event) => {
@@ -185,14 +196,27 @@ function initServerSync() {
     };
 
     eventSource.onerror = (error) => {
-      console.error("[SSE] Connection error, will retry...", error);
-      // EventSource auto-reconnects
+      console.log("[SSE] Connection failed (auth required), using polling...");
+      eventSource.close();
+      startPolling();
     };
-
   } catch (error) {
-    console.error("[SSE] Not supported, falling back to polling");
-    // Fallback: Poll every 5 seconds
-    setInterval(() => fetchServercomplaints(API_ENDPOINT), 5000);
+    console.log("[SSE] Not supported, using polling...");
+    startPolling();
+  }
+}
+
+function startPolling() {
+  if (pollingInterval) return;
+  console.log("[POLL] Starting 30s polling interval...");
+  pollingInterval = setInterval(() => fetchServercomplaints(API_ENDPOINT), 30000);
+}
+
+function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+    console.log("[POLL] Polling stopped (SSE active)");
   }
 }
 
@@ -203,17 +227,34 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
   try {
     // Build query parameters for data filtering
     const url = new URL(apiEndpoint, window.location.origin);
-    if (currentFilterStartDate) url.searchParams.append("startDate", currentFilterStartDate);
-    if (currentFilterEndDate) url.searchParams.append("endDate", currentFilterEndDate);
-    if (currentFilterOffice && currentFilterOffice !== "all") {
-        url.searchParams.append("department", currentFilterOffice);
+    // v5.3: Prioritize filters passed in options, fallback to global state
+    const startDate = options.startDate || currentFilterStartDate;
+    const endDate = options.endDate || currentFilterEndDate;
+    const category = options.category || currentFilterCategory;
+    const subcategory = options.subcategory || currentFilterSubcategory;
+    const office = options.office || currentFilterOffice;
+
+    if (startDate) url.searchParams.append("startDate", startDate);
+    if (endDate) url.searchParams.append("endDate", endDate);
+    if (office && office !== "all") {
+        url.searchParams.append("department", office);
     }
-    // v4.5.5: Support multi-category filtering on server
-    if (currentFilterCategory && currentFilterCategory !== "all") {
-        if (Array.isArray(currentFilterCategory)) {
-            currentFilterCategory.forEach(cat => url.searchParams.append("category", cat));
+    
+    // Support multi-category filtering
+    if (category && category !== "all") {
+        if (Array.isArray(category)) {
+            category.forEach(cat => url.searchParams.append("category", cat));
         } else {
-            url.searchParams.append("category", currentFilterCategory);
+            url.searchParams.append("category", category);
+        }
+    }
+    
+    // Support multi-subcategory filtering
+    if (subcategory && subcategory !== "all") {
+        if (Array.isArray(subcategory)) {
+            subcategory.forEach(sub => url.searchParams.append("subcategory", sub));
+        } else {
+            url.searchParams.append("subcategory", subcategory);
         }
     }
 
@@ -240,33 +281,61 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
           console.log(`[FETCH] First record date:`, first.submitted_at || first.timestamp);
       }
 
-      const newcomplaints = result.complaints.filter(servercomplaint => {
-        return !simulationEngine.complaints.some(c => c.id === servercomplaint.id);
-      });
-
-      if (newcomplaints.length > 0) {
-        console.log(`[SERVER] Found ${newcomplaints.length} new unique complaints`);
-        if (options.silent) {
-          newcomplaints.forEach(c => ingestServercomplaint(c, { showUI: false }));
+      // If we got 0 results (e.g. date filter has no data), clear and reload
+      if (count === 0) {
+        console.log("[SERVER] No complaints found for current filters.");
+        if (simulationEngine) simulationEngine.complaints = [];
+        
+        // v4.8: Only auto-trigger refresh if NOT a manual silent sync (like filter apply)
+        if (!options.silent) {
           if (autoReloadTimer) clearTimeout(autoReloadTimer);
           autoReloadTimer = setTimeout(() => {
             loadFullSimulation().catch(() => { });
           }, AUTO_RELOAD_DELAY);
+        }
+        return;
+      }
+
+      // Optimize O(N^2) lookups by using a Set (O(1) lookup)
+      const existingIds = new Set(simulationEngine.complaints.map(c => c.id));
+      const newcomplaints = result.complaints.filter(c => !existingIds.has(c.id));
+
+      if (newcomplaints.length > 0) {
+        console.log(`[SERVER] Found ${newcomplaints.length} new unique complaints`);
+        if (options.silent) {
+          // Bulk ingest optimization: bypass the O(N) array search in ingestServercomplaint
+          const analyzeFn = typeof window.analyzecomplaintIntelligence === "function" ? window.analyzecomplaintIntelligence : null;
+          
+          for (const c of newcomplaints) {
+            sanitizecomplaintObject(c);
+            if (analyzeFn) {
+              try { c.nlp_result = analyzeFn(c); } catch {}
+            }
+            simulationEngine.complaints.push(c);
+          }
+          
+          // v4.8: Caller handles the loadFullSimulation trigger in silent mode
         } else {
           newcomplaints.forEach(c => handleNewServercomplaint(c));
         }
+      } else {
+        // All records already loaded
+        console.log("[SERVER] No new records to ingest.");
       }
-    } else if (result.success && result.complaints.length === 0) {
-      console.log("[SERVER] No complaints found for current filters.");
-      // If we were expecting data but got none, clear the existing data
-      if (!options.silent) {
-        simulationEngine.complaints = [];
-        loadFullSimulation().catch(() => { });
+        console.log(`[SERVER] Sync complete. Filtered result: ${count} total.`);
+        
+        // v4.8: Trigger refresh if NOT silent (regular polling/refresh) 
+        // to ensure UI is in sync with the fetched server state
+        if (!options.silent) {
+            if (autoReloadTimer) clearTimeout(autoReloadTimer);
+            autoReloadTimer = setTimeout(() => {
+                loadFullSimulation().catch(() => { });
+            }, AUTO_RELOAD_DELAY);
+        }
       }
+    } catch (error) {
+      console.warn("[SERVER] Fetch failed:", error.message);
     }
-  } catch (error) {
-    console.warn("[SERVER] Fetch failed:", error.message);
-  }
 }
 
 /**
@@ -734,7 +803,6 @@ aiStatusStyles.textContent = `
         background: #ef4444;
         color: #ef4444;
     }
-    
     .ai-status-indicator.offline {
         background: #6b7280;
         color: #6b7280;
@@ -1998,20 +2066,229 @@ function analyzeCategoryDistribution(data) {
     .sort((a, b) => b.count - a.count);
 }
 
+function buildApproximateClusters(points, cellSize = 0.01, minGroupSize = 3) {
+  const groups = new Map();
+
+  (points || []).forEach((point) => {
+    if (!Number.isFinite(point.latitude) || !Number.isFinite(point.longitude)) {
+      return;
+    }
+
+    const latCell = Math.floor(point.latitude / cellSize);
+    const lngCell = Math.floor(point.longitude / cellSize);
+    const key = `${latCell}:${lngCell}`;
+
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(point);
+  });
+
+  const clustered = [];
+  const noise = [];
+
+  groups.forEach((bucket) => {
+    if (bucket.length >= minGroupSize) {
+      clustered.push(bucket);
+    } else {
+      noise.push(...bucket);
+    }
+  });
+
+  clustered.sort((a, b) => b.length - a.length);
+
+  return {
+    clusters: clustered,
+    noise,
+  };
+}
+
 
 // ==================== UI UPDATE FUNCTIONS ====================
 
 function updateStatsDisplay(insights) {
-  document.getElementById("totalcomplaints").textContent = insights.stats.totalcomplaints.toLocaleString();
-  document.getElementById("totalClusters").textContent = insights.stats.totalClusters;
-  document.getElementById("criticalHotspots").textContent = insights.stats.criticalHotspots;
-  document.getElementById("efficiencyScore").textContent = `${insights.stats.efficiencyScore}%`;
+  if (!insights || !insights.stats) return;
+  
+  const totalEl = document.getElementById("totalcomplaints");
+  const clustersEl = document.getElementById("totalClusters");
+  const hotspotsEl = document.getElementById("criticalHotspots");
+  const efficiencyEl = document.getElementById("efficiencyScore");
+
+  if (totalEl) totalEl.textContent = (insights.stats.totalcomplaints || 0).toLocaleString();
+  if (clustersEl) clustersEl.textContent = insights.stats.totalClusters || 0;
+  if (efficiencyEl) efficiencyEl.textContent = `${insights.stats.efficiencyScore || 0}%`;
+
   const activeEl = document.getElementById("activeIncidentsCount");
   const historyEl = document.getElementById("historyLogsCount");
   const advEl = document.getElementById("advisoriesCount");
+
   if (activeEl) activeEl.textContent = insights.stats.activeIncidents ?? "--";
   if (historyEl) historyEl.textContent = insights.stats.historyLogs ?? "--";
   if (advEl) advEl.textContent = insights.stats.advisories ?? "--";
+}
+
+window.applyGlobalFilters = async function() {
+  if (isSimulationLoading) {
+    console.warn("[HUD] Filter apply blocked: Engine is currently busy.");
+    return;
+  }
+
+  // Clear existing state immediately to provide feedback
+  clearDashboardUI();
+  
+  const catSelect = document.getElementById("filter-category");
+  const selectedOptions = Array.from(catSelect.selectedOptions);
+  
+  // v5.5: Optimization - If all are selected, just send "all"
+  const totalOptions = Array.from(catSelect.options).length;
+  const isAllSelected = selectedOptions.length === totalOptions || selectedOptions.length === 0;
+
+  // Separate parent categories and granular subcategories
+  const selectedCategories = isAllSelected ? "all" : selectedOptions
+    .filter(o => o.dataset.level === "parent")
+    .map(o => o.value);
+    
+  const selectedSubcategories = isAllSelected ? undefined : selectedOptions
+    .filter(o => o.dataset.level === "child")
+    .map(o => o.value);
+
+  const filters = {
+    category: selectedCategories,
+    subcategory: selectedSubcategories,
+    startDate: document.getElementById("filter-start-date").value,
+    endDate: document.getElementById("filter-end-date").value
+  };
+
+  console.log("[HUD] Applying filters (optimized):", filters);
+  
+  try {
+    // 1. Fetch new data based on filters
+    await fetchServercomplaints(API_ENDPOINT, { ...filters, silent: true });
+    
+    // 2. Perform Analysis
+    await loadFullSimulation();
+
+    // 3. HUD UI Synchronization
+    const applyBtn = document.getElementById("apply-filters-btn");
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.classList.remove("pulse-glow");
+    }
+
+    console.log("[HUD] Global filters applied successfully.");
+  } catch (err) {
+    console.error("[HUD] Filter application failed:", err);
+  }
+};
+
+/**
+ * v5.1: Layer Switcher exclusivity implementation
+ * Refactors the HUD buttons to act as Radio-style alternatives.
+ */
+function initializeExclusiveToggles() {
+  const toggles = {
+    clusters: {
+      btn: document.getElementById("btn-toggle-clusters"),
+      check: document.getElementById("clustersSwitch"),
+      action: (val) => {
+        if (!val) return;
+        setVisualizationMode("clusters");
+      }
+    },
+    heatmap: {
+      btn: document.getElementById("btn-toggle-heatmap"),
+      check: document.getElementById("heatmapSwitch"),
+      action: (val) => {
+        if (!val) return;
+        setVisualizationMode("heatmap");
+      }
+    },
+    markers: {
+      btn: document.getElementById("btn-toggle-markers"),
+      check: document.getElementById("markersToggle"),
+      action: (val) => {
+        if (!val) return;
+        setVisualizationMode("markers");
+      }
+    }
+  };
+
+  const switchMode = (selectedKey) => {
+    Object.entries(toggles).forEach(([key, cfg]) => {
+      const isActive = key === selectedKey;
+      
+      // Update UI
+      if (cfg.btn) {
+        if (isActive) {
+            cfg.btn.classList.add("active");
+            console.log(`[HUD] Setting ${key} button to ACTIVE`, cfg.btn);
+        } else {
+            cfg.btn.classList.remove("active");
+        }
+      }
+      
+      if (cfg.check) cfg.check.checked = isActive;
+      
+      // Trigger logic for the active mode only
+      if (isActive) cfg.action(true);
+    });
+  };
+
+  // Attach event listeners to hud buttons
+  Object.keys(toggles).forEach(key => {
+    const btn = toggles[key].btn;
+    if (btn) {
+        btn.addEventListener("click", (e) => {
+            console.log(`[HUD] ${key} button clicked`);
+            switchMode(key);
+        });
+    } else {
+        console.warn(`[HUD] Button for ${key} NOT FOUND in DOM`);
+    }
+  });
+
+  // 4. Set Default State (AI Clusters)
+  switchMode("clusters");
+
+  console.log("[HUD] Exclusive toggles initialized.");
+}
+
+// v5.1: Expose globally for initialization
+window.initializeExclusiveToggles = initializeExclusiveToggles;
+
+/**
+ * Atomic clear of all dashboard UI components to prevent stale data.
+ * Resets metrics, trends, and intelligence panels to an initial/loading state.
+ */
+function clearDashboardUI() {
+  console.log("[HUD] Atomic UI Clear triggered");
+  
+  // 1. Reset Metric Cards
+  const metricIds = ["totalcomplaints", "totalClusters", "criticalHotspots", "efficiencyScore"];
+  metricIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "--";
+  });
+
+  // 2. Clear Category Bars
+  const catBars = document.getElementById("categoryBars");
+  if (catBars) catBars.innerHTML = '<div class="text-[10px] text-white/20 p-4 text-center">AWAITING STREAM...</div>';
+
+  // 3. Clear Intelligence Panel
+  const insightsContent = document.getElementById("insightsContent");
+  if (insightsContent) {
+    insightsContent.innerHTML = `
+      <div class="flex flex-col items-center justify-center h-full text-center opacity-50 py-10">
+        <i class="fas fa-microchip text-3xl mb-3 fa-spin"></i>
+        <p class="text-xs font-semibold">ANALYZING STREAM...</p>
+      </div>
+    `;
+  }
+
+  // 4. Reset Emergency Bar
+  const emCount = document.getElementById("emergencyCount");
+  if (emCount) emCount.textContent = "0";
+  
+  const emContent = document.getElementById("emergencyContent");
+  if (emContent) emContent.innerHTML = "";
 }
 
 /**
@@ -2298,19 +2575,34 @@ function showLocationNotification() {
 function renderCategoryDistribution(data) {
   const distribution = analyzeCategoryDistribution(data);
   const container = document.getElementById("categoryBars");
+  if (!container) return;
+
+  // v5.0: Calculate "OTHERS" to ensure mathematical total matches (117 vs 20k fix)
+  const TOP_COUNT = 10;
+  const topCategories = distribution.slice(0, TOP_COUNT);
+  const totalInTop = topCategories.reduce((sum, item) => sum + item.count, 0);
+  const totalCount = data.length;
+  const othersCount = totalCount - totalInTop;
+
+  const displayList = [...topCategories];
+  if (othersCount > 0) {
+    displayList.push({ category: "OTHERS", count: othersCount });
+  }
 
   const maxCount = distribution[0]?.count || 1;
 
-  container.innerHTML = distribution.slice(0, 6).map(item => {
+  container.innerHTML = displayList.map(item => {
     const percentage = (item.count / maxCount) * 100;
+    const isOthers = item.category === "OTHERS";
+    
     return `
-            <div class="category-bar-item">
+            <div class="category-bar-item" style="${isOthers ? "opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 8px;" : ""}">
                 <div class="category-bar-label">
-                    <span class="category-bar-name">${item.category}</span>
-                    <span class="category-bar-count">${item.count}</span>
+                    <span class="category-bar-name" style="${isOthers ? "font-style: italic; font-size: 9px;" : ""}">${item.category}</span>
+                    <span class="category-bar-count">${item.count.toLocaleString()}</span>
                 </div>
                 <div class="category-bar-track">
-                    <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                    <div class="category-bar-fill" style="width: ${percentage}%; background: ${isOthers ? "#475569" : "var(--accent-blue)"}"></div>
                 </div>
             </div>
         `;
@@ -2376,7 +2668,7 @@ function createHeatmap(data) {
 
     const heatLayer = L.heatLayer(points, {
       radius: 25,
-      blur: 35,
+      blur: 0,
       maxZoom: 17,
       max: 1.0,
       gradient
@@ -2403,10 +2695,10 @@ function toggleHeatmap() {
   });
 
   if (anyShown) {
-    button.classList.remove("active");
+    if (button) button.classList.remove("active");
     console.log("[HEATMAP] Hidden");
   } else {
-    button.classList.add("active");
+    if (button) button.classList.add("active");
     console.log("[HEATMAP] Shown");
   }
 }
@@ -2494,26 +2786,32 @@ function initMapLayersDropdown() {
   // Heatmap toggle via switch
   if (heatmapSwitch) {
     heatmapSwitch.addEventListener("change", () => {
-      toggleHeatmapFromDropdown(heatmapSwitch.checked);
+      if (heatmapSwitch.checked) {
+        setVisualizationMode("heatmap");
+      } else if (currentVisualizationMode === "heatmap") {
+        setVisualizationMode("clusters");
+      }
     });
   }
 
   // Clusters toggle via switch
   if (clustersSwitch) {
     clustersSwitch.addEventListener("change", () => {
-      toggleClustersFromDropdown(clustersSwitch.checked);
+      if (clustersSwitch.checked) {
+        setVisualizationMode("clusters");
+      } else if (currentVisualizationMode === "clusters") {
+        setVisualizationMode("markers");
+      }
     });
   }
 
   // Individual Markers toggle
   if (markersToggle) {
     markersToggle.addEventListener("change", () => {
-      if (simulationEngine) {
-        if (markersToggle.checked) {
-          simulationEngine.showBackgroundMarkers();
-        } else {
-          simulationEngine.hideBackgroundMarkers();
-        }
+      if (markersToggle.checked) {
+        setVisualizationMode("markers");
+      } else if (currentVisualizationMode === "markers") {
+        setVisualizationMode("clusters");
       }
     });
   }
@@ -2534,6 +2832,66 @@ function initMapLayersDropdown() {
         window.cycleMapTiles();
       }
     });
+  }
+}
+
+function getNormalizedCategoryFilter() {
+  if (Array.isArray(currentFilterCategory)) return currentFilterCategory;
+  if (
+    typeof currentFilterCategory === "string" &&
+    currentFilterCategory !== "all"
+  ) {
+    return [currentFilterCategory];
+  }
+  return "all";
+}
+
+function getNormalizedSubcategoryFilter() {
+  if (Array.isArray(currentFilterSubcategory)) return currentFilterSubcategory;
+  if (
+    typeof currentFilterSubcategory === "string" &&
+    currentFilterSubcategory !== "all"
+  ) {
+    return [currentFilterSubcategory];
+  }
+  return undefined;
+}
+
+function setVisualizationMode(mode) {
+  if (!simulationEngine || !map) return;
+
+  const resolvedMode = ["clusters", "heatmap", "markers"].includes(mode)
+    ? mode
+    : "clusters";
+  currentVisualizationMode = resolvedMode;
+
+  const clustersSwitch = document.getElementById("clustersSwitch");
+  const heatmapSwitch = document.getElementById("heatmapSwitch");
+  const markersToggle = document.getElementById("markersToggle");
+  const clusterBtn = document.getElementById("btn-toggle-clusters");
+  const heatmapBtn = document.getElementById("btn-toggle-heatmap");
+  const markersBtn = document.getElementById("btn-toggle-markers");
+
+  if (clustersSwitch) clustersSwitch.checked = resolvedMode === "clusters";
+  if (heatmapSwitch) heatmapSwitch.checked = resolvedMode === "heatmap";
+  if (markersToggle) markersToggle.checked = resolvedMode === "markers";
+
+  if (clusterBtn) clusterBtn.classList.toggle("active", resolvedMode === "clusters");
+  if (heatmapBtn) heatmapBtn.classList.toggle("active", resolvedMode === "heatmap");
+  if (markersBtn) markersBtn.classList.toggle("active", resolvedMode === "markers");
+
+  toggleHeatmapFromDropdown(resolvedMode === "heatmap");
+  toggleClustersFromDropdown(resolvedMode === "clusters");
+
+  if (resolvedMode === "markers") {
+    simulationEngine.filterBackgroundMarkersByCategory(getNormalizedCategoryFilter(), {
+      startDate: currentFilterStartDate,
+      endDate: currentFilterEndDate,
+      subcategory: getNormalizedSubcategoryFilter(),
+    });
+    simulationEngine.showBackgroundMarkers();
+  } else {
+    simulationEngine.hideBackgroundMarkers();
   }
 }
 
@@ -2604,7 +2962,7 @@ function toggleClustersFromDropdown(show) {
 
     console.log("[CLUSTERS] Shown via independent toggle");
   } else {
-    // Hide clusters - show noise markers instead
+    // Hide clusters and associated artifacts
     clusterMarkers.forEach(marker => {
       if (marker && map.hasLayer(marker)) map.removeLayer(marker);
     });
@@ -2619,11 +2977,6 @@ function toggleClustersFromDropdown(show) {
         if (hull && map.hasLayer(hull)) map.removeLayer(hull);
       });
     }
-
-    // Show noise markers when clusters are off
-    noiseMarkers.forEach(marker => {
-      if (marker && map && !map.hasLayer(marker)) marker.addTo(map);
-    });
 
     console.log("[CLUSTERS] Hidden via independent toggle");
   }
@@ -3220,27 +3573,31 @@ function generatecomplaintPopupHTML(point, clusterId = null, clusterColor = "#6b
 
     urgencyScoreHTML = `
             <div class="triage-score-panel">
-                <div class="triage-header">
-                    <span class="tooltip-trigger">
-                        <i class="fas fa-tachometer-alt"></i> TRIAGE SCORE
-                        <i class="fas fa-question-circle" style="font-size: 10px; opacity: 0.7;"></i>
-                    </span>
-                    ${tooltipExplanation}
+                <div class="popup-label">
+                    <i class="fas fa-microchip"></i> System Triage Analysis
                 </div>
                 <div class="triage-display ${displayClass}">
                     <span class="triage-value">${intelligence.urgencyScore}</span>
-                    <span class="triage-max">/100</span>
+                    <span class="triage-max">/ 100</span>
                     ${originalScoreHTML}
                 </div>
-                <div class="triage-breakdown">
-                    <span class="breakdown-item">Base: ${intelligence.breakdown.base}</span>
-                    ${intelligence.breakdown.panic > 0 ? `<span class="breakdown-item panic">+${intelligence.breakdown.panic} Panic</span>` : ""}
-                    ${intelligence.breakdown.veracity !== 0 ? `<span class="breakdown-item ${intelligence.breakdown.veracity > 0 ? "bonus" : "penalty"}">${intelligence.breakdown.veracity > 0 ? "+" : ""}${intelligence.breakdown.veracity} Veracity</span>` : ""}
-                    ${intelligence.breakdown.complexity > 0 ? `<span class="breakdown-item bonus">+${intelligence.breakdown.complexity} Complexity</span>` : ""}
-                    ${intelligence.breakdown.negation ? `<span class="breakdown-item penalty">🚫 NEGATED ("${intelligence.breakdown.negation}")</span>` : ""}
-                    ${boostHTML}
-                    ${geoBoostHTML}
-                    ${isCapped ? `<span class="breakdown-item capped">CAPPED</span>` : ""}
+                <div class="popup-progress-container">
+                    <div class="popup-progress-bar" style="width: ${intelligence.urgencyScore}%; background: ${headerColor}; box-shadow: 0 0 10px ${headerColor}88;"></div>
+                </div>
+                <div class="popup-meta-grid" style="margin-top: 1rem;">
+                    <div class="popup-meta-box">
+                        <span class="popup-label" style="font-size: 8px;">Base Score</span>
+                        <span class="popup-value">${intelligence.breakdown.base}</span>
+                    </div>
+                    <div class="popup-meta-box">
+                        <span class="popup-label" style="font-size: 8px;">Breakdown</span>
+                        <div class="triage-mini-tags" style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px;">
+                            ${intelligence.breakdown.panic > 0 ? `<span style="font-size: 8px; color: #f43f5e;">+${intelligence.breakdown.panic}P</span>` : ""}
+                            ${intelligence.breakdown.veracity !== 0 ? `<span style="font-size: 8px; color: ${intelligence.breakdown.veracity > 0 ? "#22c55e" : "#f43f5e"};">${intelligence.breakdown.veracity > 0 ? "+" : ""}${intelligence.breakdown.veracity}V</span>` : ""}
+                            ${boostHTML}
+                            ${geoBoostHTML}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -3278,9 +3635,12 @@ function generatecomplaintPopupHTML(point, clusterId = null, clusterColor = "#6b
       `<div class="action-context">📌 Matched: "${intelligence.breakdown.matchedContext}"</div>` : "";
 
     actionHTML = `
-            <div class="action-box ${actionClass}">
-                <div class="action-label">RECOMMENDED ACTION</div>
-                <div class="action-value">${actionLabel}</div>
+            <div class="tactical-popup-card recommended-action" style="margin-top: 1rem; padding: 0.75rem;">
+                <div class="popup-label" style="margin-bottom: 0.25rem;">Recommended Response</div>
+                <div class="dispatch-btn">
+                    <div class="btn-scan-line"></div>
+                    <i class="fas fa-bolt"></i> ${actionLabel}
+                </div>
                 ${contextNote}
             </div>
         `;
@@ -3508,101 +3868,76 @@ function generatecomplaintPopupHTML(point, clusterId = null, clusterColor = "#6b
   }
 
   return `
-        <div class="complaint-popup-v2">
-            <!-- ===== HEADER (Full Width - Col-span-12) ===== -->
-            <div class="popup-header-v2 ${headerClass}" style="background: ${headerColor};">
-                <div class="header-left">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span class="header-category">${pointCategory}</span>
-                    ${reclassifiedBadge}
-                    ${aiUsedBadge}
+        <div class="tactical-popup-container">
+            <!-- ===== TACTICAL HEADER ===== -->
+            <div class="tactical-popup-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="header-led-active pulse-fast" style="background: ${headerColor}; box-shadow: 0 0 10px ${headerColor};"></span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 8px; color: ${headerColor}; letter-spacing: 2px; font-weight: 800;">SYS_INTEL_STREAM [${urgencyLevel}]</span>
+                        <h3 style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase;">${pointCategory}</h3>
+                    </div>
                 </div>
-                <div class="header-right">
+                <div style="display: flex; gap: 6px;">
+                    ${reclassifiedBadge}
                     ${veracityBadgeHTML}
                 </div>
             </div>
             
-            <!-- ===== 2-COLUMN GRID CONTAINER ===== -->
-            <div class="popup-grid">
+            <div class="tactical-popup-body">
                 
-                <!-- ===== LEFT COLUMN (Col-span-7) - THE CITIZEN REPORT ===== -->
-                <div class="popup-col-left">
-                    <div class="column-header">
-                        <i class="fas fa-user-circle"></i> THE CITIZEN REPORT
+                <!-- ===== CITIZEN REPORT CARD ===== -->
+                <div class="tactical-popup-card citizen-report">
+                    <div class="popup-label">
+                        <i class="fas fa-user-shield"></i> Tactical Feed: Citizen Input
                     </div>
                     
                     ${clusterBannerHTML}
                     
-                    <!-- What the User Said -->
-                    <div class="user-quote-section">
-                        <div class="section-label">
-                            <i class="fas fa-quote-left"></i> WHAT THE USER SAID
-                        </div>
-                        <blockquote class="user-quote">
-                            "${sanitizeHTML(point.description) || "No description provided"}"
-                        </blockquote>
-                    </div>
+                    <blockquote class="popup-quote">
+                        "${sanitizeHTML(point.description) || "No technical description provided by reporter"}"
+                    </blockquote>
                     
-                    <!-- Metadata Grid -->
-                    <div class="metadata-grid">
-                        <div class="meta-cell">
-                            <span class="meta-label">REPORT ID</span>
-                            <span class="meta-value mono">${point.id ? sanitizeHTML(point.id.substring(0, 12)) : "N/A"}</span>
+                    <div class="popup-meta-grid">
+                        <div class="popup-meta-box">
+                            <span class="popup-label" style="font-size: 8px;">Network ID</span>
+                            <span class="popup-value" style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">${point.id ? sanitizeHTML(point.id.substring(0, 12)).toUpperCase() : "N/A"}</span>
                         </div>
-                        <div class="meta-cell">
-                            <span class="meta-label">USER ID</span>
-                            <span class="meta-value">${sanitizeHTML(point.user_id) || "Anonymous"}</span>
-                        </div>
-                        <div class="meta-cell">
-                            <span class="meta-label">DATE/TIME</span>
-                            <span class="meta-value">${timestamp}</span>
-                        </div>
-                        <div class="meta-cell">
-                            <span class="meta-label">BARANGAY</span>
-                            <span class="meta-value">${getJurisdiction(point.latitude, point.longitude)}</span>
+                        <div class="popup-meta-box">
+                            <span class="popup-label" style="font-size: 8px;">Sourcing</span>
+                            <span class="popup-value" style="font-size: 10px;">${getJurisdiction(point.latitude, point.longitude)}</span>
                         </div>
                     </div>
-                    
-                    <!-- Street-Level Location (v3.7 - Nominatim) -->
-                    <div class="complaint-street-location" 
+
+                    <!-- v3.7: Location Bridge -->
+                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 8px; font-size: 10px; color: #94a3b8;"
                          data-lat="${point.latitude}" 
                          data-lng="${point.longitude}"
                          id="complaint-street-${point.id ? point.id.substring(0, 8) : Math.random().toString(36).substring(7)}">
-                        <i class="fas fa-road"></i>
-                        <span class="street-value">
-                            <i class="fas fa-spinner fa-spin"></i> Loading street address...
-                        </span>
-                    </div>
-                    
-                    <!-- Footer Warning -->
-                    <div class="citizen-footer">
-                        <i class="fas fa-info-circle"></i> 
-                        This is <strong>raw citizen input</strong>. Verify accuracy before dispatching.
+                        <i class="fas fa-crosshairs shadow-pulse" style="color: ${headerColor};"></i>
+                        <span class="street-value">VERIFYING GEOSPATIAL COORDINATES...</span>
                     </div>
                 </div>
                 
-                <!-- ===== RIGHT COLUMN (Col-span-5) - SYSTEM INTELLIGENCE ===== -->
-                <div class="popup-col-right">
-                    <div class="column-header">
-                        <i class="fas fa-brain"></i> SYSTEM INTELLIGENCE
-                    </div>
-                    
+                <!-- ===== SYSTEM INTELLIGENCE CARD ===== -->
+                <div class="tactical-popup-card system-intel">
                     ${urgencyScoreHTML}
-                    ${actionHTML}
+                    ${aiReasoningHTML}
                     ${multiLabelHTML}
                     
-                    <!-- v4.2: AI Reasoning Section -->
-                    ${aiReasoningHTML}
-                    
-                    <!-- Warnings Stack -->
-                    <div class="warnings-stack">
+                    <!-- Integrated Warnings -->
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
                         ${anomalyWarningHTML}
                         ${mergedWarningHTML}
-                        ${contextSuppressionWarningHTML}
                         ${mismatchAlertHTML}
                     </div>
                 </div>
-                
+
+                ${actionHTML}
+
+                <div style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 7px; color: #475569; letter-spacing: 1px; margin-top: 0.5rem; text-transform: uppercase;">
+                    Security Clearance: Tactical Admin | End of Stream
+                </div>
             </div>
         </div>
     `;
@@ -4082,6 +4417,7 @@ function visualizeClusters(clusters) {
     "#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
     "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1"
   ];
+  const largeClusterMode = clusters.length > 150;
 
   clusters.forEach((cluster, idx) => {
     const color = colors[idx % colors.length];
@@ -4103,22 +4439,24 @@ function visualizeClusters(clusters) {
     // CRITICAL FIX: Render individual points with THEIR OWN DATA
     // Each marker must show the POINT's data, NOT the cluster's data
     // ================================================================
-    cluster.forEach(point => {
-      // 1. Create marker at POINT's coordinates (NOT cluster center)
-      const marker = simulationEngine.createSpotlightMarker(point, color, 0.8);
+    if (!largeClusterMode) {
+      cluster.forEach(point => {
+        // 1. Create marker at POINT's coordinates (NOT cluster center)
+        const marker = simulationEngine.createSpotlightMarker(point, color, 0.8);
 
-      // 2. Open intelligence panel on click — content generated lazily
-      const capturedIdx = idx + 1;
-      marker.on("click", () => {
-        if (window.mapIntelligencePanel) {
-          window.mapIntelligencePanel.show(point, capturedIdx, color, dominantCategory);
-        }
+        // 2. Open intelligence panel on click — content generated lazily
+        const capturedIdx = idx + 1;
+        marker.on("click", () => {
+          if (window.mapIntelligencePanel) {
+            window.mapIntelligencePanel.show(point, capturedIdx, color, dominantCategory);
+          }
+        });
       });
-    });
+    }
 
     // Draw distance-limited connecting lines (MST-style)
     // Only connect points < 50m apart to avoid "spaghetti" visuals
-    if (cluster.length > 1) {
+    if (!largeClusterMode && cluster.length > 1) {
       const MAX_LINE_DISTANCE = 50; // meters
       const drawnConnections = new Set(); // Prevent duplicate lines
 
@@ -4164,7 +4502,7 @@ function visualizeClusters(clusters) {
     }
 
     // v4.1: CONVEX HULL POLYGON - Wraps cluster points to show "Area of Effect"
-    if (cluster.length >= 3) {
+    if (!largeClusterMode && cluster.length >= 3) {
       // Get all points as [lat, lng] pairs
       const points = cluster.map(p => [p.latitude, p.longitude]);
 
@@ -4210,7 +4548,6 @@ function visualizeClusters(clusters) {
                         font-size: 11px;
                         font-weight: 600;
                         white-space: nowrap;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
                         cursor: pointer;
                         text-align: center;
                     ">
@@ -4225,8 +4562,11 @@ function visualizeClusters(clusters) {
       .bindPopup(glassBoxPopup, {
         maxWidth: 380,
         className: "glass-box-popup-container"
-      })
-      .addTo(map);
+      });
+
+    if (clustersVisible) {
+      marker.addTo(map);
+    }
 
     // v3.7: Load street-level location when popup opens
     marker.on("popupopen", async () => {
@@ -4289,6 +4629,11 @@ function visualizeNoisePoints(noisePoints) {
     return;
   }
 
+  if (noisePoints.length > 3000) {
+    console.log(`[PERFORMANCE] Bypassing ${noisePoints.length} individual noise markers to prevent DOM locking. Heatmap will visualize density.`);
+    return;
+  }
+
   // v4.1: Re-run anomaly detection on noise points too
   rerunAnomalyDetection(noisePoints);
 
@@ -4317,7 +4662,6 @@ function visualizeNoisePoints(noisePoints) {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                 border: 2px solid rgba(255,255,255,0.6);
                 opacity: 0.7;
                 cursor: pointer;
@@ -4361,8 +4705,8 @@ function visualizeNoisePoints(noisePoints) {
       this._icon.querySelector(".noise-marker-inner").style.transform = "scale(1)";
     });
 
-    // Only add to map if clusters are not visible (show noise points as alternative to clusters)
-    if (!clustersVisible) {
+    // Only add to map if clusters are visible or requested
+    if (clustersVisible) {
       marker.addTo(map);
     }
     simulationEngine.spotlightMarkers.push(marker);
@@ -4373,20 +4717,38 @@ function visualizeNoisePoints(noisePoints) {
 
 // ==================== MAIN LOAD FUNCTION ====================
 
+let isSimulationLoading = false;
+
 async function loadFullSimulation() {
+  if (isSimulationLoading) {
+    console.warn("[PRODUCTION] Analysis engine busy. Task queued or skipped.");
+    // Auto-recovery: if it's been loading for more than 30s, force reset
+    if (!window._lastSimulationLoadTime || (Date.now() - window._lastSimulationLoadTime > 30000)) {
+        console.warn("[PRODUCTION] Emergency analysis engine reset triggered.");
+        isSimulationLoading = false;
+    } else {
+        return;
+    }
+  }
+
+  window._lastSimulationLoadTime = Date.now();
+
   const loadingOverlay = document.getElementById("loadingOverlay");
   const statusIndicator = document.getElementById("statusIndicator");
   const loadButton = document.getElementById("loadCityData");
 
+  // Always clear UI at start to prevent stale data display during analysis
+  clearDashboardUI();
   window.mapIntelligencePanel?.invalidateCache();
   clearLiveMarkers();
 
   try {
+    isSimulationLoading = true;
     if (loadingOverlay) loadingOverlay.classList.add("active");
     if (statusIndicator) {
       statusIndicator.classList.add("processing");
       const statusSpan = statusIndicator.querySelector("span");
-      if (statusSpan) statusSpan.textContent = "Processing...";
+      if (statusSpan) statusSpan.textContent = "Analyzing...";
     }
     if (loadButton) loadButton.disabled = true;
 
@@ -4396,11 +4758,13 @@ async function loadFullSimulation() {
     console.log("[DEBUG] allData count:", allData.length);
 
     if (!allData || allData.length === 0) {
-      console.warn("[PRODUCTION] No data available for analysis.");
+      console.warn("[PRODUCTION] Analysis aborted: Zero records in simulationEngine.complaints");
+      // Ensure UI reflects the empty state even if we return early
       updateStatsDisplay({
         stats: { totalcomplaints: 0, totalClusters: 0, criticalHotspots: 0, efficiencyScore: 0, activeIncidents: 0, historyLogs: 0, advisories: 0 }
       });
       renderInsightsCards({ cards: [] });
+      renderCategoryDistribution([]);
       return;
     }
 
@@ -4409,9 +4773,25 @@ async function loadFullSimulation() {
 
     // A. Category Filter
     if (Array.isArray(currentFilterCategory) && !currentFilterCategory.includes("all")) {
-      filteredData = filteredData.filter(p => currentFilterCategory.includes(p.category));
+      filteredData = filteredData.filter(
+        p =>
+          currentFilterCategory.includes(p.category) ||
+          (p.subcategory && currentFilterCategory.includes(p.subcategory))
+      );
     } else if (typeof currentFilterCategory === "string" && currentFilterCategory !== "all") {
-      filteredData = filteredData.filter(p => p.category === currentFilterCategory);
+      filteredData = filteredData.filter(
+        p => p.category === currentFilterCategory || p.subcategory === currentFilterCategory
+      );
+    }
+
+    // A2. Subcategory Filter
+    if (Array.isArray(currentFilterSubcategory) && !currentFilterSubcategory.includes("all")) {
+      filteredData = filteredData.filter(p => currentFilterSubcategory.includes(p.subcategory));
+    } else if (
+      typeof currentFilterSubcategory === "string" &&
+      currentFilterSubcategory !== "all"
+    ) {
+      filteredData = filteredData.filter(p => p.subcategory === currentFilterSubcategory);
     }
 
     // B. Office/Department Filter
@@ -4441,7 +4821,8 @@ async function loadFullSimulation() {
     // Show background points for the filtered set
     simulationEngine.filterBackgroundMarkersByCategory(currentFilterCategory, {
         startDate: currentFilterStartDate,
-        endDate: currentFilterEndDate
+      endDate: currentFilterEndDate,
+      subcategory: currentFilterSubcategory,
     });
 
     const loadingProgressEl = document.getElementById("loadingProgress");
@@ -4455,12 +4836,20 @@ async function loadFullSimulation() {
     renderEmergencyPanel(criticalPoints);
     renderCriticalMarkers(criticalPoints);
 
-    // 4. Clustering (Forced MIN_PTS 1 for Heatmap Visibility)
-    const clusteringResult = clustercomplaints(standardPoints, {
-      MIN_PTS: 1,
-      USE_ADAPTIVE_MINPTS: false,
-      ENABLE_LOGGING: true
-    });
+    // 4. Clustering
+    // Use grid-based fallback clustering for large datasets to keep AI-cluster mode visible.
+    let clusteringResult = { clusters: [], noise: [] };
+    
+    if (standardPoints.length > 3000) {
+      console.log(`[PERFORMANCE] Using approximate clustering fallback for ${standardPoints.length} points to prevent UI freeze.`);
+      clusteringResult = buildApproximateClusters(standardPoints, 0.006, 3);
+    } else {
+      clusteringResult = clustercomplaints(standardPoints, {
+        MIN_PTS: 1,
+        USE_ADAPTIVE_MINPTS: false,
+        ENABLE_LOGGING: true
+      });
+    }
 
     currentClusters = clusteringResult.clusters;
     currentNoisePoints = clusteringResult.noise;
@@ -4477,6 +4866,9 @@ async function loadFullSimulation() {
     visualizeClusters(currentClusters);
     visualizeNoisePoints(currentNoisePoints);
     createHeatmap(filteredData);
+
+    // Keep the selected marker mode active after every filter/data refresh.
+    setVisualizationMode(currentVisualizationMode || "clusters");
 
     // Handover to Analytics
     try {
@@ -4503,6 +4895,7 @@ async function loadFullSimulation() {
         if (statusSpan) statusSpan.textContent = "Analysis Failed";
     }
   } finally {
+    isSimulationLoading = false;
     if (loadingOverlay) loadingOverlay.classList.remove("active");
     if (loadButton) loadButton.disabled = false;
   }
@@ -4592,6 +4985,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   simulationEngine = new SimulationEngine(map, () => { }, () => { }, () => { });
   window.simulationEngine = simulationEngine; // Expose globally for heatmap.html
   console.log("[ENGINE] Created");
+
+  // Initialize Layer Toggles after engine is ready
+  if (typeof initializeExclusiveToggles === "function") {
+    initializeExclusiveToggles();
+  }
 
   // Load mock data
   const success = await simulationEngine.initialize();
@@ -4739,28 +5137,31 @@ window.applyGlobalFilters = async function (filters) {
   if (filters.category !== undefined) currentFilterCategory = filters.category;
   if (filters.subcategory !== undefined) currentFilterSubcategory = filters.subcategory;
 
-  // v3.9.5: Re-fetch data from server with new filters
-  const API_ENDPOINT = `/api/brain/complaints`;
-  console.log("[FILTER] Re-fetching data from server with filters...");
-  
-  // Clear existing local complaints to ensure fresh sync
+  // v3.9.5: Clear local state and UI immediately to show the user we are working
   if (window.simulationEngine) {
-    console.log("[FILTER] Clearing local complaints before sync...");
+    console.log("[FILTER] Resetting engine for fresh sync...");
     window.simulationEngine.complaints = [];
-    if (window.simulationEngine.backgroundMarkers) {
-        window.simulationEngine.backgroundMarkers.clearLayers();
+    
+    // Clear markers via the engine helper
+    if (typeof window.simulationEngine.clearAllBackgroundMarkers === "function") {
+        window.simulationEngine.clearAllBackgroundMarkers();
     }
   }
   
-  // v4.5.7: Use silent sync to avoid flooding the map with individual 
-  // markers during a full dataset refresh. loadFullSimulation will handle everything.
+  // Clear the UI metrics and trends immediately
+  clearDashboardUI();
+
+  // v4.5.7: Re-fetch data from server with new filters
+  const API_ENDPOINT = `/api/brain/complaints`;
+  console.log("[FILTER] Re-fetching data from server...");
+  
   await fetchServercomplaints(API_ENDPOINT, { silent: true });
 
-  console.log("[FILTER] Sync complete. Current complaints count:", window.simulationEngine?.complaints?.length);
+  console.log("[FILTER] Sync complete. Triggering analysis...");
 
-  // Ensure loadFullSimulation is only called once after sync
+  // Force an atomic UI update
   if (autoReloadTimer) clearTimeout(autoReloadTimer);
-  loadFullSimulation();
+  await loadFullSimulation();
 };
 
 // Sidebars handled by heatmap.html inline script or other page-specific scripts to avoid conflicts.

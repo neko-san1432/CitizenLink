@@ -24,8 +24,8 @@
     <link rel="stylesheet" href="/css/components/header.css" />
     
     <!-- Tailwind Engine (Required for HUD utilities) -->
-    <script src="/js/pages/heatmapTailwindConfig.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/pages/heatmapTailwindConfig.js"></script>
 
     <!-- New Tactical HUD CSS -->
     <link rel="stylesheet" href="/css/pages/heatmapTactical.css" />
@@ -359,9 +359,8 @@
                 });
             };
 
-            setupToggle('btn-toggle-clusters', 'clustersSwitch');
-            setupToggle('btn-toggle-heatmap', 'heatmapSwitch');
-            setupToggle('btn-toggle-markers', 'markersToggle');
+            // v5.1: Exclusive toggles are now handled in dashboardProduction.js
+            // Emergency markers remain a separate overlay
             setupToggle('btn-toggle-emergencies', 'emergencyMarkersToggle');
 
             // Emergency Bottom Bar Toggle
@@ -382,11 +381,30 @@
                 try {
                     const taxonomy = await DRIMSTaxonomy.loadTaxonomy({ skipConfig: true });
                     const categories = DRIMSTaxonomy.getCategories(taxonomy);
+                    
+                    // Clear existing (except "all" if necessary, but we'll rebuild)
+                    catSelect.innerHTML = "";
+                    
                     categories.forEach(cat => {
+                        // 1. Add Parent Category
                         const opt = document.createElement('option');
                         opt.value = cat;
                         opt.textContent = cat;
+                        opt.dataset.level = "parent";
                         catSelect.appendChild(opt);
+
+                        // 2. Add Child Subcategories
+                        const subcategories = DRIMSTaxonomy.getSubcategories(cat, taxonomy);
+                        if (subcategories && subcategories.length > 0) {
+                            subcategories.forEach(sub => {
+                                const subOpt = document.createElement('option');
+                                subOpt.value = sub;
+                                subOpt.textContent = sub;
+                                subOpt.dataset.level = "child";
+                                subOpt.dataset.parent = cat;
+                                catSelect.appendChild(subOpt);
+                            });
+                        }
                     });
                 } catch (e) {
                     console.error('[HUD] Taxonomy load error:', e);
@@ -405,7 +423,7 @@
                 });
             });
 
-            // Improved Custom Multiselect Logic
+            // Improved Hierarchical Multiselect Logic
             const setupHudMultiselect = (selectId, containerId, placeholder) => {
                 const select = document.getElementById(selectId);
                 const container = document.getElementById(containerId);
@@ -417,13 +435,14 @@
                         <span class="trigger-text truncate mr-2">${placeholder}</span>
                         <i class="fas fa-chevron-down text-[10px] opacity-50"></i>
                     </div>
-                    <div class="multiselect-dropdown hidden absolute top-full left-0 w-full mt-1 glass-card z-50 max-h-60 overflow-y-auto">
-                        <div class="p-2 border-b border-white/5 bg-white/5">
+                    <div class="multiselect-dropdown hidden absolute top-full left-0 w-full mt-1 glass-card z-50 max-h-96 overflow-y-auto">
+                        <div class="p-2 border-b border-white/5 bg-white/5 flex items-center justify-between">
                             <label class="flex items-center gap-2 text-[10px] cursor-pointer hover:text-white transition-colors">
                                 <input type="checkbox" class="cat-select-all" checked> SELECT ALL CATEGORIES
                             </label>
+                             <button class="expand-all-btn text-[9px] text-blue-400 font-bold uppercase hover:underline">Expand All</button>
                         </div>
-                        <div class="options-list p-2 flex flex-col gap-1"></div>
+                        <div class="options-list p-2 flex flex-col gap-0.5"></div>
                     </div>
                 `;
 
@@ -431,6 +450,7 @@
                 const dropdown = container.querySelector('.multiselect-dropdown');
                 const optionsList = container.querySelector('.options-list');
                 const selectAll = container.querySelector('.cat-select-all');
+                const expandAll = container.querySelector('.expand-all-btn');
                 const triggerText = container.querySelector('.trigger-text');
 
                 trigger.addEventListener('click', (e) => {
@@ -438,50 +458,138 @@
                     dropdown.classList.toggle('hidden');
                 });
 
-                // v4.5.6: Prevent dropdown from closing when clicking inside (e.g., selecting items)
                 dropdown.addEventListener('click', (e) => e.stopPropagation());
-
                 document.addEventListener('click', () => dropdown.classList.add('hidden'));
 
-                const updateSelect = () => {
-                    const checked = Array.from(optionsList.querySelectorAll('input:checked')).map(i => i.value);
+                // v5.3: Update actual <select> state based on UI checkboxes
+                const syncToSelect = () => {
                     const allOpts = Array.from(select.options);
+                    const checkboxes = Array.from(optionsList.querySelectorAll('.item-checkbox'));
                     
-                    allOpts.forEach(opt => {
-                        opt.selected = checked.includes(opt.value);
+                    checkboxes.forEach(cb => {
+                        const opt = allOpts.find(o => o.value === cb.value);
+                        if (opt) opt.selected = cb.checked;
                     });
 
-                    triggerText.textContent = checked.length === 0 ? placeholder : 
-                                            checked.length === allOpts.length ? 'All Categories' :
-                                            `${checked.length} Selected`;
+                    const checkedCount = checkboxes.filter(c => c.checked).length;
+                    const totalCount = checkboxes.length;
+
+                    triggerText.textContent = checkedCount === 0 ? placeholder : 
+                                            checkedCount === totalCount ? 'All Categories' :
+                                            `${checkedCount} Items Selected`;
                     
                     if (applyBtn) applyBtn.disabled = false;
                 };
 
-                const renderOptions = () => {
-                    optionsList.innerHTML = select.options.length > 0 ? Array.from(select.options).map(opt => `
-                        <label class="flex items-center gap-2 text-[10px] cursor-pointer hover:bg-white/5 p-1 rounded transition-all" onclick="event.stopPropagation()">
-                            <input type="checkbox" value="${opt.value}" ${opt.selected ? 'checked' : ''} onclick="event.stopPropagation()"> ${opt.textContent}
-                        </label>
-                    `).join('') : '<div class="text-[10px] text-white/40 p-2">No categories available</div>';
+                // Update parent checkbox state based on children
+                const updateParentState = (parentId) => {
+                    const parentCb = optionsList.querySelector(`.parent-checkbox[value="${parentId}"]`);
+                    const children = Array.from(optionsList.querySelectorAll(`.child-checkbox[data-parent="${parentId}"]`));
+                    if (!parentCb || children.length === 0) return;
 
-                    optionsList.querySelectorAll('input').forEach(i => {
-                        i.addEventListener('change', () => {
-                            selectAll.checked = optionsList.querySelectorAll('input:checked').length === optionsList.querySelectorAll('input').length;
-                            updateSelect();
+                    const checkedCount = children.filter(c => c.checked).length;
+                    
+                    if (checkedCount === 0) {
+                        parentCb.checked = false;
+                        parentCb.indeterminate = false;
+                    } else if (checkedCount === children.length) {
+                        parentCb.checked = true;
+                        parentCb.indeterminate = false;
+                    } else {
+                        parentCb.checked = false;
+                        parentCb.indeterminate = true;
+                    }
+                    
+                    // Update Select All state
+                    const allParents = Array.from(optionsList.querySelectorAll('.parent-checkbox'));
+                    selectAll.checked = allParents.every(p => p.checked && !p.indeterminate);
+                    selectAll.indeterminate = allParents.some(p => p.indeterminate || (p.checked !== allParents[0].checked));
+                };
+
+                const renderOptions = () => {
+                    const allOpts = Array.from(select.options);
+                    if (allOpts.length === 0) {
+                        optionsList.innerHTML = '<div class="text-[10px] text-white/40 p-2 text-center">Loading taxonomy...</div>';
+                        return;
+                    }
+
+                    const parents = allOpts.filter(o => o.dataset.level === 'parent');
+                    
+                    optionsList.innerHTML = parents.map(p => {
+                        const children = allOpts.filter(o => o.dataset.level === 'child' && o.dataset.parent === p.value);
+                        return `
+                            <div class="category-group mb-1">
+                                <div class="category-header flex items-center gap-1.5 p-1 rounded hover:bg-white/5 transition-colors group">
+                                    <i class="fas fa-chevron-right text-[8px] opacity-40 toggle-icon cursor-pointer p-1" data-id="${p.value}"></i>
+                                    <label class="flex items-center gap-2 text-[10px] font-bold cursor-pointer flex-1">
+                                        <input type="checkbox" class="parent-checkbox item-checkbox" value="${p.value}" checked>
+                                        <span class="truncate">${p.textContent.toUpperCase()}</span>
+                                    </label>
+                                </div>
+                                <div class="subcategory-list hidden flex flex-col gap-0.5 ml-6 pl-2 border-l border-white/10 mt-0.5 mb-1" id="sublist-${p.value.replace(/\s+/g, '-')}">
+                                    ${children.map(c => `
+                                        <label class="flex items-center gap-2 text-[10px] cursor-pointer hover:text-white transition-colors py-0.5">
+                                            <input type="checkbox" class="child-checkbox item-checkbox" value="${c.value}" data-parent="${p.value}" checked>
+                                            <span class="truncate">${c.textContent}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // 1. Toggle Subcategory Lists
+                    optionsList.querySelectorAll('.toggle-icon').forEach(icon => {
+                        icon.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const parentId = icon.dataset.id;
+                            const list = document.getElementById(`sublist-${parentId.replace(/\s+/g, '-')}`);
+                            if (list) {
+                                const isHidden = list.classList.toggle('hidden');
+                                icon.style.transform = isHidden ? '' : 'rotate(90deg)';
+                            }
                         });
                     });
+
+                    // 2. Parent -> Children logic
+                    optionsList.querySelectorAll('.parent-checkbox').forEach(pb => {
+                        pb.addEventListener('change', () => {
+                            const parentId = pb.value;
+                            const children = optionsList.querySelectorAll(`.child-checkbox[data-parent="${parentId}"]`);
+                            children.forEach(cb => cb.checked = pb.checked);
+                            syncToSelect();
+                        });
+                    });
+
+                    // 3. Child -> Parent logic
+                    optionsList.querySelectorAll('.child-checkbox').forEach(cb => {
+                        cb.addEventListener('change', () => {
+                            updateParentState(cb.dataset.parent);
+                            syncToSelect();
+                        });
+                    });
+                    
+                    syncToSelect();
                 };
 
                 selectAll.addEventListener('change', () => {
-                    optionsList.querySelectorAll('input').forEach(i => i.checked = selectAll.checked);
-                    updateSelect();
+                    optionsList.querySelectorAll('input[type="checkbox"]').forEach(i => {
+                        i.checked = selectAll.checked;
+                        i.indeterminate = false;
+                    });
+                    syncToSelect();
                 });
 
-                // Re-render when taxonomy loads
+                expandAll.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isExpand = expandAll.textContent === 'Expand All';
+                    optionsList.querySelectorAll('.subcategory-list').forEach(l => l.classList.toggle('hidden', !isExpand));
+                    optionsList.querySelectorAll('.toggle-icon').forEach(i => i.style.transform = isExpand ? 'rotate(90deg)' : '');
+                    expandAll.textContent = isExpand ? 'Collapse All' : 'Expand All';
+                });
+
                 const observer = new MutationObserver(renderOptions);
                 observer.observe(select, { childList: true });
-                
                 renderOptions();
             };
 

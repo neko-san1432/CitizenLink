@@ -1,5 +1,4 @@
 node_modules
-node_modules
 .env
 codeql-results
 eng.traineddata
@@ -13,3 +12,9 @@ storage/ai_cache/
 # Application logs
 log.txt
 secrets-found.txt
+
+# Standalone utilities
+standalone-map-viewer/
+
+# Ignore Windows NUL device file
+nul

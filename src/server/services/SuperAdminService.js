@@ -444,7 +444,7 @@ class SuperAdminService {
         throw new Error("Only Super Admin can view latest registered users");
       }
 
-      const userService = require("./UserService");
+      const userService = require("./user/UserService");
 
       // Get all users (we'll filter for confirmed emails/OAuth)
       const result = await userService.getUsers(
@@ -523,7 +523,7 @@ class SuperAdminService {
         throw new Error("Only Super Admin can view role distribution");
       }
 
-      const userService = require("./UserService");
+      const userService = require("./user/UserService");
       const result = await userService.getUsers(
         { includeInactive: false },
         { page: 1, limit: 10000 }

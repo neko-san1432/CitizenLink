@@ -31,11 +31,14 @@ try {
   process.exit(1);
 }
 console.log("🏗️  Initializing DRIMS application...");
-const DRIMSApp = require("./src/server/app");
 
-const app = new DRIMSApp();
-console.log("🔄 Starting server on port", config.port);
-app.start(config.port).then(() => {
+async function startServer() {
+  const DRIMSApp = require("./src/server/app");
+  const app = new DRIMSApp();
+  
+  console.log("🔄 Starting server on port", config.port);
+  await app.start(config.port);
+
   // Start the automated reporting scheduler
   const schedulerService = require("./src/server/services/SchedulerService");
   schedulerService.start();
@@ -45,7 +48,9 @@ app.start(config.port).then(() => {
   advancedDecisionEngine.initialize().catch(err => {
     console.error("⚠️ AI Engine failed to preload (will retry on demand):", err.message);
   });
-}).catch(error => {
+}
+
+startServer().catch(error => {
   console.error("💥 Failed to start server:", error);
   process.exit(1);
 });

@@ -167,8 +167,9 @@
     font-size: 1.25rem;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    border: 1px solid transparent;
 }
 
 .layer-toggle:hover {
@@ -176,10 +177,48 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-.layer-toggle.active {
-    color: var(--accent-blue);
-    background: rgba(59, 130, 246, 0.15);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+/* v5.5: Unified Active Layer Indicator */
+#hud-left .layer-toggle.active {
+    color: #ffffff !important;
+    background-color: #3b82f6 !important; /* Brighter, solid blue */
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.6) !important;
+    transform: scale(1.1);
+    opacity: 1 !important;
+}
+
+/* Force icon color inside active toggle */
+#hud-left .layer-toggle.active i {
+    color: #ffffff !important;
+    filter: drop-shadow(0 0 8px #ffffff);
+    animation: activeIconPulse 1.5s infinite;
+}
+
+/* Active indicator bar - solid & bright blue, positioned outside the card */
+#hud-left .layer-toggle.active::before {
+    content: "";
+    position: absolute;
+    left: -18px; /* Positioned clearly to the left of the button */
+    top: 15%;
+    height: 70%;
+    width: 6px;
+    background: #60a5fa;
+    border-radius: 4px;
+    box-shadow: 0 0 15px #3b82f6;
+    z-index: 50;
+    opacity: 1 !important;
+}
+
+@keyframes activeIconPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+@keyframes activeIconPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
 }
 
 .layer-tooltip {

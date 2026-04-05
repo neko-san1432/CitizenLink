@@ -141,6 +141,38 @@ function validateGPSBounds(lat, lng) {
 }
 
 /**
+ * v5.2: Categorical Palette for background markers.
+ * Ensures consistent visual identity across the dashboard.
+ */
+const CATEGORICAL_PALETTE = {
+  "Fire": "#ef4444",
+  "Flood": "#3b82f6",
+  "Flooding": "#3b82f6",
+  "Water Supply": "#0ea5e9",
+  "No Water": "#0ea5e9",
+  "Power Outage": "#f59e0b",
+  "Blackout": "#f59e0b",
+  "Trash": "#10b981",
+  "Garbage": "#10b981",
+  "Road Damage": "#64748b",
+  "Pothole": "#64748b",
+  "Traffic": "#8b5cf6",
+  "Accident": "#f97316",
+  "Crime": "#7c3aed",
+  "Others": "#94a3b8",
+  "Unknown": "#cbd5e1"
+};
+
+function getCategoryColor(category) {
+  if (!category) return CATEGORICAL_PALETTE["Unknown"];
+  // Handle subcategory mapping if needed
+  for (const [key, color] of Object.entries(CATEGORICAL_PALETTE)) {
+    if (category.toLowerCase().includes(key.toLowerCase())) return color;
+  }
+  return CATEGORICAL_PALETTE["Others"];
+}
+
+/**
  * Validate category against elevation constraints.
  * Uses approximate elevation based on known Digos City geography.
  * @param {string} category - complaint category
@@ -6710,8 +6742,7 @@ class SimulationEngine {
                             background: #888888;
                             border: 3px solid #555555;
                             border-radius: 50%;
-                            position: relative;
-                            box-shadow: 0 0 12px rgba(255,255,255,0.3);
+                          position: relative;
                         "></div>
                         <div class="stacked-badge" style="
                             position: absolute;
@@ -6731,7 +6762,6 @@ class SimulationEngine {
                             align-items: center;
                             justify-content: center;
                             text-align: center;
-                            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4), 0 4px 12px rgba(0,0,0,0.6);
                             border: 2px solid white;
                             animation: pulse-badge 2s ease-in-out infinite;
                         ">${count}</div>
@@ -6887,31 +6917,69 @@ class SimulationEngine {
      * Shows only markers matching the specified category, hides others.
      * @param {string} category - Category to show, or 'all' to show everything
      */
-  filterBackgroundMarkersByCategory(category) {
+  filterBackgroundMarkersByCategory(category, options = {}) {
     _NLP_DEBUG && console.log(`[FILTER] Starting filter - category: "${category}"`);
     _NLP_DEBUG && console.log(`[FILTER] Total complaints: ${this.complaints.length}`);
 
-    // APPROACH: Completely clear and re-render markers based on filter
-    // This ensures a clean state with no stale markers
+    // APPROACH: Use an L.layerGroup to batch-insert markers and avoid 25,000 individual UI repaints
 
-    // Step 1: Remove ALL background markers from map
-    this.backgroundMarkers.forEach((marker) => {
-      if (this.map.hasLayer(marker)) {
-        this.map.removeLayer(marker);
-      }
-    });
+    // Step 1: Remove ALL background markers from map efficiently
+    if (this._backgroundLayerGroup) {
+      this._backgroundLayerGroup.clearLayers();
+    } else {
+      this._backgroundLayerGroup = L.featureGroup().addTo(this.map);
+    }
+
+    // Clean up any stray direct markers from old logic
+    if (this.backgroundMarkers.size > 0 && !this._straysCleaned) {
+      this.backgroundMarkers.forEach(marker => {
+        if (this.map.hasLayer(marker)) this.map.removeLayer(marker);
+      });
+      this._straysCleaned = true;
+    }
     this.backgroundMarkers.clear();
 
     // v4.5.9: Synchronize background markers with total filter range (category + date)
-    const { startDate, endDate } = options || {};
+    const { startDate, endDate, subcategory } = options || {};
     const startTs = startDate ? new Date(startDate + "T00:00:00").getTime() : 0;
     const endTs = endDate ? new Date(endDate + "T23:59:59").getTime() : Infinity;
+
+    const normalizeFilterList = (value) => {
+      if (value === null || typeof value === "undefined") return [];
+      if (Array.isArray(value)) {
+        return value
+          .flatMap((v) => String(v || "").split(","))
+          .map((v) => v.trim())
+          .filter((v) => v && v.toLowerCase() !== "all");
+      }
+      const str = String(value).trim();
+      if (!str || str.toLowerCase() === "all") return [];
+      return str
+        .split(",")
+        .map((v) => v.trim())
+        .filter((v) => v && v.toLowerCase() !== "all");
+    };
+
+    const categoryList = normalizeFilterList(category);
+    const subcategoryList = normalizeFilterList(subcategory);
 
     const complaintsToShow = this.complaints.filter(c => {
       if (c.latitude == null || c.longitude == null) return false;
       
-      // Category filter
-      if (category !== "all" && c.category !== category) return false;
+      // Category filter (supports arrays and parent/child label matches)
+      if (categoryList.length > 0) {
+        const matchesCategory =
+          categoryList.includes(c.category) ||
+          (c.subcategory && categoryList.includes(c.subcategory));
+        if (!matchesCategory) return false;
+      }
+
+      // Subcategory filter
+      if (subcategoryList.length > 0) {
+        if (!c.subcategory || !subcategoryList.includes(c.subcategory)) {
+          return false;
+        }
+      }
       
       // Date filter
       const rawDate = c.timestamp || c.submittedAt || c.submitted_at || c.created_at || c.createdAt;
@@ -6926,28 +6994,69 @@ class SimulationEngine {
     _NLP_DEBUG && console.log(`[FILTER] complaints to show: ${complaintsToShow.length}`);
 
     // Step 3: Render filtered complaints as markers
+    const markersToBatch = [];
     complaintsToShow.forEach(complaint => {
       const hasWarning = complaint.spatial_warning || complaint.road_proximity_anomaly;
+      const catColor = getCategoryColor(complaint.subcategory || complaint.category);
 
       const marker = L.circleMarker([complaint.latitude, complaint.longitude], {
-        radius: hasWarning ? 5 : 4,
-        color: hasWarning ? "#ef4444" : "#888888",
-        fillColor: hasWarning ? "#ef4444" : "#888888",
-        fillOpacity: hasWarning ? 0.8 : 0.6,
-        weight: hasWarning ? 2 : 1,
+        radius: hasWarning ? 6 : 5,
+        color: hasWarning ? "#ef4444" : "#ffffff", // White border for crispness
+        fillColor: hasWarning ? "#ef4444" : catColor,
+        fillOpacity: 1, // Full opacity for "crisp" look
+        weight: 1.5,
         opacity: 1,
-        className: `background-marker${  hasWarning ? " spatial-anomaly-marker" : ""}`
+        className: `background-marker${hasWarning ? " spatial-anomaly-marker" : ""}`
       });
 
-      marker.bindTooltip(`
-                <strong style="${hasWarning ? "color: #ef4444;" : ""}">${complaint.id}</strong><br>
-                ${complaint.category}
-                ${hasWarning ? `<br><span style="color: #fca5a5; font-size: 10px;">⚠️ ${complaint.spatial_warning}</span>` : ""}
-            `, { direction: "top", offset: [0, -5] });
+      // v5.2: Add click interaction to show intelligence panel
+      marker.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        if (window.mapIntelligencePanel) {
+          window.mapIntelligencePanel.show(complaint);
+        }
+      });
 
-      marker.addTo(this.map);
+      // Simple tooltip for quick ID
+      marker.bindTooltip(`
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">
+                    <strong style="${hasWarning ? "color: #ef4444;" : "color: #fff;"}">${complaint.category.toUpperCase()}</strong><br>
+                    <span style="opacity: 0.7;">ID: ${complaint.id.substring(0, 8)}</span>
+                    ${hasWarning ? `<br><span style="color: #fca5a5;">⚠️ ANOMALY</span>` : ""}
+                </div>
+            `, { 
+              direction: "top", 
+              offset: [0, -5],
+              className: "crisp-tooltip" 
+            });
+
+      const submittedAt = complaint.timestamp || complaint.submittedAt || complaint.submitted_at || complaint.created_at || complaint.createdAt;
+      const submittedLabel = submittedAt ? new Date(submittedAt).toLocaleString() : "N/A";
+      const description = complaint.description || complaint.descriptive_su || "No description provided.";
+      const locationText = complaint.location_text || complaint.location || "N/A";
+      marker.bindPopup(
+        `
+          <div style="min-width: 240px; max-width: 320px; font-size: 12px; line-height: 1.35;">
+            <div style="font-weight: 700; margin-bottom: 6px;">${complaint.title || "Complaint"}</div>
+            <div style="margin-bottom: 4px;"><strong>Category:</strong> ${complaint.category || "Others"}</div>
+            <div style="margin-bottom: 4px;"><strong>Subcategory:</strong> ${complaint.subcategory || "N/A"}</div>
+            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${complaint.status || "N/A"}</div>
+            <div style="margin-bottom: 4px;"><strong>Priority:</strong> ${complaint.priority || "N/A"}</div>
+            <div style="margin-bottom: 4px;"><strong>Submitted:</strong> ${submittedLabel}</div>
+            <div style="margin-bottom: 6px;"><strong>Location:</strong> ${locationText}</div>
+            <div style="margin-bottom: 8px; white-space: normal;"><strong>Details:</strong> ${description}</div>
+            <div style="font-family: monospace; font-size: 10px; opacity: 0.8;">ID: ${complaint.id || "N/A"}</div>
+          </div>
+        `,
+        { maxWidth: 340, className: "complaint-popup" }
+      );
+
       this.backgroundMarkers.set(complaint.id, marker);
+      markersToBatch.push(marker);
     });
+    
+    // Efficiently batch add to the feature group
+    markersToBatch.forEach(m => this._backgroundLayerGroup.addLayer(m));
 
     _NLP_DEBUG && console.log(`[FILTER] Created ${this.backgroundMarkers.size} markers`);
     _NLP_DEBUG && console.log(`[FILTER] Filter complete`);
@@ -6969,14 +7078,38 @@ class SimulationEngine {
   }
 
   /**
+     * Show all background markers
+     */
+  showBackgroundMarkers() {
+    if (this._backgroundLayerGroup && !this.map.hasLayer(this._backgroundLayerGroup)) {
+      this.map.addLayer(this._backgroundLayerGroup);
+    }
+  }
+
+  /**
+     * Hide all background markers
+     */
+  hideBackgroundMarkers() {
+    if (this._backgroundLayerGroup && this.map.hasLayer(this._backgroundLayerGroup)) {
+      this.map.removeLayer(this._backgroundLayerGroup);
+    }
+  }
+
+  /**
      * Clear all background markers from the map.
      */
   clearAllBackgroundMarkers() {
+    if (this._backgroundLayerGroup) {
+      this._backgroundLayerGroup.clearLayers();
+    }
+    
+    // Fallback for stray markers added the old way
     this.backgroundMarkers.forEach((marker) => {
       if (this.map.hasLayer(marker)) {
         this.map.removeLayer(marker);
       }
     });
+    this.backgroundMarkers.clear();
   }
 
   // ==================== SPOTLIGHT LAYER MANAGEMENT ====================
@@ -7010,8 +7143,6 @@ class SimulationEngine {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 0 20px ${hasWarning ? "#ef4444" : color}, 0 0 40px ${hasWarning ? "#ef4444" : color}40;
-                animation: spotlight-pulse 1.5s infinite;
                 border: 3px solid white;
             ">
                 <i class="fas fa-${hasWarning ? "exclamation-triangle" : iconName}" style="
@@ -7033,7 +7164,6 @@ class SimulationEngine {
                     justify-content: center;
                     color: white;
                     font-size: 10px;
-                    box-shadow: var(--shadow-sm);
                 ">!</div>
                 ` : ""}
             </div>

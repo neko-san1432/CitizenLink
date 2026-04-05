@@ -124,7 +124,7 @@ class ComplaintRepository {
         query = query.eq("workflow_status", status);
       }
       if (type) {
-        query = query.eq("category", type);
+        query = query.eq("category_id", type);
       }
       // First get the count without range, applying same filters
       let countQuery = client
@@ -135,7 +135,7 @@ class ComplaintRepository {
         countQuery = countQuery.eq("workflow_status", status);
       }
       if (type) {
-        countQuery = countQuery.eq("category", type);
+        countQuery = countQuery.eq("category_id", type);
       }
       const { count: totalCount, error: countError } = await countQuery;
       if (countError) {
@@ -185,18 +185,7 @@ class ComplaintRepository {
    * Uses a simple in-memory cache (5 min TTL) to avoid repeated DB lookups.
    */
   async _resolveCategoryNames(complaints) {
-    if (!complaints || complaints.length === 0) return complaints;
-
-    // UUID v4 regex
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-    // Check if any complaints need resolution
-    const needsResolution = complaints.some(
-      c => uuidRegex.test(c.category || "") || uuidRegex.test(c.subcategory || "")
-    );
-    if (!needsResolution) return complaints;
-
-    // Use cached lookup maps (refresh every 5 minutes)
+    // v5.6: Always ensure cache is warm before any logic
     const now = Date.now();
     if (!this._categoryCache || now - this._categoryCacheTime > 5 * 60 * 1000) {
       try {
@@ -210,24 +199,59 @@ class ComplaintRepository {
         this._categoryCache = true;
         this._categoryCacheTime = now;
       } catch (err) {
-        console.warn("[REPO] Failed to load category lookup tables:", err.message);
-        return complaints; // Return unresolved rather than crashing
+        console.warn("[REPO] Failed to load lookup tables:", err.message);
+        // Fallback to empty maps if DB fails
+        this._categoryMap = this._categoryMap || new Map();
+        this._subcategoryMap = this._subcategoryMap || new Map();
       }
     }
 
-    // Resolve UUIDs to names
+    if (!complaints || complaints.length === 0) return complaints;
+
+    // Resolve IDs to names for frontend backward compatibility
     return complaints.map(complaint => {
       const resolved = { ...complaint };
-      if (uuidRegex.test(resolved.category || "")) {
-        resolved.category_name = this._categoryMap.get(resolved.category) || resolved.category;
-        resolved.category = resolved.category_name;
+      
+      // Map category_id -> category (string)
+      if (resolved.category_id) {
+        resolved.category = this._categoryMap.get(resolved.category_id) || resolved.category_id;
       }
-      if (uuidRegex.test(resolved.subcategory || "")) {
-        resolved.subcategory_name = this._subcategoryMap.get(resolved.subcategory) || resolved.subcategory;
-        resolved.subcategory = resolved.subcategory_name;
+      
+      // Map subcategory_id -> subcategory (string)
+      if (resolved.subcategory_id) {
+        resolved.subcategory = this._subcategoryMap.get(resolved.subcategory_id) || resolved.subcategory_id;
       }
+      
       return resolved;
     });
+  }
+
+  /**
+   * v5.5: Helper to map Name strings back to Database IDs (UUIDs)
+   */
+  async _lookupIdsByName(names, type = 'category') {
+    if (!names || names.length === 0) return [];
+    if (names === 'all') return [];
+
+    // Ensure cache is warm
+    if (!this._categoryCache) await this._resolveCategoryNames([]);
+
+    const nameArr = Array.isArray(names) ? names : [names];
+    const map = type === 'category' ? this._categoryMap : this._subcategoryMap;
+    const ids = [];
+
+    // Reverse lookup from the existing ID -> Name maps
+    for (const [id, name] of map.entries()) {
+      if (nameArr.includes(name)) ids.push(id);
+    }
+
+    // Include original names if they look like UUIDs already
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    nameArr.forEach(n => {
+      if (uuidRegex.test(n) && !ids.includes(n)) ids.push(n);
+    });
+
+    return ids;
   }
 
   async findAll(options = {}) {
@@ -267,7 +291,7 @@ class ComplaintRepository {
       }
     }
     if (type) {
-      query = query.eq("category", type);
+      query = query.eq("category_id", type);
     }
     if (department) {
       query = query.contains("departments", [department]);
@@ -553,7 +577,7 @@ class ComplaintRepository {
       data.forEach(c => {
         const status = c.workflow_status || "unknown";
         const priority = c.priority || "medium";
-        const category = c.category || "General";
+        const category = c.category_id || "General";
 
         stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
         stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
@@ -583,29 +607,95 @@ class ComplaintRepository {
 
       let query = client
         .from("complaints")
-        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category, subcategory, departments, submitted_at")
+        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category_id, subcategory_id, departments, submitted_at")
         .not("latitude", "is", null)
         .not("longitude", "is", null);
+
+      // Helper: normalize filter values to clean string arrays.
+      // Accepts arrays, comma-delimited strings, UUIDs, names, and object-like values.
+      const toArray = (val) => {
+        if (val === null || typeof val === "undefined") return [];
+
+        const values = Array.isArray(val) ? val : [val];
+        const out = [];
+
+        const pushNormalized = (item) => {
+          if (item === null || typeof item === "undefined") return;
+
+          if (Array.isArray(item)) {
+            item.forEach(pushNormalized);
+            return;
+          }
+
+          if (typeof item === "object") {
+            const candidate = item.id || item.value || item.name || item.label;
+            if (candidate) {
+              pushNormalized(candidate);
+            }
+            return;
+          }
+
+          const str = String(item).trim();
+          if (!str || str.toLowerCase() === "all") return;
+
+          str
+            .split(",")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .forEach((part) => {
+              if (part.toLowerCase() !== "all") out.push(part);
+            });
+        };
+
+        values.forEach(pushNormalized);
+        return [...new Set(out)];
+      };
+
+      const statusArr = toArray(status);
+      const confirmArr = toArray(confirmationStatus);
+      const subcategoryArr = toArray(subcategory);
+      const categoryArr = toArray(category);
+      const deptArr = toArray(department);
+
+      const categoryIds = await this._lookupIdsByName(categoryArr, "category");
+      const subcategoryIds = await this._lookupIdsByName(
+        subcategoryArr,
+        "subcategory"
+      );
 
       // Exclude resolved/cancelled unless includeResolved is true
       if (!includeResolved) {
         query = query.not("workflow_status", "in", '("completed","cancelled")');
       }
 
-      if (status && status.length > 0) {
-        query = query.in("workflow_status", status);
+      if (statusArr.length > 0) {
+        query = query.in("workflow_status", statusArr);
       }
 
-      if (confirmationStatus && confirmationStatus.length > 0) {
-        query = query.in("confirmation_status", confirmationStatus);
+      if (confirmArr.length > 0) {
+        query = query.in("confirmation_status", confirmArr);
       }
 
-      if (category && category.length > 0) {
-        query = query.in("category", category);
+      // v5.5: Filter by canonical UUID IDs only (resolved from names or direct UUIDs)
+      if (categoryArr.length > 0 && categoryIds.length === 0) {
+        return [];
+      }
+      if (subcategoryArr.length > 0 && subcategoryIds.length === 0) {
+        return [];
       }
 
-      if (subcategory) {
-        query = query.eq("subcategory", subcategory);
+      if (categoryIds.length > 0 && subcategoryIds.length > 0) {
+        query = query.or(
+          `category_id.in.(${formatInArray(categoryIds)}),subcategory_id.in.(${formatInArray(subcategoryIds)})`
+        );
+      } else if (categoryIds.length > 0) {
+        query = query.in("category_id", categoryIds);
+      } else if (subcategoryIds.length > 0) {
+        query = query.in("subcategory_id", subcategoryIds);
+      }
+
+      function formatInArray(arr) {
+        return arr.map(i => `"${i}"`).join(",");
       }
 
       if (startDate) {
@@ -620,14 +710,14 @@ class ComplaintRepository {
         query = query.lte("submitted_at", end.toISOString());
       }
 
-      // v4.5.3: Explicitly increase limit to 10000 for heatmap clustering
-      const { data, error } = await query.limit(10000);
+      // v4.5.3: Explicitly increase limit to 25000 for heatmap clustering
+      const { data, error } = await query.limit(25000);
       if (error) throw error;
 
-      // Filter by department in-memory (department_r is an array field)
+      // Filter by department in-memory (departments is an array column)
       let results = data || [];
-      if (department && department.length > 0) {
-        const deptUpper = department.map(d => String(d).toUpperCase().trim());
+      if (deptArr.length > 0) {
+        const deptUpper = deptArr.map(d => String(d).toUpperCase().trim());
         results = results.filter(c => {
           const depts = Array.isArray(c.departments) ? c.departments : [];
           return depts.some(d => deptUpper.includes(String(d).toUpperCase().trim()));
@@ -667,7 +757,7 @@ class ComplaintRepository {
 
       const { data: complaints, error } = await client
         .from("complaints")
-        .select("id, workflow_status, confirmation_status, submitted_at, priority, category, description")
+        .select("id, workflow_status, confirmation_status, submitted_at, priority, category_id, description")
         .eq("submitted_by", userId);
 
       if (error) throw error;

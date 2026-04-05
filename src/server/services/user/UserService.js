@@ -72,7 +72,7 @@ class UserService {
             address_line_2: address.line2 || null,
             city: address.city || null,
             province: address.province || null,
-            postal_code: address.postalCode || null,
+            postal_code: "8002",
             barangay: address.barangay || null,
             // LGU staff fields
             department,
@@ -111,7 +111,7 @@ class UserService {
             address_line_2: address.line2 || null,
             city: address.city || null,
             province: address.province || null,
-            postal_code: address.postalCode || null,
+            postal_code: "8002",
             barangay: address.barangay || null,
             // LGU staff fields
             department,

@@ -66,11 +66,12 @@ CREATE TABLE public.complaint_clusters (
 CREATE TABLE public.complaint_coordinators (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
-  department_id bigint NOT NULL,
+  department text NOT NULL,
   is_active boolean DEFAULT true,
   assigned_at timestamp with time zone DEFAULT now(),
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
+  department_id bigint,
   CONSTRAINT complaint_coordinators_pkey PRIMARY KEY (id),
   CONSTRAINT complaint_coordinators_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
   CONSTRAINT complaint_coordinators_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
@@ -100,7 +101,7 @@ CREATE TABLE public.complaint_evidence (
   evidence_type text DEFAULT 'initial'::text CHECK (evidence_type = ANY (ARRAY['initial'::text, 'completion'::text])),
   CONSTRAINT complaint_evidence_pkey PRIMARY KEY (id),
   CONSTRAINT complaint_evidence_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_evidence_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id) ON DELETE CASCADE
+  CONSTRAINT complaint_evidence_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
 );
 CREATE TABLE public.complaint_history (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -120,8 +121,8 @@ CREATE TABLE public.complaint_reminders (
   reminded_by uuid,
   reminder_type text DEFAULT 'manual'::text,
   CONSTRAINT complaint_reminders_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_reminders_reminded_by_fkey FOREIGN KEY (reminded_by) REFERENCES auth.users(id),
-  CONSTRAINT complaint_reminders_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id) ON DELETE CASCADE
+  CONSTRAINT complaint_reminders_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id),
+  CONSTRAINT complaint_reminders_reminded_by_fkey FOREIGN KEY (reminded_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.complaint_similarities (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -135,14 +136,6 @@ CREATE TABLE public.complaint_similarities (
   coordinator_decision text CHECK (coordinator_decision = ANY (ARRAY['duplicate'::text, 'related'::text, 'unique'::text, 'false_positive'::text])),
   CONSTRAINT complaint_similarities_pkey PRIMARY KEY (id),
   CONSTRAINT complaint_similarities_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES auth.users(id)
-);
-CREATE TABLE public.complaint_upvotes (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  complaint_id uuid NOT NULL,
-  user_id uuid NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT complaint_upvotes_pkey PRIMARY KEY (id),
-  CONSTRAINT complaint_upvotes_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES public.complaints(id)
 );
 CREATE TABLE public.complaint_workflow_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -161,10 +154,8 @@ CREATE TABLE public.complaints (
   location_text text,
   latitude double precision,
   longitude double precision,
-  category text,
-  subcategory text,
   departments ARRAY DEFAULT '{}'::text[],
-  workflow_status text DEFAULT 'new'::text CHECK (workflow_status = ANY (ARRAY['new'::text, 'assigned'::text, 'in_progress'::text, 'pending_approval'::text, 'completed'::text, 'cancelled'::text])),
+  workflow_status text DEFAULT 'submitted'::text CHECK (workflow_status = ANY (ARRAY['submitted'::text, 'verified'::text, 'under_review'::text, 'action_taken'::text, 'resolved'::text])),
   priority text DEFAULT 'low'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
   assigned_coordinator_id uuid,
   response_deadline timestamp with time zone,
@@ -193,7 +184,13 @@ CREATE TABLE public.complaints (
   submitted_by_snapshot jsonb,
   account_preservation_data jsonb,
   original_submitter_id uuid,
+  comment jsonb DEFAULT '{}'::jsonb,
+  phase_comments jsonb DEFAULT '{"resolved": [], "verified": [], "submitted": [], "action_taken": [], "under_review": []}'::jsonb,
+  category_id uuid,
+  subcategory_id uuid,
   CONSTRAINT complaints_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_complaints_category FOREIGN KEY (category_id) REFERENCES public.categories(id),
+  CONSTRAINT fk_complaints_subcategory FOREIGN KEY (subcategory_id) REFERENCES public.subcategories(id),
   CONSTRAINT complaints_assigned_coordinator_id_fkey FOREIGN KEY (assigned_coordinator_id) REFERENCES auth.users(id),
   CONSTRAINT complaints_master_complaint_id_fkey FOREIGN KEY (master_complaint_id) REFERENCES public.complaints(id),
   CONSTRAINT complaints_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES auth.users(id),
@@ -346,7 +343,6 @@ CREATE TABLE public.nlp_keywords (
   CONSTRAINT nlp_keywords_pkey PRIMARY KEY (id),
   CONSTRAINT nlp_keywords_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
-);
 CREATE TABLE public.nlp_metaphors (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   pattern text NOT NULL,
@@ -430,7 +426,7 @@ CREATE TABLE public.notifications (
   read_at timestamp with time zone,
   expires_at timestamp with time zone,
   CONSTRAINT notifications_pkey PRIMARY KEY (id),
-  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT notification_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.rate_limits (
   key text NOT NULL,
@@ -510,7 +506,6 @@ CREATE TABLE public.task_forces (
   CONSTRAINT task_forces_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
   CONSTRAINT task_forces_ended_by_fkey FOREIGN KEY (ended_by) REFERENCES auth.users(id)
 );
-);
 CREATE TABLE public.user_profiles (
   id uuid NOT NULL,
   role text DEFAULT 'citizen'::text,
@@ -519,7 +514,6 @@ CREATE TABLE public.user_profiles (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
-);
 );
 CREATE TABLE public.user_sessions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
