@@ -13,12 +13,15 @@ storage/ai_cache/
 log.txt
 secrets-found.txt
 
+<<<<<<<<< Temporary merge branch 1
+# Dev HTTPS certs (never commit private keys)
+certs/*.pem
+certs/*.key
+certs/*.crt
+=========
 # Standalone utilities
 standalone-map-viewer/
 
 # Ignore Windows NUL device file
 nul
-# Dev HTTPS certs (never commit private keys)
-certs/*.pem
-certs/*.key
-certs/*.crt
+>>>>>>>>> Temporary merge branch 2
