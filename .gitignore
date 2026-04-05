@@ -13,8 +13,15 @@ storage/ai_cache/
 log.txt
 secrets-found.txt
 
+<<<<<<< ours
 # Standalone utilities
 standalone-map-viewer/
 
 # Ignore Windows NUL device file
 nul
+=======
+# Dev HTTPS certs (never commit private keys)
+certs/*.pem
+certs/*.key
+certs/*.crt
+>>>>>>> theirs

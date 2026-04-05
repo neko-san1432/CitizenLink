@@ -39,6 +39,15 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-light);
   line-height: 1.6;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+}
+
+@supports (min-height: 100dvh) {
+  .auth-page {
+    min-height: 100dvh;
+  }
 }
 
 /* Background Effects */
@@ -57,6 +66,7 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   z-index: -2;
+  pointer-events: none;
 }
 
 .grid-overlay {
@@ -185,6 +195,45 @@ body {
   -webkit-backdrop-filter: blur(24px);
   overflow: hidden;
   animation: cardEntry 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (max-width: 640px) {
+  .auth-page {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .navbar {
+    padding: 0 1rem;
+  }
+
+  .nav-links {
+    gap: 0.5rem;
+  }
+
+  /* Keep only the primary CTA on very small screens */
+  .nav-links a:not(.btn-primary-sm) {
+    display: none;
+  }
+
+  .auth-container {
+    padding: 0.75rem;
+  }
+
+  .auth-card {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    height: 60px;
+  }
+
+  .auth-page {
+    padding-top: 60px;
+  }
 }
 
 @keyframes cardEntry {

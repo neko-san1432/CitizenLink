@@ -174,3 +174,47 @@ html.dark .complaint-item {
   max-height: 200px;
   overflow-y: auto;
 }
+
+/* Recent Status Updates: prevent text/status overlap */
+.recent-update-item {
+  align-items: flex-start;
+}
+
+.recent-update-body {
+  min-width: 0;
+}
+
+.recent-update-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-update-status {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .recent-update-item {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .recent-update-status-wrap {
+    width: 100%;
+  }
+
+  .recent-update-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+@media (max-width: 640px) {
+  /* On small screens, let the list breathe instead of forcing a tiny internal scroll area. */
+  #recent-activity-list {
+    max-height: none;
+  }
+}

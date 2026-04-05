@@ -50,6 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+function escapeHtml(value) {
+  const str = value == null ? "" : String(value);
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Update loadReviewQueue to accept page param
 async function loadReviewQueue(page = 1) {
   const tableBody = document.getElementById("complaint-list");
@@ -92,32 +102,38 @@ async function loadReviewQueue(page = 1) {
 
     if (complaints.length > 0) {
       tableBody.innerHTML = complaints.map(complaint => {
-        const cat = complaint.category || "General";
-        const sub = complaint.subcategory;
-        const categoryDisplay = sub ? `${cat} <span style="opacity:0.5">/</span> ${sub}` : cat;
-        const desc = complaint.description || "—";
-        const descSafe = (desc || "").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+      const id = escapeHtml(complaint.id);
+
+      const cat = escapeHtml(complaint.category || "General");
+      const sub = complaint.subcategory ? escapeHtml(complaint.subcategory) : "";
+      const categoryDisplay = sub ? `${cat} <span style="opacity:0.5">/</span> ${sub}` : cat;
+
+      const priorityText = escapeHtml(complaint.priority || "");
+      const locationText = escapeHtml(complaint.location_text || "N/A");
+
+      const descRaw = complaint.description || "—";
+      const descEscaped = escapeHtml(descRaw);
         return `
-                <tr class="complaint-row cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" data-id="${complaint.id}">
+          <tr class="complaint-row cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" data-id="${id}">
                     <td class="px-2 py-3 whitespace-nowrap">
                         <span class="px-2 py-0.5 inline-flex text-[10px] leading-4 font-bold uppercase tracking-wide rounded-full bg-${getPriorityColor(complaint.priority)}-100 text-${getPriorityColor(complaint.priority)}-800 border border-${getPriorityColor(complaint.priority)}-200">
-                            ${complaint.priority}
+                ${priorityText}
                         </span>
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs font-medium text-gray-700">
                         ${categoryDisplay}
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">
-                        ${complaint.location_text || "N/A"}
+              ${locationText}
                     </td>
                     <td class="px-3 py-3 text-xs text-gray-600">
-                        <div class="truncate w-64" title="${descSafe}">${desc}</div>
+              <div class="truncate w-64" title="${descEscaped}">${descEscaped}</div>
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-400">
                         ${new Date(complaint.submitted_at || complaint.created_at).toLocaleDateString()}
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-right">
-                        <button class="btn-review inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-id="${complaint.id}">
+              <button class="btn-review inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-id="${id}">
                             Review
                         </button>
                     </td>

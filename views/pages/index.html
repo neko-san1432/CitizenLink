@@ -188,7 +188,7 @@
       <div class="footer-brand">
         <div class="logo">
           <div class="logo-icon">
-            <img src="/assets/images/dRIMSIcon.png" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
+            <img src="/assets/images/dRIMSIconRemovebgPreview.png" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
           </div>
           <span class="brand-text" style="font-size: 1.5rem; margin-left: 8px;">DRIMS</span>
         </div>
@@ -230,6 +230,9 @@
     const navbar = document.querySelector('.navbar');
     const heroSection = document.querySelector('.hero-section');
 
+    // On mobile, avoid auto-hiding the navbar (it can feel like it disappears/"jumps").
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+
     const heroObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         // If hero section is NOT intersecting (scrolled past), hide navbar
@@ -242,7 +245,7 @@
       });
     }, { threshold: 0.1 }); // Trigger when 10% of hero is remaining/visible
 
-    if (heroSection) {
+    if (!isMobile && heroSection) {
       heroObserver.observe(heroSection);
     }
   </script>

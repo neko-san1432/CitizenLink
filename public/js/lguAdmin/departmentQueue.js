@@ -30,6 +30,26 @@ class departmentQueue {
     ];
     this.init();
   }
+
+  escapeHtml(value) {
+    const str = value == null ? "" : String(value);
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  safeClassToken(value, fallback = "") {
+    const str = value == null ? "" : String(value);
+    const token = str
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    return token || fallback;
+  }
+
   init() {
     this.setupEventListeners();
     this.loadcomplaints();
@@ -152,14 +172,14 @@ class departmentQueue {
             <div class="complaint-card">
                 <div class="complaint-header">
                     <div class="complaint-title-section">
-                        <h3 class="complaint-title">${complaint.title || "Untitled complaint"}</h3>
+              <h3 class="complaint-title">${this.escapeHtml(complaint.title || "Untitled complaint")}</h3>
                         <div class="complaint-meta">
                             <span class="complaint-id">#${complaint.id}</span>
-                            <span class="complaint-status status-${complaint.status?.toLowerCase().replace(" ", "-") || "pending"}">
-                                ${complaint.status || "Pending"}
+                <span class="complaint-status status-${this.safeClassToken(complaint.status, "pending")}">
+                  ${this.escapeHtml(complaint.status || "Pending")}
                             </span>
-                            <span class="complaint-priority priority-${complaint.priority?.toLowerCase() || "medium"}">
-                                ${complaint.priority || "Medium"}
+                <span class="complaint-priority priority-${this.safeClassToken(complaint.priority, "medium")}">
+                  ${this.escapeHtml(complaint.priority || "Medium")}
                             </span>
                         </div>
                     </div>
@@ -169,7 +189,7 @@ class departmentQueue {
                 </div>
                 
                 <div class="complaint-content">
-                    <p class="complaint-description">${complaint.description || "No description provided"}</p>
+            <p class="complaint-description">${this.escapeHtml(complaint.description || "No description provided")}</p>
                     ${complaint.is_assigned_to_department === false ? `
                         <div class="info-banner" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
                             ⚠️ This complaint is not assigned to your department. Limited information only.
@@ -182,11 +202,11 @@ class departmentQueue {
                         </div>
                         <div class="complaint-detail">
                             <span>📍</span>
-                            <span>${complaint.location_text || "No location"}</span>
+                <span>${this.escapeHtml(complaint.location_text || "No location")}</span>
                         </div>
                         <div class="complaint-detail">
                             <span>🏷️</span>
-                            <span>${complaint.type || "General"}</span>
+                <span>${this.escapeHtml(complaint.type || "General")}</span>
                         </div>
                     </div>
                 </div>

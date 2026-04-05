@@ -11,10 +11,10 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="./css/base/style.css" />
-  <link rel="stylesheet" href="./css/components/toast.css" />
-  <link rel="stylesheet" href="./css/components/header.css" />
-  <link rel="stylesheet" href="./css/pages/login.css" />
+  <link rel="stylesheet" href="/css/base/style.css" />
+  <link rel="stylesheet" href="/css/components/toast.css" />
+  <link rel="stylesheet" href="/css/components/header.css" />
+  <link rel="stylesheet" href="/css/pages/login.css" />
 
 </head>
 
@@ -57,7 +57,7 @@
         <div class="auth-content">
           <!-- Main Login Form -->
           <div class="auth-main">
-            <form id="login" class="login-form" method="post" action="javascript:void(0);">
+            <form id="login" class="login-form" method="post" action="#">
               <div class="form-group">
                 <label for="email" class="form-label form-label-required">Email address</label>
                 <div class="input-wrapper">
@@ -108,7 +108,7 @@
 
               <div id="login-captcha" class="captcha-container" style="display: none"></div>
 
-              <button class="btn btn-primary btn-lg w-full" type="submit" name="Login" id="login-submit-btn" disabled>
+              <button class="btn btn-primary btn-lg w-full" type="submit" name="Login" id="login-submit-btn">
                 <span id="login-btn-text">Sign in</span>
                 <svg id="login-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -181,11 +181,11 @@
 
   <!-- Scripts -->
   <script type="module" src="/js/lib/supabaseBoot.js"></script>
-  <script type="module" src="./js/components/toast.js"></script>
-  <script type="module" src="./js/utils/theme.js"></script>
-  <script type="module" src="./js/auth/auth.js"></script>
-  <script type="module" src="./js/auth/loginPage.js"></script>
-  <script type="module" src="./js/auth/authChecker.js"></script>
+  <script type="module" src="/js/components/toast.js"></script>
+  <script type="module" src="/js/utils/theme.js"></script>
+  <script type="module" src="/js/auth/auth.js"></script>
+  <script type="module" src="/js/auth/loginPage.js"></script>
+  <script type="module" src="/js/auth/authChecker.js"></script>
 </body>
 
 </html>

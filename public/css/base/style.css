@@ -124,6 +124,7 @@ body {
   line-height: 1.6;
   color: var(--gray-900);
   background-color: var(--gray-50);
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -344,6 +345,13 @@ a:hover {
   box-sizing: border-box;
 }
 
+@supports (height: 100dvh) {
+  .dashboard-container {
+    min-height: calc(100dvh - 64px);
+    max-height: calc(100dvh - 64px);
+  }
+}
+
 .hidden {
   display: none !important;
 }
@@ -500,6 +508,12 @@ a:hover {
   height: 100vh;
 }
 
+@supports (height: 100dvh) {
+  #app {
+    height: 100dvh;
+  }
+}
+
 #app>.header-container {
   position: relative;
   flex-shrink: 0;
@@ -528,12 +542,25 @@ html {
   overflow-x: hidden;
 }
 
+@supports (height: 100dvh) {
+  body,
+  html {
+    height: 100dvh;
+  }
+}
+
 /* Main App Container */
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  .app-container {
+    height: 100dvh;
+  }
 }
 
 /* Quick Actions - Compact Grid */
@@ -561,6 +588,12 @@ header,
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+@supports (height: 100dvh) {
+  .hero-section {
+    height: 100dvh;
+  }
 }
 
 /* General spacing reduction */

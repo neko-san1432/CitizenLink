@@ -10,6 +10,13 @@ body {
   box-sizing: border-box;
 }
 
+@supports (min-height: 100dvh) {
+  html,
+  body {
+    min-height: 100dvh;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

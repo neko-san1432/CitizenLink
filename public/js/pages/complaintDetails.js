@@ -1718,6 +1718,24 @@ export class complaintDetails {
       showToast("Geolocation is not supported by this browser.", "error");
       return;
     }
+
+    // Most mobile browsers require HTTPS for geolocation when not on localhost.
+    // Avoid repeated failures that feel like a loop.
+    if (!window.isSecureContext) {
+      const host = window.location.hostname;
+      const isLocalhost = host === "localhost" || host === "127.0.0.1";
+      if (!isLocalhost) {
+        showToast(
+          "Location requires HTTPS on most phones. Open this page over HTTPS or use manual map viewing.",
+          "error"
+        );
+        const manualLocation = document.getElementById("manual-location");
+        if (manualLocation) {
+          manualLocation.style.display = "block";
+        }
+        return;
+      }
+    }
     const getRouteBtn = document.getElementById("get-route-btn");
     const clearRouteBtn = document.getElementById("clear-route-btn");
     const routeInfo = document.getElementById("route-info");

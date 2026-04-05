@@ -7,11 +7,29 @@
   padding: 2rem 1rem;
 }
 
+@supports (min-height: 100dvh) {
+  .main-content-wrapper {
+    min-height: calc(100dvh - 64px);
+  }
+}
+
 .complaint-wizard-container {
   max-width: 1400px;
   /* Wider for 2 cols */
   margin: 0 auto;
   padding-bottom: 80px;
+}
+
+@media (max-width: 640px) {
+  .complaint-wizard-container {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
+  }
+
+  .form-actions-sticky {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
 }
 
 .page-header {
@@ -36,6 +54,45 @@
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto;
+}
+
+/* Description header row (label + hint + voice controls) */
+.description-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.description-header-row label {
+  margin-bottom: 0;
+}
+
+.description-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  flex: 1 1 100%;
+}
+
+.voice-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.voice-controls select {
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .description-hint {
+    flex: 1 1 auto;
+    margin-left: 8px;
+  }
 }
 
 /* Two-Column Layout */
@@ -197,6 +254,10 @@
 .location-wrapper {
   display: flex;
   flex-direction: column;
+}
+
+.auto-locate-btn {
+  margin-top: 0.75rem;
 }
 
 .map-wrapper {
@@ -756,6 +817,29 @@ html.dark .duplicate-warning-container.blocking-mode {
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+}
+
+@media (max-width: 480px) {
+  .wizard-stepper {
+    padding: 0 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .step-indicator {
+    padding: 0 6px;
+    min-width: 0;
+  }
+
+  .step-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.03em;
+  }
+}
+
+@media (max-width: 380px) {
+  .step-label {
+    display: none;
+  }
 }
 
 .wizard-stepper::before {

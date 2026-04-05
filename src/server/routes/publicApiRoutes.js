@@ -20,6 +20,7 @@ const GEOCODE_CACHE_MAX_SIZE = 1000; // LRU eviction threshold
 const GEOCODE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const GEOCODE_RATE_LIMIT_MS = 1100; // Nominatim requires 1 request/second
 let lastGeocodeRequestTime = 0;
+let geocodeBackoffUntil = 0;
 
 /**
  * Generate cache key from coordinates (5-decimal precision)
@@ -110,6 +111,21 @@ router.get("/reverse-geocode", apiLimiter, async (req, res) => {
 
     // ==================== RATE LIMITING ====================
     const now = Date.now();
+
+    if (now < geocodeBackoffUntil) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((geocodeBackoffUntil - now) / 1000)
+      );
+      return res
+        .status(429)
+        .set("Retry-After", String(retryAfterSeconds))
+        .json({
+          error: "Reverse geocoding temporarily rate-limited",
+          retryAfterSeconds
+        });
+    }
+
     const timeSinceLastRequest = now - lastGeocodeRequestTime;
     if (timeSinceLastRequest < GEOCODE_RATE_LIMIT_MS) {
       // Wait to respect Nominatim rate limit
@@ -125,6 +141,28 @@ router.get("/reverse-geocode", apiLimiter, async (req, res) => {
       }
     });
     if (!response.ok) {
+      if (response.status === 429) {
+        const retryAfterHeader = response.headers.get("retry-after");
+        const parsedRetryAfter = retryAfterHeader
+          ? Number.parseInt(retryAfterHeader, 10)
+          : NaN;
+
+        const retryAfterSeconds = Number.isFinite(parsedRetryAfter) && parsedRetryAfter > 0
+          ? parsedRetryAfter
+          : 10;
+
+        // Apply a simple global cooldown to avoid repeated 429s.
+        geocodeBackoffUntil = Date.now() + retryAfterSeconds * 1000;
+
+        return res
+          .status(429)
+          .set("Retry-After", String(retryAfterSeconds))
+          .json({
+            error: "Reverse geocoding rate-limited",
+            retryAfterSeconds
+          });
+      }
+
       throw new Error(`Nominatim API error: ${response.status}`);
     }
     const data = await response.json();
