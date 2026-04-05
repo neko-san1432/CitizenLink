@@ -27,6 +27,207 @@
       pointer-events: none;
     }
 
+    /* === Dim overlay === */
+    #mip-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    #mip-root.mip-open #mip-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* === Slide-in drawer - TACTICAL VIBE === */
+    #mip-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(680px, 100vw);
+      height: 100%;
+      background: #0f172a;
+      border-left: 1px solid rgba(255,255,255,0.08);
+      box-shadow: -10px 0 40px rgba(0,0,0,0.8), -2px 0 15px rgba(59, 130, 246, 0.15);
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+      pointer-events: auto;
+      overflow: hidden;
+      font-family: 'Outfit', sans-serif;
+    }
+    #mip-root.mip-open #mip-panel {
+      transform: translateX(0);
+    }
+
+    /* === Header - Modern Glassmorphism === */
+    .mip-header {
+      flex-shrink: 0;
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .mip-close-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 6px 10px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .mip-close-btn:hover { 
+      background: rgba(239, 68, 68, 0.15); 
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05);
+    }
+
+    .mip-complaint-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+
+    .mip-veracity-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .mip-badge-unverified { background: #b45309; color: #fff; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .mip-badge-high       { background: #047857; color: #fff; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .mip-badge-moderate   { background: #1d4ed8; color: #fff; border: 1px solid rgba(96, 165, 250, 0.3); }
+    .mip-badge-maintenance { background: #6d28d9; color: #fff; border: 1px solid rgba(167, 139, 250, 0.3); }
+
+    .mip-review-btn {
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.2) 0%, rgba(29, 78, 216, 0.1) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      color: #93c5fd;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .mip-review-btn:hover { 
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.4) 0%, rgba(29, 78, 216, 0.2) 100%);
+      border-color: rgba(59, 130, 246, 0.9);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), inset 0 1px 1px rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    .mip-review-btn i {
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    /* === Scrollable body === */
+    .mip-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.95) 100%);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+    }
+    .mip-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    .mip-body::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 4px;
+    }
+    .mip-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* === Inner layout tweaks to align map popup with panel vibe === */
+    .mip-body .tactical-popup-container {
+      width: 100% !important;
+      max-width: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    .mip-body .tactical-popup-header {
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    .mip-body .tactical-popup-body {
+      padding: 0 !important;
+      background: transparent !important;
+    }
+    /* Skeleton Loader tweaks */
+    .mip-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    @keyframes pulse-bg {
+      0% { background-color: rgba(51, 65, 85, 0.3); }
+      50% { background-color: rgba(71, 85, 105, 0.5); }
+      100% { background-color: rgba(51, 65, 85, 0.3); }
+    }
+    .mip-sk-line {
+      height: 12px;
+      border-radius: 6px;
+      animation: pulse-bg 1.5s infinite;
+    }
+    .mip-sk-line.wide  { width: 85%; }
+    .mip-sk-line.half  { width: 50%; }
+    .mip-sk-line.third { width: 33%; height: 28px; }
+    .mip-sk-block {
+      height: 140px;
+      border-radius: 12px;
+      animation: pulse-bg 1.5s infinite;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+  ;
+      top: 70px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
     /* === Dim overlay (content area only) === */
     #mip-overlay {
       position: absolute;
