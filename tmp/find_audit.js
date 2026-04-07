@@ -9,12 +9,12 @@ const supabase = createClient(supabaseUrl, serviceKey);
 async function findAudit() {
   // Look for any update on the complaints table in the last hour
   const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
-  
+
   const { data, error } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('target_type', 'complaints')
-    .gte('created_at', oneHourAgo)
+    .from("audit_logs")
+    .select("*")
+    .eq("target_type", "complaints")
+    .gte("created_at", oneHourAgo)
     .limit(10);
 
   if (error) {

@@ -20,20 +20,20 @@ async function auditLookupTables() {
   if (badCats.length > 0 || badSubs.length > 0) {
     const badCatIds = badCats.map(c => c.id);
     const badSubIds = badSubs.map(s => s.id);
-    
+
     const { data: linked, error: lErr } = await supabase.from("complaints")
-        .select("id")
-        .or(`category.in.(${badCatIds.join(',')}),subcategory.in.(${badSubIds.join(',')})`);
+      .select("id")
+      .or(`category.in.(${badCatIds.join(",")}),subcategory.in.(${badSubIds.join(",")})`);
     if (linked) linkedComplaints = linked.length;
   }
 
   const report = {
     badCategories: badCats.length,
     badSubcategories: badSubs.length,
-    linkedComplaints: linkedComplaints,
+    linkedComplaints,
     samples: {
-        cats: badCats.slice(0, 3),
-        subs: badSubs.slice(0, 3)
+      cats: badCats.slice(0, 3),
+      subs: badSubs.slice(0, 3)
     }
   };
 

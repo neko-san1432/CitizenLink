@@ -49,7 +49,6 @@ class ComplaintController {
     }
 
 
-
     res.status(201).json(response);
   }
 
@@ -219,7 +218,6 @@ class ComplaintController {
     );
 
 
-
     res.json({
       success: true,
       data: complaint,
@@ -274,7 +272,6 @@ class ComplaintController {
       },
       userId
     );
-
 
 
     return res.json({ success: true, data: updated });
@@ -544,9 +541,8 @@ class ComplaintController {
     const { user } = req;
 
     const result = await this.complaintService.upvotecomplaint(id, user.id);
-    
 
-    
+
     res.json(result);
   }
 
@@ -659,7 +655,6 @@ class ComplaintController {
     );
 
 
-
     res.json({
       success: true,
       message: "Assignment marked as complete successfully",
@@ -681,7 +676,6 @@ class ComplaintController {
       confirmed,
       feedback
     );
-
 
 
     res.json({

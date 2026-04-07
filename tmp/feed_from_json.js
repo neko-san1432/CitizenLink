@@ -1,9 +1,9 @@
-require('dotenv').config({ path: '../.env' });
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
+require("dotenv").config({ path: "../.env" });
+const fs = require("fs");
+const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
 
-require('dotenv').config();
+require("dotenv").config();
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -11,8 +11,8 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const DEFAULT_USER_ID = "85fb7b44-ad98-4607-a12f-1273f65fb365";
 
 // Load the complaint data
-const dataPath = path.join(__dirname, '../public/assets/data/complaints/mockComplaints.json');
-const rawData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+const dataPath = path.join(__dirname, "../public/assets/data/complaints/mockComplaints.json");
+const rawData = JSON.parse(fs.readFileSync(dataPath, "utf8"));
 const mockComplaints = Array.isArray(rawData) ? rawData : rawData.complaints;
 
 // The same taxonomy mapping from the bulk generator script to resolve text names to UUIDs
@@ -35,69 +35,69 @@ const TAXONOMY = [
 ];
 
 function resolveTaxonomy(categoryStr, subcategoryStr) {
-    const cat = TAXONOMY.find(c => c.category_name.toLowerCase() === categoryStr?.toLowerCase());
-    if (!cat) return { category_id: null, subcategory_id: null };
+  const cat = TAXONOMY.find(c => c.category_name.toLowerCase() === categoryStr?.toLowerCase());
+  if (!cat) return { category_id: null, subcategory_id: null };
 
-    const sub = cat.subcategories.find(s => s.subcategory_name.toLowerCase() === subcategoryStr?.toLowerCase());
-    return {
-        category_id: cat.category_id,
-        subcategory_id: sub ? sub.subcategory_id : null
-    };
+  const sub = cat.subcategories.find(s => s.subcategory_name.toLowerCase() === subcategoryStr?.toLowerCase());
+  return {
+    category_id: cat.category_id,
+    subcategory_id: sub ? sub.subcategory_id : null
+  };
 }
 
 async function rebuildComplaints() {
-    console.log("1. Deleting ALL current complaints directly bypassing references...");
-    const { error: delErr } = await supabase
-        .from('complaints')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Hack to delete all cleanly
+  console.log("1. Deleting ALL current complaints directly bypassing references...");
+  const { error: delErr } = await supabase
+    .from("complaints")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000"); // Hack to delete all cleanly
 
-    if (delErr) {
-        console.error("Failed to clear existing database:", delErr);
-        return;
+  if (delErr) {
+    console.error("Failed to clear existing database:", delErr);
+    return;
+  }
+  console.log("Database cleared.");
+
+  console.log(`2. Formatting ${mockComplaints.length} records from mockComplaints.json...`);
+  const dbRows = mockComplaints.map(mock => {
+    const { category_id, subcategory_id } = resolveTaxonomy(mock.category, mock.subcategory);
+
+    return {
+      id: typeof mock.id === "string" && mock.id.length > 20 ? mock.id : undefined, // rely on PG default if invalid
+      submitted_by: DEFAULT_USER_ID,
+      category_id,
+      subcategory_id,
+      description: mock.description || "No description provided",
+      location_text: mock.location_text || "Digos City, Davao del Sur",
+      latitude: mock.latitude,
+      longitude: mock.longitude,
+      workflow_status: mock.workflow_status === "new" ? "submitted" : mock.workflow_status,
+      priority: ["low", "medium", "high", "urgent"].includes(mock.priority) ? mock.priority : "medium",
+      status: "pending",
+      urgency_level: "medium",
+      departments: [],
+      phase_comments: { "resolved": [], "verified": [], "submitted": [], "action_taken": [], "under_review": [] },
+      submitted_at: mock.submitted_at || new Date().toISOString()
+    };
+  });
+
+  console.log("3. Inserting records into Supabase...");
+
+  // Batch insert 50 at a time
+  let successCount = 0;
+  for (let i = 0; i < dbRows.length; i += 50) {
+    const batch = dbRows.slice(i, i + 50);
+    const { error: insErr } = await supabase.from("complaints").insert(batch);
+
+    if (insErr) {
+      console.error(`Batch insertion failed at index ${i}:`, insErr);
+    } else {
+      successCount += batch.length;
+      console.log(`Inserted ${successCount} / ${dbRows.length}`);
     }
-    console.log("Database cleared.");
+  }
 
-    console.log(`2. Formatting ${mockComplaints.length} records from mockComplaints.json...`);
-    const dbRows = mockComplaints.map(mock => {
-        const { category_id, subcategory_id } = resolveTaxonomy(mock.category, mock.subcategory);
-        
-        return {
-            id: typeof mock.id === "string" && mock.id.length > 20 ? mock.id : undefined, // rely on PG default if invalid
-            submitted_by: DEFAULT_USER_ID,
-            category_id,
-            subcategory_id,
-            description: mock.description || "No description provided",
-            location_text: mock.location_text || "Digos City, Davao del Sur",
-            latitude: mock.latitude,
-            longitude: mock.longitude,
-            workflow_status: mock.workflow_status === "new" ? "submitted" : mock.workflow_status,
-            priority: ['low', 'medium', 'high', 'urgent'].includes(mock.priority) ? mock.priority : 'medium',
-            status: "pending",
-            urgency_level: "medium", 
-            departments: [], 
-            phase_comments: { "resolved": [], "verified": [], "submitted": [], "action_taken": [], "under_review": [] },
-            submitted_at: mock.submitted_at || new Date().toISOString()
-        };
-    });
-
-    console.log("3. Inserting records into Supabase...");
-    
-    // Batch insert 50 at a time
-    let successCount = 0;
-    for (let i = 0; i < dbRows.length; i += 50) {
-        const batch = dbRows.slice(i, i + 50);
-        const { error: insErr } = await supabase.from('complaints').insert(batch);
-        
-        if (insErr) {
-            console.error(`Batch insertion failed at index ${i}:`, insErr);
-        } else {
-            successCount += batch.length;
-            console.log(`Inserted ${successCount} / ${dbRows.length}`);
-        }
-    }
-
-    console.log("Done! Supabase database has been replaced with the literal data from mockComplaints.json.");
+  console.log("Done! Supabase database has been replaced with the literal data from mockComplaints.json.");
 }
 
 rebuildComplaints();

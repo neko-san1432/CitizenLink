@@ -263,7 +263,7 @@ class LguDashboardController {
       if (assignment_filter === "unassigned") {
         data = data.filter(d => !d.assigned_to);
       } else if (assignment_filter === "assigned") {
-        data = data.filter(d => !!d.assigned_to);
+        data = data.filter(d => Boolean(d.assigned_to));
       }
 
       // Calculate stats for the cards

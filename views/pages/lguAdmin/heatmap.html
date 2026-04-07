@@ -329,7 +329,7 @@
     <script src="/js/analytics/dashboard/shared/taxonomy.js"></script>
     <script src="/js/analytics/dashboard/nlpProcessor.js"></script>
     <script src="/js/analytics/dashboard/simulationEngine.js?v=3.2.0"></script>
-    <script src="/js/analytics/dashboard/dashboardProduction.js?v=3.2.0"></script>
+    <script src="/js/analytics/dashboard/dashboardProduction.js?v=1775422632868"></script>
     <script src="/js/analytics/dashboard/mapIntelligencePanel.js"></script>
 
     <!-- UI Interaction Bridge -->
@@ -522,14 +522,14 @@
                                 <div class="category-header flex items-center gap-1.5 p-1 rounded hover:bg-white/5 transition-colors group">
                                     <i class="fas fa-chevron-right text-[8px] opacity-40 toggle-icon cursor-pointer p-1" data-id="${p.value}"></i>
                                     <label class="flex items-center gap-2 text-[10px] font-bold cursor-pointer flex-1">
-                                        <input type="checkbox" class="parent-checkbox item-checkbox" value="${p.value}" checked>
+                                        <input type="checkbox" class="parent-checkbox item-checkbox" value="${p.value}" ${p.selected ? "checked" : ""}>
                                         <span class="truncate">${p.textContent.toUpperCase()}</span>
                                     </label>
                                 </div>
                                 <div class="subcategory-list hidden flex flex-col gap-0.5 ml-6 pl-2 border-l border-white/10 mt-0.5 mb-1" id="sublist-${p.value.replace(/\s+/g, '-')}">
                                     ${children.map(c => `
                                         <label class="flex items-center gap-2 text-[10px] cursor-pointer hover:text-white transition-colors py-0.5">
-                                            <input type="checkbox" class="child-checkbox item-checkbox" value="${c.value}" data-parent="${p.value}" checked>
+                                            <input type="checkbox" class="child-checkbox item-checkbox" value="${c.value}" data-parent="${p.value}" ${c.selected ? "checked" : ""}>
                                             <span class="truncate">${c.textContent}</span>
                                         </label>
                                     `).join('')}

@@ -237,25 +237,25 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
     if (startDate) url.searchParams.append("startDate", startDate);
     if (endDate) url.searchParams.append("endDate", endDate);
     if (office && office !== "all") {
-        url.searchParams.append("department", office);
+      url.searchParams.append("department", office);
     }
-    
+
     // Support multi-category filtering
     if (category && category !== "all") {
-        if (Array.isArray(category)) {
-            category.forEach(cat => url.searchParams.append("category", cat));
-        } else {
-            url.searchParams.append("category", category);
-        }
+      if (Array.isArray(category)) {
+        category.forEach(cat => url.searchParams.append("category", cat));
+      } else {
+        url.searchParams.append("category", category);
+      }
     }
-    
+
     // Support multi-subcategory filtering
     if (subcategory && subcategory !== "all") {
-        if (Array.isArray(subcategory)) {
-            subcategory.forEach(sub => url.searchParams.append("subcategory", sub));
-        } else {
-            url.searchParams.append("subcategory", subcategory);
-        }
+      if (Array.isArray(subcategory)) {
+        subcategory.forEach(sub => url.searchParams.append("subcategory", sub));
+      } else {
+        url.searchParams.append("subcategory", subcategory);
+      }
     }
 
     console.log(`[SERVER] Syncing with filters:`, url.searchParams.toString());
@@ -268,24 +268,24 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
     if (result.success) {
       const count = result.complaints?.length || 0;
       console.log(`%c[DATA SYNC] Retrieved ${count} records from server.`, "color: #00ff00; font-weight: bold;");
-      console.log(`[FILTERS] Active:`, { 
-        startDate: currentFilterStartDate, 
+      console.log(`[FILTERS] Active:`, {
+        startDate: currentFilterStartDate,
         endDate: currentFilterEndDate,
         categories: currentFilterCategory,
-        office: currentFilterOffice 
+        office: currentFilterOffice
       });
-      
+
       // DEBUG: Log the first and last record dates
       if (result.complaints.length > 0) {
-          const first = result.complaints[0];
-          console.log(`[FETCH] First record date:`, first.submitted_at || first.timestamp);
+        const first = result.complaints[0];
+        console.log(`[FETCH] First record date:`, first.submitted_at || first.timestamp);
       }
 
       // If we got 0 results (e.g. date filter has no data), clear and reload
       if (count === 0) {
         console.log("[SERVER] No complaints found for current filters.");
         if (simulationEngine) simulationEngine.complaints = [];
-        
+
         // v4.8: Only auto-trigger refresh if NOT a manual silent sync (like filter apply)
         if (!options.silent) {
           if (autoReloadTimer) clearTimeout(autoReloadTimer);
@@ -305,7 +305,7 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
         if (options.silent) {
           // Bulk ingest optimization: bypass the O(N) array search in ingestServercomplaint
           const analyzeFn = typeof window.analyzecomplaintIntelligence === "function" ? window.analyzecomplaintIntelligence : null;
-          
+
           for (const c of newcomplaints) {
             sanitizecomplaintObject(c);
             if (analyzeFn) {
@@ -313,7 +313,7 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
             }
             simulationEngine.complaints.push(c);
           }
-          
+
           // v4.8: Caller handles the loadFullSimulation trigger in silent mode
         } else {
           newcomplaints.forEach(c => handleNewServercomplaint(c));
@@ -322,20 +322,20 @@ async function fetchServercomplaints(apiEndpoint, options = {}) {
         // All records already loaded
         console.log("[SERVER] No new records to ingest.");
       }
-        console.log(`[SERVER] Sync complete. Filtered result: ${count} total.`);
-        
-        // v4.8: Trigger refresh if NOT silent (regular polling/refresh) 
-        // to ensure UI is in sync with the fetched server state
-        if (!options.silent) {
-            if (autoReloadTimer) clearTimeout(autoReloadTimer);
-            autoReloadTimer = setTimeout(() => {
-                loadFullSimulation().catch(() => { });
-            }, AUTO_RELOAD_DELAY);
-        }
+      console.log(`[SERVER] Sync complete. Filtered result: ${count} total.`);
+
+      // v4.8: Trigger refresh if NOT silent (regular polling/refresh)
+      // to ensure UI is in sync with the fetched server state
+      if (!options.silent) {
+        if (autoReloadTimer) clearTimeout(autoReloadTimer);
+        autoReloadTimer = setTimeout(() => {
+          loadFullSimulation().catch(() => { });
+        }, AUTO_RELOAD_DELAY);
       }
-    } catch (error) {
-      console.warn("[SERVER] Fetch failed:", error.message);
     }
+  } catch (error) {
+    console.warn("[SERVER] Fetch failed:", error.message);
+  }
 }
 
 /**
@@ -2106,7 +2106,7 @@ function buildApproximateClusters(points, cellSize = 0.01, minGroupSize = 3) {
 
 function updateStatsDisplay(insights) {
   if (!insights || !insights.stats) return;
-  
+
   const totalEl = document.getElementById("totalcomplaints");
   const clustersEl = document.getElementById("totalClusters");
   const hotspotsEl = document.getElementById("criticalHotspots");
@@ -2133,10 +2133,10 @@ window.applyGlobalFilters = async function() {
 
   // Clear existing state immediately to provide feedback
   clearDashboardUI();
-  
+
   const catSelect = document.getElementById("filter-category");
   const selectedOptions = Array.from(catSelect.selectedOptions);
-  
+
   // v5.5: Optimization - If all are selected, just send "all"
   const totalOptions = Array.from(catSelect.options).length;
   const isAllSelected = selectedOptions.length === totalOptions || selectedOptions.length === 0;
@@ -2145,7 +2145,7 @@ window.applyGlobalFilters = async function() {
   const selectedCategories = isAllSelected ? "all" : selectedOptions
     .filter(o => o.dataset.level === "parent")
     .map(o => o.value);
-    
+
   const selectedSubcategories = isAllSelected ? undefined : selectedOptions
     .filter(o => o.dataset.level === "child")
     .map(o => o.value);
@@ -2158,11 +2158,11 @@ window.applyGlobalFilters = async function() {
   };
 
   console.log("[HUD] Applying filters (optimized):", filters);
-  
+
   try {
     // 1. Fetch new data based on filters
     await fetchServercomplaints(API_ENDPOINT, { ...filters, silent: true });
-    
+
     // 2. Perform Analysis
     await loadFullSimulation();
 
@@ -2214,19 +2214,19 @@ function initializeExclusiveToggles() {
   const switchMode = (selectedKey) => {
     Object.entries(toggles).forEach(([key, cfg]) => {
       const isActive = key === selectedKey;
-      
+
       // Update UI
       if (cfg.btn) {
         if (isActive) {
-            cfg.btn.classList.add("active");
-            console.log(`[HUD] Setting ${key} button to ACTIVE`, cfg.btn);
+          cfg.btn.classList.add("active");
+          console.log(`[HUD] Setting ${key} button to ACTIVE`, cfg.btn);
         } else {
-            cfg.btn.classList.remove("active");
+          cfg.btn.classList.remove("active");
         }
       }
-      
+
       if (cfg.check) cfg.check.checked = isActive;
-      
+
       // Trigger logic for the active mode only
       if (isActive) cfg.action(true);
     });
@@ -2234,14 +2234,14 @@ function initializeExclusiveToggles() {
 
   // Attach event listeners to hud buttons
   Object.keys(toggles).forEach(key => {
-    const btn = toggles[key].btn;
+    const {btn} = toggles[key];
     if (btn) {
-        btn.addEventListener("click", (e) => {
-            console.log(`[HUD] ${key} button clicked`);
-            switchMode(key);
-        });
+      btn.addEventListener("click", (e) => {
+        console.log(`[HUD] ${key} button clicked`);
+        switchMode(key);
+      });
     } else {
-        console.warn(`[HUD] Button for ${key} NOT FOUND in DOM`);
+      console.warn(`[HUD] Button for ${key} NOT FOUND in DOM`);
     }
   });
 
@@ -2260,7 +2260,7 @@ window.initializeExclusiveToggles = initializeExclusiveToggles;
  */
 function clearDashboardUI() {
   console.log("[HUD] Atomic UI Clear triggered");
-  
+
   // 1. Reset Metric Cards
   const metricIds = ["totalcomplaints", "totalClusters", "criticalHotspots", "efficiencyScore"];
   metricIds.forEach(id => {
@@ -2286,7 +2286,7 @@ function clearDashboardUI() {
   // 4. Reset Emergency Bar
   const emCount = document.getElementById("emergencyCount");
   if (emCount) emCount.textContent = "0";
-  
+
   const emContent = document.getElementById("emergencyContent");
   if (emContent) emContent.innerHTML = "";
 }
@@ -2594,7 +2594,7 @@ function renderCategoryDistribution(data) {
   container.innerHTML = displayList.map(item => {
     const percentage = (item.count / maxCount) * 100;
     const isOthers = item.category === "OTHERS";
-    
+
     return `
             <div class="category-bar-item" style="${isOthers ? "opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; padding-top: 8px;" : ""}">
                 <div class="category-bar-label">
@@ -4724,10 +4724,10 @@ async function loadFullSimulation() {
     console.warn("[PRODUCTION] Analysis engine busy. Task queued or skipped.");
     // Auto-recovery: if it's been loading for more than 30s, force reset
     if (!window._lastSimulationLoadTime || (Date.now() - window._lastSimulationLoadTime > 30000)) {
-        console.warn("[PRODUCTION] Emergency analysis engine reset triggered.");
-        isSimulationLoading = false;
+      console.warn("[PRODUCTION] Emergency analysis engine reset triggered.");
+      isSimulationLoading = false;
     } else {
-        return;
+      return;
     }
   }
 
@@ -4805,9 +4805,9 @@ async function loadFullSimulation() {
 
     // C. Date Range Filter (Numerical Robustness)
     if (currentFilterStartDate || currentFilterEndDate) {
-      const filterStartTs = currentFilterStartDate ? new Date(currentFilterStartDate + "T00:00:00").getTime() : 0;
-      const filterEndTs = currentFilterEndDate ? new Date(currentFilterEndDate + "T23:59:59").getTime() : Infinity;
-      
+      const filterStartTs = currentFilterStartDate ? new Date(`${currentFilterStartDate  }T00:00:00`).getTime() : 0;
+      const filterEndTs = currentFilterEndDate ? new Date(`${currentFilterEndDate  }T23:59:59`).getTime() : Infinity;
+
       filteredData = filteredData.filter(p => {
         const rawDate = p.timestamp || p.submittedAt || p.submitted_at || p.created_at || p.createdAt;
         if (!rawDate) return false;
@@ -4820,7 +4820,7 @@ async function loadFullSimulation() {
     // 2. Synchronize Layers
     // Show background points for the filtered set
     simulationEngine.filterBackgroundMarkersByCategory(currentFilterCategory, {
-        startDate: currentFilterStartDate,
+      startDate: currentFilterStartDate,
       endDate: currentFilterEndDate,
       subcategory: currentFilterSubcategory,
     });
@@ -4839,7 +4839,7 @@ async function loadFullSimulation() {
     // 4. Clustering
     // Use grid-based fallback clustering for large datasets to keep AI-cluster mode visible.
     let clusteringResult = { clusters: [], noise: [] };
-    
+
     if (standardPoints.length > 3000) {
       console.log(`[PERFORMANCE] Using approximate clustering fallback for ${standardPoints.length} points to prevent UI freeze.`);
       clusteringResult = buildApproximateClusters(standardPoints, 0.006, 3);
@@ -4861,7 +4861,7 @@ async function loadFullSimulation() {
     updateStatsDisplay(insights);
     renderInsightsCards(insights);
     renderCategoryDistribution(filteredData);
-    
+
     // Visualization
     visualizeClusters(currentClusters);
     visualizeNoisePoints(currentNoisePoints);
@@ -4890,9 +4890,9 @@ async function loadFullSimulation() {
   } catch (error) {
     console.error("[PRODUCTION] Analysis failed:", error);
     if (statusIndicator) {
-        statusIndicator.classList.add("error");
-        const statusSpan = statusIndicator.querySelector("span");
-        if (statusSpan) statusSpan.textContent = "Analysis Failed";
+      statusIndicator.classList.add("error");
+      const statusSpan = statusIndicator.querySelector("span");
+      if (statusSpan) statusSpan.textContent = "Analysis Failed";
     }
   } finally {
     isSimulationLoading = false;
@@ -4951,20 +4951,38 @@ function collapseCommandCenter() {
 
 // ==================== EVENT LISTENERS ====================
 
-document.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener("load", async () => {
   console.log("[PRODUCTION] Initializing City Analytics Dashboard...");
 
-  // Set default filters to today's date (Local Time)
-  const today = new Date().toLocaleDateString("en-CA");
-  currentFilterStartDate = today;
-  currentFilterEndDate = today;
-  console.log(`[FILTER] Initializing default date range (local): ${today} to ${today}`);
-
-  // Sync HUD inputs if present
+  // Sync HUD inputs if present, respecting browser-restored soft-refresh states
   const startInput = document.getElementById("filter-start-date");
   const endInput = document.getElementById("filter-end-date");
-  if (startInput) startInput.value = today;
-  if (endInput) endInput.value = today;
+  const catInput = document.getElementById("filter-category");
+
+  const today = new Date().toLocaleDateString("en-CA");
+
+  if (startInput && startInput.value) {
+    currentFilterStartDate = startInput.value;
+  } else {
+    currentFilterStartDate = today;
+    if (startInput) startInput.value = today;
+  }
+
+  if (endInput && endInput.value) {
+    currentFilterEndDate = endInput.value;
+  } else {
+    currentFilterEndDate = today;
+    if (endInput) endInput.value = today;
+  }
+
+  if (catInput && catInput.options) {
+    const selected = Array.from(catInput.options).filter(o => o.selected).map(o => o.value);
+    if (selected.length > 0 && !selected.includes("all")) {
+      currentFilterCategory = selected.length === 1 ? selected[0] : selected;
+    }
+  }
+
+  console.log(`[FILTER] Date range restored/initialized: ${currentFilterStartDate} to ${currentFilterEndDate}`);
 
   // Load category colors for heatmap
   await loadCategoryColors();
@@ -5141,20 +5159,20 @@ window.applyGlobalFilters = async function (filters) {
   if (window.simulationEngine) {
     console.log("[FILTER] Resetting engine for fresh sync...");
     window.simulationEngine.complaints = [];
-    
+
     // Clear markers via the engine helper
     if (typeof window.simulationEngine.clearAllBackgroundMarkers === "function") {
-        window.simulationEngine.clearAllBackgroundMarkers();
+      window.simulationEngine.clearAllBackgroundMarkers();
     }
   }
-  
+
   // Clear the UI metrics and trends immediately
   clearDashboardUI();
 
   // v4.5.7: Re-fetch data from server with new filters
   const API_ENDPOINT = `/api/brain/complaints`;
   console.log("[FILTER] Re-fetching data from server...");
-  
+
   await fetchServercomplaints(API_ENDPOINT, { silent: true });
 
   console.log("[FILTER] Sync complete. Triggering analysis...");

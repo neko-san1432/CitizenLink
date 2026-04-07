@@ -19,13 +19,13 @@ async function checkUuidComplaints() {
 
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  const affected = complaints.filter(c => 
+  const affected = complaints.filter(c =>
     uuidRegex.test(c.category || "") || uuidRegex.test(c.subcategory || "")
   );
 
   console.log(`Total complaints: ${complaints.length}`);
   console.log(`Complaints with UUID instead of title: ${affected.length}`);
-  
+
   if (affected.length > 0) {
     console.log("\nSample of affected records (IDs):");
     affected.slice(0, 5).forEach(c => console.log(`- ID: ${c.id} | Cat: ${c.category} | Sub: ${c.subcategory}`));

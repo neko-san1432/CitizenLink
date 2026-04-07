@@ -1,8 +1,8 @@
-require('dotenv').config({ path: '../.env' });
-const { createClient } = require('@supabase/supabase-js');
-const { isWithinDigosBoundary, getDigosBounds } = require('../src/shared/boundaryValidator');
+require("dotenv").config({ path: "../.env" });
+const { createClient } = require("@supabase/supabase-js");
+const { isWithinDigosBoundary, getDigosBounds } = require("../src/shared/boundaryValidator");
 
-require('dotenv').config();
+require("dotenv").config();
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -85,70 +85,70 @@ function selectTaxonomyRow() {
 }
 
 async function fixGeneratedComplaints() {
-    console.log("Deleting 170 badly generated seeds...");
-    const { error: delErr } = await supabase
-        .from('complaints')
-        .delete()
-        .like('description', 'Generated test complaint %');
+  console.log("Deleting 170 badly generated seeds...");
+  const { error: delErr } = await supabase
+    .from("complaints")
+    .delete()
+    .like("description", "Generated test complaint %");
 
-    if (delErr) {
-        console.error("Error deleting old seeds:", delErr);
-        return;
-    }
+  if (delErr) {
+    console.error("Error deleting old seeds:", delErr);
+    return;
+  }
 
-    console.log("Generating 170 new realistic complaints perfectly inside Digos boundaries...");
+  console.log("Generating 170 new realistic complaints perfectly inside Digos boundaries...");
 
-    // Digos broad bounding box approximations
-    const minLat = 6.7235;
-    const maxLat = 6.9655;
-    const minLng = 125.2641;
-    const maxLng = 125.3874;
+  // Digos broad bounding box approximations
+  const minLat = 6.7235;
+  const maxLat = 6.9655;
+  const minLng = 125.2641;
+  const maxLng = 125.3874;
 
-    const complaints = [];
-    for (let i = 0; i < 170; i++) {
-        // Enforce boundary constraint
-        let lat, lng;
-        let attempts = 0;
-        do {
-            lat = minLat + Math.random() * (maxLat - minLat);
-            lng = minLng + Math.random() * (maxLng - minLng);
-            attempts++;
-            if (attempts > 500) {
-               // If completely stuck (unlikely), fallback.
-               console.warn("Failed to find bound coordinates within 500 attempts...");
-               break;
-            }
-        } while (!isWithinDigosBoundary(lat, lng));
+  const complaints = [];
+  for (let i = 0; i < 170; i++) {
+    // Enforce boundary constraint
+    let lat, lng;
+    let attempts = 0;
+    do {
+      lat = minLat + Math.random() * (maxLat - minLat);
+      lng = minLng + Math.random() * (maxLng - minLng);
+      attempts++;
+      if (attempts > 500) {
+        // If completely stuck (unlikely), fallback.
+        console.warn("Failed to find bound coordinates within 500 attempts...");
+        break;
+      }
+    } while (!isWithinDigosBoundary(lat, lng));
 
-        // Enforce descriptions
-        const tax = selectTaxonomyRow();
-        const desc = enrichDescription(tax.category_name, tax.subcategory_name);
+    // Enforce descriptions
+    const tax = selectTaxonomyRow();
+    const desc = enrichDescription(tax.category_name, tax.subcategory_name);
 
-        complaints.push({
-            submitted_by: "85fb7b44-ad98-4607-a12f-1273f65fb365",
-            category_id: tax.category_id,
-            subcategory_id: tax.subcategory_id,
-            description: desc,
-            location_text: pick(LOCATION_LABELS),
-            latitude: lat,
-            longitude: lng,
-            workflow_status: "submitted",
-            priority: ["low", "medium", "high"][Math.floor(Math.random() * 3)],
-            status: "pending",
-            urgency_level: ["low", "medium", "high"][Math.floor(Math.random() * 3)],
-            departments: [],
-            phase_comments: { "resolved": [], "verified": [], "submitted": [], "action_taken": [], "under_review": [] }
-        });
-    }
+    complaints.push({
+      submitted_by: "85fb7b44-ad98-4607-a12f-1273f65fb365",
+      category_id: tax.category_id,
+      subcategory_id: tax.subcategory_id,
+      description: desc,
+      location_text: pick(LOCATION_LABELS),
+      latitude: lat,
+      longitude: lng,
+      workflow_status: "submitted",
+      priority: ["low", "medium", "high"][Math.floor(Math.random() * 3)],
+      status: "pending",
+      urgency_level: ["low", "medium", "high"][Math.floor(Math.random() * 3)],
+      departments: [],
+      phase_comments: { "resolved": [], "verified": [], "submitted": [], "action_taken": [], "under_review": [] }
+    });
+  }
 
-    console.log("Submitting to Supabase...");
-    const { error: insErr } = await supabase.from('complaints').insert(complaints);
-    
-    if (insErr) {
-        console.error("Insert error:", insErr);
-    } else {
-        console.log("Inserted 170 high-quality complaints!");
-    }
+  console.log("Submitting to Supabase...");
+  const { error: insErr } = await supabase.from("complaints").insert(complaints);
+
+  if (insErr) {
+    console.error("Insert error:", insErr);
+  } else {
+    console.log("Inserted 170 high-quality complaints!");
+  }
 }
 
 fixGeneratedComplaints();

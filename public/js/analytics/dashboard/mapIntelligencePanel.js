@@ -8,7 +8,7 @@
  *  - Compute heavy NLP/triage HTML lazily in a microtask
  *  - Client-side cache: once a complaint is analyzed the result is reused
  *    until the city data is reloaded (invalidateCache)
- *  - "Go to Review Queue" button wired to /review-queue?highlight=<id>
+ *  - "Go to Review Queue" button wired to /review-queue?open_complaint_id=<id>
  */
 
 (function () {
@@ -402,7 +402,7 @@
           </button>
           <span class="mip-complaint-id" id="mip-id-label">&mdash;</span>
           <span class="mip-veracity-badge mip-badge-unverified" id="mip-veracity-badge" style="display:none"></span>
-          <a class="mip-review-btn" id="mip-review-btn" href="/review-queue" target="_blank" rel="noopener">
+          <a class="mip-review-btn" id="mip-review-btn" href="/review-queue" target="_blank" rel="noopener" style="position:relative; z-index:9999; pointer-events:auto;" onclick="window.open(this.href, '_blank'); return false;">
             <i class="fas fa-clipboard-list"></i> Go to Review Queue
           </a>
         </div>
@@ -456,8 +456,13 @@
       // ── 1. Update header immediately (no async) ──────────────────
       document.getElementById("mip-id-label").textContent = point.id || "—";
       document.getElementById("mip-review-btn").href =
-        `/review-queue?highlight=${encodeURIComponent(point.id || "")}`;
+        `/review-queue?open_complaint_id=${encodeURIComponent(point.id || "")}`;
 
+      document.getElementById("mip-review-btn").onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(this.href, "_blank");
+      };
       this._updateVeracityBadge(point);
 
       // ── 2. Open panel (triggers CSS transition) ──────────────────

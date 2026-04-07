@@ -161,7 +161,7 @@ class SlidingPanel {
 
     try {
       // Dynamically import the complaintDetails class
-      const { complaintDetails } = await import("../pages/complaint-details.js?v=20260301");
+      const { complaintDetails } = await import("../pages/complaintDetails.js?v=20260301");
 
       container.innerHTML = `
                 <div id="complaint-details" class="complaint-details" style="display: none;">

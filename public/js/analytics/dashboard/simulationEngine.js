@@ -6941,8 +6941,8 @@ class SimulationEngine {
 
     // v4.5.9: Synchronize background markers with total filter range (category + date)
     const { startDate, endDate, subcategory } = options || {};
-    const startTs = startDate ? new Date(startDate + "T00:00:00").getTime() : 0;
-    const endTs = endDate ? new Date(endDate + "T23:59:59").getTime() : Infinity;
+    const startTs = startDate ? new Date(`${startDate  }T00:00:00`).getTime() : 0;
+    const endTs = endDate ? new Date(`${endDate  }T23:59:59`).getTime() : Infinity;
 
     const normalizeFilterList = (value) => {
       if (value === null || typeof value === "undefined") return [];
@@ -6965,7 +6965,7 @@ class SimulationEngine {
 
     const complaintsToShow = this.complaints.filter(c => {
       if (c.latitude == null || c.longitude == null) return false;
-      
+
       // Category filter (supports arrays and parent/child label matches)
       if (categoryList.length > 0) {
         const matchesCategory =
@@ -6980,7 +6980,7 @@ class SimulationEngine {
           return false;
         }
       }
-      
+
       // Date filter
       const rawDate = c.timestamp || c.submittedAt || c.submitted_at || c.created_at || c.createdAt;
       if (rawDate) {
@@ -7024,11 +7024,11 @@ class SimulationEngine {
                     <span style="opacity: 0.7;">ID: ${complaint.id.substring(0, 8)}</span>
                     ${hasWarning ? `<br><span style="color: #fca5a5;">⚠️ ANOMALY</span>` : ""}
                 </div>
-            `, { 
-              direction: "top", 
-              offset: [0, -5],
-              className: "crisp-tooltip" 
-            });
+            `, {
+        direction: "top",
+        offset: [0, -5],
+        className: "crisp-tooltip"
+      });
 
       const submittedAt = complaint.timestamp || complaint.submittedAt || complaint.submitted_at || complaint.created_at || complaint.createdAt;
       const submittedLabel = submittedAt ? new Date(submittedAt).toLocaleString() : "N/A";
@@ -7054,7 +7054,7 @@ class SimulationEngine {
       this.backgroundMarkers.set(complaint.id, marker);
       markersToBatch.push(marker);
     });
-    
+
     // Efficiently batch add to the feature group
     markersToBatch.forEach(m => this._backgroundLayerGroup.addLayer(m));
 
@@ -7102,7 +7102,7 @@ class SimulationEngine {
     if (this._backgroundLayerGroup) {
       this._backgroundLayerGroup.clearLayers();
     }
-    
+
     // Fallback for stray markers added the old way
     this.backgroundMarkers.forEach((marker) => {
       if (this.map.hasLayer(marker)) {

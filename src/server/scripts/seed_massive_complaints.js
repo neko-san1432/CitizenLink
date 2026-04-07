@@ -101,15 +101,15 @@ async function seedMassiveComplaints() {
 
   // Function to apply L337-speak to a description
   function toL33t(text) {
-    const map = { 'e': '3', 'a': '4', 'i': '1', 'o': '0', 's': '5', 't': '7' };
-    return text.split('').map(char => {
-        const lower = char.toLowerCase();
-        // 30% chance to replace character if it's in the map
-        if (map[lower] && Math.random() < 0.3) {
-            return map[lower];
-        }
-        return char;
-    }).join('');
+    const map = { "e": "3", "a": "4", "i": "1", "o": "0", "s": "5", "t": "7" };
+    return text.split("").map(char => {
+      const lower = char.toLowerCase();
+      // 30% chance to replace character if it's in the map
+      if (map[lower] && Math.random() < 0.3) {
+        return map[lower];
+      }
+      return char;
+    }).join("");
   }
 
   const complaints = [];
@@ -122,7 +122,7 @@ async function seedMassiveComplaints() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(now.getDate() - 30);
 
-  const languages = ['english', 'tagalog', 'bisaya'];
+  const languages = ["english", "tagalog", "bisaya"];
 
   while (count < totalToSeed) {
     // Generate random point within bounds
@@ -144,10 +144,10 @@ async function seedMassiveComplaints() {
       const lang = languages[Math.floor(Math.random() * languages.length)];
       const phraseList = phrases[lang];
       const baseDescription = phraseList[Math.floor(Math.random() * phraseList.length)];
-      
+
       // Apply random L337-speak
       const description = toL33t(baseDescription);
-      
+
       // DEPLOYMENT SCENARIOS: 5% chance to trigger a duplication cluster
       const DUPLICATE_CHANCE = 0.05;
       const isDuplicateTrigger = Math.random() < DUPLICATE_CHANCE && complaints.length > 10;
@@ -162,26 +162,26 @@ async function seedMassiveComplaints() {
       if (isDuplicateTrigger) {
         // Pick an existing complaint as the "Master" for this duplicate
         const master = complaints[Math.floor(Math.random() * complaints.length)];
-        
+
         // Scenario 1: Near-exact duplicate (Same category, very close location)
         // Jitter within ~10 meters (0.0001 degrees)
         finalLat = master.latitude + (Math.random() * 0.0002 - 0.0001);
         finalLng = master.longitude + (Math.random() * 0.0002 - 0.0001);
         finalCategory = { id: master.category };
         finalSubcategory = { id: master.subcategory };
-        
+
         // Scenario Variations
         const subScenario = Math.random();
         if (subScenario < 0.4) {
-             // 40% chance: Exact same text
-             finalDescription = master.description;
+          // 40% chance: Exact same text
+          finalDescription = master.description;
         } else if (subScenario < 0.8) {
-             // 40% chance: Slightly modified text (L337-speak of the original)
-             finalDescription = toL33t(master.description);
+          // 40% chance: Slightly modified text (L337-speak of the original)
+          finalDescription = toL33t(master.description);
         } else {
-             // 20% chance: "Someone else reporting the same thing" - different phrase, same category
-             const lang = languages[Math.floor(Math.random() * languages.length)];
-             finalDescription = phrases[lang][Math.floor(Math.random() * phrases[lang].length)];
+          // 20% chance: "Someone else reporting the same thing" - different phrase, same category
+          const lang = languages[Math.floor(Math.random() * languages.length)];
+          finalDescription = phrases[lang][Math.floor(Math.random() * phrases[lang].length)];
         }
 
         // Temporal: Must be within 48 hours for detection
@@ -190,9 +190,9 @@ async function seedMassiveComplaints() {
         finalSubmittedAt = new Date(masterTime + jitterTime).toISOString();
       } else {
         // Normal generation
-        finalSubmittedAt = Math.random() < 0.2 ? 
-            new Date().toISOString() : 
-            new Date(thirtyDaysAgo.getTime() + Math.random() * (now.getTime() - thirtyDaysAgo.getTime())).toISOString();
+        finalSubmittedAt = Math.random() < 0.2 ?
+          new Date().toISOString() :
+          new Date(thirtyDaysAgo.getTime() + Math.random() * (now.getTime() - thirtyDaysAgo.getTime())).toISOString();
       }
 
       complaints.push({
@@ -209,12 +209,12 @@ async function seedMassiveComplaints() {
         submitted_at: finalSubmittedAt,
         updated_at: finalSubmittedAt
       });
-      
+
       count++;
       if (count % 1000 === 0) console.log(`   Processed ${count}...`);
     }
   }
-  
+
   // POST-PROCESSING: Inject one guaranteed "High-Density Cluster" for testing
   // Location: Digos City Plaza (approx)
   console.log("📍 Injecting guaranteed Duplicate Cluster (Blocking Scenario)...");
@@ -222,7 +222,7 @@ async function seedMassiveComplaints() {
   const plazaLng = 125.3572;
   const infraCat = catList.find(c => c.name === "Infrastructure") || catList[0];
   const infraSub = subList.find(s => s.category_id === infraCat.id) || null;
-  
+
   for (let i = 0; i < 8; i++) {
     const clusterTime = new Date().toISOString();
     complaints.push({
@@ -247,13 +247,13 @@ async function seedMassiveComplaints() {
   const floodLng = 125.3500;
   const envCat = catList.find(c => c.name === "Environment") || catList[0];
   const floodSub = subList.find(s => s.category_id === envCat.id && s.name.includes("Flood")) || null;
-  
+
   const today = new Date();
   for (let i = 0; i < 15; i++) {
     // Reports distributed within 4 hours today
-    const hourOffset = Math.random() * 4; 
+    const hourOffset = Math.random() * 4;
     const reportTime = new Date(today.getTime() - hourOffset * 60 * 60 * 1000).toISOString();
-    
+
     complaints.push({
       id: crypto.randomUUID(),
       submitted_by: userList[Math.floor(Math.random() * userList.length)],

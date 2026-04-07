@@ -102,17 +102,17 @@ async function loadReviewQueue(page = 1) {
 
     if (complaints.length > 0) {
       tableBody.innerHTML = complaints.map(complaint => {
-      const id = escapeHtml(complaint.id);
+        const id = escapeHtml(complaint.id);
 
-      const cat = escapeHtml(complaint.category || "General");
-      const sub = complaint.subcategory ? escapeHtml(complaint.subcategory) : "";
-      const categoryDisplay = sub ? `${cat} <span style="opacity:0.5">/</span> ${sub}` : cat;
+        const cat = escapeHtml(complaint.category || "General");
+        const sub = complaint.subcategory ? escapeHtml(complaint.subcategory) : "";
+        const categoryDisplay = sub ? `${cat} <span style="opacity:0.5">/</span> ${sub}` : cat;
 
-      const priorityText = escapeHtml(complaint.priority || "");
-      const locationText = escapeHtml(complaint.location_text || "N/A");
+        const priorityText = escapeHtml(complaint.priority || "");
+        const locationText = escapeHtml(complaint.location_text || "N/A");
 
-      const descRaw = complaint.description || "—";
-      const descEscaped = escapeHtml(descRaw);
+        const descRaw = complaint.description || "—";
+        const descEscaped = escapeHtml(descRaw);
         return `
           <tr class="complaint-row cursor-pointer hover:bg-gray-50 from-gray-50 to-white transition-colors" data-id="${id}">
                     <td class="px-2 py-3 whitespace-nowrap">

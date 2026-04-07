@@ -85,7 +85,7 @@ router.get(
           : Array.isArray(result?.data)
             ? result.data
             : [];
-        
+
         // Update TTL cache
         _ttlCache = { data: complaints, filters: filterKey, expiresAt: Date.now() + TTL_MS };
         console.log(`[BRAIN-API] DB query: ${complaints.length} complaints (cached for ${TTL_MS / 1000}s)`);

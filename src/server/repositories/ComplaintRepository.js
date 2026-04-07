@@ -211,17 +211,17 @@ class ComplaintRepository {
     // Resolve IDs to names for frontend backward compatibility
     return complaints.map(complaint => {
       const resolved = { ...complaint };
-      
+
       // Map category_id -> category (string)
       if (resolved.category_id) {
         resolved.category = this._categoryMap.get(resolved.category_id) || resolved.category_id;
       }
-      
+
       // Map subcategory_id -> subcategory (string)
       if (resolved.subcategory_id) {
         resolved.subcategory = this._subcategoryMap.get(resolved.subcategory_id) || resolved.subcategory_id;
       }
-      
+
       return resolved;
     });
   }
@@ -229,15 +229,15 @@ class ComplaintRepository {
   /**
    * v5.5: Helper to map Name strings back to Database IDs (UUIDs)
    */
-  async _lookupIdsByName(names, type = 'category') {
+  async _lookupIdsByName(names, type = "category") {
     if (!names || names.length === 0) return [];
-    if (names === 'all') return [];
+    if (names === "all") return [];
 
     // Ensure cache is warm
     if (!this._categoryCache) await this._resolveCategoryNames([]);
 
     const nameArr = Array.isArray(names) ? names : [names];
-    const map = type === 'category' ? this._categoryMap : this._subcategoryMap;
+    const map = type === "category" ? this._categoryMap : this._subcategoryMap;
     const ids = [];
 
     // Reverse lookup from the existing ID -> Name maps

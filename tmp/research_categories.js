@@ -28,7 +28,7 @@ async function analyzeCategories() {
   complaints.forEach(c => {
     const cat = c.category || "NULL";
     const sub = c.subcategory || "NULL";
-    
+
     categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     subcategoryCounts[`${cat} > ${sub}`] = (subcategoryCounts[`${cat} > ${sub}`] || 0) + 1;
   });
