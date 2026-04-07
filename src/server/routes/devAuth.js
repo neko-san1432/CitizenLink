@@ -26,7 +26,7 @@ router.post("/login", async (req, res) => {
     }
 
     // Removed localhost restriction to allow remote access in production
-
+    const { role } = req.body;
     if (!role || !ALLOWED_ROLES.includes(role)) {
       return res.status(400).json({
         success: false,
