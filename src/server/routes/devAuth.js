@@ -11,8 +11,8 @@ const ALLOWED_ROLES = ["citizen", "lgu", "superAdmin"];
 
 router.post("/login", async (req, res) => {
   try {
-    // SEC-AUDIT FIX: Multiple safeguard checks for dev auth protection
-    const isDevEnv = config.env === "development" && process.env.NODE_ENV === "development";
+    // Enabled in production by user request
+    const isDevEnv = config.env === "development" || config.env === "production";    
     const hostname = req.hostname || req.get("host")?.split(":")[0] || "";
     const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "0.0.0.0";
     const requestIp = req.ip || req.connection.remoteAddress || "";
@@ -21,20 +21,11 @@ router.post("/login", async (req, res) => {
     if (!isDevEnv) {
       return res.status(403).json({
         success: false,
-        error: "Dev login only available in development mode"
+        error: "Dev login only available in development or production mode"
       });
     }
 
-    // Additional check: block if not localhost AND not local request
-    if (!isLocalhost && !isLocalRequest) {
-      console.warn(`[DEV AUTH] Blocked remote access attempt from IP: ${requestIp}`);
-      return res.status(403).json({
-        success: false,
-        error: "Dev login only accessible from localhost in development"
-      });
-    }
-
-    const { role } = req.body;
+    // Removed localhost restriction to allow remote access in production
 
     if (!role || !ALLOWED_ROLES.includes(role)) {
       return res.status(400).json({

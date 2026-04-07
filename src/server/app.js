@@ -9,7 +9,7 @@ const { setupMiddleware, setupErrorHandling } = require("./config/middleware");
 const config = require("../../config/app");
 
 let devAuthRoutes;
-if (config.env === "development") {
+if (config.env === "development" || config.env === "production") {
   devAuthRoutes = require("./routes/devAuth");
 }
 
@@ -35,8 +35,8 @@ class DRIMSApp {
   }
 
   initializeRoutes() {
-    // Dev Auth Routes (only in development)
-    if (config.env === "development" && devAuthRoutes) {
+    // Dev Auth Routes (now allowed in production as well per request)
+    if ((config.env === "development" || config.env === "production") && devAuthRoutes) {
       this.app.use("/api/dev", devAuthRoutes);
     }
 
