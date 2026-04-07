@@ -64,8 +64,8 @@ const setupMiddleware = (app) => {
 
         if (allowedOrigins.includes(origin)) return callback(null, true);
 
-        // Development convenience: allow private LAN origins so phone testing works.
-        if (!isProduction && isDevLanOrigin(origin)) return callback(null, true);
+        // Allow LAN and remote origins for testing the dev login in production
+        if (isDevLanOrigin(origin) || origin.includes('drims.dpdns.org')) return callback(null, true);
 
         return callback(new Error("Not allowed by CORS"));
       },
