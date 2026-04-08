@@ -927,8 +927,9 @@ body,
   }
 }
 
-/* Light Mode Support */
-@media (prefers-color-scheme: light) {
+/* Light Mode Support Removed - Forced Dark Mode */
+
+html:not(.dark) {
   :root {
     --bg-dark: #f8fafc;
     /* Slate 50 */
