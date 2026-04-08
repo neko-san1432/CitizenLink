@@ -6517,13 +6517,16 @@ class SimulationEngine {
       }
       // DivIcon markers (stacked) maintain fixed size for badge visibility
     });
-  }
 
-  // ==================== INITIALIZATION ====================
-
-  /**
-     * Initialize engine: Load data and render ALL background points.
-     * Reference: DOCUMENTATION.md Section 7.1 - initialize()
+      // Toggle MULTI and HOTSPOT labels globally based on zoom level (14 threshold)
+      const labels = document.querySelectorAll(".multi-report-label > div");
+      labels.forEach(el => {
+        if (zoom < 14) {
+          el.style.display = "none";
+        } else {
+          el.style.display = "block";
+        }
+      });
      *
      * @returns {Promise<boolean>} Success status
      */

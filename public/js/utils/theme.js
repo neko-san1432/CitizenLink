@@ -36,8 +36,8 @@ class ThemeManager {
   }
 
   getStoredTheme() {
-    // Default to 'light' if nothing stored
-    return localStorage.getItem(this.storageKey) || "light";
+    // Default to 'dark' if nothing stored, as requested for landing page default
+    return localStorage.getItem(this.storageKey) || "dark";
   }
 
   setTheme(theme) {

@@ -4536,11 +4536,16 @@ function visualizeClusters(clusters) {
     const labelEmoji = rationale.emoji;
     const labelText = rationale.type === "multi-issue" ? "MULTI" : "HOTSPOT";
 
+    // Only set display block if zoom level is 14 or higher (close up)
+    const isZoomedIn = map && map.getZoom() >= 14;
+    const initialDisplay = isZoomedIn ? "block" : "none";
+
     const marker = L.marker([center.lat, center.lng], {
       icon: L.divIcon({
-        className: "cluster-label",
+        className: "cluster-label multi-report-label",
         html: `
                     <div style="
+                        display: ${initialDisplay};
                         background: ${color};
                         color: white;
                         padding: 8px 12px;
