@@ -4138,9 +4138,7 @@ button.signup-method-card .method-chevron,
 }
 
 /* Adjust top padding to restore original spacing since navbar is back to 70px */
-.auth-page {
-  /* padding-top: 70px !important;  -- Default is fine */
-}
+
 
 /* =========================================
    FIX: Icon Padding Override

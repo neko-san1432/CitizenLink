@@ -1,0 +1,5420 @@
+[
+  {
+    "Report_ID": "CMP-66DD67",
+    "Raw_Text_Input": "EXTREME DANGER HOUSE FIRE HERE",
+    "NLP_Tokens": [
+      "extreme",
+      "danger",
+      "house",
+      "fire",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.21%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.39,
+    "Matched_Keywords": [
+      "extreme",
+      "danger"
+    ]
+  },
+  {
+    "Report_ID": "CMP-778698",
+    "Raw_Text_Input": "may pothole na sobrang laki sa lugar na ito",
+    "NLP_Tokens": [
+      "may",
+      "pothole",
+      "sobrang",
+      "laki",
+      "lugar"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.83%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.03,
+    "Matched_Keywords": [
+      "may",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-BA0161",
+    "Raw_Text_Input": "sobrang ingay ng karaoke ng aming kapit bahay",
+    "NLP_Tokens": [
+      "sobrang",
+      "ingay",
+      "karaoke",
+      "aming",
+      "kapit"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.15%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sobrang",
+      "ingay"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D42402",
+    "Raw_Text_Input": "hindi umi ilaw ng maayos ang streetlight",
+    "NLP_Tokens": [
+      "hindi",
+      "umi",
+      "ilaw",
+      "maayos",
+      "ang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "91.43%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "hindi",
+      "umi"
+    ]
+  },
+  {
+    "Report_ID": "CMP-00097F",
+    "Raw_Text_Input": "kinagat ako ng aso na kulay brown at bungi",
+    "NLP_Tokens": [
+      "kinagat",
+      "ako",
+      "aso",
+      "kulay",
+      "brown"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.14%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "kinagat",
+      "ako"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FDCA09",
+    "Raw_Text_Input": "may baha di ako makapasok sa trabaho",
+    "NLP_Tokens": [
+      "may",
+      "baha",
+      "ako",
+      "makapasok",
+      "trabaho"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.31%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "baha"
+    ]
+  },
+  {
+    "Report_ID": "CMP-30E427",
+    "Raw_Text_Input": "di ako maka daan kase may baha",
+    "NLP_Tokens": [
+      "ako",
+      "maka",
+      "daan",
+      "kase",
+      "may"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.58%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ako",
+      "maka"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8027AD",
+    "Raw_Text_Input": "bumaha dito di ako maka alis",
+    "NLP_Tokens": [
+      "bumaha",
+      "dito",
+      "ako",
+      "maka",
+      "alis"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.10%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "bumaha",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-67CA12",
+    "Raw_Text_Input": "dito masyadong mataas ang baha",
+    "NLP_Tokens": [
+      "dito",
+      "masyadong",
+      "mataas",
+      "ang",
+      "baha"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.39%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dito",
+      "masyadong"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F50E68",
+    "Raw_Text_Input": "bumaha dito umay",
+    "NLP_Tokens": [
+      "bumaha",
+      "dito",
+      "umay"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.63%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "bumaha",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-42F706",
+    "Raw_Text_Input": "sobrang baho talaga dito",
+    "NLP_Tokens": [
+      "sobrang",
+      "baho",
+      "talaga",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.74%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sobrang",
+      "baho"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4A3688",
+    "Raw_Text_Input": "di maayos and pag lagay ng basura",
+    "NLP_Tokens": [
+      "maayos",
+      "and",
+      "pag",
+      "lagay",
+      "basura"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.17%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "maayos",
+      "and"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C0862E",
+    "Raw_Text_Input": "di nakuha ang basura ng maayos",
+    "NLP_Tokens": [
+      "nakuha",
+      "ang",
+      "basura",
+      "maayos"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.15%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "nakuha",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-90E034",
+    "Raw_Text_Input": "sobrang baho dito",
+    "NLP_Tokens": [
+      "sobrang",
+      "baho",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.77%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sobrang",
+      "baho"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F64523",
+    "Raw_Text_Input": "na late ako sa trabaho kase nawalan ng tubig",
+    "NLP_Tokens": [
+      "late",
+      "ako",
+      "trabaho",
+      "kase",
+      "nawalan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.68%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "late",
+      "ako"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8F23D5",
+    "Raw_Text_Input": "di ako nakapasok sa trabaho kase nawalan ng tubig",
+    "NLP_Tokens": [
+      "ako",
+      "nakapasok",
+      "trabaho",
+      "kase",
+      "nawalan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.28%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ako",
+      "nakapasok"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3DBBD2",
+    "Raw_Text_Input": "nawalan ako ng trabaho dahil walang tubig",
+    "NLP_Tokens": [
+      "nawalan",
+      "ako",
+      "trabaho",
+      "dahil",
+      "walang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.41%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "nawalan",
+      "ako"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F0E990",
+    "Raw_Text_Input": "walang tubig kaninang 10pm",
+    "NLP_Tokens": [
+      "walang",
+      "tubig",
+      "kaninang",
+      "10pm"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.77%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "walang",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1EC5D6",
+    "Raw_Text_Input": "walang tubig dito sa bahay",
+    "NLP_Tokens": [
+      "walang",
+      "tubig",
+      "dito",
+      "bahay"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "68.28%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "walang",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9B626F",
+    "Raw_Text_Input": "pothole sa gilid ng daan",
+    "NLP_Tokens": [
+      "pothole",
+      "gilid",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.28%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "gilid"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B62545",
+    "Raw_Text_Input": "pothole in the center",
+    "NLP_Tokens": [
+      "pothole",
+      "the",
+      "center"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.02%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "the"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2A046A",
+    "Raw_Text_Input": "may pothole sa gilid ng daan",
+    "NLP_Tokens": [
+      "may",
+      "pothole",
+      "gilid",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.62%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C82136",
+    "Raw_Text_Input": "may pothole sa daan",
+    "NLP_Tokens": [
+      "may",
+      "pothole",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.00%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-AB20D9",
+    "Raw_Text_Input": "this street there pothole",
+    "NLP_Tokens": [
+      "this",
+      "street",
+      "there",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.38%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "this",
+      "street"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CA1E9F",
+    "Raw_Text_Input": "I FOUND SOME HOLE IN THE STREET",
+    "NLP_Tokens": [
+      "found",
+      "some",
+      "hole",
+      "the",
+      "street"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.27%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "found",
+      "some"
+    ]
+  },
+  {
+    "Report_ID": "CMP-577ABE",
+    "Raw_Text_Input": "EXTREME DANGER HOUSE FIRE HERE",
+    "NLP_Tokens": [
+      "extreme",
+      "danger",
+      "house",
+      "fire",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.77%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "extreme",
+      "danger"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5572C2",
+    "Raw_Text_Input": "may nakita akong pothole sa daan",
+    "NLP_Tokens": [
+      "may",
+      "nakita",
+      "akong",
+      "pothole",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.53%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "nakita"
+    ]
+  },
+  {
+    "Report_ID": "CMP-60E12E",
+    "Raw_Text_Input": "maingay dito sa amin",
+    "NLP_Tokens": [
+      "maingay",
+      "dito",
+      "amin"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.95%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "maingay",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0C7F54",
+    "Raw_Text_Input": "may nakita akong sirang street light",
+    "NLP_Tokens": [
+      "may",
+      "nakita",
+      "akong",
+      "sirang",
+      "street"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.73%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "nakita"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2593E2",
+    "Raw_Text_Input": "may nakita akong aso sa daan",
+    "NLP_Tokens": [
+      "may",
+      "nakita",
+      "akong",
+      "aso",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.70%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "nakita"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B1D804",
+    "Raw_Text_Input": "EXTREME DANGER HOUSE FIRE HERE",
+    "NLP_Tokens": [
+      "extreme",
+      "danger",
+      "house",
+      "fire",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.62%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "extreme",
+      "danger"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C13197",
+    "Raw_Text_Input": "meron butas dito men",
+    "NLP_Tokens": [
+      "meron",
+      "butas",
+      "dito",
+      "men"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.58%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "meron",
+      "butas"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5C14AD",
+    "Raw_Text_Input": "ang ingay men",
+    "NLP_Tokens": [
+      "ang",
+      "ingay",
+      "men"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.39%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ang",
+      "ingay"
+    ]
+  },
+  {
+    "Report_ID": "CMP-49E814",
+    "Raw_Text_Input": "Broken Streetlight",
+    "NLP_Tokens": [
+      "broken",
+      "streetlight"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.69%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "broken",
+      "streetlight"
+    ]
+  },
+  {
+    "Report_ID": "CMP-42FB85",
+    "Raw_Text_Input": "Stray Dog here",
+    "NLP_Tokens": [
+      "stray",
+      "dog",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.35%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "stray",
+      "dog"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F48F48",
+    "Raw_Text_Input": "EXTREME DANGER HOUSE FIRE HERE",
+    "NLP_Tokens": [
+      "extreme",
+      "danger",
+      "house",
+      "fire",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.24%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "extreme",
+      "danger"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5B5116",
+    "Raw_Text_Input": "normal pothole",
+    "NLP_Tokens": [
+      "normal",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.92%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "normal",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7CB20B",
+    "Raw_Text_Input": "ang iingay ng mga tao dito",
+    "NLP_Tokens": [
+      "ang",
+      "iingay",
+      "mga",
+      "tao",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.39%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "ang",
+      "iingay"
+    ]
+  },
+  {
+    "Report_ID": "CMP-739F39",
+    "Raw_Text_Input": "May nakita ako ditong street light",
+    "NLP_Tokens": [
+      "may",
+      "nakita",
+      "ako",
+      "ditong",
+      "street"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.23%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "nakita"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9098EE",
+    "Raw_Text_Input": "nakita ko ang aso dito",
+    "NLP_Tokens": [
+      "nakita",
+      "ang",
+      "aso",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.10%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "nakita",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-75E4A1",
+    "Raw_Text_Input": "ambaho ng mga tao dito",
+    "NLP_Tokens": [
+      "ambaho",
+      "mga",
+      "tao",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.03%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ambaho",
+      "mga"
+    ]
+  },
+  {
+    "Report_ID": "CMP-87BBF8",
+    "Raw_Text_Input": "may mga tao nag tatapon ng basura kung saan saan",
+    "NLP_Tokens": [
+      "may",
+      "mga",
+      "tao",
+      "nag",
+      "tatapon"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.97%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "mga"
+    ]
+  },
+  {
+    "Report_ID": "CMP-ADC098",
+    "Raw_Text_Input": "nagbara yung drainage",
+    "NLP_Tokens": [
+      "nagbara",
+      "yung",
+      "drainage"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.94%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "nagbara",
+      "yung"
+    ]
+  },
+  {
+    "Report_ID": "CMP-36481B",
+    "Raw_Text_Input": "may umaapaw na basura sa bangin",
+    "NLP_Tokens": [
+      "may",
+      "umaapaw",
+      "basura",
+      "bangin"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.11%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "umaapaw"
+    ]
+  },
+  {
+    "Report_ID": "CMP-70A2CF",
+    "Raw_Text_Input": "there is another pothole found here",
+    "NLP_Tokens": [
+      "there",
+      "another",
+      "pothole",
+      "found",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "93.58%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "another"
+    ]
+  },
+  {
+    "Report_ID": "CMP-57CDCC",
+    "Raw_Text_Input": "there is a pothole found here",
+    "NLP_Tokens": [
+      "there",
+      "pothole",
+      "found",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.69%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0181FC",
+    "Raw_Text_Input": "there is a pothole",
+    "NLP_Tokens": [
+      "there",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.54%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-319D8A",
+    "Raw_Text_Input": "another smelly trash here",
+    "NLP_Tokens": [
+      "another",
+      "smelly",
+      "trash",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.52%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "another",
+      "smelly"
+    ]
+  },
+  {
+    "Report_ID": "CMP-699FC8",
+    "Raw_Text_Input": "some smelly trash here",
+    "NLP_Tokens": [
+      "some",
+      "smelly",
+      "trash",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.14%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "some",
+      "smelly"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9E8525",
+    "Raw_Text_Input": "some odor trash here",
+    "NLP_Tokens": [
+      "some",
+      "odor",
+      "trash",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.93%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "some",
+      "odor"
+    ]
+  },
+  {
+    "Report_ID": "CMP-49CC84",
+    "Raw_Text_Input": "there are some trash found here",
+    "NLP_Tokens": [
+      "there",
+      "are",
+      "some",
+      "trash",
+      "found"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.26%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0BC7F1",
+    "Raw_Text_Input": "there something hole here",
+    "NLP_Tokens": [
+      "there",
+      "something",
+      "hole",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.71%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "something"
+    ]
+  },
+  {
+    "Report_ID": "CMP-370233",
+    "Raw_Text_Input": "there some path hole here",
+    "NLP_Tokens": [
+      "there",
+      "some",
+      "path",
+      "hole",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.11%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "some"
+    ]
+  },
+  {
+    "Report_ID": "CMP-452C35",
+    "Raw_Text_Input": "there's something here",
+    "NLP_Tokens": [
+      "theres",
+      "something",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.16%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "theres",
+      "something"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A8D87A",
+    "Raw_Text_Input": "Trash are In Bad Odor.",
+    "NLP_Tokens": [
+      "trash",
+      "are",
+      "bad",
+      "odor"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.64%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "trash",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7F8986",
+    "Raw_Text_Input": "Trash are In messy Dumpster",
+    "NLP_Tokens": [
+      "trash",
+      "are",
+      "messy",
+      "dumpster"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.88%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "trash",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B3435C",
+    "Raw_Text_Input": "Drain system are clogged.",
+    "NLP_Tokens": [
+      "drain",
+      "system",
+      "are",
+      "clogged"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.88%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "drain",
+      "system"
+    ]
+  },
+  {
+    "Report_ID": "CMP-10D75B",
+    "Raw_Text_Input": "unsanitary trash, need to collect.",
+    "NLP_Tokens": [
+      "unsanitary",
+      "trash",
+      "need",
+      "collect"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.78%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "unsanitary",
+      "trash"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1E47BB",
+    "Raw_Text_Input": "broken road.",
+    "NLP_Tokens": [
+      "broken",
+      "road"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.55%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "broken",
+      "road"
+    ]
+  },
+  {
+    "Report_ID": "CMP-42C8BC",
+    "Raw_Text_Input": "There are holes in the road.",
+    "NLP_Tokens": [
+      "there",
+      "are",
+      "holes",
+      "the",
+      "road"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.76%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-DF8D6B",
+    "Raw_Text_Input": "broken path",
+    "NLP_Tokens": [
+      "broken",
+      "path"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.43%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "broken",
+      "path"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5501CD",
+    "Raw_Text_Input": "Something seems to reek in this part of the road. Might be a dead rat.",
+    "NLP_Tokens": [
+      "something",
+      "seems",
+      "reek",
+      "this",
+      "part"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.34%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "something",
+      "seems"
+    ]
+  },
+  {
+    "Report_ID": "CMP-BD9DB1",
+    "Raw_Text_Input": "A drain on a public road is clogged. This causes dirty water from sources to stay and form into a bigger body of water",
+    "NLP_Tokens": [
+      "drain",
+      "public",
+      "road",
+      "clogged",
+      "this"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.96%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "drain",
+      "public"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C82C32",
+    "Raw_Text_Input": "With in 15 meters of the previous overflowing trash bin, there is another overflowing trashbin. This could be because of the garbage collectors tardiness.",
+    "NLP_Tokens": [
+      "with",
+      "meters",
+      "the",
+      "previous",
+      "overflowing"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.78%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "with",
+      "meters"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7E01A5",
+    "Raw_Text_Input": "Visible overflowing trashbins in this particular section of the road. Messy and dirty to look at.",
+    "NLP_Tokens": [
+      "visible",
+      "overflowing",
+      "trashbins",
+      "this",
+      "particular"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "93.86%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "visible",
+      "overflowing"
+    ]
+  },
+  {
+    "Report_ID": "CMP-43B576",
+    "Raw_Text_Input": "3rd pothole within the diversion road. This is very dangerous",
+    "NLP_Tokens": [
+      "3rd",
+      "pothole",
+      "within",
+      "the",
+      "diversion"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "68.72%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "3rd",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2EBBDC",
+    "Raw_Text_Input": "Simultaneous potholes with in a singular diversion road. Could be dangerous, leave lots of signages warning riders to slowdown and be careful.",
+    "NLP_Tokens": [
+      "simultaneous",
+      "potholes",
+      "with",
+      "singular",
+      "diversion"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.56%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "simultaneous",
+      "potholes"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8BD5B8",
+    "Raw_Text_Input": "The pot hole is in the middle of the road and its very dangerous as it is hard to spot",
+    "NLP_Tokens": [
+      "the",
+      "pot",
+      "hole",
+      "the",
+      "middle"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.03%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "pot"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2D3834",
+    "Raw_Text_Input": "di na maka daan, medyo malalim na ang baha!",
+    "NLP_Tokens": [
+      "maka",
+      "daan",
+      "medyo",
+      "malalim",
+      "ang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.25%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "maka",
+      "daan"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E6E35D",
+    "Raw_Text_Input": "may mga dalang kahoy yung baha, hirap maka daan.",
+    "NLP_Tokens": [
+      "may",
+      "mga",
+      "dalang",
+      "kahoy",
+      "yung"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.58%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "mga"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5A3244",
+    "Raw_Text_Input": "di na makadaan motor namin. buti naang semento wall ng house.",
+    "NLP_Tokens": [
+      "makadaan",
+      "motor",
+      "namin",
+      "buti",
+      "naang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "87.89%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "makadaan",
+      "motor"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8C4FD1",
+    "Raw_Text_Input": "yung baha pumapasok na sa bahay, sobrang lalim na!",
+    "NLP_Tokens": [
+      "yung",
+      "baha",
+      "pumapasok",
+      "bahay",
+      "sobrang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.81%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "yung",
+      "baha"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8C7FE7",
+    "Raw_Text_Input": "ang lalim nang baha dito sa intersection, abot tuhod na.",
+    "NLP_Tokens": [
+      "ang",
+      "lalim",
+      "nang",
+      "baha",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.32%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ang",
+      "lalim"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CCDE58",
+    "Raw_Text_Input": "daga everywhere, pati sa bahay namin pinapasukan na! ayusin nyo to",
+    "NLP_Tokens": [
+      "daga",
+      "everywhere",
+      "pati",
+      "bahay",
+      "namin"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.74%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "daga",
+      "everywhere"
+    ]
+  },
+  {
+    "Report_ID": "CMP-DC62BD",
+    "Raw_Text_Input": "ambaho na dito, wala man lang  komuha sa mga basura.",
+    "NLP_Tokens": [
+      "ambaho",
+      "dito",
+      "wala",
+      "man",
+      "lang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.19%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ambaho",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1A0D8C",
+    "Raw_Text_Input": "ang daming basura, pati sa sidewalk di madaanan.",
+    "NLP_Tokens": [
+      "ang",
+      "daming",
+      "basura",
+      "pati",
+      "sidewalk"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "74.15%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ang",
+      "daming"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B4BBA3",
+    "Raw_Text_Input": "wla bang lilinis dito, tambak nayung basura wla na madaanan yung tubig",
+    "NLP_Tokens": [
+      "wla",
+      "bang",
+      "lilinis",
+      "dito",
+      "tambak"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.72%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "wla",
+      "bang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9455D3",
+    "Raw_Text_Input": "subrag init di man lang maka inom. ayusin nyo to.",
+    "NLP_Tokens": [
+      "subrag",
+      "init",
+      "man",
+      "lang",
+      "maka"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.05%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "subrag",
+      "init"
+    ]
+  },
+  {
+    "Report_ID": "CMP-839DAB",
+    "Raw_Text_Input": "ano ba! hihintayin nyo paba na may mamatay sa uhaw bago nyo ito ayusin?",
+    "NLP_Tokens": [
+      "ano",
+      "hihintayin",
+      "nyo",
+      "paba",
+      "may"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.24%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ano",
+      "hihintayin"
+    ]
+  },
+  {
+    "Report_ID": "CMP-361574",
+    "Raw_Text_Input": "di kami makapag laba.",
+    "NLP_Tokens": [
+      "kami",
+      "makapag",
+      "laba"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.88%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "kami",
+      "makapag"
+    ]
+  },
+  {
+    "Report_ID": "CMP-60FB83",
+    "Raw_Text_Input": "2 weeks nang walang tubig, pano kami makakatrabaho nyan eh ambaho na",
+    "NLP_Tokens": [
+      "weeks",
+      "nang",
+      "walang",
+      "tubig",
+      "pano"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.03%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "weeks",
+      "nang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-AE02DA",
+    "Raw_Text_Input": "ambaho na ng kapitbahay namin! wlang tubig!",
+    "NLP_Tokens": [
+      "ambaho",
+      "kapitbahay",
+      "namin",
+      "wlang",
+      "tubig"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.22%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "ambaho",
+      "kapitbahay"
+    ]
+  },
+  {
+    "Report_ID": "CMP-EAD5C1",
+    "Raw_Text_Input": "i think someones not doing their job. these potholes are causing traffic jams.",
+    "NLP_Tokens": [
+      "think",
+      "someones",
+      "not",
+      "doing",
+      "their"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.61%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "think",
+      "someones"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B22753",
+    "Raw_Text_Input": "pothole spotted near the hospital center, its causing delay!",
+    "NLP_Tokens": [
+      "pothole",
+      "spotted",
+      "near",
+      "the",
+      "hospital"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.99%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "spotted"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7BC174",
+    "Raw_Text_Input": "pothole alert! someone should really fix this. i can cause accidents!",
+    "NLP_Tokens": [
+      "pothole",
+      "alert",
+      "someone",
+      "should",
+      "really"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.47%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "alert"
+    ]
+  },
+  {
+    "Report_ID": "CMP-DB4D6C",
+    "Raw_Text_Input": "almost crashed our vehicle, very deep cracks on the road!",
+    "NLP_Tokens": [
+      "almost",
+      "crashed",
+      "our",
+      "vehicle",
+      "very"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.27%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "almost",
+      "crashed"
+    ]
+  },
+  {
+    "Report_ID": "CMP-939F74",
+    "Raw_Text_Input": "unfinished part of the road turned pothole very bumpy and annoying",
+    "NLP_Tokens": [
+      "unfinished",
+      "part",
+      "the",
+      "road",
+      "turned"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.93%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "unfinished",
+      "part"
+    ]
+  },
+  {
+    "Report_ID": "CMP-896BC8",
+    "Raw_Text_Input": "parang moon crater, di makadaan ng maayos",
+    "NLP_Tokens": [
+      "parang",
+      "moon",
+      "crater",
+      "makadaan",
+      "maayos"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.61%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "parang",
+      "moon"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6D3077",
+    "Raw_Text_Input": "traffic due to flooding on crossroad",
+    "NLP_Tokens": [
+      "traffic",
+      "due",
+      "flooding",
+      "crossroad"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.68%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "due"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CCAE2A",
+    "Raw_Text_Input": "traffic due to flooding",
+    "NLP_Tokens": [
+      "traffic",
+      "due",
+      "flooding"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.92%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "due"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A77CB5",
+    "Raw_Text_Input": "flood due to heavy rainfall",
+    "NLP_Tokens": [
+      "flood",
+      "due",
+      "heavy",
+      "rainfall"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.11%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flood",
+      "due"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F6EF3E",
+    "Raw_Text_Input": "flood due to rainfall.",
+    "NLP_Tokens": [
+      "flood",
+      "due",
+      "rainfall"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.82%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flood",
+      "due"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3C85E3",
+    "Raw_Text_Input": "Heavy rainfall in the area.",
+    "NLP_Tokens": [
+      "heavy",
+      "rainfall",
+      "the",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.96%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "heavy",
+      "rainfall"
+    ]
+  },
+  {
+    "Report_ID": "CMP-19E634",
+    "Raw_Text_Input": "It attracts stray animals and pests.",
+    "NLP_Tokens": [
+      "attracts",
+      "stray",
+      "animals",
+      "and",
+      "pests"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.14%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "attracts",
+      "stray"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FA6736",
+    "Raw_Text_Input": "It may lead to health and sanitation risks.",
+    "NLP_Tokens": [
+      "may",
+      "lead",
+      "health",
+      "and",
+      "sanitation"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.46%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "lead"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E3245F",
+    "Raw_Text_Input": "It is causing an unpleasant odor.",
+    "NLP_Tokens": [
+      "causing",
+      "unpleasant",
+      "odor"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.78%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "causing",
+      "unpleasant"
+    ]
+  },
+  {
+    "Report_ID": "CMP-533182",
+    "Raw_Text_Input": "Garbage has been left unattended at the street corner.",
+    "NLP_Tokens": [
+      "garbage",
+      "has",
+      "been",
+      "left",
+      "unattended"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.00%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "garbage",
+      "has"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9DB5C2",
+    "Raw_Text_Input": "The main valve or faucet is closed or faulty.",
+    "NLP_Tokens": [
+      "the",
+      "main",
+      "valve",
+      "faucet",
+      "closed"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.57%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "main"
+    ]
+  },
+  {
+    "Report_ID": "CMP-441DB0",
+    "Raw_Text_Input": "The water pressure is very low, especially during peak hours.",
+    "NLP_Tokens": [
+      "the",
+      "water",
+      "pressure",
+      "very",
+      "low"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.42%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F64B05",
+    "Raw_Text_Input": "There is a leak in the pipeline",
+    "NLP_Tokens": [
+      "there",
+      "leak",
+      "the",
+      "pipeline"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.71%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "leak"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E6E11C",
+    "Raw_Text_Input": "The pipes are clogged or damaged.",
+    "NLP_Tokens": [
+      "the",
+      "pipes",
+      "are",
+      "clogged",
+      "damaged"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.08%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "pipes"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A95BED",
+    "Raw_Text_Input": "The water supply source has a problem",
+    "NLP_Tokens": [
+      "the",
+      "water",
+      "supply",
+      "source",
+      "has"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.87%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2309F1",
+    "Raw_Text_Input": "POTHOLE 6 LOCATED HERE ON PURPOSE",
+    "NLP_Tokens": [
+      "pothole",
+      "located",
+      "here",
+      "purpose"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.52%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "located"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1DE4B6",
+    "Raw_Text_Input": "POTHOLE 5 LOCATED HERE",
+    "NLP_Tokens": [
+      "pothole",
+      "located",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "91.91%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "located"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1B96D4",
+    "Raw_Text_Input": "POTHOLE 4 IS LOCATED HERE EON PURPOSE",
+    "NLP_Tokens": [
+      "pothole",
+      "located",
+      "here",
+      "eon",
+      "purpose"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.88%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "located"
+    ]
+  },
+  {
+    "Report_ID": "CMP-91F18E",
+    "Raw_Text_Input": "POTHOLE 3 LOCATED HERE ON PURPOSE",
+    "NLP_Tokens": [
+      "pothole",
+      "located",
+      "here",
+      "purpose"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.55%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "located"
+    ]
+  },
+  {
+    "Report_ID": "CMP-552E53",
+    "Raw_Text_Input": "POTHOLE 2 LOCATED HERE",
+    "NLP_Tokens": [
+      "pothole",
+      "located",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.08%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "located"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6291B3",
+    "Raw_Text_Input": "POTHOLE #1 LOCATED HERE",
+    "NLP_Tokens": [
+      "pothole",
+      "located",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.93%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pothole",
+      "located"
+    ]
+  },
+  {
+    "Report_ID": "CMP-763E97",
+    "Raw_Text_Input": "in this area so difficult to entry cause of flooding and my car get stuck my lambo always  gets stuck because of the water",
+    "NLP_Tokens": [
+      "this",
+      "area",
+      "difficult",
+      "entry",
+      "cause"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.40%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "this",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F15C76",
+    "Raw_Text_Input": "n this area so difficult to entry because of the water are stuck in this area",
+    "NLP_Tokens": [
+      "this",
+      "area",
+      "difficult",
+      "entry",
+      "because"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.35%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "this",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5AE68A",
+    "Raw_Text_Input": "this area are flooding",
+    "NLP_Tokens": [
+      "this",
+      "area",
+      "are",
+      "flooding"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.74%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "this",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6249DE",
+    "Raw_Text_Input": "in this area are dead end and the water are stuck",
+    "NLP_Tokens": [
+      "this",
+      "area",
+      "are",
+      "dead",
+      "end"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.89%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "this",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1E1D34",
+    "Raw_Text_Input": "we have problem here always flooding",
+    "NLP_Tokens": [
+      "have",
+      "problem",
+      "here",
+      "always",
+      "flooding"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.40%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "have",
+      "problem"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8768D3",
+    "Raw_Text_Input": "hays! sana po matuonan nang pansin mga problema ng sambayanan ng digos kasi dito marami po talaga basura kahit saan saan nalang po naka lagay at wala ng tama lagayan sa basura",
+    "NLP_Tokens": [
+      "hays",
+      "sana",
+      "matuonan",
+      "nang",
+      "pansin"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.38%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "hays",
+      "sana"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4D706B",
+    "Raw_Text_Input": "meron po akong hinain sa inyo kasi dito marami po kasing basura sa parte nato ang sakita sa mata tingnan at napaka baho talaga.",
+    "NLP_Tokens": [
+      "meron",
+      "akong",
+      "hinain",
+      "inyo",
+      "kasi"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.08%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "meron",
+      "akong"
+    ]
+  },
+  {
+    "Report_ID": "CMP-349599",
+    "Raw_Text_Input": "i can see here in the part of this area is so many rat and so disturbing to see because because of those trash that area overflowing and the rat is everywhere!.",
+    "NLP_Tokens": [
+      "can",
+      "see",
+      "here",
+      "the",
+      "part"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "87.32%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "can",
+      "see"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FD000F",
+    "Raw_Text_Input": "dito po ay mading mga basuro dito na parte tapos ito po ay naka sagabal sa mga tao kasi napaka baho talaga sana po ma solusyonan nyo ang problema nato!.",
+    "NLP_Tokens": [
+      "dito",
+      "mading",
+      "mga",
+      "basuro",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.96%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dito",
+      "mading"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4954FF",
+    "Raw_Text_Input": "sa akin lang po sana ma tuonan nang pansin ang mga  reklamo nang sanbayanan filipino kasi dito wala po kaming tubig sa lugar nato at sana ma solusyonan ang mga problema nato.",
+    "NLP_Tokens": [
+      "akin",
+      "lang",
+      "sana",
+      "tuonan",
+      "nang"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.95%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "akin",
+      "lang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-59400E",
+    "Raw_Text_Input": "good evening! first thing first thank you for the opportunity to address our problem to our brgy this area is no water and were struggling everymorning",
+    "NLP_Tokens": [
+      "good",
+      "evening",
+      "first",
+      "thing",
+      "first"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.77%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "good",
+      "evening"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6FF2FE",
+    "Raw_Text_Input": "good day! i have something to address and problem to our beloved brgy this area were struggling water every morning because everymorning there is no water.",
+    "NLP_Tokens": [
+      "good",
+      "day",
+      "have",
+      "something",
+      "address"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.67%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "good",
+      "day"
+    ]
+  },
+  {
+    "Report_ID": "CMP-ECF7C7",
+    "Raw_Text_Input": "good evening i have a problem lately were having problem of water because sometimes every morning there is no water in this area and were struggling like taking bath and drinking water.",
+    "NLP_Tokens": [
+      "good",
+      "evening",
+      "have",
+      "problem",
+      "lately"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.94%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "good",
+      "evening"
+    ]
+  },
+  {
+    "Report_ID": "CMP-21D21E",
+    "Raw_Text_Input": "i have something to complain to this area that there is no water and were having problem like now were struggling everyday like example this week we can only taste water in 3 days but the rest is no water.",
+    "NLP_Tokens": [
+      "have",
+      "something",
+      "complain",
+      "this",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.02%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.07,
+    "Matched_Keywords": [
+      "have",
+      "something"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4A32C5",
+    "Raw_Text_Input": "dito din po meron naman akong nakita mali! sana po matuonan nyo ng pansin mga hinain nang sambayanan ng digos sana masama nyo po ito mga bago na proyekto sa digos salamat po!",
+    "NLP_Tokens": [
+      "dito",
+      "din",
+      "meron",
+      "naman",
+      "akong"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.78%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "dito",
+      "din"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F0BF4C",
+    "Raw_Text_Input": "magandang gabi po meron po akong hinain sa inyo sana matulungan nyo po kami kasi madami napo akong napapasin na mga pothole dito sa amin lugar salamat po sana ma pansin nyo ako!",
+    "NLP_Tokens": [
+      "magandang",
+      "gabi",
+      "meron",
+      "akong",
+      "hinain"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.58%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "magandang",
+      "gabi"
+    ]
+  },
+  {
+    "Report_ID": "CMP-726FC8",
+    "Raw_Text_Input": "dito meron din akong na pansin na pothole sa daan nato sana din matulugan ang mga drivers na maka daan ng maayo at mabilis ng walang problema  salamat po!",
+    "NLP_Tokens": [
+      "dito",
+      "meron",
+      "din",
+      "akong",
+      "pansin"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.73%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dito",
+      "meron"
+    ]
+  },
+  {
+    "Report_ID": "CMP-020960",
+    "Raw_Text_Input": "tapos dito meron din akong nakita po mga pothole at ito po ay nakakasagabal sa daan please po ah sana ma matuonan ng pansin po",
+    "NLP_Tokens": [
+      "tapos",
+      "dito",
+      "meron",
+      "din",
+      "akong"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.29%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "tapos",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3B8F73",
+    "Raw_Text_Input": "tapos dito meron din akong nakita po mga pothole at ito po ay nakakasagabal sa daan please po ah sana ma matuonan ng pansin po.",
+    "NLP_Tokens": [
+      "tapos",
+      "dito",
+      "meron",
+      "din",
+      "akong"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.59%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "tapos",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-42542F",
+    "Raw_Text_Input": "Meron po akong sasabihin po oh reklamo meron po kasi ako nakita mga pothole sa daan nga dona aurora at ito po ay naka sagabal sadaann.",
+    "NLP_Tokens": [
+      "meron",
+      "akong",
+      "sasabihin",
+      "reklamo",
+      "meron"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.56%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "meron",
+      "akong"
+    ]
+  },
+  {
+    "Report_ID": "CMP-69C826",
+    "Raw_Text_Input": "another traffic occurred due to flood control",
+    "NLP_Tokens": [
+      "another",
+      "traffic",
+      "occurred",
+      "due",
+      "flood"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.06%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "another",
+      "traffic"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5630E0",
+    "Raw_Text_Input": "traffic happened due to flood",
+    "NLP_Tokens": [
+      "traffic",
+      "happened",
+      "due",
+      "flood"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.36%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "happened"
+    ]
+  },
+  {
+    "Report_ID": "CMP-79CF92",
+    "Raw_Text_Input": "reason why flood occurred",
+    "NLP_Tokens": [
+      "reason",
+      "why",
+      "flood",
+      "occurred"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.57%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "reason",
+      "why"
+    ]
+  },
+  {
+    "Report_ID": "CMP-EF2EC8",
+    "Raw_Text_Input": "minor flood",
+    "NLP_Tokens": [
+      "minor",
+      "flood"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.56%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "minor",
+      "flood"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4C8EB0",
+    "Raw_Text_Input": "flooded area",
+    "NLP_Tokens": [
+      "flooded",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.22%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flooded",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-146CA0",
+    "Raw_Text_Input": "another clogged drainage",
+    "NLP_Tokens": [
+      "another",
+      "clogged",
+      "drainage"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.13%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "another",
+      "clogged"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2D58A6",
+    "Raw_Text_Input": "clogged drainage",
+    "NLP_Tokens": [
+      "clogged",
+      "drainage"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.51%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "clogged",
+      "drainage"
+    ]
+  },
+  {
+    "Report_ID": "CMP-72CAFD",
+    "Raw_Text_Input": "pile of trash",
+    "NLP_Tokens": [
+      "pile",
+      "trash"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.29%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "pile",
+      "trash"
+    ]
+  },
+  {
+    "Report_ID": "CMP-980AD7",
+    "Raw_Text_Input": "a lot of trash in this area",
+    "NLP_Tokens": [
+      "lot",
+      "trash",
+      "this",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.44%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "lot",
+      "trash"
+    ]
+  },
+  {
+    "Report_ID": "CMP-747157",
+    "Raw_Text_Input": "poor water connection",
+    "NLP_Tokens": [
+      "poor",
+      "water",
+      "connection"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.26%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "poor",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E73FF0",
+    "Raw_Text_Input": "house ran out of water",
+    "NLP_Tokens": [
+      "house",
+      "ran",
+      "out",
+      "water"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.29%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "house",
+      "ran"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5A5CAD",
+    "Raw_Text_Input": "no water for the trees",
+    "NLP_Tokens": [
+      "water",
+      "for",
+      "the",
+      "trees"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.83%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "for"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6A6A0E",
+    "Raw_Text_Input": "no water in this other house",
+    "NLP_Tokens": [
+      "water",
+      "this",
+      "other",
+      "house"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.06%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "this"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3FCF66",
+    "Raw_Text_Input": "no water in this house",
+    "NLP_Tokens": [
+      "water",
+      "this",
+      "house"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.37%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "this"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C11BEE",
+    "Raw_Text_Input": "slight damaged road here",
+    "NLP_Tokens": [
+      "slight",
+      "damaged",
+      "road",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.31%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "slight",
+      "damaged"
+    ]
+  },
+  {
+    "Report_ID": "CMP-54F2D0",
+    "Raw_Text_Input": "dangerous pothole here",
+    "NLP_Tokens": [
+      "dangerous",
+      "pothole",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.30%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dangerous",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0B2F76",
+    "Raw_Text_Input": "nakita ko may lubak dito",
+    "NLP_Tokens": [
+      "nakita",
+      "may",
+      "lubak",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.11%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "nakita",
+      "may"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FC4BB5",
+    "Raw_Text_Input": "rough road",
+    "NLP_Tokens": [
+      "rough",
+      "road"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.25%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "rough",
+      "road"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0678E1",
+    "Raw_Text_Input": "another hole has been spotted here",
+    "NLP_Tokens": [
+      "another",
+      "hole",
+      "has",
+      "been",
+      "spotted"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.32%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "another",
+      "hole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CF81C3",
+    "Raw_Text_Input": "there is a hole in the street.",
+    "NLP_Tokens": [
+      "there",
+      "hole",
+      "the",
+      "street"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.80%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "hole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D25227",
+    "Raw_Text_Input": "Flooding Problems",
+    "NLP_Tokens": [
+      "flooding",
+      "problems"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.98%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flooding",
+      "problems"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FAC3B1",
+    "Raw_Text_Input": "Drainage Problems",
+    "NLP_Tokens": [
+      "drainage",
+      "problems"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "68.23%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "drainage",
+      "problems"
+    ]
+  },
+  {
+    "Report_ID": "CMP-EB6DF5",
+    "Raw_Text_Input": "Poor Drainage Maintenance",
+    "NLP_Tokens": [
+      "poor",
+      "drainage",
+      "maintenance"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "68.28%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "poor",
+      "drainage"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7A1C96",
+    "Raw_Text_Input": "Flood issues",
+    "NLP_Tokens": [
+      "flood",
+      "issues"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.14%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flood",
+      "issues"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F5B27B",
+    "Raw_Text_Input": "Excessive Flooding",
+    "NLP_Tokens": [
+      "excessive",
+      "flooding"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.63%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "excessive",
+      "flooding"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0538C7",
+    "Raw_Text_Input": "Poor Gargarbage Sanitary",
+    "NLP_Tokens": [
+      "poor",
+      "gargarbage",
+      "sanitary"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "87.74%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "poor",
+      "gargarbage"
+    ]
+  },
+  {
+    "Report_ID": "CMP-764D46",
+    "Raw_Text_Input": "Poor sanitation",
+    "NLP_Tokens": [
+      "poor",
+      "sanitation"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "91.22%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "poor",
+      "sanitation"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2D102B",
+    "Raw_Text_Input": "Trash Everywhere",
+    "NLP_Tokens": [
+      "trash",
+      "everywhere"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.12%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "trash",
+      "everywhere"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2D76D9",
+    "Raw_Text_Input": "Daming Basura",
+    "NLP_Tokens": [
+      "daming",
+      "basura"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.18%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "daming",
+      "basura"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1A8FB3",
+    "Raw_Text_Input": "Gusto ko Nang Maligo",
+    "NLP_Tokens": [
+      "gusto",
+      "nang",
+      "maligo"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.91%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "gusto",
+      "nang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2914B6",
+    "Raw_Text_Input": "We Dont Have Water here.",
+    "NLP_Tokens": [
+      "dont",
+      "have",
+      "water",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.83%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dont",
+      "have"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4320D4",
+    "Raw_Text_Input": "Walang Tubig.",
+    "NLP_Tokens": [
+      "walang",
+      "tubig"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.63%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "walang",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-AE07EB",
+    "Raw_Text_Input": "No Water send Help",
+    "NLP_Tokens": [
+      "water",
+      "send",
+      "help"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.86%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "send"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4763E3",
+    "Raw_Text_Input": "Water Issues",
+    "NLP_Tokens": [
+      "water",
+      "issues"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.37%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "issues"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3A5A14",
+    "Raw_Text_Input": "Road issues",
+    "NLP_Tokens": [
+      "road",
+      "issues"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.26%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "issues"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7C5CD5",
+    "Raw_Text_Input": "DPWH  what now?",
+    "NLP_Tokens": [
+      "dpwh",
+      "what",
+      "now"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "74.87%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dpwh",
+      "what"
+    ]
+  },
+  {
+    "Report_ID": "CMP-AB93ED",
+    "Raw_Text_Input": "Road is in bad condition",
+    "NLP_Tokens": [
+      "road",
+      "bad",
+      "condition"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.52%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "bad"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5C6A1E",
+    "Raw_Text_Input": "Road issues",
+    "NLP_Tokens": [
+      "road",
+      "issues"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.43%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "issues"
+    ]
+  },
+  {
+    "Report_ID": "CMP-55167C",
+    "Raw_Text_Input": "Road it rough again",
+    "NLP_Tokens": [
+      "road",
+      "rough",
+      "again"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.32%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "rough"
+    ]
+  },
+  {
+    "Report_ID": "CMP-BEB3DE",
+    "Raw_Text_Input": "Road is too rough. its annoying",
+    "NLP_Tokens": [
+      "road",
+      "too",
+      "rough",
+      "its",
+      "annoying"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.11%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "too"
+    ]
+  },
+  {
+    "Report_ID": "CMP-72EF3E",
+    "Raw_Text_Input": "TRAFFIC TRAFFIC",
+    "NLP_Tokens": [
+      "traffic",
+      "traffic"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.23%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "traffic"
+    ]
+  },
+  {
+    "Report_ID": "CMP-13B36D",
+    "Raw_Text_Input": "TRAFFIC TRAFFIC",
+    "NLP_Tokens": [
+      "traffic",
+      "traffic"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.12%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "traffic"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4B75E6",
+    "Raw_Text_Input": "BAHA WALANG TULAY",
+    "NLP_Tokens": [
+      "baha",
+      "walang",
+      "tulay"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.34%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "baha",
+      "walang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-79D729",
+    "Raw_Text_Input": "BAHA WALANG TULAY",
+    "NLP_Tokens": [
+      "baha",
+      "walang",
+      "tulay"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.02%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "baha",
+      "walang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D61D3A",
+    "Raw_Text_Input": "BAHA WALANG TULAY",
+    "NLP_Tokens": [
+      "baha",
+      "walang",
+      "tulay"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.20%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "baha",
+      "walang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1E9968",
+    "Raw_Text_Input": "BASURA SA DAAN",
+    "NLP_Tokens": [
+      "basura",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.50%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "basura",
+      "daan"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CD744A",
+    "Raw_Text_Input": "BASURA SA DAAN",
+    "NLP_Tokens": [
+      "basura",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.27%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "basura",
+      "daan"
+    ]
+  },
+  {
+    "Report_ID": "CMP-93E26E",
+    "Raw_Text_Input": "BASURA SA DAAN",
+    "NLP_Tokens": [
+      "basura",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.20%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "basura",
+      "daan"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7C711E",
+    "Raw_Text_Input": "BASURA SA DAAN",
+    "NLP_Tokens": [
+      "basura",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.61%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "basura",
+      "daan"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B564B6",
+    "Raw_Text_Input": "WAY TUBIG SKWATER",
+    "NLP_Tokens": [
+      "way",
+      "tubig",
+      "skwater"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.66%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "way",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-95DF9A",
+    "Raw_Text_Input": "WAY TUBIG SKWATER",
+    "NLP_Tokens": [
+      "way",
+      "tubig",
+      "skwater"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.77%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "way",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1A492D",
+    "Raw_Text_Input": "WAY TUBIG SKWATER",
+    "NLP_Tokens": [
+      "way",
+      "tubig",
+      "skwater"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.59%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "way",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D91E3A",
+    "Raw_Text_Input": "WAY TUBIG SKWATER",
+    "NLP_Tokens": [
+      "way",
+      "tubig",
+      "skwater"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.63%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "way",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-EF7CA5",
+    "Raw_Text_Input": "WAY TUBIG SKWATER",
+    "NLP_Tokens": [
+      "way",
+      "tubig",
+      "skwater"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.02%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "way",
+      "tubig"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FB65AE",
+    "Raw_Text_Input": "SIRA ANG DAAN",
+    "NLP_Tokens": [
+      "sira",
+      "ang",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.74%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sira",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0F6819",
+    "Raw_Text_Input": "NASAANG ANG GOBYERNO DITO BAT SIRA ANG DAAN",
+    "NLP_Tokens": [
+      "nasaang",
+      "ang",
+      "gobyerno",
+      "dito",
+      "bat"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.05%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "nasaang",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-161864",
+    "Raw_Text_Input": "SIRA ANG DAAN",
+    "NLP_Tokens": [
+      "sira",
+      "ang",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.06%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sira",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-52736F",
+    "Raw_Text_Input": "SIRA ANG DAAN",
+    "NLP_Tokens": [
+      "sira",
+      "ang",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.32%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sira",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FE8AD1",
+    "Raw_Text_Input": "SIRA ANG DAAN",
+    "NLP_Tokens": [
+      "sira",
+      "ang",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.79%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sira",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3C7514",
+    "Raw_Text_Input": "SIRA ANG DAAN",
+    "NLP_Tokens": [
+      "sira",
+      "ang",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.07%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sira",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2487B4",
+    "Raw_Text_Input": "Traffic because of no traffic light",
+    "NLP_Tokens": [
+      "traffic",
+      "because",
+      "traffic",
+      "light"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.04%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "because"
+    ]
+  },
+  {
+    "Report_ID": "CMP-29D8A0",
+    "Raw_Text_Input": "Traffic because of flood",
+    "NLP_Tokens": [
+      "traffic",
+      "because",
+      "flood"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "74.24%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "traffic",
+      "because"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4AED8C",
+    "Raw_Text_Input": "Flood causes trafic",
+    "NLP_Tokens": [
+      "flood",
+      "causes",
+      "trafic"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.06%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flood",
+      "causes"
+    ]
+  },
+  {
+    "Report_ID": "CMP-096EFB",
+    "Raw_Text_Input": "Highly flooded",
+    "NLP_Tokens": [
+      "highly",
+      "flooded"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.13%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "highly",
+      "flooded"
+    ]
+  },
+  {
+    "Report_ID": "CMP-970105",
+    "Raw_Text_Input": "Flooded area",
+    "NLP_Tokens": [
+      "flooded",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.91%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flooded",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-612E5F",
+    "Raw_Text_Input": "Many litters here",
+    "NLP_Tokens": [
+      "many",
+      "litters",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.11%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "many",
+      "litters"
+    ]
+  },
+  {
+    "Report_ID": "CMP-DBFCF3",
+    "Raw_Text_Input": "There are many dumpster here",
+    "NLP_Tokens": [
+      "there",
+      "are",
+      "many",
+      "dumpster",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "87.98%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C973A8",
+    "Raw_Text_Input": "There are many D's here as well",
+    "NLP_Tokens": [
+      "there",
+      "are",
+      "many",
+      "here",
+      "well"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.66%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-AD0B1F",
+    "Raw_Text_Input": "There are many D's here",
+    "NLP_Tokens": [
+      "there",
+      "are",
+      "many",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.22%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D497F4",
+    "Raw_Text_Input": "No water right here",
+    "NLP_Tokens": [
+      "water",
+      "right",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.06%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "right"
+    ]
+  },
+  {
+    "Report_ID": "CMP-EA777A",
+    "Raw_Text_Input": "Especially definitely here",
+    "NLP_Tokens": [
+      "especially",
+      "definitely",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.18%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "especially",
+      "definitely"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5E45B0",
+    "Raw_Text_Input": "Most definitely here",
+    "NLP_Tokens": [
+      "most",
+      "definitely",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.40%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "most",
+      "definitely"
+    ]
+  },
+  {
+    "Report_ID": "CMP-240539",
+    "Raw_Text_Input": "No water here as well",
+    "NLP_Tokens": [
+      "water",
+      "here",
+      "well"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.34%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "here"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A741DB",
+    "Raw_Text_Input": "No water here",
+    "NLP_Tokens": [
+      "water",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.66%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "here"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9CB485",
+    "Raw_Text_Input": "Most definitely itly is hole here as well",
+    "NLP_Tokens": [
+      "most",
+      "definitely",
+      "itly",
+      "hole",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.80%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "most",
+      "definitely"
+    ]
+  },
+  {
+    "Report_ID": "CMP-DA6D2E",
+    "Raw_Text_Input": "Definitely itly is hole here as well",
+    "NLP_Tokens": [
+      "definitely",
+      "itly",
+      "hole",
+      "here",
+      "well"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.62%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "definitely",
+      "itly"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5E70AD",
+    "Raw_Text_Input": "There is hole here as well",
+    "NLP_Tokens": [
+      "there",
+      "hole",
+      "here",
+      "well"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "93.96%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "hole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-25FF43",
+    "Raw_Text_Input": "There is hole here",
+    "NLP_Tokens": [
+      "there",
+      "hole",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.94%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "there",
+      "hole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CEE2D4",
+    "Raw_Text_Input": "One big hole",
+    "NLP_Tokens": [
+      "one",
+      "big",
+      "hole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "93.29%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "one",
+      "big"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A1C89D",
+    "Raw_Text_Input": "Bangag diri",
+    "NLP_Tokens": [
+      "bangag",
+      "diri"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.66%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "bangag",
+      "diri"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C5AA6E",
+    "Raw_Text_Input": "congested intersection",
+    "NLP_Tokens": [
+      "congested",
+      "intersection"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.55%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "congested",
+      "intersection"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5B0AA9",
+    "Raw_Text_Input": "too many vehicles",
+    "NLP_Tokens": [
+      "too",
+      "many",
+      "vehicles"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.64%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "too",
+      "many"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D60FD1",
+    "Raw_Text_Input": "no drainage, deep flood",
+    "NLP_Tokens": [
+      "drainage",
+      "deep",
+      "flood"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.74%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "drainage",
+      "deep"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7E1D0E",
+    "Raw_Text_Input": "flooding area",
+    "NLP_Tokens": [
+      "flooding",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.28%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flooding",
+      "area"
+    ]
+  },
+  {
+    "Report_ID": "CMP-3CBAAB",
+    "Raw_Text_Input": "no drainage, causing flood",
+    "NLP_Tokens": [
+      "drainage",
+      "causing",
+      "flood"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.86%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "drainage",
+      "causing"
+    ]
+  },
+  {
+    "Report_ID": "CMP-942C1C",
+    "Raw_Text_Input": "the drains are clogged by the trash",
+    "NLP_Tokens": [
+      "the",
+      "drains",
+      "are",
+      "clogged",
+      "the"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.81%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "drains"
+    ]
+  },
+  {
+    "Report_ID": "CMP-68AEF2",
+    "Raw_Text_Input": "so many rats",
+    "NLP_Tokens": [
+      "many",
+      "rats"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.18%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "many",
+      "rats"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B198CA",
+    "Raw_Text_Input": "no proper disposal of garbage",
+    "NLP_Tokens": [
+      "proper",
+      "disposal",
+      "garbage"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.16%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "proper",
+      "disposal"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9E0D34",
+    "Raw_Text_Input": "trash in the drainage, it's stinky",
+    "NLP_Tokens": [
+      "trash",
+      "the",
+      "drainage",
+      "its",
+      "stinky"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "76.13%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "trash",
+      "the"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B66E2C",
+    "Raw_Text_Input": "water supply not stable",
+    "NLP_Tokens": [
+      "water",
+      "supply",
+      "not",
+      "stable"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.70%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "supply"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1107F2",
+    "Raw_Text_Input": "low pressure of water",
+    "NLP_Tokens": [
+      "low",
+      "pressure",
+      "water"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.23%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "low",
+      "pressure"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9F35CD",
+    "Raw_Text_Input": "no flow of water of faucet",
+    "NLP_Tokens": [
+      "flow",
+      "water",
+      "faucet"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.65%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flow",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-831BCE",
+    "Raw_Text_Input": "water not stable",
+    "NLP_Tokens": [
+      "water",
+      "not",
+      "stable"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.21%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "not"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CE199C",
+    "Raw_Text_Input": "slow water supply in morning",
+    "NLP_Tokens": [
+      "slow",
+      "water",
+      "supply",
+      "morning"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "74.14%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "slow",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F125A9",
+    "Raw_Text_Input": "small pothole",
+    "NLP_Tokens": [
+      "small",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "91.88%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "small",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-77DE00",
+    "Raw_Text_Input": "huge pothole",
+    "NLP_Tokens": [
+      "huge",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.00%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "huge",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1C24E0",
+    "Raw_Text_Input": "medium pothole",
+    "NLP_Tokens": [
+      "medium",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.46%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "medium",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2723C9",
+    "Raw_Text_Input": "small pothole",
+    "NLP_Tokens": [
+      "small",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.00%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "small",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F1E9A0",
+    "Raw_Text_Input": "small pothole",
+    "NLP_Tokens": [
+      "small",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.24%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "small",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-72FE8D",
+    "Raw_Text_Input": "Huge pothole",
+    "NLP_Tokens": [
+      "huge",
+      "pothole"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "68.70%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "huge",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4FB637",
+    "Raw_Text_Input": "Incoming vehicles have a hard time passing in this area when the flood occurs causing a series of traffic.",
+    "NLP_Tokens": [
+      "incoming",
+      "vehicles",
+      "have",
+      "hard",
+      "time"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "83.22%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "incoming",
+      "vehicles"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E8ADDE",
+    "Raw_Text_Input": "All motor vehicles  cannot pass through this area causing a traffic.",
+    "NLP_Tokens": [
+      "all",
+      "motor",
+      "vehicles",
+      "cannot",
+      "pass"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.50%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "all",
+      "motor"
+    ]
+  },
+  {
+    "Report_ID": "CMP-522A8D",
+    "Raw_Text_Input": "Doesn't have a proper sewage system in the area.",
+    "NLP_Tokens": [
+      "doesnt",
+      "have",
+      "proper",
+      "sewage",
+      "system"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "91.78%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "doesnt",
+      "have"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8015FF",
+    "Raw_Text_Input": "When a flood occur a lot of water flow in this area.",
+    "NLP_Tokens": [
+      "when",
+      "flood",
+      "occur",
+      "lot",
+      "water"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.79%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "when",
+      "flood"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2B6A0F",
+    "Raw_Text_Input": "Flood prone area.",
+    "NLP_Tokens": [
+      "flood",
+      "prone",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.68%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "flood",
+      "prone"
+    ]
+  },
+  {
+    "Report_ID": "CMP-94E79D",
+    "Raw_Text_Input": "A  lot of trash are litter everywhere",
+    "NLP_Tokens": [
+      "lot",
+      "trash",
+      "are",
+      "litter",
+      "everywhere"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.42%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "lot",
+      "trash"
+    ]
+  },
+  {
+    "Report_ID": "CMP-25D89E",
+    "Raw_Text_Input": "Trash are everywhere.",
+    "NLP_Tokens": [
+      "trash",
+      "are",
+      "everywhere"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.61%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "trash",
+      "are"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F2D197",
+    "Raw_Text_Input": "Clogged drainage due to a lot of garbage stuck in the manhole.",
+    "NLP_Tokens": [
+      "clogged",
+      "drainage",
+      "due",
+      "lot",
+      "garbage"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.44%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "clogged",
+      "drainage"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FD3186",
+    "Raw_Text_Input": "A lot of waste can be found in this location.",
+    "NLP_Tokens": [
+      "lot",
+      "waste",
+      "can",
+      "found",
+      "this"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.50%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "lot",
+      "waste"
+    ]
+  },
+  {
+    "Report_ID": "CMP-499528",
+    "Raw_Text_Input": "Low water pressure.",
+    "NLP_Tokens": [
+      "low",
+      "water",
+      "pressure"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.54%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "low",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2BF3ED",
+    "Raw_Text_Input": "A lot of water interruption.",
+    "NLP_Tokens": [
+      "lot",
+      "water",
+      "interruption"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.07%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "lot",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D05F7C",
+    "Raw_Text_Input": "No water at all",
+    "NLP_Tokens": [
+      "water",
+      "all"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "74.47%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "all"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B9F5E1",
+    "Raw_Text_Input": "Low water pressure detected in this house.",
+    "NLP_Tokens": [
+      "low",
+      "water",
+      "pressure",
+      "detected",
+      "this"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.12%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "low",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-43851B",
+    "Raw_Text_Input": "No water pressure at all means no water.",
+    "NLP_Tokens": [
+      "water",
+      "pressure",
+      "all",
+      "means",
+      "water"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "86.79%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "pressure"
+    ]
+  },
+  {
+    "Report_ID": "CMP-99C926",
+    "Raw_Text_Input": "Several of the cracks can be found in this area.",
+    "NLP_Tokens": [
+      "several",
+      "the",
+      "cracks",
+      "can",
+      "found"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.24%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "several",
+      "the"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FB3703",
+    "Raw_Text_Input": "A huge crack on the pavement is located in here.",
+    "NLP_Tokens": [
+      "huge",
+      "crack",
+      "the",
+      "pavement",
+      "located"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.78%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "huge",
+      "crack"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B60FC0",
+    "Raw_Text_Input": "A series of small holes was detected.",
+    "NLP_Tokens": [
+      "series",
+      "small",
+      "holes",
+      "was",
+      "detected"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.76%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "series",
+      "small"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E7DC1C",
+    "Raw_Text_Input": "No issue here.",
+    "NLP_Tokens": [
+      "issue",
+      "here"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.95%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "issue",
+      "here"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A32F4C",
+    "Raw_Text_Input": "No issue regarding in this area.",
+    "NLP_Tokens": [
+      "issue",
+      "regarding",
+      "this",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.89%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "issue",
+      "regarding"
+    ]
+  },
+  {
+    "Report_ID": "CMP-2CF2A1",
+    "Raw_Text_Input": "A huge pothole is located in this area",
+    "NLP_Tokens": [
+      "huge",
+      "pothole",
+      "located",
+      "this",
+      "area"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.06%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "huge",
+      "pothole"
+    ]
+  },
+  {
+    "Report_ID": "CMP-E15B4D",
+    "Raw_Text_Input": "Both way cannot be use",
+    "NLP_Tokens": [
+      "both",
+      "way",
+      "cannot",
+      "use"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.04%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0.01,
+    "Matched_Keywords": [
+      "both",
+      "way"
+    ]
+  },
+  {
+    "Report_ID": "CMP-834C69",
+    "Raw_Text_Input": "1 way is unused due to high water level",
+    "NLP_Tokens": [
+      "way",
+      "unused",
+      "due",
+      "high",
+      "water"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.72%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "way",
+      "unused"
+    ]
+  },
+  {
+    "Report_ID": "CMP-0A2D25",
+    "Raw_Text_Input": "surface is uneven; preventing the water from going to the drainage",
+    "NLP_Tokens": [
+      "surface",
+      "uneven",
+      "preventing",
+      "the",
+      "water"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "94.82%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "surface",
+      "uneven"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D83480",
+    "Raw_Text_Input": "leaves blocked the drainage causing water level to rise",
+    "NLP_Tokens": [
+      "leaves",
+      "blocked",
+      "the",
+      "drainage",
+      "causing"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.67%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "leaves",
+      "blocked"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F174B2",
+    "Raw_Text_Input": "The sink is block, water level is rising",
+    "NLP_Tokens": [
+      "the",
+      "sink",
+      "block",
+      "water",
+      "level"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.44%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "sink"
+    ]
+  },
+  {
+    "Report_ID": "CMP-91386D",
+    "Raw_Text_Input": "used condoms  on the floor",
+    "NLP_Tokens": [
+      "used",
+      "condoms",
+      "the",
+      "floor"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.46%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "used",
+      "condoms"
+    ]
+  },
+  {
+    "Report_ID": "CMP-5296FA",
+    "Raw_Text_Input": "cigarette butts scattered everywhere",
+    "NLP_Tokens": [
+      "cigarette",
+      "butts",
+      "scattered",
+      "everywhere"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "67.56%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "cigarette",
+      "butts"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F2EF7D",
+    "Raw_Text_Input": "Plastic wrapper everywhere",
+    "NLP_Tokens": [
+      "plastic",
+      "wrapper",
+      "everywhere"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "65.43%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "plastic",
+      "wrapper"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4ADC10",
+    "Raw_Text_Input": "Plastic bottles scattered everywhere",
+    "NLP_Tokens": [
+      "plastic",
+      "bottles",
+      "scattered",
+      "everywhere"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "71.85%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "plastic",
+      "bottles"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1FDEE3",
+    "Raw_Text_Input": "I need to take a bath",
+    "NLP_Tokens": [
+      "need",
+      "take",
+      "bath"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.92%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "need",
+      "take"
+    ]
+  },
+  {
+    "Report_ID": "CMP-237FFB",
+    "Raw_Text_Input": "ss ni crystalmaiden",
+    "NLP_Tokens": [
+      "crystalmaiden"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "92.13%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "crystalmaiden"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D00DE9",
+    "Raw_Text_Input": "water bender",
+    "NLP_Tokens": [
+      "water",
+      "bender"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.68%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "water",
+      "bender"
+    ]
+  },
+  {
+    "Report_ID": "CMP-B226E7",
+    "Raw_Text_Input": "My cat's piss flow more",
+    "NLP_Tokens": [
+      "cats",
+      "piss",
+      "flow",
+      "more"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "91.73%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "cats",
+      "piss"
+    ]
+  },
+  {
+    "Report_ID": "CMP-008DED",
+    "Raw_Text_Input": "The water flow is almost nothing",
+    "NLP_Tokens": [
+      "the",
+      "water",
+      "flow",
+      "almost",
+      "nothing"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "81.57%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "the",
+      "water"
+    ]
+  },
+  {
+    "Report_ID": "CMP-EC8F72",
+    "Raw_Text_Input": "very dangerous",
+    "NLP_Tokens": [
+      "very",
+      "dangerous"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "79.69%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "very",
+      "dangerous"
+    ]
+  },
+  {
+    "Report_ID": "CMP-7AFCBD",
+    "Raw_Text_Input": "accident prone are",
+    "NLP_Tokens": [
+      "accident",
+      "prone",
+      "are"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.15%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "accident",
+      "prone"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4748F6",
+    "Raw_Text_Input": "Fix this hole bro",
+    "NLP_Tokens": [
+      "fix",
+      "this",
+      "hole",
+      "bro"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "72.23%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "fix",
+      "this"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8D53D7",
+    "Raw_Text_Input": "I lost my son here during accident",
+    "NLP_Tokens": [
+      "lost",
+      "son",
+      "here",
+      "during",
+      "accident"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.30%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "lost",
+      "son"
+    ]
+  },
+  {
+    "Report_ID": "CMP-D7058B",
+    "Raw_Text_Input": "Dangerous,please fix this",
+    "NLP_Tokens": [
+      "dangerousplease",
+      "fix",
+      "this"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "88.36%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dangerousplease",
+      "fix"
+    ]
+  },
+  {
+    "Report_ID": "CMP-50337D",
+    "Raw_Text_Input": "Dense road with pothole. Very dangerous.",
+    "NLP_Tokens": [
+      "dense",
+      "road",
+      "with",
+      "pothole",
+      "very"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.44%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "dense",
+      "road"
+    ]
+  },
+  {
+    "Report_ID": "CMP-659658",
+    "Raw_Text_Input": "Tumatraffic pag bumabaha dito",
+    "NLP_Tokens": [
+      "tumatraffic",
+      "pag",
+      "bumabaha",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.98%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "tumatraffic",
+      "pag"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C30DFD",
+    "Raw_Text_Input": "Tumatraffic pag bumabaha dito",
+    "NLP_Tokens": [
+      "tumatraffic",
+      "pag",
+      "bumabaha",
+      "dito"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "75.42%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "tumatraffic",
+      "pag"
+    ]
+  },
+  {
+    "Report_ID": "CMP-9B92D8",
+    "Raw_Text_Input": "Bumabaha dito pag ulan",
+    "NLP_Tokens": [
+      "bumabaha",
+      "dito",
+      "pag",
+      "ulan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "74.16%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "bumabaha",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-169934",
+    "Raw_Text_Input": "Bumabaha dito pag ulan",
+    "NLP_Tokens": [
+      "bumabaha",
+      "dito",
+      "pag",
+      "ulan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.40%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "bumabaha",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A2D3D4",
+    "Raw_Text_Input": "Bumabaha dito pag ulan",
+    "NLP_Tokens": [
+      "bumabaha",
+      "dito",
+      "pag",
+      "ulan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "69.68%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "bumabaha",
+      "dito"
+    ]
+  },
+  {
+    "Report_ID": "CMP-4B0E04",
+    "Raw_Text_Input": "No proper garbage disposal",
+    "NLP_Tokens": [
+      "proper",
+      "garbage",
+      "disposal"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.33%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "proper",
+      "garbage"
+    ]
+  },
+  {
+    "Report_ID": "CMP-CF80F2",
+    "Raw_Text_Input": "I smell rotten fish and meat all the time",
+    "NLP_Tokens": [
+      "smell",
+      "rotten",
+      "fish",
+      "and",
+      "meat"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.29%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "smell",
+      "rotten"
+    ]
+  },
+  {
+    "Report_ID": "CMP-F672AE",
+    "Raw_Text_Input": "Trashcans have lots of flies flying",
+    "NLP_Tokens": [
+      "trashcans",
+      "have",
+      "lots",
+      "flies",
+      "flying"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "80.62%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "trashcans",
+      "have"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6F124F",
+    "Raw_Text_Input": "Very Smelly",
+    "NLP_Tokens": [
+      "very",
+      "smelly"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "70.37%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "very",
+      "smelly"
+    ]
+  },
+  {
+    "Report_ID": "CMP-8AEE13",
+    "Raw_Text_Input": "Palaging nawawala yung tubig sa afternoon",
+    "NLP_Tokens": [
+      "palaging",
+      "nawawala",
+      "yung",
+      "tubig",
+      "afternoon"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "77.76%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "palaging",
+      "nawawala"
+    ]
+  },
+  {
+    "Report_ID": "CMP-1EF357",
+    "Raw_Text_Input": "Mahina yung tubig sa umaga",
+    "NLP_Tokens": [
+      "mahina",
+      "yung",
+      "tubig",
+      "umaga"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.99%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "mahina",
+      "yung"
+    ]
+  },
+  {
+    "Report_ID": "CMP-775D5C",
+    "Raw_Text_Input": "Sometimes the water is unavailable",
+    "NLP_Tokens": [
+      "sometimes",
+      "the",
+      "water",
+      "unavailable"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "78.75%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "sometimes",
+      "the"
+    ]
+  },
+  {
+    "Report_ID": "CMP-DDD2E7",
+    "Raw_Text_Input": "Sa gabi lang may tubig",
+    "NLP_Tokens": [
+      "gabi",
+      "lang",
+      "may",
+      "tubig"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "82.54%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "gabi",
+      "lang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-A5784D",
+    "Raw_Text_Input": "Once a week lang nagkaka tubig dito",
+    "NLP_Tokens": [
+      "once",
+      "week",
+      "lang",
+      "nagkaka",
+      "tubig"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "89.50%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "once",
+      "week"
+    ]
+  },
+  {
+    "Report_ID": "CMP-C19764",
+    "Raw_Text_Input": "May butas ang daan",
+    "NLP_Tokens": [
+      "may",
+      "butas",
+      "ang",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "85.76%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "may",
+      "butas"
+    ]
+  },
+  {
+    "Report_ID": "CMP-57B0E5",
+    "Raw_Text_Input": "Maliit ang daanan",
+    "NLP_Tokens": [
+      "maliit",
+      "ang",
+      "daanan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "73.54%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "maliit",
+      "ang"
+    ]
+  },
+  {
+    "Report_ID": "CMP-22B1A5",
+    "Raw_Text_Input": "Malubak yung daan",
+    "NLP_Tokens": [
+      "malubak",
+      "yung",
+      "daan"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "93.71%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "malubak",
+      "yung"
+    ]
+  },
+  {
+    "Report_ID": "CMP-6B0BE7",
+    "Raw_Text_Input": "Road is uneven",
+    "NLP_Tokens": [
+      "road",
+      "uneven"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "66.62%",
+    "System_Action": "Requires Manual Review",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "uneven"
+    ]
+  },
+  {
+    "Report_ID": "CMP-44DAFA",
+    "Raw_Text_Input": "Road is uneven",
+    "NLP_Tokens": [
+      "road",
+      "uneven"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "90.35%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "uneven"
+    ]
+  },
+  {
+    "Report_ID": "CMP-FA9FDB",
+    "Raw_Text_Input": "Road is uneven",
+    "NLP_Tokens": [
+      "road",
+      "uneven"
+    ],
+    "AI_Classification": "Unclassified",
+    "Confidence_Score": "84.86%",
+    "System_Action": "Forwarded to Map",
+    "Language_Detected": "ceb",
+    "Processing_Time_ms": 0,
+    "Matched_Keywords": [
+      "road",
+      "uneven"
+    ]
+  }
+]

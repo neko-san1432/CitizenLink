@@ -6527,6 +6527,10 @@ class SimulationEngine {
           el.style.display = "block";
         }
       });
+  }
+
+  /**
+     * Initialize the simulation.
      *
      * @returns {Promise<boolean>} Success status
      */
