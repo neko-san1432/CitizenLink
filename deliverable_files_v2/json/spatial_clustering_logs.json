@@ -1,164 +1,182 @@
 [
   {
-    "Cluster_ID": "CLST-INF-0001",
+    "Cluster_ID": "cluster_1776015599364_cxe4s",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 8,
     "Urgency_Score": "8.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.754128",
+    "Center_Longitude": "125.351624",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-UTI-0002",
+    "Cluster_ID": "cluster_1776015599365_n04fb",
     "Category": "Utilities",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.756046",
+    "Center_Longitude": "125.359390",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0003",
+    "Cluster_ID": "cluster_1776015599366_y84mg",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738695",
+    "Center_Longitude": "125.356239",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0004",
+    "Cluster_ID": "cluster_1776015599368_mmzp3",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 12,
     "Urgency_Score": "12.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.731653",
+    "Center_Longitude": "125.362344",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-SAN-0005",
+    "Cluster_ID": "cluster_1776015599369_pvj2f",
     "Category": "Sanitation",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 8,
     "Urgency_Score": "8.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.739335",
+    "Center_Longitude": "125.345145",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0006",
+    "Cluster_ID": "cluster_1776015599370_0uhid",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738691",
+    "Center_Longitude": "125.356455",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0007",
+    "Cluster_ID": "cluster_1776015599372_0xazm",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738718",
+    "Center_Longitude": "125.355975",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0008",
+    "Cluster_ID": "cluster_1776015599373_0b469",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738727",
+    "Center_Longitude": "125.355725",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-ENV-0009",
+    "Cluster_ID": "cluster_1776015599374_w7jgb",
     "Category": "Environment",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.757748",
+    "Center_Longitude": "125.350493",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-UTI-0010",
+    "Cluster_ID": "cluster_1776015599374_1wfc0",
     "Category": "Utilities",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.756025",
+    "Center_Longitude": "125.359427",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0011",
+    "Cluster_ID": "cluster_1776015599375_94o05",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738540",
+    "Center_Longitude": "125.359106",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0012",
+    "Cluster_ID": "cluster_1776015599376_m7cxt",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738613",
+    "Center_Longitude": "125.358138",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-ENV-0013",
+    "Cluster_ID": "cluster_1776015599376_cy6sc",
     "Category": "Environment",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.758544",
+    "Center_Longitude": "125.350489",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0014",
+    "Cluster_ID": "cluster_1776015599377_vp5oh",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738700",
+    "Center_Longitude": "125.356221",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-ENV-0015",
+    "Cluster_ID": "cluster_1776015599377_5i7wv",
     "Category": "Environment",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.757106",
+    "Center_Longitude": "125.350395",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-UTI-0016",
+    "Cluster_ID": "cluster_1776015599378_23xbc",
     "Category": "Utilities",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 16,
     "Urgency_Score": "16.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.756497",
+    "Center_Longitude": "125.359201",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-INF-0017",
+    "Cluster_ID": "cluster_1776015599381_x13jh",
     "Category": "Infrastructure",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 29,
     "Urgency_Score": "29.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.738672",
+    "Center_Longitude": "125.357062",
+    "Formation_Time_ms": "1.21"
   },
   {
-    "Cluster_ID": "CLST-ENV-0018",
+    "Cluster_ID": "cluster_1776015599382_sbygx",
     "Category": "Environment",
-    "Core_Point_Count": 0,
+    "Status": "Valid Hazard Zone",
+    "Core_Point_Count": 8,
     "Urgency_Score": "8.0",
-    "Center_Latitude": "0.000000",
-    "Center_Longitude": "0.000000",
-    "Formation_Time_ms": "1.16"
+    "Center_Latitude": "6.757994",
+    "Center_Longitude": "125.350630",
+    "Formation_Time_ms": "1.21"
   }
 ]

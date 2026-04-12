@@ -193,11 +193,11 @@ class NLPService {
         // For now, we use classify() if available
         if (tensorFlowService.classify) {
           const aiResult = await tensorFlowService.classify(text);
-          if (aiResult && aiResult.confidence > 0.6) {
+          if (aiResult && aiResult.confidence > 0.45) {
             result = {
               category: aiResult.category,
               confidence: aiResult.confidence.toFixed(2),
-              method: "ai-fallback-use"
+              method: aiResult.method || "ai-fallback-use"
             };
           }
         }

@@ -7,7 +7,8 @@ This folder contains technical documentation for the D.R.I.M.S. system.
 ```
 docs/
 └── performance/
-    └── heatmap-optimization-report.md   — Heatmap render pipeline fixes + benchmarks (2026-02-28)
+    ├── heatmap-optimization-report.md   — Heatmap render pipeline fixes + benchmarks (2026-02-28)
+    └── spatial-grid-indexing-future-work.md — Chapter 5 recommendation: grid-index DBSCAN scalability
 ```
 
 ## Adding Documentation

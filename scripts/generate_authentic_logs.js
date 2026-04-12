@@ -1,7 +1,14 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const ExcelJS = require('exceljs');
+let ExcelJS;
+try {
+  // Optional: Excel export. JSON generation should still work without it.
+  // eslint-disable-next-line global-require
+  ExcelJS = require('exceljs');
+} catch (e) {
+  console.warn('[deliverables] exceljs not installed; skipping Excel export.');
+}
 const Database = require('../src/server/config/database');
 
 // Require the actual DRIMS Engine Services
@@ -18,6 +25,42 @@ async function run() {
   const tEndModel = process.hrtime.bigint();
   const actualModelLoadTimeMs = Number(tEndModel - tStartModel) / 1e6;
   console.log("TensorFlow model loaded successfully in " + actualModelLoadTimeMs.toFixed(2) + " ms");
+
+  // Ensure TensorFlow anchors are available for fallback classification.
+  // We derive anchors from the local NLP category registry to avoid relying on DB tables.
+  try {
+    const registry = nlpService.CATEGORY_REGISTRY || {};
+    const anchors = {};
+
+    for (const [category, data] of Object.entries(registry)) {
+      const kw = Array.isArray(data?.keywords) ? data.keywords : [];
+      // Keep anchors compact but representative.
+      const base = kw.slice(0, 12);
+
+      if (category === 'Infrastructure') {
+        anchors[category] = [
+          ...base,
+          'road is uneven',
+          'uneven road surface',
+          'road surface is damaged',
+          'rough road condition',
+          'road needs repair'
+        ];
+      } else {
+        anchors[category] = base;
+      }
+    }
+
+    if (Object.keys(anchors).length > 0) {
+      console.log("Precomputing TensorFlow anchors for fallback classification...");
+      await tensorFlowService.precomputeAnchors(anchors);
+      console.log("Anchors ready.");
+    } else {
+      console.warn("No anchors could be derived from CATEGORY_REGISTRY; TF fallback may be unavailable.");
+    }
+  } catch (e) {
+    console.warn("Failed to precompute TensorFlow anchors:", e.message);
+  }
 
   // Fetch Categories strictly for reference
   const { data: catData } = await supabase.from('categories').select('id, name');
@@ -54,6 +97,7 @@ async function run() {
     const c = complaints[i];
     const originalCategory = catMap[c.category_id] || 'Undetermined';
     const text = c.description || c.location_text || '';
+    const timestamp = c.submitted_at || c.created_at || new Date().toISOString();
     
     // Live Perf Measurement - Start
     const t0 = process.hrtime.bigint();
@@ -90,18 +134,18 @@ async function run() {
 
     semanticLogs.push({
       Report_ID: c.id,
+      Timestamp: timestamp,
       Raw_Text_Input: text,
       NLP_Tokens: `[${tokens.join(', ')}]`,
       AI_Classification: classificationStr,
       Confidence_Score: confidenceScore,
       Method_Used: aiResult.method, // Identifies if TF or rule-based triggered
       System_Action: actionStr,
-      Processing_Time_ms: parseFloat(processingTimeMs.toFixed(2)),
       Matched_Keywords: tokens.slice(0, 2).join(', ')
     });
 
     // Device memory estimate statically or dynamically
-    const isTF = aiResult.method && aiResult.method.includes('tensorflow');
+    const isTF = aiResult.method && String(aiResult.method).toLowerCase().includes('tensorflow');
     const memUsageMB = process.memoryUsage().heapUsed / 1024 / 1024;
     const memoryUsage = memUsageMB.toFixed(2); // Using Node native profiling
 
@@ -109,7 +153,7 @@ async function run() {
       Execution_ID: `EXEC-${Date.now()}-${i}`,
       Report_ID: c.id,
       Device_Profile: deviceProfiles[i % deviceProfiles.length],
-      Model_Load_Time_ms: isTF ? actualModelLoadTimeMs.toFixed(2) : 0, // Real model init time
+      Model_Load_Time_ms: actualModelLoadTimeMs.toFixed(2), // Real model init time (measured at start of run)
       Tokenization_Time_ms: (processingTimeMs * 0.1).toFixed(2),
       Inference_Time_ms: isTF ? processingTimeMs.toFixed(2) : (processingTimeMs * 0.9).toFixed(2),
       Total_Pipeline_Time_ms: processingTimeMs.toFixed(2),
@@ -139,15 +183,22 @@ async function run() {
   const avgFormationTimeMs = clusters.length > 0 ? (clusterTimeMs / clusters.length).toFixed(2) : '0';
   
   clusters.forEach((cluster, index) => {
-      const lat = cluster.center ? cluster.center.latitude : 0;
-      const lon = cluster.center ? cluster.center.longitude : 0;
+      const lat = typeof cluster.latitude === 'number' ? cluster.latitude : Number.parseFloat(cluster.latitude);
+      const lon = typeof cluster.longitude === 'number' ? cluster.longitude : Number.parseFloat(cluster.longitude);
+      const coreCount = Number.isFinite(cluster.count)
+        ? cluster.count
+        : Array.isArray(cluster.reports)
+          ? cluster.reports.length
+          : 0;
+
       spatialLogs.push({
-        Cluster_ID: cluster.cluster_id || `CLST-${cluster.category.substring(0, 3).toUpperCase().replace(/\s/g,'-')}-${String(index + 1).padStart(4, '0')}`,
+        Cluster_ID: cluster.id || `CLST-${cluster.category.substring(0, 3).toUpperCase().replace(/\s/g,'-')}-${String(index + 1).padStart(4, '0')}`,
         Category: cluster.category,
-        Core_Point_Count: cluster.incidents ? cluster.incidents.length : cluster.core_count || 0,
+        Status: coreCount > 0 ? 'Valid Hazard Zone' : 'Invalid / Empty Cluster',
+        Core_Point_Count: coreCount,
         Urgency_Score: cluster.urgency_score || 0,
-        Center_Latitude: typeof lat === 'number' ? lat.toFixed(6) : lat,
-        Center_Longitude: typeof lon === 'number' ? lon.toFixed(6) : lon,
+        Center_Latitude: Number.isFinite(lat) ? lat.toFixed(6) : '0.000000',
+        Center_Longitude: Number.isFinite(lon) ? lon.toFixed(6) : '0.000000',
         Formation_Time_ms: avgFormationTimeMs // Cluster calculation array time
       });
   });
@@ -168,33 +219,35 @@ async function run() {
   fs.writeFileSync(path.join(jsonFolder, 'edge_ai_performance_logs.json'), JSON.stringify(performanceLogs, null, 2));
 
   // Write Excel
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'DRIMS Live Engine Generater';
-  workbook.created = new Date();
+  if (ExcelJS) {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'DRIMS Live Engine Generater';
+    workbook.created = new Date();
 
-  function addDataToSheet(sheetName, dataArray) {
-    if (!dataArray || dataArray.length === 0) return;
-    const worksheet = workbook.addWorksheet(sheetName);
-    
-    const headers = Object.keys(dataArray[0]);
-    worksheet.columns = headers.map(header => ({
-      header: header,
-      key: header,
-      width: 25
-    }));
+    function addDataToSheet(sheetName, dataArray) {
+      if (!dataArray || dataArray.length === 0) return;
+      const worksheet = workbook.addWorksheet(sheetName);
 
-    dataArray.forEach(row => {
-      worksheet.addRow(row);
-    });
+      const headers = Object.keys(dataArray[0]);
+      worksheet.columns = headers.map(header => ({
+        header: header,
+        key: header,
+        width: 25
+      }));
 
-    worksheet.getRow(1).font = { bold: true };
+      dataArray.forEach(row => {
+        worksheet.addRow(row);
+      });
+
+      worksheet.getRow(1).font = { bold: true };
+    }
+
+    addDataToSheet('Semantic_AI_Logs', semanticLogs);
+    addDataToSheet('Spatial_Clustering', spatialLogs);
+    addDataToSheet('Edge_AI_Performance', performanceLogs);
+
+    await workbook.xlsx.writeFile(path.join(excelFolder, 'deliverable_logs_v2.xlsx'));
   }
-
-  addDataToSheet('Semantic_AI_Logs', semanticLogs);
-  addDataToSheet('Spatial_Clustering', spatialLogs);
-  addDataToSheet('Edge_AI_Performance', performanceLogs);
-
-  await workbook.xlsx.writeFile(path.join(excelFolder, 'deliverable_logs_v2.xlsx'));
   console.log('Done! 100% Authentic Logs generated.');
 }
 
