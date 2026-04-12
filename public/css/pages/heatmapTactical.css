@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Tactical Mirror: Heatmap Design System
  * Focus: Immersive, Glassmorphic, Modern, High Contrast
  */
@@ -990,3 +990,302 @@
 }
 
 
+/* --- TACTICAL LEGEND BASE STYLES --- */
+.leaflet-bottom.leaflet-right .tactical-legend {
+    margin-right: 430px !important;
+    margin-bottom: 40px !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    color: #f8fafc !important;
+    font-family: Outfit, system-ui, sans-serif !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    backdrop-filter: blur(12px) !important;
+    z-index: 1000 !important;
+}
+.tactical-legend .legend-header {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    color: #94a3b8 !important;
+    margin-bottom: 8px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
+    padding-bottom: 4px !important;
+}
+.tactical-legend .legend-item {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 4px !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+}
+.tactical-legend .legend-color {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    margin-right: 8px !important;
+    display: inline-block !important;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5) !important;
+}
+.tactical-legend .legend-color.marker-fire { background-color: #ef4444 !important; border: 1px solid #7f1d1d !important; }
+.tactical-legend .legend-color.marker-crime { background-color: #f97316 !important; border: 1px solid #7c2d12 !important; }
+.tactical-legend .legend-color.marker-accident { background-color: #eab308 !important; border: 1px solid #713f12 !important; }
+.tactical-legend .legend-color.heatmap-high { background-color: #ef4444 !important; border: 1px solid transparent !important; }
+.tactical-legend .legend-color.heatmap-low { background-color: #3b82f6 !important; border: 1px solid transparent !important; }
+/* --- HUD RIGHT COLLAPSE --- */
+#hud-right {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#hud-right.collapsed {
+    transform: translateX(120%);
+}
+#toggle-hud-right {
+    position: absolute;
+    right: 395px; /* width 380 + 15 right */
+    top: 5rem;
+    z-index: 10000;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-right: none;
+    color: #cbd5e1;
+    padding: 0.75rem 0.5rem;
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+}
+#toggle-hud-right:hover {
+    background: rgba(30, 41, 59, 1);
+    color: #60a5fa;
+}
+#toggle-hud-right.collapsed {
+    right: 0;
+}
+#toggle-hud-right i {
+    transition: transform 0.3s ease;
+}
+#toggle-hud-right.collapsed i {
+    transform: rotate(180deg);
+}
+/* --- HUD RIGHT COLLAPSE --- */
+#hud-right {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#hud-right.collapsed {
+    transform: translateX(120%);
+}
+#toggle-hud-right {
+    position: absolute;
+    right: 395px; /* width 380 + 15 right */
+    top: 5rem;
+    z-index: 10000;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-right: none;
+    color: #cbd5e1;
+    padding: 0.75rem 0.5rem;
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+}
+#toggle-hud-right:hover {
+    background: rgba(30, 41, 59, 1);
+    color: #60a5fa;
+}
+#toggle-hud-right.collapsed {
+    right: 0;
+}
+#toggle-hud-right i {
+    transition: transform 0.3s ease;
+}
+#toggle-hud-right.collapsed i {
+    transform: rotate(180deg);
+}
+
+#hud-right.collapsed {
+    transform: translateX(120%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+#toggle-hud-right.collapsed {
+    right: 0 !important;
+}
+
+#hud-right.collapsed {
+    transform: translateX(120%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+#toggle-hud-right.collapsed {
+    right: 0 !important;
+}
+
+
+
+
+
+#emergencyPanel.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+#emergencyPanel:not(.hidden) {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 10005 !important;
+}
+#emergencyToggleBar {
+    z-index: 10005 !important;
+}
+
+
+
+
+
+
+/* FINAL CLEAN HUD RIGHT FIX */
+#hud-right.collapsed {
+    right: -420px !important;
+    opacity: 0 !important;
+    transform: translateX(120%) !important;
+}
+
+/* --- EMERGENCY RADAR CARD STYLING --- */
+#emergencyContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-right: 0.25rem;
+}
+#emergencyContent::-webkit-scrollbar {
+    width: 6px;
+}
+#emergencyContent::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 4px;
+}
+#emergencyContent::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5);
+    border-radius: 4px;
+}
+#emergencyContent::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
+}
+
+.emergency-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    border-left: 3px solid #f43f5e;
+    border-radius: 6px;
+    padding: 0.75rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+}
+.emergency-card:hover {
+    transform: translateX(4px);
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(244, 63, 94, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.emergency-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.emergency-type-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.emergency-type-badge.fire { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+.emergency-type-badge.medical { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+.emergency-type-badge.crime { background: rgba(167, 139, 250, 0.2); color: #c4b5fd; }
+.emergency-type-badge.accident { background: rgba(251, 146, 60, 0.2); color: #fdba74; }
+.emergency-type-badge.flood, .emergency-type-badge.water { background: rgba(96, 165, 250, 0.2); color: #93c5fd; }
+.emergency-type-badge.casualty { background: rgba(250, 204, 21, 0.2); color: #fde047; }
+.emergency-type-badge.emergency { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+
+.emergency-time {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.emergency-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.emergency-description {
+    font-size: 0.8rem;
+    color: #f1f5f9;
+    font-style: italic;
+    line-height: 1.3;
+}
+
+.emergency-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    color: #cbd5e1;
+}
+.emergency-meta-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+}
+
+.emergency-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+.emergency-btn {
+    flex: 1;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.35rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+}
+.emergency-btn.acknowledge {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.emergency-btn.acknowledge:hover {
+    background: rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+}
+.emergency-btn.dispatch {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.emergency-btn.dispatch:hover {
+    background: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+}

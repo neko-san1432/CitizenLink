@@ -622,7 +622,7 @@ class ComplaintRepository {
 
       let query = client
         .from("complaints")
-        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category_id, subcategory_id, departments, submitted_at")
+        .select("id, latitude, longitude, priority, workflow_status, confirmation_status, category_id, subcategory_id, departments, submitted_at, description")
         .not("latitude", "is", null)
         .not("longitude", "is", null);
 
@@ -803,6 +803,7 @@ class ComplaintRepository {
         subcategory: c.subcategory || null,
         departments: c.departments || [],
         submitted_at: c.submitted_at,
+        description: c.description || null,
       }));
     } catch (error) {
       console.error("[COMPLAINT-REPO] findLocationsSlim error:", error.message);

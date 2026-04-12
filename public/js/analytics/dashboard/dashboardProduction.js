@@ -1645,13 +1645,14 @@ function initEmergencyPanel() {
   // Track panel visibility state
   let isPanelVisible = true;
 
-  toggleBar.addEventListener("click", () => {
+  toggleBar.onclick = (e) => {
+    e.stopImmediatePropagation();
     const isHidden = panel.classList.toggle("hidden");
     if (arrow) {
       arrow.style.transform = isHidden ? "" : "rotate(180deg)";
     }
     console.log(`[TRIAGE] Emergency radar ${isHidden ? "collapsed" : "expanded"}`);
-  });
+  };
 
   // Toggle button in control panel
   if (toggleBtn) {

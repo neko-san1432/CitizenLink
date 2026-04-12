@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -213,6 +213,9 @@
         </nav>
 
         <!-- HUD: RIGHT WING (Intelligence & Stats) -->
+        <button id="toggle-hud-right" class="hud-toggle-btn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
         <aside id="hud-right" class="tactical-hud">
             <!-- Metrics Card -->
             <section class="glass-card intelligence-card" id="metrics-section">
@@ -334,16 +337,23 @@
 
     <!-- UI Interaction Bridge -->
     <script>
-        document.addEventListener('DOMContentLoaded', async function initHUD() {
-            // Wait for dashboardProduction.js to expose the map
-            const map = window.map;
-            const simulationEngine = window.simulationEngine;
+        let hudInitAttempts = 0;
 
-            if (!map || !simulationEngine) {
-                console.warn("[HUD] Map core or Simulation Engine not detected. Retrying...");
-                setTimeout(initHUD, 100);
-                return;
-            }
+          document.addEventListener('DOMContentLoaded', async function initHUD() {
+              // Wait for dashboardProduction.js to expose the map
+              const map = window.map;
+              const simulationEngine = window.simulationEngine;
+
+              if (!map || !simulationEngine) {
+                  hudInitAttempts++;
+                  if (hudInitAttempts > 50) {
+                      console.error("[HUD] Initialization failed: Map or Simulation Engine not detected.");
+                      return;
+                  }
+                  console.warn(`[HUD] Map core or Simulation Engine not detected. Retrying...`);
+                  setTimeout(initHUD, 100);
+                  return;
+              }
 
             console.log("[HUD] Initializing tactical overlays...");
             // HUD Layer Toggles
@@ -362,18 +372,6 @@
             // v5.1: Exclusive toggles are now handled in dashboardProduction.js
             // Emergency markers remain a separate overlay
             setupToggle('btn-toggle-emergencies', 'emergencyMarkersToggle');
-
-            // Emergency Bottom Bar Toggle
-            const emBar = document.getElementById('emergencyToggleBar');
-            const emPanel = document.getElementById('emergencyPanel');
-            const emArrow = document.getElementById('emergencyArrow');
-            
-            if (emBar && emPanel) {
-                emBar.addEventListener('click', () => {
-                    const isHidden = emPanel.classList.toggle('hidden');
-                    emArrow.style.transform = isHidden ? '' : 'rotate(180deg)';
-                });
-            }
 
             // Sync Multi-select with Taxonomy
             const catSelect = document.getElementById('filter-category');
@@ -655,7 +653,31 @@
                 }
             });
         });
-    </script>
+    
+            // --- TOGGLE HUD RIGHT INJECT V2 ---
+            document.body.addEventListener('click', (e) => {
+                const btn = e.target.closest('#toggle-hud-right');
+                if (btn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('HUD Toggle clicked!');
+                    const hudRight = document.getElementById('hud-right');
+                    if (hudRight) {
+                        hudRight.classList.toggle('collapsed');
+                        btn.classList.toggle('collapsed');
+                        const isCollapsed = hudRight.classList.contains('collapsed');
+                        console.log('HUD collapsed:', isCollapsed);
+                    }
+                }
+            });
+</script>
 </body>
 
 </html>
+
+
+
+
+
+
+
