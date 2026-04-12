@@ -5,7 +5,7 @@
  * Hybrid Rule-Based + AI Text Analysis
  */
 
-const tensorFlowService = require("../TensorFlowService"); // AI Fallback Provider
+const tensorFlowService = require("../ml/TensorFlowService"); // AI Fallback Provider
 
 class NLPService {
   constructor() {

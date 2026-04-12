@@ -2,144 +2,163 @@
   {
     "Cluster_ID": "CLST-INF-0001",
     "Category": "Infrastructure",
-    "Core_Point_Count": 8,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "1.60",
-    "Center_Latitude": "6.754128",
-    "Center_Longitude": "125.351624",
-    "Formation_Time_ms": "3.24"
+    "Core_Point_Count": 0,
+    "Urgency_Score": "8.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-INF-0002",
+    "Cluster_ID": "CLST-UTI-0002",
+    "Category": "Utilities",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "3.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-INF-0003",
     "Category": "Infrastructure",
-    "Core_Point_Count": 71,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "14.20",
-    "Center_Latitude": "6.738671",
-    "Center_Longitude": "125.356921",
-    "Formation_Time_ms": "2.90"
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-TRA-0003",
-    "Category": "Traffic",
-    "Core_Point_Count": 21,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "4.20",
-    "Center_Latitude": "6.757689",
-    "Center_Longitude": "125.350438",
-    "Formation_Time_ms": "2.31"
+    "Cluster_ID": "CLST-INF-0004",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "12.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-ENV-0004",
+    "Cluster_ID": "CLST-SAN-0005",
+    "Category": "Sanitation",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "8.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-INF-0006",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-INF-0007",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-INF-0008",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-ENV-0009",
     "Category": "Environment",
-    "Core_Point_Count": 26,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "5.20",
-    "Center_Latitude": "6.757953",
-    "Center_Longitude": "125.350567",
-    "Formation_Time_ms": "1.72"
+    "Core_Point_Count": 0,
+    "Urgency_Score": "3.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-ENV-0005",
+    "Cluster_ID": "CLST-UTI-0010",
+    "Category": "Utilities",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "3.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-INF-0011",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-INF-0012",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-ENV-0013",
     "Category": "Environment",
-    "Core_Point_Count": 12,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "2.40",
-    "Center_Latitude": "6.757197",
-    "Center_Longitude": "125.350157",
-    "Formation_Time_ms": "1.22"
+    "Core_Point_Count": 0,
+    "Urgency_Score": "3.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-SAN-0006",
-    "Category": "Sanitation",
-    "Core_Point_Count": 6,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "1.20",
-    "Center_Latitude": "6.747540",
-    "Center_Longitude": "125.355946",
-    "Formation_Time_ms": "0.58"
+    "Cluster_ID": "CLST-INF-0014",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "6.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-SAN-0007",
-    "Category": "Sanitation",
-    "Core_Point_Count": 16,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "3.20",
-    "Center_Latitude": "6.748959",
-    "Center_Longitude": "125.357303",
-    "Formation_Time_ms": "2.14"
+    "Cluster_ID": "CLST-ENV-0015",
+    "Category": "Environment",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "3.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-SAN-0008",
-    "Category": "Sanitation",
-    "Core_Point_Count": 6,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "1.20",
-    "Center_Latitude": "6.749406",
-    "Center_Longitude": "125.356881",
-    "Formation_Time_ms": "1.36"
-  },
-  {
-    "Cluster_ID": "CLST-SAN-0009",
-    "Category": "Sanitation",
-    "Core_Point_Count": 8,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "1.60",
-    "Center_Latitude": "6.749508",
-    "Center_Longitude": "125.356082",
-    "Formation_Time_ms": "2.82"
-  },
-  {
-    "Cluster_ID": "CLST-SAN-0010",
-    "Category": "Sanitation",
-    "Core_Point_Count": 16,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "3.20",
-    "Center_Latitude": "6.739407",
-    "Center_Longitude": "125.345443",
-    "Formation_Time_ms": "2.26"
-  },
-  {
-    "Cluster_ID": "CLST-SAN-0011",
-    "Category": "Sanitation",
-    "Core_Point_Count": 6,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "1.20",
-    "Center_Latitude": "6.747438",
-    "Center_Longitude": "125.357367",
-    "Formation_Time_ms": "2.85"
-  },
-  {
-    "Cluster_ID": "CLST-UTI-0012",
+    "Cluster_ID": "CLST-UTI-0016",
     "Category": "Utilities",
-    "Core_Point_Count": 52,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "10.40",
-    "Center_Latitude": "6.756306",
-    "Center_Longitude": "125.359060",
-    "Formation_Time_ms": "1.06"
+    "Core_Point_Count": 0,
+    "Urgency_Score": "16.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   },
   {
-    "Cluster_ID": "CLST-UTI-0013",
-    "Category": "Utilities",
-    "Core_Point_Count": 5,
-    "Epsilon_Radius_Meters": 50,
-    "MinPts_Threshold": 4,
-    "Density_Score": "1.00",
-    "Center_Latitude": "6.754997",
-    "Center_Longitude": "125.358764",
-    "Formation_Time_ms": "0.91"
+    "Cluster_ID": "CLST-INF-0017",
+    "Category": "Infrastructure",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "29.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
+  },
+  {
+    "Cluster_ID": "CLST-ENV-0018",
+    "Category": "Environment",
+    "Core_Point_Count": 0,
+    "Urgency_Score": "8.0",
+    "Center_Latitude": "0.000000",
+    "Center_Longitude": "0.000000",
+    "Formation_Time_ms": "1.16"
   }
 ]

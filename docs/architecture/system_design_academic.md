@@ -19,11 +19,11 @@ The DRIMS platform employs a modular, N-tier (layered) architectural paradigm. T
 
 ### 1.1 The N-Tier Architectural Strata
 
-1. **Presentation Layer**: Responsible for rendering the user interface and processing client-side interactions. Implemented utilizing HTML5, CSS3, and JavaScript, it manages Document Object Model (DOM) manipulation, client-state continuity, and asynchronous HTTP client requests.
-2. **Routing & Middleware Layer**: Operates as the application gateway. It intercepts incoming network requests, enforcing critical security protocols—including rate-limiting, authentication payload validation, and request sanitization—prior to delegating traffic to subsequent logic controllers.
-3. **Business Logic Layer**: Comprises the application controllers and service modules that execute the core operations of the municipal platform. It computes categorizations, manages incident state lifecycles, and orchestrates calls to artificial intelligence computing pipelines.
-4. **Data Access Layer**: Acts as an intermediary abstraction layer centralizing database transactions. It translates logical operations from the service layer into optimized relational database querying languages, effectively decoupling the application logic from the underlying storage schema.
-5. **Database / External Services Layer**: Provides persistent storage infrastructure. DRIMS utilizes a distributed PostgreSQL instance to securely warehouse relational datasets, cryptographic credentials, system audit logs, and encrypted multimedia binaries.
+1. **Presentation Layer (Client-Side Rendering):** Operates entirely within the user's browser or mobile webview. It is purely stateless, handling DOM representations constructed via dynamic HTML5 and CSS3 mapping. The JavaScript component manages localized state continuity (e.g., buffering partial form inputs), intercepts UI events, and constructs strictly typed JSON payloads for asynchronous Transmission Control Protocol (TCP) handshakes via HTTPS, abstracting local device APIs (such as the Geolocation API or Camera media streams) from the backend.
+2. **Routing & Middleware Layer (The Gateway):** The primary ingress point acting as a reverse-proxy and defensive perimeter. It intercepts all incoming RESTful and WebSocket traffic. Here, deterministic middleware pipelines execute critical security heuristics: validating cryptographic signatures of JSON Web Tokens (JWT) mapped to the `Authorization: Bearer` header, enforcing strict memory-backed IP rate-limiting using algorithms like Token Bucket, and actively stripping malicious string executions (Cross-Site Scripting or SQL injection signatures) before the payload penetrates the internal application space.
+3. **Business Logic Layer (Application Controllers):** The cerebral core of the DRIMS platform. This layer calculates all proprietary operational algorithms. It remains fully decoupled from network concerns, ingesting sanitized data structures to manipulate internal business states. The controllers directly instantiate domain-specific models, trigger calls to localized background AI microservices, enforce temporal Service Level Agreements (SLAs), and handle complex algorithmic transactions, such as deduplicating incoming municipal complaints based on multidimensional analysis.
+4. **Data Access Layer (Persistence Abstraction):** Functions as an Object-Relational Mapping (ORM) and low-level driver interface (e.g., `pg` or `knex`). This layer shields the Business Logic Layer from SQL dialect nuances, constructing parameterized, prepared statements to guarantee atomicity, consistency, isolation, and durability (ACID) compliance during database writes. It includes built-in concurrency controls for simultaneous incident report submissions, eliminating race conditions.
+5. **Database / External Services Layer (Storage Infrastructure):** The physical or distributed storage bedrock. Primary storage is handled by a partitioned PostgreSQL relational database customized with the PostGIS extension to allow raw geographic spatial querying natively on the server. Supplementary infrastructure accommodates caching layers (e.g., Redis for caching clustered heatmap coordinates to reduce DB thermal limits) and cryptographically sealed, immutable external Blob storage volumes holding evidentiary multimedia.
 
 ```mermaid
 graph TB
@@ -66,36 +66,56 @@ graph TB
 
 ### 1.2 Request Lifecycle: Incident Submission Sequence
 
-To illustrate the sequential data flow, the execution pipeline for a standard incident report submission is detailed below:
+To mathematically illustrate the sequential logical data flow of the architecture, the exact execution pipeline for a standard incident report submission is detailed step-by-step:
 
-1. **Client Payload Dispatch**: The client application compiles unstructured textual descriptions, geolocation coordinates, and evidentiary media into a structured JSON payload, transmitting it securely via HTTPS.
-2. **Middleware Interception**: The API gateway parses the incoming request, wherein middleware validates cryptographic session tokens, enforces IP rate-limit thresholds, and sanitizes payload parameters against injection vulnerabilities.
-3. **Controller Delegation**: Upon successful middleware traversal, the endpoint router delegates processing to the `ComplaintController`, which encapsulates the request and invokes the appropriate service layer methods.
-4. **Service Execution & Processing**: The `ComplaintCreateService` executes the primary algorithmic workload. It engages the Natural Language Processing (NLP) subsystem to extrapolate semantic context from strings, computes dynamic categorization, executes duplicate-anomaly detection algorithms (evaluating temporal, spatial, and semantic proximity vectors), and generates the database entity model.
-5. **Data Persistence execution**: The Data Access Layer executes atomic transactional commits against the PostgreSQL database. Upon successful writing of the data and associated media blobs, a declarative success resolution propagates up the stack, culminating in an HTTP 201 response payload returned to the client.
+1. **Client Payload Dispatch State**: The presentation tier assembles asynchronous client inputs. Standard strings, precise floating-point geospatial coordinates (`lat, lng`), and large multimedia files (binary encoded) are merged. The JS client standardizes this object via the `FormData` or JSON interface, applying a unique idempotency key string, and dispatches the structure onto the network via a secure HTTPS asynchronous transmission (`fetch`).
+2. **Middleware Interception Protocol**: At the Node.js Express perimeter, incoming packet streams are caught. The `RateLimiter` evaluates the request's originating IP against a time-decaying cache window to block Denial-of-Service attacks. The `AuthMiddleware` verifies valid `Authorization` tokens, decoding the JWT to extract the unique user `uuid` and permissions map. Final sanitization middlewares traverse the object keys to escape any unencoded string characters preventing injection vulnerabilities.
+3. **Controller Delegation (The Hand-off)**: Reaching the application context safely, the request `req.body` is handed explicitly to the `IncidentController`. This module acts strictly as the conductor, orchestrating lower-level Service invocations. It unwraps the payload, initiates an asynchronous block, and maps out the necessary sequential AI and storage dependencies to handle the entity.
+4. **Service Execution & Algorithmic Computations**: The `ComplaintCreateService` starts the primary workload logic. 
+    *   *Step A (Inference)*: Calls the Natural Language Processing (semantic-AI) dependency to build predictive text embeddings off the user's description, returning a normalized `municipality-taxonomy` string.
+    *   *Step B (Heuristics)*: Invokes spatial distance calculations. Utilizing the spherical coordinates (e.g., Haversine formula), it cross-references recent database entries to identify if this represents an anomaly or a duplicate event.
+    *   *Step C (Generation)*: Generates the internal structural map of the new (or linked) entity, incorporating current UTC timestamps and the "Submitted" state string.
+5. **Atomic Data Persistence Execution**: Finally, the system initiates the Data Access Layer ORM. A prepared SQL transaction command executes a blocking `INSERT` operation against the remote PostgreSQL cluster, appending the record alongside its geometric indices (`ST_GeomFromGeoJSON`). If the commit concludes without a rollback flag, a cascading callback modifies related real-time memory caches, after which the process culminates by tearing down the request stream securely and forwarding a declarative HTTP 201 Created acknowledgment back through the protocol stack to client application state.
+
+### 1.3 Application Initialization & Layer Integration (Code Reference)
+
+The following implementation details the binding of the N-tier architecture strata (Middleware, Routing, and Background Engines) at the application's entry point:
 
 ```javascript
 /**
  * Application Entry Point Initialization
- * Orchestrates environment variables, server binding, and background worker instantiation.
+ * Orchestrates environment variables, server binding, middleware strata, and background worker instantiation.
  */
 require("dotenv").config();
+const express = require('express');
 
 async function startSystemServer() {
-  const DRIMSApp = require("./src/server/app");
-  const app = new DRIMSApp();
+  const app = express();
   
-  // Bind network listeners to environment-defined ports and host interfaces
-  await app.start(config.port, config.host);
+  // 1. Routing & Middleware Layer: Security & Payload Sanitization
+  app.use(express.json());
+  app.use(require('./src/server/middleware/securityHeaders'));
+  app.use(require('./src/server/middleware/rateLimiter'));
 
-  // Initialize asynchronous cron workers for deadline escalations
+  // 2. Business Logic Layer Delegation (Controllers orchestrate AI & DB calls)
+  app.use('/api/v1/complaints', require('./src/server/routes/complaintRoutes'));
+  app.use('/api/v1/auth', require('./src/server/routes/authRoutes'));
+
+  // 3. Bind network listeners to environment-defined ports and host interfaces
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+      console.log(`DRIMS Logical Application Tier bound to port ${PORT}`);
+  });
+
+  // 4. Initialize Background Processing Tiers & Persistent Workers
   const schedulerService = require("./src/server/services/SchedulerService");
   schedulerService.start();
 
-  // Pre-allocate memory and initialize parameters for the Machine Learning models
   const advancedDecisionEngine = require("./src/server/services/ml/AdvancedDecisionEngine");
   advancedDecisionEngine.initialize();
 }
+
+startSystemServer();
 ```
 
 ---
@@ -104,11 +124,58 @@ async function startSystemServer() {
 
 The backend architecture consists of integrated modules and logical engines that execute asynchronously to sustain the system's operational continuity.
 
-### 2.1 Authentication and Authorization Engine
-Manages identity verification protocols, including user registration, cryptographic password hashing via bcrypt, session management, and JSON Web Token (JWT) issuance. It enforces a strict programmatic Role-Based Access Control (RBAC) paradigm, isolating execution privileges among Citizen, Government Officer, Coordinator, and Administrator hierarchies to preclude unauthorized escalation.
+### 2.1 Core Subsystem Integration & Controller Orchestration
+The primary functional pipeline of the DRIMS architecture relies on the controller layer acting as a central orchestrator connecting otherwise isolated processing modules. Rather than monolithic execution, the functional logic follows a deterministic pipeline bridging AI, Storage, and Cache updating:
+- **Phase 1 (Inference Engine):** It suspends `await`ing the **Semantic AI (NLP)** service to analyze the raw, unstructured civic complaint, waiting for it to return a structured taxonomy object (categorization tags and severity matrices).
+- **Phase 2 (Persistence Engine):** It synchronizes with the **Data Persistence Module**, committing the structured NLP data and the encoded Geographic JSON parameters down into the persistent PostGIS database vault utilizing parameterized arrays to prevent SQL-injection vectors.
+- **Phase 3 (Asynchronous Event Propagation):** Finally, it executes a non-blocking "fire-and-forget" broadcast (`geoClustering.recalculateDensities()`). This updates the **Geospatial Map Cache** in the background without forcing the Citizen client to wait for complex volumetric calculating algorithms to finish. By divorcing the heavy map-rendering logic from the response lifecycle, it maximizes HTTP application responsiveness and minimizes perceived UI latency.
 
-### 2.2 Incident Lifecycle Management State Machine
-Engineered as an internal state machine delineating the canonical progression of a citizen report. Status mutations follow a strict sequence from *Submitted* and *Verified*, through internal transition states of *Under Review* and *Action Taken*, culminating in *Resolved*. Strict programmatic constraints prevent invalid state transitions.
+The exact mechanical execution of these three integrated functional components is referenced in the controller schema below:
+
+```javascript
+// src/server/controllers/complaintController.js
+const db = require('../../db/connection');
+const semanticAi = require('../services/semanticAi');
+const geoClustering = require('../services/spatialClustering');
+
+exports.submitIncident = async (req, res) => {
+    try {
+        const { description, location } = req.body;
+        
+        // Target Module 1: NLP / Semantic AI Inference Pipeline
+        const inferredTags = await semanticAi.analyzeTaxonomyOutput(description);
+        
+        // Target Module 2: Data Persistence & Encrypted BLOB mappings
+        const incidentId = await db.query(
+            'INSERT INTO incidents (description, geometry, context_tags) VALUES (?, ST_GeomFromGeoJSON(?), ?)',
+            [description, JSON.stringify(location), JSON.stringify(inferredTags)]
+        );
+
+        // Target Module 3: Geospatial Visualizer Clustering Map Update (Asynchronous)
+        geoClustering.recalculateDensities(location.coordinates).catch(err => console.error(err));
+
+        res.status(201).json({ success: true, ai_nlp_tags: inferredTags });
+    } catch (e) {
+        res.status(500).json({ error: 'Functional component pipeline failure.' });
+    }
+};
+```
+
+### 2.2 Identity Access Management, RBAC, and Security Perimeter
+*This segment merges the standalone Authentication logic, Organizational RBAC Matrix, and Multi-Layered Defenses into a singular integrated security component.*
+
+Built upon Oauth2 standards and localized state logic, this functional subsystem forms the baseline of the application security perimeter. The execution strictly follows a defensive-in-depth model:
+- **Authentication & Cryptography:** During local credential registration, passwords undergo one-way cryptographic destruction utilizing `bcrypt` hashing algorithms. Mathematical dynamic salts are injected during the hash loop to prevent hardware-accelerated lookup vulnerabilities such as Rainbow Table decryption. Successful authentication yields signed JSON Web Tokens (JWTs), which are securely bound to encrypted, `HTTP-Only`, `SameSite=Strict` client cookies, mechanically preventing Cross-Site Scripting (XSS) payload token extraction.
+- **Organizational RBAC Matrix:** The Identity Access Management logic implements deep Role-Based Access Control (RBAC). It evaluates internal memory matrices, mapping Express endpoint route strings recursively to unique identifier types. For example, a middleware hook mathematically analyzes the `req.user.role` extracted from the JWT. If a `Citizen` role schema attempts to `POST` a JSON body to an endpoint requiring `Coordinator` clearance, the matrix instantly returns an HTTP 403 Forbidden halt. All privilege modifications inside the matrix are forcefully appended to an immutable administrative PostgreSQL audit table.
+- **Multi-Layered Security Framework:** Operating at the outermost Node.js ingress perimeter, this logic bounds incoming payload streams. It runs parallel heuristics (Regex string sanitization against raw SQL structures and memory-backed IP-rate-limiting via Token Bucket algorithms) designed explicitly to automatically throttle or abandon DDoS requests and bot-net traffic *before* the workload touches the heavy API controllers.
+
+### 2.3 Incident Lifecycle State Machine & Coordinator Validation
+*This segment integrates the Incident Lifecycle DFA (State Machine), the Coordinator Triage Distribution module, and Automated Notification pipelines.*
+
+Rather than relying on disjointed `status="pending"` string updates within a database controller, DRIMS operates a formally defined Deterministic Finite Automaton (DFA). This structurally engineers the entity statuses, permanently negating erratic progression skipping. 
+- **The DFA Vectors:** Status mutations exist exclusively in explicit vector progressions: `[Submitted] → [Verified] → [Under Review] → [Action Taken] → [Resolved]`. Each explicit vector acts as a hardened validation chokepoint executing distinct operational hook requirements. 
+- **Coordinator Triage Module (HITL):** This DFA perfectly intertwines with Human-In-The-Loop (HITL) procedures. As the explicit State Machine allows a ticket to safely mutate into "Verified," the Triage routing hook automatically ejects the processed report array into an asynchronous memory queue (ingress pipeline). This maps directly to the Coordinator's dashboard logic allowing for inter-departmental allocation mapping.
+- **Automated Asynchronous Notifications:** Every single time the DFA State Machine mutates forward (for instance moving a ticket into `Action Taken` pending municipal completion), an integrated event-emitter triggers. This pipeline translates the transactional receipt into a WebSocket payload, pushing task allocation pings and real-time DOM DOM refreshes directly to the LGU officer screens simultaneously, effectively removing the dependency on client-side HTTP polling loops.
 
 ```mermaid
 stateDiagram-v2
@@ -127,62 +194,73 @@ stateDiagram-v2
     end note
 ```
 
-### 2.3 Natural Language Processing (NLP) Engine
-An integrated semantic analysis framework leveraging advanced computational modeling (e.g., TensorFlow text embeddings) to parse unstructured natural language input. It neutralizes colloquialisms and localized dialect semantics, algorithmically categorizing raw strings into normalized municipal taxonomies (e.g., classifying localized infrastructural slang under standard "Public Works" categories) and generating initial severity prioritization metrics.
+### 2.4 AI-Driven NLP, Taxonomy, and Anomaly Detection Engine
+*This segment consolidates the Semantic LLM bridging, Anomaly/Duplicate logic, OCR extraction, and the Dynamic Taxonomy mapping since they execute as a sequential intelligence pipeline.*
 
-### 2.4 Anomaly and Duplication Detection Subsystem
-Executes a multi-variable algorithmic analysis designed to identify isomorphic reporting clusters. By evaluating text-similarity quotients, conducting geospatial proximity checks utilizing spherical coordinate models, and measuring temporal density, the system algorithmically merges redundant independent reports into unified parent clusters, optimizing resource dispatcher allocation.
+Operating as the cognitive inference logic gate, this pipeline triggers deterministically precisely when unstructured civic strings or image array buffers are intercepted from the HTTP hand-shake:
+- **Pre-Computation Phase (OCR Extraction):** The first hook parses the internal `FormData` boundary. The **Optical Character Recognition (OCR)** framework instantly extracts raw image binaries. It slices these pixel matrices running computer vision algorithms specifically configured to heuristically isolate text segments (Date-of-Birth, National Identification integers) algorithmically comparing and rejecting false or synthetic accounts.
+- **Inference Processing (Semantic NLP Model):** Secondarily, unstructured descriptions undergo advanced **Semantic NLP Model** routines. Utilizing external LLM APIs (e.g. OpenAI) or localized TensorFlow.js memory weights, the descriptions shift into semantic tensor tokenizations. The system calculates absolute distances neutralizing misspellings or regional slang dialects, deterministically pairing the complaint's underlying logic up directly against predefined **Taxonomy** arrays established manually by Government Administrators (i.e. changing `puddle deep hole road` identically to `Hazardous Public Infrastructure (Traffic Severity Level)`.)
+- **Post-Computation Phase (Anomaly / Suppression):** Finally, a specialized **Anomaly, Fraud, and Duplication Subsystem** prevents workload overlap calculation. It derives an integer priority score combining a weighted combinatorial equation of three variables: **Spatial Limits** (cross-querying `PostGIS` locations calculating literal meters between two pending nodes), **Temporal Deltas** (subtracting UTC timestamps to check if nodes happened simultaneously), and **Cosine Similarity Math** (the quantitative NLP embedding closeness). Scores overriding a `0.85%` threshold trigger instantaneous suppression flags, stopping duplicate processing completely.
 
-### 2.5 Geospatial Analytics Engine
-Ingests longitudinal and latitudinal incident coordinates executing a K-dimensional aggregation protocol. It calculates volumetric clustering algorithms to dynamically project localized incident severity onto an interactive client mapping interface, providing temporal intelligence for municipal resource deployment.
+### 2.5 K-Dimensional Geospatial Analytics Engine
+The mapping module acts natively within the relational structures. Rather than sending out basic text strings describing location, DRIMS relies heavily on the `GIST` indexing capabilities of the PostgreSQL PostGIS database spatial extension mapping (`ST_GeomFromText()`, `ST_Distance()`).
+- **Memory-Based Indexing:** When a citizen records latitude and longitude parameters (such as `10.2974° N, 125.1015° E`), these coordinates are geometrically indexed into a Point or Polygon matrix directly onto a physical DB storage row.
+- **Volumetric Spatial Aggregation:** Rather than requesting an array of ten thousand points, placing enormous bandwidth pressure entirely onto the Client UI DOM payload limit, an internal analytics aggregation algorithm (`DBSCAN` or equivalent clustering computations) computes overlapping scalar volumes algorithmically. It maps data bounds via density variables internally grouping localized `epsilon` clusters rendering complex `.geojson` mapping matrices locally in server CPU, and returning a pre-calculated map tile overlay cache explicitly intended to inject seamlessly into a `WebGL` map renderer element. 
 
-### 2.6 Coordinator Triage and Distribution Module
-A specialized interface component engineered to optimize human-in-the-loop (HITL) procedures. It consolidates unprocessed inputs into an asynchronous ingress queue, facilitating complex inter-departmental allocation mapping and the establishment of combined task-force entity structures.
-
-### 2.7 Automated Asynchronous Notification Pipeline
-An event-driven communication dispatcher. Utilizing both SMTP protocol configurations and WebSocket bindings, it propagates transactional event receipts, task allocation notifications, and SLA deadline transgressions to appropriate user state endpoints in real-time.
-
-### 2.8 Dynamic Taxonomy Management
-Implements a declarative relational mapping architecture that permits dynamic administrative mutations to system complaint categories and organizational routing logic without requiring source-code recompilation or database schema mutations.
-
-### 2.9 RBAC and Organizational Matrix Subsystem
-Manages human capital state variables for government authorities interacting with the system. It strictly enforces immutable administrative audit logging—serializing all privilege modifications, departmental allocation changes, and user termination requests for compliance and oversight integration.
-
-### 2.10 Multi-Layered Security Framework
-An integrated defense mechanism executing parallel heuristic validations on incoming payloads. It includes real-time string sanitization against SQL injection architectures, cross-site scripting (XSS) neutralizations, and employs strict sliding-window request throttling to mitigate distributed denial of service or botnet volumetric exhaustion vectors.
-
-### 2.11 Asynchronous Task Scheduler
-Utilizes background chron-job dispatchers designed for periodic database evaluations. The module analyzes pending entity states, automatically enforcing Service Level Agreement (SLA) heuristics by triggering administrative escalations if defined response velocity parameters are breached.
-
-### 2.12 Optical Character Recognition (OCR) Identity Extraction
-Incorporates algorithmic computer vision frameworks to analyze uploaded government identity documentation. The engine isolates and extracts distinct alphanumeric strings (e.g., Date of Birth, National ID iterations) to cross-reference client form inputs, algorithmically limiting account falsification.
-
-### 2.13 Encrypted Digital Evidence Vault
-Administers the binary large object (BLOB) storage parameters. Executing discrete File I/O algorithms, evidentiary and resolution media files are cryptographically isolated behind layered access controls to prevent unauthenticated topological exposure.
+### 2.6 Asynchronous Task Scheduler & External Integrity Vault
+The final support mechanisms operate structurally completely disjointed from the core CRUD HTTP pipelines. 
+- **Asynchronous Loop (The Scheduler):** Generating an isolated asynchronous loop memory worker (`cron-job` logic), it actively queries PostgreSQL metadata independent of HTTP triggers. It executes sequential loop evaluations iterating across all pending administrative incident queues specifically parsing UTC timestamps against pre-configured SLAs (Service Level Agreements). A ticket breaking 72 hours age-limits instantly forces a DB write triggering an escalated `Severity Flag` sent directly via the WebSocket emitter into the LGU matrix.
+- **Media Preservation (Evidence Vault):** Administering all localized BLOB payloads (`.jpg`, `.mp4`), an **Encrypted Digital Evidence Vault** isolates citizen submissions on external SSD topological partitions, writing rigid byte-streaming via explicit File I/O algorithms. These arrays encode and completely drop direct client-accessibility flags—there exist absolutely no literal browser URL routing links into the drive partition. Authorized users retrieve binary buffers mechanically routed entirely through Signed-URL cryptographical request arrays dynamically generated explicitly at render time.
 
 ---
 
 ## 3. Physical Design (GUI) and Interaction Architecture
 
-The Graphical User Interface (GUI) is engineered utilizing modern human-computer interaction (HCI) methodologies. Design choices prioritize systemic visual clarity, cognitive load reduction, modal structuring, and responsive data projection methodologies. 
+The Graphical User Interface (GUI) is explicitly engineered utilizing modern Human-Computer Interaction (HCI) methodologies. The entire front-end follows a Mobile-First responsive CSS framework enforcing structural constraints designed strictly for optimal rendering across fragmented ViewPort sizes (such as standardized Android iOS browsers vs 4K command-center monitors). Cognitive load reduction functions as the prime variable shaping modal structures, grid geometries, and color semantics mapping closely to psychological standards (e.g. Red strictly representing critical incidents context mapping).
 
 ### 3.1 Authentication Interface Layer
-Implements a minimalist architectural aesthetic emphasizing high-contrast layout structuring, employing glassmorphism components to communicate systemic modernity. Oauth2 protocol flows are seamlessly integrated alongside standard localized credential ingestion forms.
+The digital ingress point for all users. Adhering to the psychological principles of Hick's Law, the login UI presents minimalist architectural geometry emphasizing a high-contrast layout matrix and deep CSS glassmorphism overlay patterns to convey systemic reliability. Oauth2 SSO (Single Sign-On, e.g., Google or Microsoft credentials) integrations exist natively as decoupled CSS Flexbox components. They sit parallel alongside the standard Local HTML5 input validations (which utilize RegEx schema evaluation) designed specifically to check localized credentials natively within client memory before TCP dispatch. Wait-state spinners and explicit toast notifications map error states dynamically bridging UX mapping latency intervals.
+
+> **[UI Placeholder: Authentication Form & OAuth Login View]**
+> *Path: `/public/assets/images/mockups/auth_interface.png`*
+> ![Authentication Interface](../../public/assets/images/mockups/auth_interface.png)
 
 ### 3.2 Citizen Dashboard Architecture
-Designed heuristically to minimize client operational anxiety and maximize systemic transparency. Employs prominent quantitative numerical data cards outputting atomic system state variables (e.g., active vs. resolved metrics). Navigation structures are enforced by universally normalized iconography.
+Once authorized, instances mapping to Citizen JWT payloads invoke the dashboard skeleton (`citizen_layout.ejs`). Engineered heuristically, this interface structure mitigates general operating anxiety and constructs systemic transparency. At the top of the Document Object flow, the DOM allocates dynamic HTML numerical data cards. These elements bind directly to API responses rendering atomic system state aggregates like quantitative count distributions (`Resolved VS Active`). Navigation elements utilize universally normalized scalable vector graphic (SVG) iconography bounded in a strict fixed bottom `tab-bar` grid implementation for mobile devices and a fixed left-drawer component for wider breakpoint arrays.
+
+> **[UI Placeholder: Citizen Main Dashboard & Nav]**
+> *Path: `/public/assets/images/mockups/citizen_dashboard.png`*
+> ![Citizen Dashboard](../../public/assets/images/mockups/citizen_dashboard.png)
 
 ### 3.3 Discretized Interaction Pipeline (Submission Form)
-Transmutes complex data-entry requirements into a multi-stage sequential user flow:
-1. **Qualitative Metrics:** Component parsing unstructured text string implementations.
-2. **Geospatial Mapping:** Interactive map components leveraging geographic coordinate selector APIs.
-3. **Asynchronous Ingestion:** Visual drag-and-drop elements for asynchronous multi-part media uploads.
+A major architectural feature in the UI relies strictly heavily upon the theory of discretizing large complex data entries. The application explicitly transmutes municipal forms into a chunked Multi-Stage Sequential Wizard execution. A single HTML `<form>` tag is visually partitioned relying on Javascript-controlled `display: none` toggle maps:
+1. **Qualitative Metrics (Screen 1):** The user evaluates natural-language standard fields (Text string lengths over `<textarea>`).
+2. **Geospatial Implementation (Screen 2):** Leverages a mapping framework (like Leaflet or Mapbox). Utilizing the device `Navigator.geolocation` Javascript namespace, a localized map instantiates, locking an interactive draggable pin on the user's localized physical layout automatically.
+3. **Asynchronous Contextual Storage (Screen 3):** Exposes drop-zone UI geometries. Executing HTML5 file handling namespaces (`File API`, `<input type="file" capture="environment">`) to ingest camera media directly into client blob structures pre-transmission.
+
+> **[UI Placeholder: Sequential Incident Reporting Form Flow]**
+> *Path: `/public/assets/images/mockups/submission_form.png`*
+> ![Submission Form](../../public/assets/images/mockups/submission_form.png)
 
 ### 3.4 Administrative Analytics Environment
-Provides high-density administrative tracking visualization properties. Data points are aggregated mathematically and visually translated using contemporary charting frameworks (e.g., pie distributions, bar histograms, temporal line trends). System defaults implement dark-mode topological styles to diminish prolonged screen ocular fatigue metrics.
+This structural framework explicitly flips the design paradigm from Citizen minimalist aesthetics into high-density temporal visualizations. The DOM layout (`admin Dashboard.ejs`) injects mathematically mapped data variables translating API responses via charting libraries (`D3.js` or `Chart.js`). Key interfaces incorporate Pie Distributions evaluating Incident Taxonomy mapping, Bar-Histogram charting indicating historical LGU throughput, and smooth-spline timeline graphing indicating volume influx rates. Furthermore, entire UI blocks inject dynamic inline styles executing "Dark-Mode" topography standards as the CSS default standard to mitigate visual noise and prolong ocular performance for persistent tracking officers.
 
-### 3.5 Spatio-Temporal Visualizer (Geomapping)
-Renders full DOM real-time coordinate arrays. Distinct geographic opacities and gradient rendering quantitatively indicate incident density. This visualization integrates advanced localized filtering vectors based precisely on localized multi-polygonal barriers and temporal queries.
+> **[UI Placeholder: Government Officer Analytics Data & Charts View]**
+> *Path: `/public/assets/images/mockups/admin_analytics.png`*
+> ![Administrative Analytics](../../public/assets/images/mockups/admin_analytics.png)
 
-### 3.6 Triage Assessment Interface
-Engineered to maximize evaluation throughput. Adopts a split-pane DOM configuration integrating a consistently mutating asynchronous ticket queue juxtaposed against an expanded qualitative read-view. UI elements explicitly manifest the underlying NLP predictive intelligence factors, accelerating authorized human judgment processes.
+### 3.5 Spatio-Temporal Visualizer (The WebGL Heatmap)
+Executed primarily on a discrete architectural domain component (`standalone-map-viewer`). Rather than HTML DOM mapping constraints, this layer utilizes the native `Canvas` API powered heavily by WebGL to accelerate thousands of dynamic spatial float indices. It relies upon an algorithmic shader that draws floating polygon overlays on localized map bounds. The intensity gradient explicitly utilizes Red-Green-Blue hexadecimal interpolations mapping density volumes visually—a bright red `#ff0000` focal point explicitly quantifies 20+ active reports mapped inside a `.0005` geographical boundary threshold. Custom UI filter bars exist floating above the Canvas manipulating variables dynamically triggering the spatial rendering array asynchronous rebuild functions to instantly modify local query intervals (e.g. tracking “Last 24 Hours” mapping to "Last Month").
+
+> **[UI Placeholder: Full-Screen Spatial Heatmap & Density Map]**
+> *Path: `/public/assets/images/mockups/spatial_heatmap.png`*
+> ![Spatio-Temporal Visualizer](../../public/assets/images/mockups/spatial_heatmap.png)
+
+### 3.6 Triage Assessment Interface (Coordinator Module)
+Engineered for maximizing raw cognitive throughput by eliminating unnecessary routing jumps. The system implements a robust `CSS Display: Grid` configuration creating a fluid Split-Pane arrangement. 
+On the Left (Side A), a consistently mutating, vertically scrolling un-resolved ticket queue `(<ul>)` is mapped; tickets append vertically triggering animation flashes upon successful WebSocket connections pushing real-time states to DOM indices.
+On the Right (Side B), the expanded ticket object manifests contextually without requiring full-page URL navigations. It explicitly renders the algorithmic logic of the background Semantic AI logic visually (e.g., `<span class="badge ai-confidence">98% Match - Public Safety Risk</span>`) empowering quick authorized Administrative clicks mapped into "Approve", "Assign-to-Unit", or "Resolve" controller vectors.
+
+> **[UI Placeholder: Split-pane Coordinator Triage View (Queue + details)]**
+> *Path: `/public/assets/images/mockups/triage_assessment.png`*
+> ![Triage Assessment Interface](../../public/assets/images/mockups/triage_assessment.png)
