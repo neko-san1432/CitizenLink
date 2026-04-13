@@ -62,6 +62,24 @@ cp .env .env.backup  # if needed
 npm run dev
 ```
 
+---
+
+## 📊 Convert JSON Logs to Separate Excel Files
+
+If you have multiple `.json` log files (e.g., in `deliverable_files_v2/json/`) and you want **one Excel file per JSON file**, run:
+
+```bash
+npm run logs:json-to-excel
+```
+
+This reads all `.json` files in `deliverable_files_v2/json/` and writes matching `.xlsx` files to `deliverable_files_v2/excel/`.
+
+You can also pass custom folders:
+
+```bash
+node scripts/json_folder_to_excel.js --input path/to/json --output path/to/excel
+```
+
 ### Key Dependencies
 
 | Package | Version | Purpose |

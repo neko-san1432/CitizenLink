@@ -1,182 +1,182 @@
 [
   {
-    "Cluster_ID": "cluster_1776015599364_cxe4s",
+    "Cluster_ID": "cluster_1776113293249_p5uxe",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 8,
     "Urgency_Score": "8.0",
     "Center_Latitude": "6.754128",
     "Center_Longitude": "125.351624",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599365_n04fb",
+    "Cluster_ID": "cluster_1776113293250_38tw5",
     "Category": "Utilities",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
     "Center_Latitude": "6.756046",
     "Center_Longitude": "125.359390",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599366_y84mg",
+    "Cluster_ID": "cluster_1776113293251_pxdud",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738695",
     "Center_Longitude": "125.356239",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599368_mmzp3",
+    "Cluster_ID": "cluster_1776113293253_ao0xp",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 12,
     "Urgency_Score": "12.0",
     "Center_Latitude": "6.731653",
     "Center_Longitude": "125.362344",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599369_pvj2f",
+    "Cluster_ID": "cluster_1776113293253_jgpdx",
     "Category": "Sanitation",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 8,
     "Urgency_Score": "8.0",
     "Center_Latitude": "6.739335",
     "Center_Longitude": "125.345145",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599370_0uhid",
+    "Cluster_ID": "cluster_1776113293255_os6tm",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738691",
     "Center_Longitude": "125.356455",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599372_0xazm",
+    "Cluster_ID": "cluster_1776113293256_xngjs",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738718",
     "Center_Longitude": "125.355975",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599373_0b469",
+    "Cluster_ID": "cluster_1776113293257_8v4ur",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738727",
     "Center_Longitude": "125.355725",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599374_w7jgb",
+    "Cluster_ID": "cluster_1776113293258_g2psu",
     "Category": "Environment",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
     "Center_Latitude": "6.757748",
     "Center_Longitude": "125.350493",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599374_1wfc0",
+    "Cluster_ID": "cluster_1776113293258_kucos",
     "Category": "Utilities",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
     "Center_Latitude": "6.756025",
     "Center_Longitude": "125.359427",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599375_94o05",
+    "Cluster_ID": "cluster_1776113293259_o5w07",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738540",
     "Center_Longitude": "125.359106",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599376_m7cxt",
+    "Cluster_ID": "cluster_1776113293261_iqkml",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738613",
     "Center_Longitude": "125.358138",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599376_cy6sc",
+    "Cluster_ID": "cluster_1776113293261_l0tf7",
     "Category": "Environment",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
     "Center_Latitude": "6.758544",
     "Center_Longitude": "125.350489",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599377_vp5oh",
+    "Cluster_ID": "cluster_1776113293263_adg0y",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 6,
     "Urgency_Score": "6.0",
     "Center_Latitude": "6.738700",
     "Center_Longitude": "125.356221",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599377_5i7wv",
+    "Cluster_ID": "cluster_1776113293263_ofk6d",
     "Category": "Environment",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 3,
     "Urgency_Score": "3.0",
     "Center_Latitude": "6.757106",
     "Center_Longitude": "125.350395",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599378_23xbc",
+    "Cluster_ID": "cluster_1776113293265_kdtyy",
     "Category": "Utilities",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 16,
     "Urgency_Score": "16.0",
     "Center_Latitude": "6.756497",
     "Center_Longitude": "125.359201",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599381_x13jh",
+    "Cluster_ID": "cluster_1776113293269_1p6uo",
     "Category": "Infrastructure",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 29,
     "Urgency_Score": "29.0",
     "Center_Latitude": "6.738672",
     "Center_Longitude": "125.357062",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   },
   {
-    "Cluster_ID": "cluster_1776015599382_sbygx",
+    "Cluster_ID": "cluster_1776113293269_pbcgk",
     "Category": "Environment",
-    "Status": "Valid Hazard Zone",
+    "Status": "active",
     "Core_Point_Count": 8,
     "Urgency_Score": "8.0",
     "Center_Latitude": "6.757994",
     "Center_Longitude": "125.350630",
-    "Formation_Time_ms": "1.21"
+    "Formation_Time_ms": "1.35"
   }
 ]

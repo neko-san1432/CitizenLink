@@ -23,6 +23,37 @@ class AdvancedDecisionEngine {
     this.enableAutoQueue = true;      // Set false to disable HITL queueing
   }
 
+  _escapeRegex(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  /**
+     * Safer keyword match than substring `includes`.
+     * - Single words match as whole tokens (word boundaries)
+     * - Phrases match with boundaries around the phrase
+     */
+  _keywordMatchesText(normalizedText, term) {
+    if (!normalizedText || !term) return false;
+    const cleanTerm = String(term).trim().toLowerCase();
+    if (!cleanTerm) return false;
+
+    const escaped = this._escapeRegex(cleanTerm);
+
+    // Phrase match (contains whitespace)
+    if (cleanTerm.includes(" ")) {
+      // Use boundaries around the phrase so we don't match inside longer tokens
+      // Example: "no water" should not match "snow water"
+      // eslint-disable-next-line security/detect-non-literal-regexp
+      const re = new RegExp(`(?:^|\\s)${escaped}(?=\\s|$|[.,!?;:])`, "i");
+      return re.test(normalizedText);
+    }
+
+    // Single token match (whole word)
+    // eslint-disable-next-line security/detect-non-literal-regexp
+    const re = new RegExp(`\\b${escaped}\\b`, "i");
+    return re.test(normalizedText);
+  }
+
   /**
      * Helper to log to file and optionally console
      */
@@ -161,7 +192,9 @@ class AdvancedDecisionEngine {
           // subcategory: 'Metaphor Filtered', // Removed
           urgency: 30,
           method: "METAPHOR_FILTER",
-          confidence: 1.0
+          // Metaphor-filtered text is explicitly treated as unclassified.
+          // Force 0 confidence so downstream routing cannot "Forward" it.
+          confidence: 0.0
         };
       }
     }
@@ -173,10 +206,8 @@ class AdvancedDecisionEngine {
     let bestMatch = null;
 
     for (const kw of sortedKeywords) {
-      // Check for exact word/phrase match in text
-      // We use word boundary check \b unless distinct content
-      // Simple includes for now to match multiple words
-      if (normalizedText.includes(kw.term)) {
+      // Safer match: avoid substring false positives (e.g., "baho" in "trabaho")
+      if (this._keywordMatchesText(normalizedText, kw.term)) {
         if (!bestMatch || kw.confidence > bestMatch.confidence) {
           bestMatch = kw;
         }

@@ -12,6 +12,7 @@
     "seed:complaints:run20k": "node scripts/db/runSplitComplaintSeeds.js --prefix seedBulkComplaints.20k.part",
     "seed:complaints:run50k": "node scripts/db/runSplitComplaintSeeds.js --prefix seedBulkComplaints.50k.part",
     "seed:complaints:dryrun20k": "node scripts/db/runSplitComplaintSeeds.js --prefix seedBulkComplaints.20k.part --dry-run",
+    "logs:json-to-excel": "node scripts/json_folder_to_excel.js --input deliverable_files_v2/json --output deliverable_files_v2/excel",
     "test": "jest --config tests/setup/jest.config.js",
     "test:watch": "jest --config tests/setup/jest.config.js --watch",
     "test:coverage": "jest --config tests/setup/jest.config.js --coverage",

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const { performance } = require('perf_hooks');
 let ExcelJS;
 try {
   // Optional: Excel export. JSON generation should still work without it.
@@ -13,54 +14,22 @@ const Database = require('../src/server/config/database');
 
 // Require the actual DRIMS Engine Services
 const nlpService = require('../src/server/services/nlp/NLPService');
+const advancedDecisionEngine = require('../src/server/services/ml/AdvancedDecisionEngine');
 const tensorFlowService = require('../src/server/services/ml/TensorFlowService');
 const clusteringService = require('../src/server/services/nlp/ClusteringService');
 
 async function run() {
   const supabase = Database.getServiceClient();
 
-  console.log("Loading actual TensorFlow Edge-AI bindings into memory...");
-  const tStartModel = process.hrtime.bigint();
+  // PERFORMANCE LINEAGE (Academic): Measure real model boot time.
+  // We time the actual async initialize() call once, then reuse/cached for all rows.
+  const modelLoadStartMs = performance.now();
   await tensorFlowService.initialize();
-  const tEndModel = process.hrtime.bigint();
-  const actualModelLoadTimeMs = Number(tEndModel - tStartModel) / 1e6;
-  console.log("TensorFlow model loaded successfully in " + actualModelLoadTimeMs.toFixed(2) + " ms");
+  const modelLoadTimeMs = performance.now() - modelLoadStartMs;
 
-  // Ensure TensorFlow anchors are available for fallback classification.
-  // We derive anchors from the local NLP category registry to avoid relying on DB tables.
-  try {
-    const registry = nlpService.CATEGORY_REGISTRY || {};
-    const anchors = {};
-
-    for (const [category, data] of Object.entries(registry)) {
-      const kw = Array.isArray(data?.keywords) ? data.keywords : [];
-      // Keep anchors compact but representative.
-      const base = kw.slice(0, 12);
-
-      if (category === 'Infrastructure') {
-        anchors[category] = [
-          ...base,
-          'road is uneven',
-          'uneven road surface',
-          'road surface is damaged',
-          'rough road condition',
-          'road needs repair'
-        ];
-      } else {
-        anchors[category] = base;
-      }
-    }
-
-    if (Object.keys(anchors).length > 0) {
-      console.log("Precomputing TensorFlow anchors for fallback classification...");
-      await tensorFlowService.precomputeAnchors(anchors);
-      console.log("Anchors ready.");
-    } else {
-      console.warn("No anchors could be derived from CATEGORY_REGISTRY; TF fallback may be unavailable.");
-    }
-  } catch (e) {
-    console.warn("Failed to precompute TensorFlow anchors:", e.message);
-  }
+  // Initialize the real backend engine used by complaint creation.
+  // This loads DB keywords/metaphors/anchors and preps TF fallback as needed.
+  await advancedDecisionEngine.initialize();
 
   // Fetch Categories strictly for reference
   const { data: catData } = await supabase.from('categories').select('id, name');
@@ -84,9 +53,7 @@ async function run() {
   const performanceLogs = [];
 
   const deviceProfiles = [
-    'LGU Workstation (Intel Core i5-11400)', 
-    'LGU Response Terminal (Intel Core i7-12700K)', 
-    'LGU Coordination Hub (Mac Mini M2)'
+    'HP Victus by HP Gaming Laptop 15-fb0xxx | AMD Ryzen 5 5600H (6C/12T) | RAM 8GB | GPU NVIDIA GeForce RTX 3050 Ti Laptop GPU + AMD Radeon(TM) Graphics | Windows 11 Home Single Language (64-bit)'
   ];
 
   const pointsForClustering = [];
@@ -99,20 +66,21 @@ async function run() {
     const text = c.description || c.location_text || '';
     const timestamp = c.submitted_at || c.created_at || new Date().toISOString();
     
-    // Live Perf Measurement - Start
-    const t0 = process.hrtime.bigint();
-
-    // 1. Tokenize precisely using the real nlpService tokenizer
+    // ================= PERFORMANCE LINEAGE (Real Timings) =================
+    // 1) Tokenization timing: wrap the actual tokenizer
+    const tokStartMs = performance.now();
     const tokens = nlpService.tokenizeText(text);
+    const tokenizationTimeMs = performance.now() - tokStartMs;
 
-    // 2. Perform Real Engine Classification (Hybrid Rule-Based + TF USE)
-    const aiResult = await nlpService.analyze(text);
+    // 2) Inference timing: wrap the actual classification call
+    const infStartMs = performance.now();
+    const aiResult = await advancedDecisionEngine.classify(text, c.id);
+    const inferenceTimeMs = performance.now() - infStartMs;
 
-    // Live Perf Measurement - End
-    const t1 = process.hrtime.bigint();
-    const processingTimeMs = Number(t1 - t0) / 1e6; // Convert nanoseconds to ms
+    const totalPipelineTimeMs = tokenizationTimeMs + inferenceTimeMs;
 
-    const confidenceScore = parseFloat(aiResult.confidence * 100).toFixed(2) + '%';
+    let confidenceScore = (Number(aiResult.confidence) * 100).toFixed(2) + '%';
+    let confidencePct = Number.parseFloat(confidenceScore);
     const hasMatch = aiResult && aiResult.category !== 'Others';
 
     // Edge AI Classification & Noise Logic
@@ -122,15 +90,35 @@ async function run() {
     let actionStr;
 
     if (isNoise) {
-        classificationStr = 'Linguistic Noise / Spam';
-        actionStr = 'Rejected';
+      classificationStr = 'Linguistic Noise / Spam';
+      // Noise/spam rows must never be forwarded.
+      // Force confidence to 0 so System_Action routes to HITL.
+      confidenceScore = '0.00%';
+      confidencePct = 0;
     } else if (hasMatch) {
-        classificationStr = `Valid Hazard (${aiResult.category})`;
-        actionStr = 'Forwarded to Map & Sub-Nodes';
+      classificationStr = `Valid Hazard (${aiResult.category})`;
     } else {
-        classificationStr = 'Unclassified Syntax';
-        actionStr = 'Flagged for Manual Verification';
+      classificationStr = 'Unclassified Syntax';
     }
+
+    // IMPORTANT (thesis/deliverables): Mirror backend decision thresholds.
+    // - >= 70%: Forwarded
+    // - >= 60% and < 70%: Forwarded, but low confidence (still subject to HITL)
+    // - < 60%: Flag for manual verification (HITL)
+    if (confidencePct >= 70) {
+      actionStr = 'Forwarded to Map & Sub-Nodes';
+    } else if (confidencePct >= 60) {
+      actionStr = 'Forwarded (Low Confidence)';
+    } else {
+      actionStr = 'Flagged for Manual Verification (HITL)';
+    }
+
+    const methodUsed = isNoise ? 'NOISE_FILTER' : aiResult.method;
+    const matchedKeywords = isNoise
+      ? ''
+      : aiResult && aiResult.matched_term
+        ? String(aiResult.matched_term)
+        : '';
 
     semanticLogs.push({
       Report_ID: c.id,
@@ -139,24 +127,24 @@ async function run() {
       NLP_Tokens: `[${tokens.join(', ')}]`,
       AI_Classification: classificationStr,
       Confidence_Score: confidenceScore,
-      Method_Used: aiResult.method, // Identifies if TF or rule-based triggered
+      Method_Used: methodUsed, // RULE_BASED | AI_TENSORFLOW | FALLBACK | METAPHOR_FILTER | NOISE_FILTER
       System_Action: actionStr,
-      Matched_Keywords: tokens.slice(0, 2).join(', ')
+      Matched_Keywords: matchedKeywords
     });
 
-    // Device memory estimate statically or dynamically
-    const isTF = aiResult.method && String(aiResult.method).toLowerCase().includes('tensorflow');
+    // Device memory (real Node/V8 heap usage) captured immediately after classification
     const memUsageMB = process.memoryUsage().heapUsed / 1024 / 1024;
-    const memoryUsage = memUsageMB.toFixed(2); // Using Node native profiling
+    const memoryUsage = memUsageMB.toFixed(2);
 
     performanceLogs.push({
       Execution_ID: `EXEC-${Date.now()}-${i}`,
       Report_ID: c.id,
       Device_Profile: deviceProfiles[i % deviceProfiles.length],
-      Model_Load_Time_ms: actualModelLoadTimeMs.toFixed(2), // Real model init time (measured at start of run)
-      Tokenization_Time_ms: (processingTimeMs * 0.1).toFixed(2),
-      Inference_Time_ms: isTF ? processingTimeMs.toFixed(2) : (processingTimeMs * 0.9).toFixed(2),
-      Total_Pipeline_Time_ms: processingTimeMs.toFixed(2),
+      // Record model load time once; subsequent rows show cached (0.00)
+      Model_Load_Time_ms: i === 0 ? modelLoadTimeMs.toFixed(2) : '0.00',
+      Tokenization_Time_ms: tokenizationTimeMs.toFixed(2),
+      Inference_Time_ms: inferenceTimeMs.toFixed(2),
+      Total_Pipeline_Time_ms: totalPipelineTimeMs.toFixed(2),
       Memory_Usage_MB: memoryUsage,
       Tokens_Processed: tokens.length
     });
@@ -176,11 +164,11 @@ async function run() {
 
   console.log("Running Live spatial clustering via DBSCAN...");
   // Group identically to thesis (DBSCAN over spatial points)
-  const clusterStart = process.hrtime.bigint();
+  const clusterStartMs = performance.now();
   const clusters = clusteringService.clusterIncidents(pointsForClustering);
-  const clusterEnd = process.hrtime.bigint();
-  const clusterTimeMs = Number(clusterEnd - clusterStart) / 1e6;
-  const avgFormationTimeMs = clusters.length > 0 ? (clusterTimeMs / clusters.length).toFixed(2) : '0';
+  const clusterEndMs = performance.now();
+  const clusterTimeMs = clusterEndMs - clusterStartMs;
+  const avgFormationTimeMs = clusters.length > 0 ? (clusterTimeMs / clusters.length) : 0;
   
   clusters.forEach((cluster, index) => {
       const lat = typeof cluster.latitude === 'number' ? cluster.latitude : Number.parseFloat(cluster.latitude);
@@ -194,12 +182,12 @@ async function run() {
       spatialLogs.push({
         Cluster_ID: cluster.id || `CLST-${cluster.category.substring(0, 3).toUpperCase().replace(/\s/g,'-')}-${String(index + 1).padStart(4, '0')}`,
         Category: cluster.category,
-        Status: coreCount > 0 ? 'Valid Hazard Zone' : 'Invalid / Empty Cluster',
+        Status: cluster.status || (coreCount > 0 ? 'active' : 'inactive'),
         Core_Point_Count: coreCount,
         Urgency_Score: cluster.urgency_score || 0,
         Center_Latitude: Number.isFinite(lat) ? lat.toFixed(6) : '0.000000',
         Center_Longitude: Number.isFinite(lon) ? lon.toFixed(6) : '0.000000',
-        Formation_Time_ms: avgFormationTimeMs // Cluster calculation array time
+        Formation_Time_ms: avgFormationTimeMs.toFixed(2) // avg per-cluster time over this run
       });
   });
 
