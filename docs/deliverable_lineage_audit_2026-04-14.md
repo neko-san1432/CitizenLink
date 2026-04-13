@@ -224,6 +224,46 @@ Frozen engines (audited only):
 
 ---
 
+## Appendix A) Defense Appendix — Copy/Paste Validators
+
+These commands are designed for panel Q&A. They are read-only checks against the generated deliverables.
+
+### A.1 Semantic logs: `System_Action` threshold parity
+
+```bash
+node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('deliverable_files_v2/json/semantic_ai_logs.json','utf8'));let bad=[];for(const r of data){const pct=parseFloat(String(r.Confidence_Score||'').replace('%',''));const expected=pct>=70?'Forwarded to Map & Sub-Nodes':pct>=60?'Forwarded (Low Confidence)':'Flagged for Manual Verification (HITL)';if(r.System_Action!==expected){bad.push({id:r.Report_ID,pct:r.Confidence_Score,action:r.System_Action,expected});}}console.log('rows',data.length,'mismatches',bad.length);if(bad.length){console.log(bad.slice(0,5));process.exitCode=1;}"
+```
+
+### A.2 Semantic logs: METAPHOR_FILTER rows cannot be forwarded
+
+```bash
+node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('deliverable_files_v2/json/semantic_ai_logs.json','utf8'));const rows=data.filter(r=>r.Method_Used==='METAPHOR_FILTER');const bad=rows.filter(r=>r.Confidence_Score!=='0.00%'||r.System_Action!=='Flagged for Manual Verification (HITL)');console.log('metaphor_rows',rows.length,'bad',bad.length);if(bad.length){console.log(bad.slice(0,5));process.exitCode=1;}"
+```
+
+### A.3 Semantic logs: Linguistic Noise / Spam rows cannot be forwarded
+
+```bash
+node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('deliverable_files_v2/json/semantic_ai_logs.json','utf8'));const rows=data.filter(r=>String(r.AI_Classification)==='Linguistic Noise / Spam');const bad=rows.filter(r=>r.Confidence_Score!=='0.00%'||r.System_Action!=='Flagged for Manual Verification (HITL)');console.log('noise_rows',rows.length,'bad',bad.length);if(bad.length){console.log(bad.slice(0,5));process.exitCode=1;}"
+```
+
+### A.4 Spatial clustering logs: sanity invariants
+
+```bash
+node -e "const fs=require('fs');const clusters=JSON.parse(fs.readFileSync('deliverable_files_v2/json/spatial_clustering_logs.json','utf8'));let bad=[];for(const c of clusters){const coreOk=Number.isFinite(Number(c.Core_Point_Count)) && Number(c.Core_Point_Count)>0;const latOk=/^-?\\d+\\.\\d{6}$/.test(String(c.Center_Latitude));const lonOk=/^-?\\d+\\.\\d{6}$/.test(String(c.Center_Longitude));const formOk=Number.isFinite(Number(c.Formation_Time_ms)) && Number(c.Formation_Time_ms)>=0;const urgOk=Number.isFinite(Number(c.Urgency_Score));if(!(coreOk&&latOk&&lonOk&&formOk&&urgOk)){bad.push(c); if(bad.length>=5) break;}}console.log('clusters',clusters.length,'bad',bad.length);if(bad.length){console.log(bad);process.exitCode=1;}"
+```
+
+### A.5 Performance logs: empirical lineage checks
+
+```bash
+node -e "const fs=require('fs');const rows=JSON.parse(fs.readFileSync('deliverable_files_v2/json/edge_ai_performance_logs.json','utf8'));const nonZero=rows.filter((r,i)=>Number(r.Model_Load_Time_ms)>0.01 && i!==0);console.log('rows',rows.length,'modelLoadFirst',rows[0]?.Model_Load_Time_ms,'nonZeroAfterFirst',nonZero.length);if(nonZero.length){console.log(nonZero.slice(0,3));process.exitCode=1;}"
+```
+
+```bash
+node -e "const fs=require('fs');const rows=JSON.parse(fs.readFileSync('deliverable_files_v2/json/edge_ai_performance_logs.json','utf8'));const minInf=Math.min(...rows.map(r=>Number(r.Inference_Time_ms)));const maxInf=Math.max(...rows.map(r=>Number(r.Inference_Time_ms)));console.log('inference_ms_range',minInf.toFixed(2),'..',maxInf.toFixed(2));"
+```
+
+---
+
 ## 9) Known Environment Constraints
 
 - Native TF binding (`@tensorflow/tfjs-node`) may not load on Node 22 Windows without rebuild.
