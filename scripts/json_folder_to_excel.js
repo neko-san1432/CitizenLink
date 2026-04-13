@@ -57,6 +57,62 @@ function sanitizeSheetName(name, usedNames) {
   return finalName;
 }
 
+function isPrimitive(value) {
+  return (
+    value === null ||
+    value === undefined ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  );
+}
+
+function collectArraysDeep(value, pathParts = [], out = []) {
+  if (Array.isArray(value)) {
+    out.push({ pathParts, value });
+    return out;
+  }
+
+  if (!isPlainObject(value)) return out;
+
+  for (const [key, child] of Object.entries(value)) {
+    collectArraysDeep(child, [...pathParts, key], out);
+  }
+  return out;
+}
+
+function flattenToKeyValueRows(value, prefixParts = [], rows = []) {
+  if (Array.isArray(value)) {
+    const key = prefixParts.join('.');
+    rows.push({ Key: key || 'data', Value: '(see sheet)' });
+    return rows;
+  }
+
+  if (isPrimitive(value)) {
+    const key = prefixParts.join('.');
+    rows.push({ Key: key || 'data', Value: normalizeCell(value) });
+    return rows;
+  }
+
+  if (isPlainObject(value)) {
+    const entries = Object.entries(value);
+    if (entries.length === 0) {
+      const key = prefixParts.join('.');
+      rows.push({ Key: key || 'data', Value: '{}' });
+      return rows;
+    }
+
+    for (const [key, child] of entries) {
+      flattenToKeyValueRows(child, [...prefixParts, key], rows);
+    }
+    return rows;
+  }
+
+  const key = prefixParts.join('.');
+  rows.push({ Key: key || 'data', Value: normalizeCell(value) });
+  return rows;
+}
+
 function appendDataAsSheets(workbook, data) {
   const usedNames = new Set();
 
@@ -68,25 +124,32 @@ function appendDataAsSheets(workbook, data) {
   }
 
   if (isPlainObject(data)) {
-    const meta = {};
-    let appendedAnyArraySheet = false;
-
-    for (const [key, value] of Object.entries(data)) {
-      if (Array.isArray(value)) {
-        appendedAnyArraySheet = true;
-        const rows = normalizeRecords(value);
-        const sheet = xlsx.utils.json_to_sheet(rows);
-        xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName(key, usedNames));
-      } else {
-        meta[key] = normalizeCell(value);
-      }
+    // 1) Append any arrays found anywhere in the object tree as their own sheets
+    const arrays = collectArraysDeep(data);
+    for (const arr of arrays) {
+      const name = arr.pathParts.length ? arr.pathParts.join('.') : 'data';
+      const rows = normalizeRecords(arr.value);
+      const sheet = xlsx.utils.json_to_sheet(rows);
+      xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName(name, usedNames));
     }
 
-    if (!appendedAnyArraySheet || Object.keys(meta).length > 0) {
-      const sheet = xlsx.utils.json_to_sheet([meta]);
-      xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName(appendedAnyArraySheet ? 'meta' : 'data', usedNames));
+    // 1.5) If the top-level object has named sections (common in benchmark summaries),
+    // export them as separate tables for readability.
+    // Example: { adaptive: {...}, fixed: {...} }
+    const sectionKeys = ['adaptive', 'fixed', 'dataset', 'delta', 'interpretation'];
+    for (const key of sectionKeys) {
+      if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+      const section = data[key];
+      if (!isPlainObject(section)) continue;
+      const kvRows = flattenToKeyValueRows(section);
+      const sheet = xlsx.utils.json_to_sheet(kvRows);
+      xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName(key, usedNames));
     }
 
+    // 2) Append a key/value summary sheet for all non-array content
+    const kvRows = flattenToKeyValueRows(data);
+    const sheet = xlsx.utils.json_to_sheet(kvRows);
+    xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName('summary', usedNames));
     return;
   }
 

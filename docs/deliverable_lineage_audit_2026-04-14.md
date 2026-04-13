@@ -283,3 +283,22 @@ node -e "const fs=require('fs');const rows=JSON.parse(fs.readFileSync('deliverab
 - `scripts/json_folder_to_excel.js` (new)
 - `package.json`, `README.md` (conversion usage)
 - Deliverable artifacts regenerated under `deliverable_files_v2/json` and `deliverable_files_v2/excel`
+
+---
+
+## Appendix B) Comparative DBSCAN Benchmark (Adaptive vs Fixed)
+
+Purpose: support the thesis claim that Adaptive DBSCAN (category-aware, thesis-tuned eps/minPts, strict time window) is superior to a naive fixed-parameter DBSCAN.
+
+Script:
+- `scripts/compare_dbscan.js`
+
+Experimental setup:
+- **Adaptive (Control):** `ClusteringService.clusterIncidents()`
+- **Fixed (Experimental):** in-script DBSCAN with `epsilon = 50m`, `minPts = 4`, ignores category/time pruning
+
+Generated summary artifact:
+- `deliverable_files_v2/json/dbscan_comparison_summary_2026-04-14.json`
+
+Key observed failure mode (Fixed):
+- Incorrect merging across categories (example cluster contained `Traffic`, `Environment`, and `Infrastructure`).

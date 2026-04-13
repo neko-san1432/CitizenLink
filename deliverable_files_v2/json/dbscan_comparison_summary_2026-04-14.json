@@ -1,0 +1,54 @@
+{
+  "dataset": {
+    "complaintsFetched": 288,
+    "complaintsUsed": 288,
+    "pointsWithCoords": 288
+  },
+  "adaptive": {
+    "totalPoints": 288,
+    "clusterCount": 18,
+    "clusteredPoints": 138,
+    "noisePoints": 150,
+    "mixedCategoryClusters": 0,
+    "expectedClusterCount": 18
+  },
+  "fixed": {
+    "params": {
+      "epsilonMeters": 50,
+      "minPts": 4,
+      "ignoresCategory": true,
+      "ignoresTimeWindow": true
+    },
+    "totalPoints": 288,
+    "clusterCount": 12,
+    "clusteredPoints": 260,
+    "noisePoints": 28,
+    "clusterSize": {
+      "min": 4,
+      "max": 72,
+      "avg": 21.67
+    },
+    "mixedCategoryClusters": 1,
+    "mixedCategoryExamples": [
+      {
+        "clusterId": "fixed_cluster_2",
+        "size": 61,
+        "categories": [
+          "Traffic",
+          "Environment",
+          "Infrastructure"
+        ]
+      }
+    ]
+  },
+  "delta": {
+    "clusterCountDiff": -6,
+    "noisePointDiff": -122,
+    "mixedCategoryClustersFixed": 1
+  },
+  "interpretation": {
+    "fragmentationSignal": false,
+    "unclusteredSignal": false,
+    "incorrectMergeSignal": true
+  }
+}
