@@ -159,14 +159,12 @@ async function setSidebarRole() {
     <img src="${brandConfig.logo.imageUrl}" alt="${brandConfig.name
 } Logo" class="brand-icon" style="width: 32px; height: 32px; object-fit: contain;">
     <div class="brand-text">
-      <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name
-}</a>
-      <div class="brand-subtitle">Citizen Link</div>
+      <a href="${brandConfig.dashboardUrl}" class="brand-link">${brandConfig.name}</a>
     </div>
   </div>
   <button id="sidebar-close" class="sidebar-close" aria-label="Close sidebar">×</button>
 </div>
-        
+
 <div class="sidebar-menu">
           ${menuItems
     .map((item) => {

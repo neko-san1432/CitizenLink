@@ -1,4 +1,7 @@
 :root {
+  --sidebar-width-expanded: 260px;
+  --sidebar-width-collapsed: 72px;
+  --sidebar-brand-height: 56px;
   --color-surface: #ffffff;
   --color-text: #1f2937;
   --color-line: #e5e7eb;
@@ -18,18 +21,18 @@
 }
 
 html.dark {
-  --color-surface: #1f2937;
+  --color-surface: #0f172a;
   --color-text: #f3f4f6;
-  --color-line: #374151;
-  --sidebar-bg: #1f2937;
+  --color-line: #1e293b;
+  --sidebar-bg: #0f172a;
   --sidebar-text: #f3f4f6;
-  --sidebar-hover: #374151;
+  --sidebar-hover: #1e293b;
   --sidebar-active: #3b82f6;
-  --sidebar-border: #374151;
+  --sidebar-border: #1e293b;
   --sidebar-shadow: rgba(0, 0, 0, 0.3);
-  --sidebar-brand-bg: #111827;
-  --sidebar-search-bg: #374151;
-  --sidebar-footer-bg: #111827;
+  --sidebar-brand-bg: #0f172a;
+  --sidebar-search-bg: #1e293b;
+  --sidebar-footer-bg: #0f172a;
   /* Z-index variables remain the same in dark mode */
   --z-header: 1000;
   --z-backdrop: 1100;
@@ -58,10 +61,10 @@ html.dark {
 /* Sidebar Container */
 #sidebar {
   position: fixed !important;
-  left: -260px;
+  left: calc(-1 * var(--sidebar-width-expanded));
   top: 0;
   bottom: 0;
-  width: 260px;
+  width: var(--sidebar-width-expanded);
   z-index: 9999 !important;
   /* Ensure sidebar is above everything */
   overflow-y: auto;
@@ -79,6 +82,52 @@ html.dark {
 #sidebar.open {
   left: 0 !important;
 }
+
+/* Global Mini Sidebar overriding for Desktop */
+@media (min-width: 1025px) {
+  /* Brand logo is restored by default now in the header */
+
+  body:not(.heatmap-layout) #app:not(.heatmap-page) ~ #sidebar,
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar) {
+    left: 0 !important;
+    top: 0 !important;
+    width: var(--sidebar-width-collapsed) !important;
+    transition: width 0.2s ease;
+  }
+
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):hover {
+    width: var(--sidebar-width-expanded) !important; /* Expand on hover */
+  }
+  
+  /* Hide labels, brand text when collapsed */
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .brand-text,
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-menu a span:not(.menu-icon),
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-menu .menu-group .menu-header span:not(.menu-icon),
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-menu .menu-group .menu-chevron,
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-bottom,
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-close {
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    overflow: hidden;
+    display: none !important;
+  }
+
+  
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-menu a {
+    justify-content: center !important;
+    padding: 12px !important;
+  }
+  
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .menu-icon {
+    margin: 0 !important;
+  }
+
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):hover .sidebar-backdrop {
+    display: none !important;
+  }
+}
+
 
 #sidebar::-webkit-scrollbar {
   width: 4px;
@@ -102,9 +151,11 @@ html.dark {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 20px !important;
+  padding: 0 20px !important;
+  height: var(--sidebar-brand-height) !important;
+  min-height: var(--sidebar-brand-height) !important;
   background: var(--sidebar-brand-bg, #f8fafc) !important;
-  border-bottom: 1px solid var(--sidebar-border, #e5e7eb) !important;
+  border-bottom: none !important;
 }
 
 .brand-logo {
@@ -260,8 +311,17 @@ html.dark {
 .menu-icon {
   font-size: 16px !important;
   width: 20px !important;
+  height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center !important;
   flex-shrink: 0 !important;
+}
+
+.menu-icon svg {
+  width: 20px !important;
+  height: 20px !important;
 }
 
 /* Sidebar Bottom */
@@ -543,3 +603,47 @@ html.dark .logout-link:hover {
 .menu-children a:hover {
   opacity: 1;
 }
+/* Make brand-logo act as a hamburger menu when deflated */
+@media (min-width: 1025px) {
+  /* Hide the actual image when deflated */
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .brand-logo img {
+    opacity: 0 !important;
+  }
+  
+  /* Inject a hamburger menu instead */
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .brand-logo::before {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    left: 24px;
+    top: 16px;
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%2364748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 10;
+  }
+  
+  /* White hamburger for dark mode */
+  html.dark body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .brand-logo::before {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>');
+  }
+}
+
+/* Ensure brand text is vertically centered since subtitle is gone */
+.sidebar-brand .brand-text {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+/* Close button logic */
+.sidebar-close {
+  display: none !important;
+}
+
+body.page-file-complaint .sidebar-close, body.page-digos-map .sidebar-close {
+  display: flex !important;
+}
+

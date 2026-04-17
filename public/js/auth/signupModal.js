@@ -1,4 +1,4 @@
-import showMessage from "./components/toast.js";
+import showMessage from "../components/toast.js";
 
 document.addEventListener("click", (e) => {
   console.log("Click detected on:", e.target.tagName, e.target.className, e.target.getAttribute("data-open-terms"), e.target.getAttribute("data-open-privacy"));

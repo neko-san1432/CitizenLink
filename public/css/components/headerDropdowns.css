@@ -340,94 +340,91 @@
 }
 
 /* Dark Mode Support */
-.dark .header-dropdown,
-@media (prefers-color-scheme: dark) {
-  .header-dropdown {
-    background: rgba(31, 41, 55, 0.98);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
-  }
+html.dark .header-dropdown {
+  background: rgba(31, 41, 55, 0.98);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
 
-  .dropdown-header {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-  }
+html.dark .dropdown-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
 
-  .dropdown-title {
-    color: #f3f4f6;
-  }
+html.dark .dropdown-title {
+  color: #f3f4f6;
+}
 
-  .dropdown-close {
-    background: rgba(255, 255, 255, 0.1);
-    color: #9ca3af;
-  }
+html.dark .dropdown-close {
+  background: rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+}
 
-  .dropdown-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #d1d5db;
-  }
+html.dark .dropdown-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #d1d5db;
+}
 
-  .dropdown-item {
-    color: #d1d5db;
-  }
+html.dark .dropdown-item {
+  color: #d1d5db;
+}
 
-  .dropdown-item:hover {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.15));
-    color: #60a5fa;
-  }
+html.dark .dropdown-item:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.15));
+  color: #60a5fa;
+}
 
-  .dropdown-item.logout-btn {
-    color: #f87171;
-    border-top-color: rgba(255, 255, 255, 0.1);
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(220, 38, 38, 0.05));
-  }
+html.dark .dropdown-item.logout-btn {
+  color: #f87171;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(220, 38, 38, 0.05));
+}
 
-  .dropdown-item.logout-btn:hover {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.15));
-    color: #fca5a5;
-  }
+html.dark .dropdown-item.logout-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.15));
+  color: #fca5a5;
+}
 
-  .notification-item {
-    border-bottom-color: rgba(255, 255, 255, 0.05);
-  }
+html.dark .notification-item {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
 
-  .notification-item:hover {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), transparent);
-  }
+html.dark .notification-item:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), transparent);
+}
 
-  .notification-item.unread {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
-  }
+html.dark .notification-item.unread {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
+}
 
-  .notification-icon {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
-    color: #60a5fa;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
-  }
+html.dark .notification-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
+  color: #60a5fa;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
 
-  .notification-title {
-    color: #f3f4f6;
-  }
+html.dark .notification-title {
+  color: #f3f4f6;
+}
 
-  .notification-message {
-    color: #9ca3af;
-  }
+html.dark .notification-message {
+  color: #9ca3af;
+}
 
-  .notification-time {
-    color: #6b7280;
-  }
+html.dark .notification-time {
+  color: #6b7280;
+}
 
-  .no-notifications {
-    color: #9ca3af;
-  }
+html.dark .no-notifications {
+  color: #9ca3af;
+}
 
-  .dropdown-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-  }
+html.dark .dropdown-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
 
-  .dropdown-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
+html.dark .dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Responsive Design */

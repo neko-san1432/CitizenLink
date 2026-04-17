@@ -1,3 +1,13 @@
+:root {
+  --header-height-desktop: 56px;
+  --header-height-tablet: 70px;
+  --header-height-mobile: 60px;
+  --header-control-size: 40px;
+  --header-control-size-mobile: 32px;
+  --header-icon-size: 20px;
+  --header-icon-size-mobile: 18px;
+}
+
 .header-container {
   position: fixed;
   top: 0;
@@ -10,9 +20,9 @@
   border-bottom: 1px solid var(--gray-200);
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 2px 8px rgba(0, 0, 0, 0.04);
   overflow: visible;
-  min-height: 56px;
+  min-height: var(--header-height-desktop);
   /* Reduced from 70px */
-  max-height: 56px;
+  max-height: var(--header-height-desktop);
   box-sizing: border-box;
   transition: all var(--transition-normal, 200ms);
 }
@@ -27,7 +37,7 @@
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  min-height: 56px;
+  min-height: var(--header-height-desktop);
   padding: 0 var(--space-4);
   width: 100%;
   position: relative;
@@ -50,8 +60,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--header-control-size);
+  height: var(--header-control-size);
   background: transparent;
   border: 1px solid transparent;
   border-radius: 50%;
@@ -75,8 +85,8 @@
 }
 
 .menu-toggle svg {
-  width: 20px;
-  height: 20px;
+  width: var(--header-icon-size);
+  height: var(--header-icon-size);
 }
 
 .menu-toggle.active svg {
@@ -159,8 +169,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--header-control-size);
+  height: var(--header-control-size);
   background: transparent;
   border: 1px solid transparent;
   border-radius: 50%;
@@ -189,7 +199,7 @@
   /* Allow automatic width */
   max-width: none;
   /* Remove maximum restriction */
-  height: 40px;
+  height: var(--header-control-size);
   /* Match button height */
   font-size: 0.875rem;
   flex-shrink: 0;
@@ -216,8 +226,8 @@
 }
 
 .header-action svg {
-  width: 20px;
-  height: 20px;
+  width: var(--header-icon-size);
+  height: var(--header-icon-size);
 }
 
 .notification-container,
@@ -743,13 +753,13 @@
 
 @media (max-width: 768px) {
   .header-container {
-    min-height: 70px;
-    max-height: 70px;
+    min-height: var(--header-height-tablet);
+    max-height: var(--header-height-tablet);
   }
 
   .header-content {
     height: 100%;
-    min-height: 70px;
+    min-height: var(--header-height-tablet);
     padding: 0 var(--space-2);
   }
 
@@ -814,12 +824,12 @@
 
 @media (max-width: 480px) {
   .header-container {
-    min-height: 60px;
-    max-height: 60px;
+    min-height: var(--header-height-mobile);
+    max-height: var(--header-height-mobile);
   }
 
   .header-content {
-    height: 60px;
+    height: var(--header-height-mobile);
     padding: 0;
   }
 
@@ -850,14 +860,14 @@
 
   .menu-toggle,
   .header-action {
-    width: 32px;
-    height: 32px;
+    width: var(--header-control-size-mobile);
+    height: var(--header-control-size-mobile);
   }
 
   .menu-toggle svg,
   .header-action svg {
-    width: 18px;
-    height: 18px;
+    width: var(--header-icon-size-mobile);
+    height: var(--header-icon-size-mobile);
   }
 
   .brand-icon {
@@ -891,9 +901,9 @@
 
 .dark .menu-toggle:hover,
 .dark .header-action:hover {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
+  background: var(--gray-700);
+  border-color: var(--gray-600);
+  color: #ffffff;
 }
 
 .dark .brand-logo {
@@ -961,13 +971,13 @@ html.dark .brand-text:hover {
 
 /* Enhanced Dark Mode Styles */
 html.dark .header-container {
-  background: rgba(30, 41, 59, 0.95);
-  border-bottom-color: #334155;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom-color: #1e293b;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3), 0px 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 html.dark .header-container.scrolled {
-  background: rgba(30, 41, 59, 0.98);
+  background: rgba(15, 23, 42, 0.98);
   box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.4), 0px 4px 16px rgba(0, 0, 0, 0.3);
 }
 
@@ -980,14 +990,14 @@ html.dark .header-action {
 
 html.dark .menu-toggle:hover,
 html.dark .header-action:hover {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
+  background: var(--gray-700);
+  border-color: var(--gray-600);
   color: #ffffff;
 }
 
 html.dark .header-dropdown {
-  background: rgba(30, 41, 59, 0.98);
-  border-color: #334155;
+  background: rgba(15, 23, 42, 0.98);
+  border-color: #1e293b;
   box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.4), 0px 16px 48px rgba(0, 0, 0, 0.3),
     0px 0px 0px 1px rgba(255, 255, 255, 0.05);
 }
@@ -998,25 +1008,32 @@ html.dark .dropdown-header {
 }
 
 html.dark .dropdown-item {
-  color: var(--gray-300);
+  color: #e2e8f0; /* Use explicit light color for contrast */
+}
+
+html.dark .dropdown-item svg {
+  color: #94a3b8;
 }
 
 html.dark .dropdown-item:hover {
   background: linear-gradient(135deg, #1e40af, #1e3a8a);
-  color: white;
+  color: #ffffff;
+}
+
+html.dark .dropdown-item:hover svg {
+  color: #60a5fa;
 }
 
 html.dark .dropdown-item.logout-btn {
-  color: var(--error-400);
+  color: #f87171; /* Brighter red explicitly for dark mode */
   border-top-color: #334155;
 }
 
 html.dark .dropdown-item.logout-btn:hover {
-  background: linear-gradient(135deg,
-      rgba(239, 68, 68, 0.2),
-      rgba(220, 38, 38, 0.2));
-  color: var(--error-300);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+  color: #fca5a5;
 }
+
 
 html.dark .notification-panel {
   background: rgba(30, 41, 59, 0.98);
@@ -1052,19 +1069,33 @@ html.dark .notification-item:hover .notification-icon {
   color: white;
 }
 
+/* Notification text contrast fix */
+html.dark .notification-item.unread .notification-title,
+html.dark .notification-item.unread .notification-message {
+    color: #ffffff !important;
+}
+
+.notification-item.unread .notification-title {
+  color: #1e3a8a !important;
+}
+
+.notification-item.unread .notification-message {
+  color: #334155 !important;
+}
+
 html.dark .notification-title {
-  color: var(--gray-100);
+    color: #f8fafc !important;
 }
 
 html.dark .notification-message {
-  color: var(--gray-400);
+    color: #cbd5e1 !important;
 }
 
 html.dark .notification-time {
-  color: var(--gray-500);
-}
+    color: var(--gray-500);
+  }
 
-/* Dark mode for notification button */
+  /* Dark mode for notification button */
 .dark .notification-btn,
 html.dark .notification-btn,
 .dark .profile-btn,
@@ -1079,8 +1110,8 @@ html.dark .profile-btn {
 html.dark .notification-btn:hover,
 .dark .profile-btn:hover,
 html.dark .profile-btn:hover {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
+  background: var(--gray-700);
+  border-color: var(--gray-600);
   color: #ffffff;
   box-shadow: none;
 }
@@ -1320,11 +1351,11 @@ body.tactical-mode .header-action,
 body.tactical-mode .notification-btn,
 body.tactical-mode .profile-btn,
 body.tactical-mode .theme-toggle {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   width: 38px !important;
   height: 38px !important;
-  color: #94a3b8 !important;
+  color: #ffffff !important;
   transition: all 0.2s !important;
   display: flex !important;
   align-items: center !important;
@@ -1354,4 +1385,30 @@ body.tactical-mode .header-left {
 
 body.tactical-mode .header-right {
   gap: 0.75rem !important;
-}
+}
+
+
+/* Ensure high contrast for menu toggle in dark modes */
+body.tactical-mode.heatmap-layout .menu-toggle,
+body.tactical-mode.heatmap-layout .header-action {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    opacity: 1 !important;
+}
+
+body.tactical-mode.heatmap-layout .menu-toggle:hover,
+body.tactical-mode.heatmap-layout .header-action:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+}
+
+body.tactical-mode.heatmap-layout .menu-toggle svg {
+    stroke: #ffffff !important;
+    opacity: 1 !important;
+    width: 22px !important;
+    height: 22px !important;
+}

@@ -254,6 +254,27 @@
 .location-wrapper {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .location-wrapper {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    align-items: start;
+  }
+  .map-wrapper {
+    margin-bottom: 0;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .auto-locate-btn {
+    grid-column: 2;
+    margin-top: 0;
+  }
+  .location-input-group {
+    grid-column: 2;
+  }
 }
 
 .auto-locate-btn {
@@ -487,9 +508,11 @@
   }
 
   .btn-submit-premium,
-  .btn-cancel {
+  .btn-cancel,
+  .btn-back {
     width: 100%;
     justify-content: center;
+    text-align: center;
   }
 }
 
@@ -1010,4 +1033,148 @@ html.dark .btn-back {
 
 html.dark .btn-back:hover {
   background: #4b5563;
+}
+/* ------------- Mockup Overlay Overrides ------------- */
+html.dark .form-section {
+    background: #1e293b !important; /* solid slate 800 */
+    border: 1px solid #334155 !important;
+    border-radius: 16px !important;
+}
+
+html.dark body {
+    background: #0f172a !important; /* slate 900 background */
+}
+
+/* Typography Overrides */
+html.dark .page-title {
+    color: #3b82f6 !important; /* Active blue like mockup */
+    font-weight: 800 !important;
+    font-size: 2rem !important;
+}
+html.dark .page-subtitle {
+    color: #cbd5e1 !important; /* Lighter slightly grayish white */
+}
+
+/* Stepper Overrides */
+html.dark .wizard-stepper::before {
+    background: #334155 !important; /* Darker track line */
+    height: 1px !important; /* Thinner line */
+    top: 18px !important;
+    left: 10% !important;
+    width: 80% !important; /* Don't go all the way to edge */
+}
+
+html.dark .step-number {
+    width: 36px !important;
+    height: 36px !important;
+    background: #0f172a !important;
+    border: 1px solid #475569 !important;
+    color: #94a3b8 !important;
+    font-size: 14px !important;
+    border-radius: 50% !important;
+    font-weight: 600 !important;
+}
+html.dark .step-indicator {
+    background: #0f172a !important; /* Hide line behind circle */
+}
+html.dark .step-indicator.active .step-number {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+}
+
+html.dark .step-label {
+    text-transform: uppercase !important;
+    font-size: 10px !important;
+    letter-spacing: 0.05em !important;
+    color: #64748b !important;
+    margin-top: 8px !important;
+    font-weight: 600 !important;
+}
+html.dark .step-indicator.active .step-label {
+    color: #ffffff !important; /* White for active */
+}
+
+/* Card Header Overrides */
+html.dark .section-header {
+    border-bottom: 1px solid #334155 !important;
+    margin-bottom: 24px !important;
+    padding-bottom: 16px !important;
+    /* display: flex !important; removed to fix inline styles */
+    align-items: center !important;
+    gap: 12px !important;
+}
+html.dark .section-header h3 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+}
+html.dark .section-icon {
+    width: 40px !important;
+    height: 40px !important;
+    background: #334155 !important;
+    border-radius: 10px !important;
+    /* display: flex !important; removed to fix inline styles */
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+}
+
+/* Inputs and Labels */
+html.dark .form-group label {
+    font-size: 13px !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+html.dark .required {
+    color: #ef4444 !important;
+}
+
+html.dark .premium-select,
+html.dark .premium-input,
+html.dark .premium-textarea {
+    background: #334155 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+}
+html.dark .premium-select:focus,
+html.dark .premium-input:focus,
+html.dark .premium-textarea:focus {
+    border-color: #3b82f6 !important;
+    background: #334155 !important;
+}
+
+/* Next Step Button */
+html.dark .btn-submit-premium {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 14px 24px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    display: flex; /* DO NOT USE !IMPORTANT SO INLINE STYLE CAN OVERRIDE! */
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+}
+
+html.dark .form-actions-sticky {
+    background: #1e293b !important;
+    border-top: 1px solid #334155 !important;
+}
+
+/* Make sure the submit button respects inline display: none */
+html.dark button[style*="display: none"] {
+    display: none !important;
 }

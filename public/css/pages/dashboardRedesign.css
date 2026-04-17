@@ -1,4 +1,373 @@
+/* --- New Citizen Dashboard Layout --- */
+.dash-new-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: var(--text-color, #1f2937);
+}
+
+.dash-welcome {
+    margin-bottom: 2rem;
+}
+.dash-welcome h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px 0;
+}
+.dash-welcome p {
+    color: var(--text-muted, #4b5563);
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+.dash-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dash-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.dash-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dash-card-blue {
+    background-color: var(--primary-600, #2563eb);
+    color: #ffffff;
+}
+.dash-card-blue .dash-card-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.dash-card-blue p {
+    color: rgba(255, 255, 255, 0.8);
+}
+.dash-card-blue svg {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.dash-card-dark {
+    background-color: var(--dash-dark-bg, #1f2937);
+    border: 1px solid var(--dash-dark-border, #374151);
+    color: #ffffff;
+}
+.dash-card-dark .dash-card-icon {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.dash-card-dark p {
+    color: #d1d5db;
+}
+.dash-card-dark svg {
+    color: #cbd5e1;
+}
+
+.dash-card-dark .dash-card-text h3 {
+    color: #ffffff;
+}
+
+.dash-card-dark:hover .dash-card-text p,
+.dash-card-dark:hover .dash-card-arrow svg {
+    color: #f8fafc;
+}
+
+/* Light-mode specific styling so theme switch is visually distinct */
+html:not(.dark) .dash-card-dark {
+    background: #1e293b;
+    border-color: #334155;
+    color: #ffffff;
+}
+
+html:not(.dark) .dash-card-dark .dash-card-icon {
+    background: rgba(148, 163, 184, 0.2);
+}
+
+html:not(.dark) .dash-card-dark .dash-card-text h3 {
+    color: #ffffff;
+}
+
+html:not(.dark) .dash-card-dark .dash-card-text p,
+html:not(.dark) .dash-card-dark .dash-card-arrow svg {
+    color: #e2e8f0;
+}
+
+/* Dark-mode keeps deeper contrast but different from light */
+html.dark .dash-card-dark {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dash-card-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.dash-card-icon {
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    transition: transform 0.2s ease;
+}
+.dash-card:hover .dash-card-icon {
+    transform: scale(1.1);
+}
+.dash-card-text h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0 0 2px 0;
+}
+.dash-card-text p {
+    font-size: 0.875rem;
+    margin: 0;
+}
+.dash-card-arrow svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.dash-mid-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dash-box {
+    background: var(--bg-surface, #ffffff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.dash-box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.dash-box-header h3, .dash-box-title, .dash-box-header-title h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-color, #1f2937);
+}
+
+.dash-box-metrics {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted, #6b7280);
+}
+.dash-box-metrics span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.metrics-icon {
+    width: 16px;
+    height: 16px;
+}
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.dot.bg-blue { background-color: var(--primary-400, #60a5fa); }
+.dot.bg-green { background-color: var(--success-400, #34d399); }
+
+.dash-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    background: rgba(249, 250, 251, 0.5);
+    border: 1px dashed var(--border-color, #e5e7eb);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+}
+html.dark .dash-empty-state {
+    background: rgba(31, 41, 55, 0.5);
+    border-color: #374151;
+}
+
+.dash-empty-state h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-color, #374151);
+}
+.dash-empty-state p {
+    color: var(--text-muted, #6b7280);
+    margin: 0 0 1rem 0;
+}
+
+.dash-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary-500, #3b82f6);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.dash-btn-primary:hover {
+    background: var(--primary-600, #2563eb);
+}
+.dash-btn-primary svg {
+    width: 16px;
+    height: 16px;
+}
+
+.dash-box-header-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.dash-link-icon {
+    color: var(--text-muted, #9ca3af);
+    transition: color 0.2s;
+}
+.dash-link-icon:hover {
+    color: var(--text-color, #4b5563);
+}
+.dash-link-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.dash-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.dash-category-btn {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    background: var(--bg-surface, #ffffff);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    color: var(--text-color, #1f2937);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+.dash-category-btn:hover {
+    background: rgba(243, 244, 246, 0.5);
+}
+
+.dash-category-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    background: rgba(249, 250, 251, 1);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    color: var(--text-color, #1f2937);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+html.dark .dash-category-more {
+    background: rgba(31, 41, 55, 1);
+}
+.dash-category-more:hover {
+    background: rgba(243, 244, 246, 1);
+}
+
+.dash-divider {
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    color: var(--text-muted, #9ca3af);
+}
+.dash-divider svg {
+    width: 20px;
+    height: 20px;
+}
+
+.cat-icon { font-size: 1.25rem; }
+.cat-icon-gray { color: var(--text-muted, #6b7280); font-size: 1.25rem; }
+
 /* Quick Action Icons Fix for Dark Mode */
+
+/* --- Dark Mode Text Contrast Fixes --- */
+html.dark .dash-welcome h2,
+html.dark .dash-welcome p,
+html.dark .dash-box-header h3,
+html.dark .dash-box-title,
+html.dark .dash-box-header-title h3,
+html.dark .dash-empty-state h4,
+html.dark .dash-box-metrics strong {
+    color: #f3f4f6 !important; /* light gray for high visibility */
+}
+
+html.dark .dash-empty-state p,
+html.dark .dash-box-metrics {
+    color: #9ca3af !important; /* mid gray for secondary text */
+}
+
+html.dark .dash-box {
+    background-color: var(--dash-dark-bg, #1f2937);
+    border-color: var(--dash-dark-border, #374151);
+}
+
+html.dark .dash-category-btn {
+    background-color: var(--dash-dark-bg, #1f2937);
+    border-color: var(--dash-dark-border, #374151);
+    color: #e5e7eb !important;
+}
+
+html.dark .dash-category-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+html.dark .dash-empty-state {
+    border-color: #374151;
+    background: rgba(17, 24, 39, 0.5); /* slightly darker empty state */
+}
+
+html.dark .cat-icon-gray {
+    color: #9ca3af !important;
+}
+
 html.dark .bg-blue-100 {
     background-color: rgba(59, 130, 246, 0.15) !important;
 }
@@ -50,4 +419,114 @@ html.dark p.text-gray-500 {
 html.dark .text-blue-600 svg,
 html.dark .text-purple-600 svg {
     stroke: currentColor;
+}
+/* Fix Tailwind JS overrides for empty states */
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark .text-gray-700 {
+    color: #e5e7eb !important;
+}
+html.dark .bg-gray-50,
+html.dark .bg-orange-50,
+html.dark .bg-green-50,
+html.dark .bg-blue-50 {
+    background-color: var(--gray-800, #1f2937) !important;
+    border-color: var(--gray-700, #374151) !important;
+}
+
+/* Very strong override for JS injected empty states */
+html.dark body .text-gray-500, 
+html.dark body .bg-gray-50 {
+    background-color: transparent !important;
+    border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+    color: #e5e7eb !important;
+}
+html.dark body .text-gray-500 p {
+    color: #e5e7eb !important;
+}
+
+/* Fix More button contrast */
+html.dark .dash-category-more {
+    background: transparent !important;
+    border-color: rgba(255,255,255,0.15) !important;
+    color: #e5e7eb !important;
+}
+html.dark .dash-category-more:hover {
+    background: rgba(255,255,255,0.1) !important;
+}
+html.dark .dash-category-more .cat-icon-gray {
+    color: #e5e7eb !important;
+}
+
+/* Keep shared header controls consistent across pages */
+html body .menu-toggle {
+    display: flex !important;
+}
+
+/* Mobile Bottom Navigation Styles */
+.dash-bottom-nav {
+    display: none; /* hidden on desktop */
+}
+
+@media (max-width: 1024px) {
+    /* Show bottom nav on mobile/tablet */
+    .dash-bottom-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        background: var(--dash-dark-bg, #1f2937); /* dark like the mockup */
+        border-top: 1px solid var(--dash-dark-border, #374151);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 64px;
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    html.dark .dash-bottom-nav,
+    body.tactical-mode .dash-bottom-nav {
+        background: #0f172a; /* matching dark header/background */
+        border-top: 1px solid #1e293b;
+    }
+
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        text-decoration: none;
+        width: 100%;
+        height: 100%;
+        transition: color 0.2s;
+    }
+
+    .nav-item:hover, .nav-item:active {
+        color: #94a3b8;
+    }
+
+    .nav-item.active {
+        color: #3b82f6; /* blue accent */
+        border-bottom: 2px solid #3b82f6; /* line indicator */
+    }
+
+    .nav-icon {
+        width: 24px;
+        height: 24px;
+        margin-top: 4px;
+    }
+
+    /* Create space for the bottom nav in the main wrapper */
+    .dashboard-main-wrapper {
+        padding-bottom: 80px !important;
+    }
+
+    /* Hide sidebar explicitly on mobile since we have bottom nav */
+    #sidebar {
+        display: none !important;
+    }
 }

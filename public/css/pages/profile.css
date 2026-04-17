@@ -29,13 +29,14 @@ body {
   padding: 0 !important;
 }
 
+
 .profile-page-container {
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 1.5rem;
   padding: 1.5rem;
-  padding-top: 5rem;
-  /* Fix Header Overlap */
+  padding-top: var(--header-height-desktop, 56px);
+  /* Always offset by header height */
   overflow-x: hidden;
 }
 
@@ -201,27 +202,36 @@ body {
 }
 
 /* Mobile Responsiveness */
+
 @media (max-width: 1024px) {
   .profile-page-container {
     grid-template-columns: 1fr;
     padding: 1rem;
-    padding-top: 1rem;
+    padding-top: var(--header-height-tablet, 70px);
   }
+
 
   .profile-sidebar {
     height: auto;
     overflow: visible;
   }
 
+
   .profile-main-content {
     height: auto;
     overflow: visible;
   }
 
+
   .activity-list-container {
     overflow: visible;
     padding: 1rem;
   }
+@media (max-width: 600px) {
+  .profile-page-container {
+    padding-top: var(--header-height-mobile, 60px);
+  }
+}
 }
 
 /* settings Page Header Styles */

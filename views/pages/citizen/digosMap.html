@@ -16,10 +16,61 @@
       crossorigin=""
     />
     <style>
+      body.page-digos-map .complaint-wizard-container {
+        max-width: min(1700px, calc(100vw - 120px));
+        width: 100%;
+        padding-top: 8px;
+        padding-bottom: 16px;
+      }
+
+      body.page-digos-map .page-header {
+        margin-bottom: 0.75rem;
+      }
+
+      body.page-digos-map .page-title {
+        font-size: 1.85rem;
+        margin-bottom: 0.2rem;
+      }
+
+      body.page-digos-map .page-subtitle {
+        font-size: 0.98rem;
+      }
+
+      body.page-digos-map .form-section {
+        padding: 1rem;
+      }
+
+      body.page-digos-map .section-header {
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.6rem;
+      }
+
+      body.page-digos-map .section-header h3 {
+        font-size: 1.08rem;
+      }
+
+      /* Visually obvious equal inset around the map canvas */
+      body.page-digos-map .map-wrapper {
+        margin: 0 14px !important;
+        border-radius: 12px !important;
+      }
+
+      @media (max-width: 1024px) {
+        body.page-digos-map .complaint-wizard-container {
+          max-width: 100%;
+          padding-top: 6px;
+          padding-bottom: 12px;
+        }
+
+        body.page-digos-map .map-wrapper {
+          margin: 0 10px !important;
+        }
+      }
+
       #digos-map {
-        height: 55vh;
-        max-height: 650px;
-        min-height: 320px;
+        height: 40vh;
+        max-height: 460px;
+        min-height: 240px;
         width: 100%;
         border-radius: 12px;
         z-index: 1;
@@ -27,7 +78,7 @@
 
       @supports (height: 100dvh) {
         #digos-map {
-          height: 55dvh;
+          height: 40dvh;
         }
       }
       /* Fix for leaflet z-index in premium cards */
@@ -40,7 +91,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="page-digos-map">
     <div class="app-container">
       <div id="sidebar" class="collapsible"></div>
 

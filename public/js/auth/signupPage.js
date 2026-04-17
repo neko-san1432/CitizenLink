@@ -96,8 +96,9 @@ let oauthAbortWatcherInstalled = false;
 // Initialize signup page
 const initializeSignupPage = async () => {
   // CRITICAL: Run Global OAuth Guard FIRST to wipe stale state
-  const { initGlobalOAuthGuard } = await import("../utils/global-oauth-guard.js");
-  await initGlobalOAuthGuard();
+  // Temporarily disabling missing global-oauth-guard
+  // const { initGlobalOAuthGuard } = await import("../utils/global-oauth-guard.js");
+  // await initGlobalOAuthGuard();
 
   // Setup navigation cleanup for login/signup buttons and brand logo
   const { setupNavigationCleanup } = await import("../utils/navigation.js");

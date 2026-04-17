@@ -51,6 +51,20 @@ async function loadDashboardData() {
     if (statsRes.ok) {
       const statsJson = await statsRes.json();
       if (statsJson.success) {
+        // Update Desktop Metrics
+        const stats = statsJson.data;
+        if (document.getElementById("desktop-metric-total")) {
+          document.getElementById("desktop-metric-total").textContent = stats.total || 0;
+        }
+        if (document.getElementById("desktop-metric-pending")) {
+          const byStatus = stats.byStatus || {};
+          document.getElementById("desktop-metric-pending").textContent = (byStatus.in_progress || 0) + (byStatus.assigned || 0) + (byStatus.submitted || 0) + (byStatus.new || 0);
+        }
+        if (document.getElementById("desktop-metric-resolved")) {
+          const byStatus = stats.byStatus || {};
+          document.getElementById("desktop-metric-resolved").textContent = (byStatus.resolved || 0) + (byStatus.completed || 0);
+        }
+
         // Filter activity by timeframe
         const filteredActivity = filterActivityByTimeframe(statsJson.data.recentActivity || [], "all");
         updateActivity(filteredActivity);
@@ -177,9 +191,7 @@ function updateActivity(complaints) {
   if (!container) return;
 
   if (!complaints || complaints.length === 0) {
-    container.innerHTML = `<div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-      <p>No recent activity</p>
-    </div>`;
+    container.innerHTML = `<p>No recent activity</p>`;
     return;
   }
 
@@ -222,9 +234,7 @@ function updateOngoingResolution(complaints) {
   if (!container) return;
 
   if (!complaints || complaints.length === 0) {
-    container.innerHTML = `<div class="text-center py-4 text-gray-500 w-full">
-      <p>No ongoing resolutions</p>
-    </div>`;
+    container.innerHTML = `<p>No ongoing resolutions</p>`;
     return;
   }
 

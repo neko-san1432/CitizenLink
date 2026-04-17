@@ -23,7 +23,9 @@
   width: 100%;
   height: 100%;
   background:
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)),
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.95)),
     url('/assets/images/bgDigos.jpg');
   background-size: cover;
   background-position: center;
@@ -48,30 +50,37 @@
 
 /* Navigation */
 .navbar {
-  position: absolute;
-  /* Changed from fixed to absolute per user request */
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative; /* Change from fixed so it takes up space and pushes content down */
+  width: 100%;
+  flex-shrink: 0;
+  height: 70px;
+  margin: 0 !important;
+  top: 0 !important;
+  /* Match dashboard header */
   padding: 0 2rem;
-  height: 60px;
-  /* Reduced from 70px */
-  z-index: 100;
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--glass-border);
-  opacity: 1;
   display: flex;
   align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  background: rgba(15, 23, 42, 0.4);
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.3s ease;
 }
 
 .nav-container {
-  max-width: 900px;
-  /* Reduced from 1200px to fix "distance" issue */
+  max-width: 1200px; /* MATCH LOGIN WIDTH */
   margin: 0 auto;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+}
+
+/* Override brand-text for auth pages */
+.auth-page .navbar .brand-text,
+.auth-page .brand-text {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .logo {
@@ -80,20 +89,12 @@
   gap: 0.75rem;
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 1.25rem;
-  /* Reduced from 1.5rem to match dashboard */
+  font-size: 1.5rem;
   letter-spacing: -0.02em;
-  color: var(--text-light) !important;
-  /* Force white text for contrast */
 }
 
-.brand-text {
-  color: var(--text-light) !important;
-  /* Force white text for contrast */
-}
-
-.logo-icon {
-  color: var(--primary-color);
+.logo-icon img {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
 }
 
 .nav-links {
@@ -144,19 +145,27 @@
 .auth-page {
   /* rely on background-gradient div */
   position: relative;
-  overflow: hidden;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+  overflow: auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   font-family: var(--font-body);
+  background-color: var(--bg-dark);
+  color: var(--text-light);
 }
 
 html,
 body {
   height: 100%;
   margin: 0;
-  overflow: hidden;
-  /* Prevent body scroll per request */
+  overflow: auto;
+  /* Allow body scroll per request */
 }
 
 .auth-page .header-container {
@@ -195,18 +204,18 @@ body {
 .auth-container {
   width: 100%;
   max-width: 1200px;
+  flex: 1; /* expand to take remaining space below navbar */
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* keep flex-start so it doesn't top clip */
   justify-content: center;
   position: relative;
   z-index: 10;
-  padding: 1rem;
+  padding: 2rem 1rem; /* 2rem top/bottom padding acts as minimum gap to navbar/footer */
   margin: 0 auto;
-  height: 100%;
-  /* Ensure vertical centering */
 }
 
 .auth-card {
+  width: 100%;
   max-width: 600px;
   /* Reduced width for unified form */
   background: rgba(15, 23, 42, 0.6);
@@ -221,8 +230,8 @@ body {
   /* Changed from grid to flex column */
   flex-direction: column;
   box-sizing: border-box;
-  margin-top: 20px;
-  max-height: calc(100vh - 100px);
+  margin: auto; /* Vertically and horizontally centers safely inside the flex start container */
+  max-height: calc(100vh - 120px); /* 70 nav + 50 padding */
   /* Ensure card fits within viewport to enable internal scrolling */
 }
 
@@ -232,8 +241,8 @@ body {
 
 .auth-header {
   padding: 1rem 1rem 0;
-  margin-top: 60px;
-  /* Add margin to clear fixed header if needed, or adjust padding */
+  margin-top: 0;
+  /* Removed margin that forced space above */
   text-align: center;
   background: transparent;
   border-bottom: 1px solid var(--glass-border);
@@ -825,7 +834,9 @@ body {
 
 .visual-highlights {
   list-style: none;
-  padding: 0;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -849,7 +860,7 @@ body {
 }
 
 .visual-metrics {
-  display: grid;
+  /* removed display grid */
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 0.75rem;
   margin-top: 0.25rem;
@@ -1108,7 +1119,7 @@ body {
 }
 
 .id-verify-body {
-  display: grid;
+  /* removed display grid */
   gap: var(--space-3);
 }
 
@@ -1117,7 +1128,7 @@ body {
   border-radius: var(--radius-lg);
   background: white;
   padding: var(--space-6);
-  display: grid;
+  /* removed display grid */
   grid-template-columns: auto 1fr;
   gap: var(--space-3);
   align-items: center;
@@ -1240,7 +1251,7 @@ body {
 }
 
 .id-verify-footer {
-  display: grid;
+  /* removed display grid */
   gap: var(--space-3);
   margin-top: var(--space-3);
 }
@@ -1270,13 +1281,13 @@ body {
 
 .review-grid {
   margin-top: var(--space-2);
-  display: grid;
+  /* removed display grid */
   grid-template-columns: 1fr 1fr;
   gap: var(--space-2);
 }
 
 .review-grid .kv {
-  display: grid;
+  /* removed display grid */
   grid-template-columns: 160px 1fr;
   gap: var(--space-2);
   font-size: 0.9rem;
@@ -1694,35 +1705,15 @@ body {
 }
 
 .auth-page {
-  min-height: 100vh;
-  padding: 1rem;
-  padding-top: calc(64px + 1rem);
-  /* Account for fixed header */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg,
-      var(--primary-50) 0%,
-      var(--gray-50) 100%);
+  /* Removed conflicting layout rules from duplicate block */
 }
 
 .auth-container {
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* Inherits from top */
 }
 
 .auth-card {
-  width: 100%;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 1rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--glass-border);
-  overflow: hidden;
+  /* Inherits from top */
 }
 
 .auth-header {
@@ -1980,11 +1971,7 @@ body {
 
 /* Small mobile devices */
 @media (max-width: 480px) {
-  .auth-page {
-    padding: 0.75rem;
-    padding-top: calc(64px + 0.75rem);
-    /* Account for fixed header */
-  }
+/* Removed padding that squeezed navbar */
 
   .auth-header {
     padding: 1rem 1rem 0.75rem;
@@ -2066,26 +2053,24 @@ body {
 
 /* Tablet styles - Side by side layout */
 @media (min-width: 769px) {
-  .auth-page {
-    padding: 2rem;
-    padding-top: calc(64px + 2rem);
-    /* Account for fixed header */
-  }
+/* Removed padding that squeezed navbar */
 
   .auth-container {
     max-width: 1200px;
   }
 
   .auth-card {
-    max-width: 920px;
+    max-width: 600px; /* MATCH LOGIN WIDTH */
     max-height: 85vh;
     height: auto;
-    display: grid;
-    grid-template-rows: auto auto;
+    /* removed display grid */
+    
   }
 
   .auth-form {
-    padding: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   }
 
   /* Desktop: Side by side layout */
@@ -2141,30 +2126,30 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   }
 }
 
 /* Desktop styles - Enhanced side by side layout */
 @media (min-width: 1024px) {
-  .auth-page {
-    padding: 3rem;
-    padding-top: calc(64px + 3rem);
-    /* Account for fixed header */
-  }
+/* Removed padding that squeezed navbar */
 
   .auth-container {
-    max-width: 1400px;
+    max-width: 1200px; /* MATCH LOGIN WIDTH */
   }
 
   .auth-card {
-    max-width: 920px;
+    max-width: 600px; /* MATCH LOGIN WIDTH */
     max-height: 85vh;
     height: auto;
   }
 
   .auth-form {
-    padding: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   }
 
   .auth-content {
@@ -2207,7 +2192,9 @@ body {
 
   .signup-form {
     gap: 1.5rem;
-    padding: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   }
 
   .form-group {
@@ -2326,64 +2313,40 @@ body {
   overflow-y: auto;
 }
 
-.signup-page,
-.auth-page {
-  --vp-pad: clamp(8px, 1vw, 16px);
-  min-height: 100vh;
-  height: auto;
-  /* allow natural height so page can scroll */
-  padding-top: 64px;
-  /* Account for fixed header */
-  background: linear-gradient(135deg,
-      var(--primary-50) 0%,
-      var(--gray-50) 100%);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--vp-pad);
-  overflow: hidden;
-}
+/* Removed conflicting .signup-page/.auth-page block entirely */
 
 @media (min-width: 1024px) {
 
-  .signup-page,
-  .auth-page {
-    padding: clamp(12px, 1.5vw, 24px);
-  }
+  
 }
 
 @media (min-width: 1280px) {
 
-  .signup-page,
-  .auth-page {
-    padding: clamp(16px, 2vw, 32px);
-  }
+  
 }
 
 @media (min-width: 1536px) {
 
-  .signup-page,
-  .auth-page {
-    padding: clamp(20px, 2.5vw, 40px);
-  }
+  
 }
 
 .auth-container {
   z-index: 1;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1200px; /* MATCH LOGIN WIDTH */
   height: auto;
   /* let content define height */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
 }
 
 @media (min-width: 1024px) {
   .auth-container {
-    max-width: 1400px;
+    max-width: 1200px; /* MATCH LOGIN WIDTH */
   }
 }
 
@@ -2409,7 +2372,7 @@ body {
   border-radius: var(--radius-2xl);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   border: 1px solid var(--glass-border);
-  display: grid;
+  /* removed display grid */
   grid-template-rows: auto 1fr auto;
   overflow: hidden;
   /* padding removed so header is not padded */
@@ -2488,7 +2451,9 @@ body {
 
 /* Middle area with internal scroll when needed */
 .auth-form {
-  padding: 0;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -3003,43 +2968,14 @@ body {
 
 @media (max-width: 480px) {
   .auth-card .auth-form {
-    padding-top: 0rem !important;
-  }
-}
-
-/* Extra headroom under the fixed header so the form is fully visible */
-.auth-container {
-  padding-top: 1rem;
-}
-
-@media (max-width: 480px) {
-  .auth-container {
-    padding-top: 4rem;
-  }
-}
-
-@media (min-width: 769px) {
-  .auth-container {
-    padding-top: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .auth-container {
-    padding-top: 1.75rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .auth-container {
-    padding-top: 2rem;
-  }
 }
 
 /* Signup method selector */
 .signup-method-section {
   margin-bottom: clamp(20px, 3vw, 32px);
-  padding: 0;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   /* Remove padding as it's inside the card now */
   border: none;
   background: transparent;
@@ -3193,7 +3129,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   margin-bottom: 0;
   cursor: pointer;
 }
@@ -3221,7 +3159,9 @@ body {
   /* Fix white background override */
   border: none;
   border-radius: 0;
-  padding: 0;
+  padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
   box-shadow: none;
   display: flex;
   flex-direction: column;
@@ -3420,7 +3360,7 @@ body {
 /* Restore grid layout for main column */
 .signup-method-grid {
   margin-top: clamp(16px, 2vw, 24px);
-  display: grid;
+  /* removed display grid */
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: clamp(12px, 1.25vw, 18px);
 }
@@ -3695,7 +3635,7 @@ body {
 }
 
 .signup-method-grid {
-  display: grid;
+  /* removed display grid */
   grid-template-columns: 1fr;
   /* Force single column for ultra squeeze */
   gap: 0.5rem;
@@ -3720,7 +3660,7 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--text-light) !important;
+  color: var(--primary-color) !important;
 }
 
 /* Resize internal SVGs */
@@ -3846,27 +3786,7 @@ body {
   }
 }
 
-/* =========================================
-   MERGED COMPACT MODE OVERRIDES
-   ========================================= */
-
-/* Login/Signup Page Specifics from compact-overrides.css */
-.auth-container,
-.login-container,
-.signup-container {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0 !important;
-}
-
-/* Global Scrollbar Override for Auth Page */
-html,
-body {
-  overflow: hidden !important;
-}
+/* Removed MERGED COMPACT MODE OVERRIDES that were breaking layout */
 
 .auth-card {
   max-height: 95vh;
@@ -4150,3 +4070,4 @@ button.signup-method-card .method-chevron,
 .signup-form .input.has-icon {
   padding-left: 3rem !important;
 }
+

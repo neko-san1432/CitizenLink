@@ -31,6 +31,66 @@
   box-sizing: border-box;
 }
 
+/* Themed page scrollbar for dashboard pages */
+html,
+body {
+  scrollbar-width: thin;
+}
+
+html:not(.dark),
+html:not(.dark) body {
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+html:not(.dark)::-webkit-scrollbar,
+html:not(.dark) body::-webkit-scrollbar {
+  width: 10px;
+}
+
+html:not(.dark)::-webkit-scrollbar-track,
+html:not(.dark) body::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+html:not(.dark)::-webkit-scrollbar-thumb,
+html:not(.dark) body::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+  border: 2px solid #e2e8f0;
+}
+
+html:not(.dark)::-webkit-scrollbar-thumb:hover,
+html:not(.dark) body::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+html.dark,
+html.dark body {
+  scrollbar-color: #475569 #1e293b;
+}
+
+html.dark::-webkit-scrollbar,
+html.dark body::-webkit-scrollbar {
+  width: 10px;
+}
+
+html.dark::-webkit-scrollbar-track,
+html.dark body::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+html.dark::-webkit-scrollbar-thumb,
+html.dark body::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 999px;
+  border: 2px solid #1e293b;
+}
+
+html.dark::-webkit-scrollbar-thumb:hover,
+html.dark body::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* Scrollbar Styling - useful globally */
 .dashboard-grid::-webkit-scrollbar,
 .content-container::-webkit-scrollbar {
@@ -47,6 +107,21 @@
 .content-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
+}
+
+html.dark .dashboard-grid::-webkit-scrollbar-track,
+html.dark .content-container::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+html.dark .dashboard-grid::-webkit-scrollbar-thumb,
+html.dark .content-container::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+html.dark .dashboard-grid::-webkit-scrollbar-thumb:hover,
+html.dark .content-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* Dark Mode Overrides for Dashboards */

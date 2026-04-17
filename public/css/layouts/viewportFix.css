@@ -5,6 +5,8 @@ html,
 body {
   height: 100%;
   min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -40,19 +42,24 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
+  transition: padding-left 0.3s ease;
 }
 
-/* Ensure dashboard content sits below fixed header on all viewports */
+@media (min-width: 1025px) {
+  /* Offset content for mini-sidebar globally on desktop */
+  body:not(.heatmap-layout) #app:not(.heatmap-page) {
+    margin-left: 72px; /* width of mini sidebar */
+  }
+}
+
+/* Ensure dashboard content is unconstrained */
 #app.citizen-dashboard {
   margin-top: 0;
-  max-height: 100%;
+  height: 100%;
 }
 
-/* Dashboard containers - fit within available space */
-.citizen-dashboard,
-.coordinator-dashboard,
-.lgu-admin-dashboard,
-.superadmin-dashboard {
+/* Dashboard inner wrapper - fit within available space */
+.dashboard-main-wrapper {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -62,11 +69,7 @@ body {
   margin: 0;
 }
 
-/* Coordinator dashboard needs minimal top padding for fixed header */
-#app.coordinator-dashboard,
-.coordinator-dashboard {
-  padding-top: 1rem; /* Minimal padding - header already has its own spacing */
-}
+
 
 /* Exclude heatmap pages from responsive padding (they need full-width for map) */
 .lgu-admin-dashboard.heatmap-page,
@@ -75,59 +78,39 @@ body {
   padding: 0 !important;
 }
 
-/* Apply citizen dashboard padding to all dashboards except heatmap/map pages */
-.coordinator-dashboard:not(.heatmap-page):not(.heatmap-page),
-.lgu-admin-dashboard:not(.heatmap-page),
-.superadmin-dashboard:not(.heatmap-page):not(.heatmap-page) {
-  padding: 0 1%;
-}
+
 
 /* Responsive page margins - apply citizen dashboard padding to all dashboards except heatmap/map pages */
 @media (min-width: 320px) and (max-width: 479px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 16px;
     padding-right: 16px;
   }
 }
 
 @media (min-width: 480px) and (max-width: 700px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 24px;
     padding-right: 24px;
   }
 }
 
 @media (min-width: 701px) and (max-width: 1024px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 32px;
     padding-right: 32px;
   }
 }
 
 @media (min-width: 1025px) and (max-width: 1439px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 48px;
     padding-right: 48px;
   }
 }
 
 @media (min-width: 1440px) and (max-width: 1920px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 80px;
     padding-right: 80px;
   }
@@ -135,20 +118,14 @@ body {
 
 /* For very small and very large screens, fall back to closest rule */
 @media (max-width: 319px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 16px;
     padding-right: 16px;
   }
 }
 
 @media (min-width: 1921px) {
-  .citizen-dashboard,
-  .coordinator-dashboard:not(.heatmap-page),
-    .lgu-admin-dashboard:not(.heatmap-page),
-  .superadmin-dashboard:not(.heatmap-page) {
+  .dashboard-main-wrapper:not(.heatmap-page) {
     padding-left: 120px;
     padding-right: 120px;
   }
@@ -359,3 +336,5 @@ body {
   margin-right: 0;
   box-sizing: border-box;
 }
+
+
