@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <title>Review Queue | DRIMS Intelligence</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/base/style.css" />
+  <link rel="stylesheet" href="/css/components/toast.css" />
+  <link rel="stylesheet" href="/css/components/clock.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/base/app.css" />
+  <link rel="stylesheet" href="/css/components/header.css" />
+  <link rel="stylesheet" href="/css/pages/dashboardCommon.css" />
+  <link rel="stylesheet" href="/css/pages/coordinatorReviewQueue.css" />
+  <link rel="stylesheet" href="/css/components/barangayPrioritization.css" />
+  <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
+  <style>
+    :root { --font-family: 'Outfit', sans-serif; }
+    body { font-family: var(--font-family); }
+  </style>
+  <script type="module" src="/js/utils/theme.js"></script>
+</head>
+
+<body class="dark overflow-hidden">
+  <div class="app-container">
+    <div class="header-container"></div>
+    <div id="sidebar" class="collapsible"></div>
+
+    <div id="app" class="collapsible coordinator-dashboard" style="background: #0f172a;">
+      <!-- Dashboard Header -->
+      <div class="dashboard-header-section" style="padding: 8px 32px 0 32px;">
+        <h1 style="font-size: 1.8em; font-weight: 700; color: #fff; margin: 0;">Review Queue</h1>
+        <p style="color: #94a3b8; margin: 2px 0 0 0; font-size: 0.95em;">Review and prioritize incoming complaints.</p>
+      </div>
+
+      <!-- Main Content -->
+      <div class="dashboard-content" style="padding: 8px 24px 16px 24px;">
+        
+        <!-- Perspective Switcher -->
+        <div class="perspective-tabs">
+          <button class="perspective-btn active" data-tab="queue">Review Queue</button>
+          <button class="perspective-btn" data-tab="insights">Barangay Insights</button>
+        </div>
+
+        <!-- MAIN DATA PANEL -->
+        <div class="rq-panel panel overflow-hidden" style="margin-bottom: 24px; height: calc(100vh - 280px); min-height: 500px; display: flex; flex-direction: column;">
+          
+          <!-- INTELLIGENCE STRIP (FILTERS) -->
+          <div class="intelligence-strip" style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Top Search Row -->
+            <div style="position: relative; width: 100%;">
+              <div style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; display: flex; align-items: center;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+              <input type="text" id="search-input" class="form-input" style="width: 100%; padding-left: 44px; height: 44px; background: rgba(15, 23, 42, 0.4) !important;" placeholder="Search complaints, locations, or IDs...">
+            </div>
+
+            <!-- Bottom Filter Controls -->
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              
+              <!-- Date Range -->
+              <div style="display: flex; align-items: center; gap: 8px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0 12px; height: 38px;">
+                <svg width="16" height="16" style="color: #94a3b8;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <input type="date" id="filter-start-date" class="form-input" style="border:none !important; background:transparent !important; width: 125px;">
+                <span style="color: #64748b;">➞</span>
+                <input type="date" id="filter-end-date" class="form-input" style="border:none !important; background:transparent !important; width: 125px;">
+              </div>
+
+              <!-- Priority -->
+              <select id="filter-priority" class="form-select" style="min-width: 130px;">
+                <option value="">Priority: All</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+
+              <!-- Category -->
+              <div style="display: flex; align-items: center; gap: 8px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0 12px; height: 38px;">
+                 <svg width="16" height="16" style="color: #94a3b8;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                 <select id="filter-type" class="form-select" style="border:none !important; background:transparent !important; min-width: 100px;">
+                   <option value="">All Categories</option>
+                   <option value="Infrastructure">Infrastructure</option>
+                   <option value="Sanitation">Sanitation</option>
+                   <option value="Community">Community</option>
+                   <option value="Safety">Safety</option>
+                   <option value="Environment">Environment</option>
+                 </select>
+              </div>
+
+              <!-- Duplicates -->
+              <select id="filter-similar" class="form-select">
+                <option value="">Duplicates: All</option>
+                <option value="yes">Show Similar</option>
+                <option value="no">Show Unique</option>
+              </select>
+
+              <!-- Sort Order -->
+              <select id="filter-prioritization" class="form-select">
+                <option value="">Default Order</option>
+                <option value="desc">Highest Priority First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+
+              <!-- Badge -->
+              <div style="margin-left: auto; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 6px 14px; border-radius: 99px; font-size: 0.8em; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.3);" id="queue-count-badge">
+                Loading...
+              </div>
+            </div>
+          </div>
+
+          <!-- TABLE SECTION -->
+          <div id="loading" style="padding: 100px 0; text-align: center; background: rgba(15, 23, 42, 0.2);">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 16px; color: #94a3b8; font-weight: 500;">Retrieving Queue Intelligence...</p>
+          </div>
+
+          <div id="empty-state" class="hidden" style="padding: 80px 40px; text-align: center;">
+            <div style="font-size: 3em; margin-bottom: 20px;">✅</div>
+            <h3 style="color: #fff; font-size: 1.5em; margin-bottom: 8px;">All Caught Up!</h3>
+            <p style="color: #94a3b8;">There are no complaints pending review at the moment.</p>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; overflow-x: hidden;" id="queue-table-container">
+            <table class="rq-table table">
+              <thead>
+                <tr>
+                  <th style="width: 100px;">Priority</th>
+                  <th style="width: 220px;">Category</th>
+                  <th style="width: 250px;">Location</th>
+                  <th>Description</th>
+                  <th style="width: 120px;">Date</th>
+                  <th style="text-align: right; width: 140px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="complaint-list">
+                <!-- Data rows injected by reviewQueue.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- PAGINATION FOOTER -->
+          <div id="pagination-container" class="rq-pagination hidden" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: rgba(15, 23, 42, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: auto;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--rq-text-secondary); font-size: 0.85rem;">Rows:</span>
+                <select id="rows-per-page" class="form-select" style="padding: 2px 8px !important; min-width: 60px;">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+              <div style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px; display: flex; align-items: baseline; gap: 6px;">
+                <span id="page-info" style="color: var(--rq-text-primary); font-size: 0.85rem; font-weight: 500;">Page 1</span>
+                <span id="items-info" style="color: var(--rq-text-muted); font-size: 0.75rem;">(Loading...)</span>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; align-items: center;">
+               <button id="prev-page" class="pagination-btn">Previous</button>
+               <div id="page-numbers" style="display: flex; gap: 8px;"></div>
+               <button id="next-page" class="pagination-btn">Next</button>
+            </div>
+          </div>
+        </div> <!-- End .rq-panel -->
+
+        <!-- Barangay Data Container (Shared Logic) -->
+        <div id="insights-view" style="display: none; padding: 0 8px;">
+           <div id="barangay-prioritization-container"></div>
+        </div>
+
+      </div> <!-- End .dashboard-content -->
+    </div> <!-- End #app -->
+  </div> <!-- End .app-container -->
+
+  <div id="toast-container" class="toast-container"></div>
+  <div id="sliding-panel-container"></div>
+
+  <script type="module" src="../../js/components/header.js"></script>
+  <script type="module" src="../../js/components/sidebar.js"></script>
+  <script type="module" src="../../js/auth/authChecker.js"></script>
+  <script type="module" src="../../js/lgu/reviewQueue.js?v=2026-04-20"></script>
+</body>
+</html>

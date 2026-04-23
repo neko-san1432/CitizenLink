@@ -34,10 +34,29 @@
 }
 
 @keyframes shimmer {
-    100% {
-        transform: translateX(100%);
-    }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
+
+/* Fade Out Animation */
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.skeleton-fade-out {
+    animation: fadeOut 0.4s ease forwards;
+    pointer-events: none;
+}
+
+/* Dashboard Specific Skeleton Shapes */
+.skeleton-welcome-title { height: 36px; width: 280px; margin-bottom: 10px; }
+.skeleton-welcome-subtitle { height: 24px; width: 360px; }
+.skeleton-action-card { height: 92px; border-radius: 16px; }
+.skeleton-box-title { height: 28px; width: 320px; border-radius: 6px; }
+.skeleton-box-meta { height: 24px; width: 220px; border-radius: 6px; }
+.skeleton-box-content { height: 170px; border-radius: 12px; }
+.skeleton-category-item { height: 56px; border-radius: 12px; }
 
 /* Global Overlay */
 #global-skeleton-loader {

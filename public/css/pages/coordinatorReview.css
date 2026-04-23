@@ -1056,7 +1056,7 @@ html.dark .empty-state h2 {
 
 .complainant-link:hover {
     color: #1d4ed8;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 /* High Confidence Duplicate Alert */

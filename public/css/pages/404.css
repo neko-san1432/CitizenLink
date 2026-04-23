@@ -118,7 +118,7 @@ body {
     font-weight: 600}
 
 .suggestions a:hover {
-    text-decoration: underline}
+    text-decoration: none}
 
 @media (max-width: 600px) {
     .error-container {

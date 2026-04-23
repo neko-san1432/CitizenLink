@@ -188,65 +188,17 @@ function updateActivity(activities) {
 }
 
 function initCharts(chartData = {}) {
-  const trendCtx = document.getElementById("trendChart");
-  if (trendCtx) {
-    // Destroy existing chart if it exists (for refresh)
-    const existing = Chart.getChart(trendCtx);
+  // Category Breakdown (Doughnut)
+  const categoryCtx = document.getElementById("categoryBreakdownChart");
+  if (categoryCtx) {
+    const existing = Chart.getChart(categoryCtx);
     if (existing) existing.destroy();
-
-    const trend = chartData.trend || {};
-    const labels = Object.keys(trend).sort();
-    const dataPoints = labels.map(l => trend[l]);
-
-    // Fallback if no data
-    const finalLabels = labels.length > 0 ? labels : ["No Data"];
-    const finalData = dataPoints.length > 0 ? dataPoints : [0];
-
-    new Chart(trendCtx, {
-      type: "line",
-      data: {
-        labels: finalLabels,
-        datasets: [
-          {
-            label: "complaints",
-            data: finalData,
-            borderColor: "#3b82f6",
-            tension: 0.4,
-            fill: true,
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { display: false },
-            ticks: { precision: 0 }
-          },
-          x: { grid: { display: false } },
-        },
-      },
-    });
-  }
-
-  const distCtx = document.getElementById("distributionChart");
-  if (distCtx) {
-    const existing = Chart.getChart(distCtx);
-    if (existing) existing.destroy();
-
     const dist = chartData.category_distribution || {};
     const labels = Object.keys(dist);
     const dataPoints = labels.map(l => dist[l]);
-
-    // Fallback if no data
     const finalLabels = labels.length > 0 ? labels : ["No complaints"];
     const finalData = dataPoints.length > 0 ? dataPoints : [0];
-
-    new Chart(distCtx, {
+    new Chart(categoryCtx, {
       type: "doughnut",
       data: {
         labels: finalLabels,
@@ -264,13 +216,100 @@ function initCharts(chartData = {}) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: "right",
-            labels: {
-              boxWidth: 12,
-              font: { size: 10 }
-            }
-          }
+          // We use the static HTML legend on the page; disable Chart.js legend to avoid duplication
+          legend: { display: false }
+        },
+      },
+    });
+  }
+
+  // Complaints by Category (Bar)
+  const complaintsCtx = document.getElementById("complaintsByCategoryChart");
+  if (complaintsCtx) {
+    const existing = Chart.getChart(complaintsCtx);
+    if (existing) existing.destroy();
+    const dist = chartData.category_distribution || {};
+    const labels = Object.keys(dist);
+    const dataPoints = labels.map(l => dist[l]);
+    const finalLabels = labels.length > 0 ? labels : ["No complaints"];
+    const finalData = dataPoints.length > 0 ? dataPoints : [0];
+    new Chart(complaintsCtx, {
+      type: "bar",
+      data: {
+        labels: finalLabels,
+        datasets: [
+          {
+            label: "Complaints",
+            data: finalData,
+            backgroundColor: "rgba(59, 130, 246, 0.8)",
+            hoverBackgroundColor: "rgba(96, 165, 250, 1)",
+            borderRadius: 4,
+            barPercentage: 0.6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          x: {
+            ticks: { color: "#d1d5db", font: { size: 10 } },
+            grid: { display: false },
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#d1d5db", precision: 0, font: { size: 10 } },
+            grid: { color: "#374151" },
+          },
+        },
+      },
+    });
+  }
+
+  // NLP Intelligence Impact (Bar)
+  const nlpCtx = document.getElementById("nlpIntelligenceImpactChart");
+  if (nlpCtx) {
+    const existing = Chart.getChart(nlpCtx);
+    if (existing) existing.destroy();
+    const trend = chartData.nlp_trend || {};
+    const labels = Object.keys(trend);
+    const dataPoints = labels.map(l => trend[l]);
+    const finalLabels = labels.length > 0 ? labels : ["No Data"];
+    const finalData = dataPoints.length > 0 ? dataPoints : [0];
+    new Chart(nlpCtx, {
+      type: "bar",
+      data: {
+        labels: finalLabels,
+        datasets: [
+          {
+            label: "NLP Impact",
+            data: finalData,
+            backgroundColor: "rgba(217, 70, 239, 0.85)",
+            hoverBackgroundColor: "rgba(232, 121, 249, 1)",
+            borderRadius: 4,
+            barPercentage: 0.6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          x: {
+            ticks: { color: "#d1d5db", font: { size: 10 } },
+            grid: { display: false },
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#d1d5db", precision: 0, font: { size: 10 } },
+            grid: { color: "#374151" },
+          },
         },
       },
     });

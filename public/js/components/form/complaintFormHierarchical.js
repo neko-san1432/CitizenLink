@@ -115,8 +115,7 @@ export async function initializecomplaintForm() {
   // Setup title auto-generation from description
   setupTitleAutoGeneration(form);
 
-  // Setup voice input
-  setupVoiceInput(form);
+
 
   // Setup duplicate detection
   setupDuplicateDetection(form);
@@ -419,143 +418,7 @@ function setupTitleAutoGeneration(form) {
   descriptionInput.addEventListener("blur", updateTitle); // Ensure final update
 }
 
-/**
- * Setup Voice Input using Web Speech API
- */
-/**
- * Setup Voice Input using Web Speech API
- */
-function setupVoiceInput(form) {
-  const micBtn = form.querySelector("#startSpeech");
-  const langSelect = form.querySelector("#voiceLanguage");
-  const descriptionInput = form.querySelector("#description");
 
-  if (!micBtn || !descriptionInput) return;
-
-  // Check browser support
-  if (
-    !("webkitSpeechRecognition" in window) &&
-    !("SpeechRecognition" in window)
-  ) {
-    micBtn.style.display = "none";
-    if (langSelect) langSelect.style.display = "none";
-    return;
-  }
-
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = new SpeechRecognition();
-
-  recognition.continuous = false; // Stop after one sentence/pause
-  recognition.interimResults = true;
-
-  let isListening = false;
-
-  micBtn.addEventListener("click", () => {
-    // Check for Secure Context (HTTPS or localhost)
-    if (!window.isSecureContext) {
-      showMessage(
-        "error",
-        "Microphone access requires a secure connection (HTTPS) or localhost. Please use http://localhost:3000 if testing locally."
-      );
-      return;
-    }
-
-    if (isListening) {
-      recognition.stop();
-      return;
-    }
-
-    // Set language from selector
-    if (langSelect) {
-      recognition.lang = langSelect.value;
-    }
-
-    try {
-      recognition.start();
-      isListening = true;
-      micBtn.classList.add("listening");
-      micBtn.style.background = "rgba(220, 38, 38, 0.2)"; // Red tint
-      micBtn.style.color = "#ef4444"; // Red color
-
-      // Visual feedback with language specific hint
-      const lang = langSelect ? langSelect.value : "en-US";
-      let hint = "Listening... Speak now";
-      if (lang === "tl-PH" || lang === "ceb-PH") {
-        hint = "Listening... (Speak clearly in the selected language)";
-      }
-      showMessage("info", hint);
-    } catch (e) {
-      console.error("Speech recognition error:", e);
-      isListening = false;
-      showMessage("error", "Unable to start speech recognition.");
-    }
-  });
-
-  recognition.onresult = (event) => {
-    let finalTranscript = "";
-    let interimTranscript = "";
-
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) {
-        finalTranscript += event.results[i][0].transcript;
-      } else {
-        interimTranscript += event.results[i][0].transcript;
-      }
-    }
-
-    // Determine where to insert (at cursor or append)
-    // For simplicity, we just append or replace
-    // Better UX: Append with space
-    if (finalTranscript) {
-      const curentVal = descriptionInput.value;
-      // If empty, just set. If not, append.
-      const newVal = curentVal
-        ? `${curentVal.trim()  } ${  finalTranscript.trim()}`
-        : finalTranscript.trim();
-      descriptionInput.value = newVal;
-
-      // Trigger input event for auto-resize and title generation
-      descriptionInput.dispatchEvent(new Event("input"));
-    }
-  };
-
-  recognition.onerror = (event) => {
-    console.warn("Speech recognition error", event.error);
-    isListening = false;
-    resetMicBtn(micBtn);
-
-    if (event.error === "not-allowed") {
-      if (!window.isSecureContext) {
-        showMessage(
-          "error",
-          "Microphone blocked due to insecure connection (HTTP). Please use localhost."
-        );
-      } else {
-        showMessage(
-          "error",
-          "Microphone access denied. Please check your browser permissions."
-        );
-      }
-    } else if (event.error === "no-speech") {
-      // Ignore no-speech error, just stop listening usually or show mild warning
-      // showMessage("info", "No speech detected.");
-    } else {
-      showMessage("error", `Speech recognition error: ${event.error}`);
-    }
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    resetMicBtn(micBtn);
-  };
-}
-
-function resetMicBtn(btn) {
-  btn.classList.remove("listening");
-  btn.style.background = "rgba(255, 255, 255, 0.1)";
-  btn.style.color = "inherit";
-}
 /**
  * Setup hierarchical category -> subcategory -> department selection
  */

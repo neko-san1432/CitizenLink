@@ -44,7 +44,7 @@ class ApiClient {
           if (error || !session) {
             // console.log removed for security
             // Import and show session expired toast
-            const { showMessage } = await import("../components/toast.js");
+            const { default: showMessage } = await import("../components/toast.js");
             showMessage("error", "Session expired. Please log in again.", 5000);
             setTimeout(() => {
               window.location.href = `${window.location.origin  }/login`;
@@ -66,7 +66,7 @@ class ApiClient {
           });
           if (retryResponse.status === 401) {
             // console.log removed for security
-            const { showMessage } = await import("../components/toast.js");
+            const { default: showMessage } = await import("../components/toast.js");
             showMessage("error", "Session expired. Please log in again.", 5000);
             setTimeout(() => {
               window.location.href = `${window.location.origin  }/login`;
@@ -76,7 +76,7 @@ class ApiClient {
           return await retryResponse.json();
         } catch (refreshError) {
           console.error("Token refresh failed:", refreshError);
-          const { showMessage } = await import("../components/toast.js");
+          const { default: showMessage } = await import("../components/toast.js");
           showMessage("error", "Session expired. Please log in again.", 5000);
           setTimeout(() => {
             window.location.href = "/login";
@@ -138,7 +138,7 @@ class ApiClient {
           });
         } else {
           console.error("Token refresh failed");
-          const { showMessage } = await import("../components/toast.js");
+          const { default: showMessage } = await import("../components/toast.js");
           showMessage("error", "Session expired. Please log in again.");
           setTimeout(() => { window.location.href = "/login"; }, 3000);
           return null;
@@ -168,7 +168,7 @@ class ApiClient {
           const { data: { session }, error } = await supabase.auth.refreshSession();
           if (error || !session) {
             // console.log removed for security
-            const { showMessage } = await import("../components/toast.js");
+            const { default: showMessage } = await import("../components/toast.js");
             showMessage("error", "Session expired. Please log in again.", 5000);
             setTimeout(() => {
               window.location.href = `${window.location.origin  }/login`;
@@ -191,7 +191,7 @@ class ApiClient {
           });
           if (retryResponse.status === 401) {
             // console.log removed for security
-            const { showMessage } = await import("../components/toast.js");
+            const { default: showMessage } = await import("../components/toast.js");
             showMessage("error", "Session expired. Please log in again.", 5000);
             setTimeout(() => {
               window.location.href = `${window.location.origin  }/login`;
@@ -201,7 +201,7 @@ class ApiClient {
           return await retryResponse.json();
         } catch (refreshError) {
           console.error("Token refresh failed:", refreshError);
-          const { showMessage } = await import("../components/toast.js");
+          const { default: showMessage } = await import("../components/toast.js");
           showMessage("error", "Session expired. Please log in again.", 5000);
           setTimeout(() => {
             window.location.href = "/login";
@@ -232,7 +232,7 @@ class ApiClient {
           const { data: { session }, error } = await supabase.auth.refreshSession();
           if (error || !session) {
             // console.log removed for security
-            const { showMessage } = await import("../components/toast.js");
+            const { default: showMessage } = await import("../components/toast.js");
             showMessage("error", "Session expired. Please log in again.", 5000);
             setTimeout(() => {
               window.location.href = `${window.location.origin  }/login`;
@@ -254,7 +254,7 @@ class ApiClient {
           });
           if (retryResponse.status === 401) {
             // console.log removed for security
-            const { showMessage } = await import("../components/toast.js");
+            const { default: showMessage } = await import("../components/toast.js");
             showMessage("error", "Session expired. Please log in again.", 5000);
             setTimeout(() => {
               window.location.href = `${window.location.origin  }/login`;
@@ -264,7 +264,7 @@ class ApiClient {
           return await retryResponse.json();
         } catch (refreshError) {
           console.error("Token refresh failed:", refreshError);
-          const { showMessage } = await import("../components/toast.js");
+          const { default: showMessage } = await import("../components/toast.js");
           showMessage("error", "Session expired. Please log in again.", 5000);
           setTimeout(() => {
             window.location.href = "/login";

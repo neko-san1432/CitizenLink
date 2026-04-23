@@ -466,6 +466,7 @@
    ACCESSIBILITY
    ============================================================================ */
 
+/* Reduced motion DISABLED per user request
 @media (prefers-reduced-motion: reduce) {
   .toast {
     transition: none;
@@ -483,6 +484,7 @@
     transition: none;
   }
 }
+*/
 
 @media (prefers-contrast: high) {
   .toast {

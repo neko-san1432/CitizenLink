@@ -273,18 +273,17 @@
 .hover\:shadow-lg:hover { box-shadow: var(--shadow-lg); }
 
 /* Animations */
-@media (prefers-reduced-motion: no-preference) {
-  .animate-fade-in {
-    animation: fadeIn var(--transition-md);
-  }
+/* Animations enabled by default per user request */
+.animate-fade-in {
+  animation: fadeIn var(--transition-md);
+}
 
-  .animate-slide-in {
-    animation: slideIn var(--transition-md);
-  }
+.animate-slide-in {
+  animation: slideIn var(--transition-md);
+}
 
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes fadeIn {

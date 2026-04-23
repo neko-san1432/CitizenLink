@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>Strategic Tactical Heatmap | DRIMS</title>
+    
+    <!-- External Dependencies -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- System Styles -->
+    <link rel="stylesheet" href="/css/base/style.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <link rel="stylesheet" href="/css/components/sidebar.css">
+    <link rel="stylesheet" href="/css/base/app.css">
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/pages/heatmapTactical.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: {
+                            900: '#020617',
+                            800: '#0f172a',
+                            700: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .leaflet-container { background: #020617 !important; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+
+ <body class="dark bg-obsidian-900 overflow-hidden">
+     <div class="app-container tactical-view">
+         <!-- System Shell (Hidden by default in CSS) -->
+         <div class="header-container fixed top-0 left-0 right-0 z-[2000]"></div>
+         <div id="sidebar" class="collapsible z-[2001]"></div>
+ 
+         <div id="map" class="tactical-map"></div>
+ 
+         <!-- Floating Sidebar Trigger -->
+         <button id="floating-menu-btn" class="tactical-hud glass-card flex items-center justify-center w-10 h-10 fixed top-4 left-4 z-[2005] cursor-pointer hover:bg-white/10 transition-colors pointer-events-auto">
+             <i class="fas fa-bars text-white"></i>
+         </button>
+ 
+         <!-- TACTICAL HUD SYSTEM -->
+         <!-- HUD TOP: Strategic Command Header -->
+         <header id="hud-top" class="tactical-hud fixed top-4 left-1/2 -translate-x-1/2 w-auto max-w-[99vw] z-[2002]">
+             <div class="glass-card flex items-center gap-2 p-2 w-full overflow-x-auto no-scrollbar">
+                 <a href="/lgu/dashboard" class="hud-btn hud-btn-secondary h-8 w-8 p-0 shrink-0" title="Back to Intelligence Dashboard">
+                     <i class="fas fa-arrow-left text-[10px]"></i>
+                 </a>
+                 
+                 <div class="flex flex-col ml-1 min-w-[120px] shrink-0">
+                     <h1 class="text-[9px] font-black uppercase tracking-tighter text-blue-400 leading-none">Strategic Heatmap</h1>
+                     <div class="flex items-center gap-1 mt-0.5">
+                         <span class="text-[10px] font-bold text-white leading-none" id="totalcomplaints">--</span>
+                         <span class="text-[7px] font-bold text-gray-500 uppercase tracking-widest leading-none">Reports</span>
+                     </div>
+                 </div>
+ 
+                 <div class="h-6 w-px bg-white/10 mx-1 shrink-0"></div>
+ 
+                 <!-- Filters Section -->
+                 <div class="flex items-center gap-2 shrink-0">
+                     <!-- Temporal Range -->
+                     <div class="flex flex-col">
+                         <span class="text-[7px] uppercase text-blue-400/60 font-black tracking-widest mb-0.5">Temporal Range</span>
+                         <div class="flex items-center gap-1">
+                             <input type="date" id="date-range-start" class="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-[9px] font-bold text-white outline-none focus:border-blue-500/50 h-7 w-24">
+                             <span class="text-white/20 text-[8px] font-bold">TO</span>
+                             <input type="date" id="date-range-end" class="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-[9px] font-bold text-white outline-none focus:border-blue-500/50 h-7 w-24">
+                         </div>
+                     </div>
+ 
+                     <div class="h-6 w-px bg-white/10 mx-1"></div>
+ 
+                     <!-- Classification -->
+                     <div class="flex flex-col min-w-[160px]">
+                         <span class="text-[7px] uppercase text-blue-400/60 font-black tracking-widest mb-0.5">Classification</span>
+                         <div class="flex gap-1">
+                             <select id="category-filter-preset" class="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-[9px] font-bold text-white outline-none focus:border-blue-500/50 w-1/2 h-7">
+                                 <option value="">Category</option>
+                             </select>
+                             <select id="subcategory-filter-preset" class="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-[9px] font-bold text-white outline-none focus:border-blue-500/50 w-1/2 h-7">
+                                 <option value="">Sub</option>
+                             </select>
+                         </div>
+                     </div>
+                 </div>
+ 
+                 <div class="h-6 w-px bg-white/10 mx-1 shrink-0"></div>
+ 
+                 <!-- TRIGGER: Apply Button -->
+                 <button id="apply-filters-btn" class="hud-btn h-8 px-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/40 transition-all flex items-center justify-center gap-1 shrink-0" title="Apply Filters & Sync Data">
+                     <i class="fas fa-sync-alt text-[9px]"></i>
+                     <span class="text-[9px] font-black uppercase">Sync</span>
+                 </button>
+ 
+                 <div class="h-6 w-px bg-white/10 mx-1 shrink-0"></div>
+ 
+                 <!-- Intelligence/Search Area -->
+                 <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+                     <div class="relative w-32 focus-within:w-48 transition-all">
+                         <i class="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[9px]"></i>
+                         <input type="text" placeholder="Search..." 
+                                class="w-full bg-black/40 border border-white/5 rounded h-7 pl-6 pr-2 text-[9px] font-medium text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 transition-all">
+                     </div>
+                     
+                     <button id="toolbar-insights-btn" class="hud-btn hud-btn-primary h-7 w-7 p-0 shrink-0" title="AI Intelligence">
+                         <i class="fas fa-bolt text-[10px]"></i>
+                     </button>
+                 </div>
+             </div>
+         </header>
+ 
+         <!-- HUD LEFT: Tactical Layer Controls -->
+          <div id="hud-left" class="tactical-hud fixed left-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-[2002] pointer-events-auto">
+              <div id="reset-view-btn" class="layer-toggle glass-card w-10 h-10 flex items-center justify-center hover:text-blue-400 transition-all cursor-pointer pointer-events-auto" title="Reset Origin">
+                  <i class="fas fa-crosshairs"></i>
+              </div>
+              <div class="w-10 h-[1px] bg-white/10 my-1"></div>
+              <div id="toggle-heatmap-btn" class="layer-toggle glass-card w-10 h-10 flex items-center justify-center active text-blue-400 cursor-pointer pointer-events-auto" title="Intensity Heatmap">
+                  <i class="fas fa-fire"></i>
+              </div>
+              <div id="toggle-markers-btn" class="layer-toggle glass-card w-10 h-10 flex items-center justify-center cursor-pointer pointer-events-auto" title="Individual Markers">
+                  <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div id="toggle-clusters-btn" class="layer-toggle glass-card w-10 h-10 flex items-center justify-center cursor-pointer pointer-events-auto" title="AI Clusters">
+                  <i class="fas fa-project-diagram"></i>
+              </div>
+          </div>
+
+          <!-- HUD RIGHT: Status Filters -->
+          <div id="hud-right-filters" class="tactical-hud fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-[2002]">
+              <div class="glass-card flex flex-col gap-2 p-2 items-center">
+                  <span class="text-[7px] uppercase text-blue-400/60 font-black tracking-widest text-center">Complaint<br>Statuses</span>
+                  <div class="flex flex-col gap-1.5" id="status-filters-hud">
+                      <label class="status-pill status-submitted"><input type="checkbox" class="status-checkbox hidden" value="submitted,new" checked><span class="w-10 h-6 flex items-center justify-center rounded text-[9px]">SUB</span></label>
+                      <label class="status-pill status-verified"><input type="checkbox" class="status-checkbox hidden" value="verified" checked><span class="w-10 h-6 flex items-center justify-center rounded text-[9px]">VER</span></label>
+                      <label class="status-pill status-assigned"><input type="checkbox" class="status-checkbox hidden" value="assigned" checked><span class="w-10 h-6 flex items-center justify-center rounded text-[9px]">ASG</span></label>
+                      <label class="status-pill status-action"><input type="checkbox" class="status-checkbox hidden" value="action_taken,in_progress" checked><span class="w-10 h-6 flex items-center justify-center rounded text-[9px]">ACT</span></label>
+                      <label class="status-pill status-resolved"><input type="checkbox" class="status-checkbox hidden" value="resolved" checked><span class="w-10 h-6 flex items-center justify-center rounded text-[9px]">RES</span></label>
+                  </div>
+              </div>
+          </div>
+ 
+          <!-- LIVE ALERTS PANEL (Bottom Left) -->
+          <div class="fixed bottom-6 left-6 z-[2002]">
+              <div class="glass-card emergency-bar cursor-pointer group" id="emergency-toggle">
+                  <div class="emergency-dot"></div>
+                  <div class="flex flex-col">
+                      <span class="text-[10px] font-black uppercase tracking-widest text-rose-500">Emergency Radar</span>
+                      <span class="text-xs font-bold" id="emergencyCount">0 Active Anomalies</span>
+                  </div>
+                  <i class="fas fa-chevron-up text-gray-500 ml-4 group-hover:text-white transition-transform" id="emergencyArrow"></i>
+              </div>
+          </div>
+ 
+          <!-- Emergency Matrix Modal -->
+          <div id="emergencyPanel" class="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-md hidden items-center justify-center p-6">
+              <div class="glass-card w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden">
+                  <div class="p-6 border-b border-white/10 flex justify-between items-center bg-rose-500/10">
+                      <div class="flex items-center gap-3">
+                          <i class="fas fa-exclamation-triangle text-rose-500 text-2xl"></i>
+                          <div>
+                              <h2 class="text-xl font-black uppercase tracking-tighter">Emergency Response Matrix</h2>
+                              <p class="text-xs text-rose-400 font-bold uppercase tracking-widest text-white">Priority incidents requiring immediate LGU action</p>
+                          </div>
+                      </div>
+                      <button id="closeEmergencyBtn" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center">
+                          <i class="fas fa-times text-white"></i>
+                      </button>
+                  </div>
+                  <div class="flex-1 overflow-y-auto p-6 custom-scroll" id="emergencyContent">
+                      <!-- Cards injected via JS -->
+                  </div>
+              </div>
+          </div>
+      </div>
+
+    <!-- System Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    
+    <script src="/js/components/map/mapGenerator.js"></script>
+    <script src="/js/components/map/boundaryGenerator.js"></script>
+    <script src="/js/components/map/adaptiveDbscan.js"></script>
+    <script src="/js/components/map/heatmapVisualization.js"></script>
+
+    <script type="module" src="/js/pages/heatmapInit.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+
+    <script>
+        // UI Enhancements for Tactical HUD
+        document.getElementById('emergency-toggle')?.addEventListener('click', () => {
+            document.getElementById('emergencyPanel').classList.remove('hidden');
+            document.getElementById('emergencyPanel').classList.add('flex');
+        });
+        document.getElementById('closeEmergencyBtn')?.addEventListener('click', () => {
+            document.getElementById('emergencyPanel').classList.add('hidden');
+            document.getElementById('emergencyPanel').classList.remove('flex');
+        });
+    </script>
+
+    <script>
+    // ============================================================
+    // STANDALONE HUD Layer Toggles — No module dependency
+    // Mutually exclusive: clicking one deactivates the others.
+    // ============================================================
+    (function() {
+        const LAYER_BTNS = [
+            { id: 'toggle-heatmap-btn',  type: 'heatmap'  },
+            { id: 'toggle-markers-btn',  type: 'markers'  },
+            { id: 'toggle-clusters-btn', type: 'clusters'  }
+        ];
+
+        function getViz() { return window.heatmapViz; }
+
+        function hideAllLayers() {
+            const viz = getViz();
+            if (!viz) return;
+            try { viz.hideHeatmap(); } catch(e) {}
+            try { viz.hideMarkers(); } catch(e) {}
+            try { viz.toggleClustering(false); } catch(e) {}
+        }
+
+        function showLayer(type) {
+            const viz = getViz();
+            if (!viz) { console.warn('[HUD-INLINE] heatmapViz not ready'); return; }
+            try {
+                if (type === 'heatmap') viz.showHeatmap();
+                if (type === 'markers') {
+                    // Ensure marker layer exists before showing
+                    if (!viz.markerLayer || (viz.markerLayer.getLayers && viz.markerLayer.getLayers().length === 0)) {
+                        viz.createMarkerLayer();
+                    }
+                    viz.showMarkers();
+                }
+                if (type === 'clusters') viz.toggleClustering(true);
+            } catch(e) { console.error('[HUD-INLINE] showLayer error:', e); }
+        }
+
+        function syncUI(activeId) {
+            LAYER_BTNS.forEach(function(b) {
+                var el = document.getElementById(b.id);
+                if (!el) return;
+                if (b.id === activeId) {
+                    el.classList.add('active', 'text-blue-400');
+                } else {
+                    el.classList.remove('active', 'text-blue-400');
+                }
+            });
+        }
+
+        function attachListeners() {
+            LAYER_BTNS.forEach(function(btnInfo) {
+                var btn = document.getElementById(btnInfo.id);
+                if (!btn) { console.warn('[HUD-INLINE] Button not found:', btnInfo.id); return; }
+
+                // Remove any duplicate listeners by cloning
+                var newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var wasActive = newBtn.classList.contains('active');
+                    console.log('[HUD-INLINE] Clicked', btnInfo.type, 'wasActive:', wasActive);
+
+                    // 1. Kill all layers
+                    hideAllLayers();
+
+                    if (!wasActive) {
+                        // 2. Activate this one
+                        syncUI(btnInfo.id);
+                        showLayer(btnInfo.type);
+                        console.log('[HUD-INLINE] Activated', btnInfo.type);
+                    } else {
+                        // 3. Toggle off — nothing active
+                        syncUI(null);
+                        console.log('[HUD-INLINE] Deactivated all');
+                    }
+                });
+            });
+            console.log('[HUD-INLINE] Layer toggle listeners attached');
+        }
+
+        // Attach immediately — DOM is ready since this script is at the bottom
+        attachListeners();
+
+        // Reset Origin button
+        var resetBtn = document.getElementById('reset-view-btn');
+        if (resetBtn) {
+            // Clone to nuke any stale listeners
+            var newResetBtn = resetBtn.cloneNode(true);
+            resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+            newResetBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var viz = getViz();
+                if (viz && viz.map) {
+                    viz.map.setView([6.854282, 125.318462], 11, { animate: true });
+                    console.log('[HUD-INLINE] Reset to origin');
+                } else {
+                    console.warn('[HUD-INLINE] Cannot reset: heatmapViz or map not ready');
+                }
+            });
+            console.log('[HUD-INLINE] Reset Origin listener attached');
+        }
+    })();
+    </script>
+</body>
+
+</html>

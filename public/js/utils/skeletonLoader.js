@@ -44,13 +44,25 @@ class SkeletonLoader {
   shouldShow() {
     try {
       const path = (window.location.pathname || "").toLowerCase();
-      // Check if path is in excluded list
-      if (this.excludedPaths.includes(path)) return false;
+      
+      // 1. Check exclusion list (expanded)
+      const isExcluded = [
+        "/", "/login", "/signup", "/signup-with-code", 
+        "/reset-password", "/resetpassword", "/success", 
+        "/oauth-callback", "/privacy", "/terms", "/404", "/500"
+      ].some(p => path === p || path.startsWith(p + "/"));
+      
+      if (isExcluded) return false;
 
-      // Check if it's the root (landing page)
-      if (path === "/" || path === "" || path.endsWith("index.html")) return false;
+      // 2. Exclude all Dashboard variants
+      if (path.includes("dashboard")) return false;
 
-      // Check if specifically disabled via URL param (for debugging)
+      // 3. Smart Detection: If a local skeleton already exists in HTML, don't overlay
+      if (document.getElementById("dashboard-loading") || document.querySelector(".dashboard-loading")) {
+        return false;
+      }
+
+      // Check if specifically disabled via URL param
       if (window.location.search.includes("no-skeleton")) return false;
 
       return true;

@@ -1,6 +1,10 @@
 <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
 <div class="app-container">
-    <div class="header-container"></div>
+    <div class="header-container">
+        <button id="menu-toggle" class="menu-toggle" aria-label="Open sidebar" aria-expanded="false" tabindex="0">
+            <span class="menu-toggle-icon" aria-hidden="true">&#9776;</span>
+        </button>
+    </div>
     <div id="sidebar" class="collapsible"></div>
 
     <div id="app" class="collapsible <%= locals.appClass || '' %>">

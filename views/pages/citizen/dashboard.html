@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/css/pages/dashboardCommon.css" />
   <link rel="stylesheet" href="/css/pages/dashboardRedesign.css" />
   <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
+  <link rel="stylesheet" href="/css/components/skeleton.css" />
   <script type="module" src="/js/utils/theme.js"></script>
 
 </head>
@@ -36,46 +37,45 @@
         <!-- Main Content Grid -->
         <div class="dashboard-content gap-4 p-4 relative" style="flex: 1;">
           <!-- Global Skeleton Loader -->
-          <div id="dashboard-loading" class="dashboard-loading dash-new-container"
-            style="display: flex; flex-direction: column; width: 100%;">
+          <div id="dashboard-loading" class="dashboard-loading dash-new-container" style="display: flex; flex-direction: column; width: 100%;">
             <!-- Welcome Skeleton -->
             <div class="dash-welcome">
-              <div class="skeleton" style="height: 36px; width: 280px; border-radius: 8px; margin-bottom: 10px;"></div>
-              <div class="skeleton" style="height: 24px; width: 360px; border-radius: 6px;"></div>
+              <div class="skeleton skeleton-welcome-title"></div>
+              <div class="skeleton skeleton-welcome-subtitle"></div>
             </div>
 
             <!-- Quick Actions Skeleton -->
             <div class="dash-quick-actions">
-              <div class="skeleton" style="height: 92px; border-radius: 16px;"></div>
-              <div class="skeleton" style="height: 92px; border-radius: 16px;"></div>
-              <div class="skeleton" style="height: 92px; border-radius: 16px;"></div>
+              <div class="skeleton skeleton-action-card"></div>
+              <div class="skeleton skeleton-action-card"></div>
+              <div class="skeleton skeleton-action-card"></div>
             </div>
 
             <!-- Mid Section Skeleton -->
             <div class="dash-mid-section">
               <div class="dash-box" style="padding: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
-                  <div class="skeleton" style="height: 28px; width: 320px; border-radius: 6px;"></div>
-                  <div class="skeleton" style="height: 24px; width: 220px; border-radius: 6px;"></div>
+                  <div class="skeleton skeleton-box-title"></div>
+                  <div class="skeleton skeleton-box-meta"></div>
                 </div>
-                <div class="skeleton" style="height: 170px; border-radius: 12px;"></div>
+                <div class="skeleton skeleton-box-content"></div>
               </div>
 
               <div class="dash-box" style="padding: 1.25rem;">
-                <div class="skeleton" style="height: 28px; width: 240px; border-radius: 6px; margin-bottom: 1rem;"></div>
-                <div class="skeleton" style="height: 150px; border-radius: 12px;"></div>
+                <div class="skeleton skeleton-box-title" style="width: 240px; margin-bottom: 1rem;"></div>
+                <div class="skeleton skeleton-box-content" style="height: 150px;"></div>
               </div>
 
               <div class="dash-box" style="padding: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
-                  <div class="skeleton" style="height: 28px; width: 200px; border-radius: 6px;"></div>
-                  <div class="skeleton" style="height: 24px; width: 28px; border-radius: 6px;"></div>
+                  <div class="skeleton skeleton-box-title" style="width: 200px;"></div>
+                  <div class="skeleton skeleton-box-meta" style="width: 28px;"></div>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
-                  <div class="skeleton" style="height: 56px; border-radius: 12px;"></div>
-                  <div class="skeleton" style="height: 56px; border-radius: 12px;"></div>
-                  <div class="skeleton" style="height: 56px; border-radius: 12px;"></div>
-                  <div class="skeleton" style="height: 56px; border-radius: 12px;"></div>
+                  <div class="skeleton skeleton-category-item"></div>
+                  <div class="skeleton skeleton-category-item"></div>
+                  <div class="skeleton skeleton-category-item"></div>
+                  <div class="skeleton skeleton-category-item"></div>
                 </div>
               </div>
             </div>

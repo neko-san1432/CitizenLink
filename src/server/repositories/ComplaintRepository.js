@@ -542,6 +542,10 @@ class ComplaintRepository {
     return await this.findLocationsSlim(filters);
   }
 
+  async getLocationsSlim(filters = {}) {
+    return await this.findLocationsSlim(filters);
+  }
+
   async getStats(filters = {}) {
     try {
       const client = Database.getServiceClient();
@@ -670,13 +674,9 @@ class ComplaintRepository {
       const confirmArr = toArray(confirmationStatus);
       const subcategoryArr = toArray(subcategory);
       const categoryArr = toArray(category);
-      const deptArr = toArray(department);
 
       const categoryIds = await this._lookupIdsByName(categoryArr, "category");
-      const subcategoryIds = await this._lookupIdsByName(
-        subcategoryArr,
-        "subcategory"
-      );
+      const subcategoryIds = await this._lookupIdsByName(subcategoryArr, "subcategory");
 
       // Exclude resolved/cancelled unless includeResolved is true
       if (!includeResolved) {
@@ -773,18 +773,9 @@ class ComplaintRepository {
         ({ data, error } = await query.limit(25000));
       }
 
-
       if (error) throw error;
 
-      // Filter by department in-memory (departments is an array column)
-      let results = data || [];
-      if (deptArr.length > 0) {
-        const deptUpper = deptArr.map(d => String(d).toUpperCase().trim());
-        results = results.filter(c => {
-          const depts = Array.isArray(c.departments) ? c.departments : [];
-          return depts.some(d => deptUpper.includes(String(d).toUpperCase().trim()));
-        });
-      }
+      const results = data || [];
 
       // Resolve UUID-based category/subcategory values to names
       // If category/subcategory columns are absent, this method should be a no-op.

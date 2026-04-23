@@ -50,7 +50,8 @@
 
 /* Navigation */
 .navbar {
-  position: relative; /* Change from fixed so it takes up space and pushes content down */
+  position: relative;
+  /* Change from fixed so it takes up space and pushes content down */
   width: 100%;
   flex-shrink: 0;
   height: 70px;
@@ -68,7 +69,8 @@
 }
 
 .nav-container {
-  max-width: 1200px; /* MATCH LOGIN WIDTH */
+  max-width: 1200px;
+  /* MATCH LOGIN WIDTH */
   margin: 0 auto;
   width: 100%;
   display: flex;
@@ -148,8 +150,8 @@
   min-height: 100vh;
   width: 100%;
   padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
+  margin: 0 !important;
+  box-sizing: border-box;
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -204,13 +206,16 @@ body {
 .auth-container {
   width: 100%;
   max-width: 1200px;
-  flex: 1; /* expand to take remaining space below navbar */
+  flex: 1;
+  /* expand to take remaining space below navbar */
   display: flex;
-  align-items: flex-start; /* keep flex-start so it doesn't top clip */
+  align-items: flex-start;
+  /* keep flex-start so it doesn't top clip */
   justify-content: center;
   position: relative;
   z-index: 10;
-  padding: 2rem 1rem; /* 2rem top/bottom padding acts as minimum gap to navbar/footer */
+  padding: 2rem 1rem;
+  /* 2rem top/bottom padding acts as minimum gap to navbar/footer */
   margin: 0 auto;
 }
 
@@ -230,8 +235,10 @@ body {
   /* Changed from grid to flex column */
   flex-direction: column;
   box-sizing: border-box;
-  margin: auto; /* Vertically and horizontally centers safely inside the flex start container */
-  max-height: calc(100vh - 120px); /* 70 nav + 50 padding */
+  margin: auto;
+  /* Vertically and horizontally centers safely inside the flex start container */
+  max-height: calc(100vh - 120px);
+  /* 70 nav + 50 padding */
   /* Ensure card fits within viewport to enable internal scrolling */
 }
 
@@ -835,8 +842,8 @@ body {
 .visual-highlights {
   list-style: none;
   padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
+  margin: 0 !important;
+  box-sizing: border-box;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -1526,7 +1533,7 @@ html.dark .id-verify-review {
 
 .terms-link:hover {
   color: var(--primary-700);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .input:invalid {
@@ -1966,12 +1973,12 @@ body {
 
 .auth-link:hover {
   color: var(--primary-700);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Small mobile devices */
 @media (max-width: 480px) {
-/* Removed padding that squeezed navbar */
+  /* Removed padding that squeezed navbar */
 
   .auth-header {
     padding: 1rem 1rem 0.75rem;
@@ -2053,18 +2060,19 @@ body {
 
 /* Tablet styles - Side by side layout */
 @media (min-width: 769px) {
-/* Removed padding that squeezed navbar */
+  /* Removed padding that squeezed navbar */
 
   .auth-container {
     max-width: 1200px;
   }
 
   .auth-card {
-    max-width: 600px; /* MATCH LOGIN WIDTH */
+    max-width: 600px;
+    /* MATCH LOGIN WIDTH */
     max-height: 85vh;
     height: auto;
     /* removed display grid */
-    
+
   }
 
   .auth-form {
@@ -2134,14 +2142,16 @@ body {
 
 /* Desktop styles - Enhanced side by side layout */
 @media (min-width: 1024px) {
-/* Removed padding that squeezed navbar */
+  /* Removed padding that squeezed navbar */
 
   .auth-container {
-    max-width: 1200px; /* MATCH LOGIN WIDTH */
+    max-width: 1200px;
+    /* MATCH LOGIN WIDTH */
   }
 
   .auth-card {
-    max-width: 600px; /* MATCH LOGIN WIDTH */
+    max-width: 600px;
+    /* MATCH LOGIN WIDTH */
     max-height: 85vh;
     height: auto;
   }
@@ -2315,38 +2325,31 @@ body {
 
 /* Removed conflicting .signup-page/.auth-page block entirely */
 
-@media (min-width: 1024px) {
+@media (min-width: 1024px) {}
 
-  
-}
+@media (min-width: 1280px) {}
 
-@media (min-width: 1280px) {
-
-  
-}
-
-@media (min-width: 1536px) {
-
-  
-}
+@media (min-width: 1536px) {}
 
 .auth-container {
   z-index: 1;
   width: 100%;
-  max-width: 1200px; /* MATCH LOGIN WIDTH */
+  max-width: 1200px;
+  /* MATCH LOGIN WIDTH */
   height: auto;
   /* let content define height */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
+  margin: 0 !important;
+  box-sizing: border-box;
 }
 
 @media (min-width: 1024px) {
   .auth-container {
-    max-width: 1200px; /* MATCH LOGIN WIDTH */
+    max-width: 1200px;
+    /* MATCH LOGIN WIDTH */
   }
 }
 
@@ -2452,8 +2455,8 @@ body {
 /* Middle area with internal scroll when needed */
 .auth-form {
   padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
+  margin: 0 !important;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -2967,1107 +2970,1105 @@ body {
 }
 
 @media (max-width: 480px) {
-  .auth-card .auth-form {
-}
+  .auth-card .auth-form {}
 
-/* Signup method selector */
-.signup-method-section {
-  margin-bottom: clamp(20px, 3vw, 32px);
-  padding: 0 !important;
+  /* Signup method selector */
+  .signup-method-section {
+    margin-bottom: clamp(20px, 3vw, 32px);
+    padding: 0 !important;
     margin: 0 !important;
     box-sizing: border-box;
-  /* Remove padding as it's inside the card now */
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
+    /* Remove padding as it's inside the card now */
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
 
-.method-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--text-light);
-  /* Fix black text */
-  margin-bottom: 0.5rem;
-}
+  .method-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    /* Fix black text */
+    margin-bottom: 0.5rem;
+  }
 
-.method-header p {
-  margin: 0;
-  color: var(--text-dim);
-  /* Fix gray text */
-  font-size: 0.95rem;
-}
+  .method-header p {
+    margin: 0;
+    color: var(--text-dim);
+    /* Fix gray text */
+    font-size: 0.95rem;
+  }
 
-.method-eyebrow {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  /* Wider spacing for elegance */
-  color: var(--primary-400);
-  /* Lighter primary color */
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  opacity: 0.9;
-}
+  .method-eyebrow {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    /* Wider spacing for elegance */
+    color: var(--primary-400);
+    /* Lighter primary color */
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+  }
 
-.signup-method-grid {
-  margin-top: clamp(16px, 2vw, 24px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.signup-method-card {
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  background: rgba(255, 255, 255, 0.03);
-  /* Lighter glass */
-  /* Better contrast against dark container */
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: left;
-  width: 100%;
-}
-
-.signup-method-card .method-body {
-  flex: 1;
-}
-
-.signup-method-card h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #f8fafc !important;
-  /* Explicit light text with important */
-  margin: 0 0 0.25rem 0;
-}
-
-.signup-method-card p {
-  color: #cbd5e1 !important;
-  /* Lighter gray for better contrast with important */
-  margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-.signup-method-card .method-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #f8fafc !important;
-  /* Force light icon */
-  border: 1px solid var(--glass-border);
-}
-
-.signup-method-card .method-chevron {
-  font-size: 1.25rem;
-  color: #cbd5e1 !important;
-  /* Force light chevron */
-}
-
-.signup-method-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--primary-400);
-  /* Brighter border */
-  transform: translateY(-2px) scale(1.005);
-  /* Subtle scale up */
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
-  /* Deeper shadow */
-}
-
-.signup-method-card:hover .method-chevron {
-  color: var(--text-light);
-  transform: translateX(4px);
-  /* More pronounced arrow movement */
-}
-
-.signup-flow-placeholder {
-  margin-bottom: clamp(16px, 1.5vw, 24px);
-}
-
-.placeholder-card {
-  border: 1px dashed rgba(15, 23, 42, 0.2);
-  border-radius: var(--radius-xl);
-  padding: clamp(14px, 1.5vw, 20px);
-  background: rgba(248, 250, 252, 0.75);
-  color: var(--gray-600);
-}
-
-.signup-email-flow[hidden] {
-  display: none;
-}
-
-.signup-progress-indicator {
-  margin-bottom: clamp(18px, 1.75vw, 24px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.progress-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-dim);
-  /* Fixed contrast */
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.signup-method-back {
-  border: none;
-  background: transparent;
-  color: var(--text-light);
-  /* Fixed contrast */
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
-  margin-bottom: 0;
-  cursor: pointer;
-}
-
-.signup-method-back .back-icon {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.signup-method-back:hover,
-.signup-method-back:focus-visible {
-  color: var(--primary-400);
-  text-decoration: underline;
-}
-
-/* Progressive signup steps */
-.signup-steps {
-  display: block;
-}
-
-.signup-step {
-  width: 100%;
-  box-sizing: border-box;
-  background: transparent;
-  /* Fix white background override */
-  border: none;
-  border-radius: 0;
-  padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  /* Reduced gap */
-  position: relative;
-  isolation: isolate;
-}
-
-.signup-step .form-group {
-  width: 100%;
-}
-
-.signup-step .form-group.form-half {
-  width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .signup-step {
+  .signup-method-grid {
+    margin-top: clamp(16px, 2vw, 24px);
     display: flex;
     flex-direction: column;
+    gap: 12px;
+  }
+
+  .signup-method-card {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: rgba(255, 255, 255, 0.03);
+    /* Lighter glass */
+    /* Better contrast against dark container */
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    width: 100%;
+  }
+
+  .signup-method-card .method-body {
+    flex: 1;
+  }
+
+  .signup-method-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f8fafc !important;
+    /* Explicit light text with important */
+    margin: 0 0 0.25rem 0;
+  }
+
+  .signup-method-card p {
+    color: #cbd5e1 !important;
+    /* Lighter gray for better contrast with important */
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .signup-method-card .method-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f8fafc !important;
+    /* Force light icon */
+    border: 1px solid var(--glass-border);
+  }
+
+  .signup-method-card .method-chevron {
+    font-size: 1.25rem;
+    color: #cbd5e1 !important;
+    /* Force light chevron */
+  }
+
+  .signup-method-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-400);
+    /* Brighter border */
+    transform: translateY(-2px) scale(1.005);
+    /* Subtle scale up */
+    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
+    /* Deeper shadow */
+  }
+
+  .signup-method-card:hover .method-chevron {
+    color: var(--text-light);
+    transform: translateX(4px);
+    /* More pronounced arrow movement */
+  }
+
+  .signup-flow-placeholder {
+    margin-bottom: clamp(16px, 1.5vw, 24px);
+  }
+
+  .placeholder-card {
+    border: 1px dashed rgba(15, 23, 42, 0.2);
+    border-radius: var(--radius-xl);
+    padding: clamp(14px, 1.5vw, 20px);
+    background: rgba(248, 250, 252, 0.75);
+    color: var(--gray-600);
+  }
+
+  .signup-email-flow[hidden] {
+    display: none;
+  }
+
+  .signup-progress-indicator {
+    margin-bottom: clamp(18px, 1.75vw, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .progress-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    /* Fixed contrast */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .signup-method-back {
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    /* Fixed contrast */
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+
+  .signup-method-back .back-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .signup-method-back:hover,
+  .signup-method-back:focus-visible {
+    color: var(--primary-400);
+    text-decoration: none;
+  }
+
+  /* Progressive signup steps */
+  .signup-steps {
+    display: block;
+  }
+
+  .signup-step {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    /* Fix white background override */
+    border: none;
+    border-radius: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* Reduced gap */
+    position: relative;
+    isolation: isolate;
   }
 
   .signup-step .form-group {
     width: 100%;
   }
-}
 
-.signup-step[hidden] {
-  display: none;
-}
-
-.step-card-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: flex-start;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  padding-bottom: clamp(8px, 1vw, 12px);
-}
-
-.step-chip {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  padding: 0.25rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary-700);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.step-card-copy h3 {
-  margin: 0;
-  font-size: 1.15rem;
-  color: var(--gray-900);
-}
-
-.step-card-copy p {
-  margin: 4px 0 0;
-  color: var(--gray-600);
-  font-size: 0.95rem;
-  line-height: 1.45;
-}
-
-.signup-step .form-group {
-  margin-bottom: 12px;
-}
-
-.signup-step .input,
-.signup-step .phone-input,
-.signup-step .phone-input-wrapper {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--glass-border);
-  transition: border-color 160ms ease, background 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.signup-step .phone-prefix {
-  background: transparent !important;
-  border-right: 1px solid var(--glass-border) !important;
-  color: var(--text-light) !important;
-}
-
-.signup-step .input:focus,
-.signup-step .phone-input-wrapper:focus-within {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--primary-400);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.signup-progress-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-  width: 100%;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: var(--gray-100);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-700));
-  width: 0%;
-  transition: width 240ms ease;
-}
-
-.step-actions {
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-2);
-  align-items: center;
-  justify-content: flex-end;
-  /* Align buttons to the right */
-  margin-top: var(--space-4);
-}
-
-.step-actions .btn {
-  min-width: 120px;
-}
-
-/* Keep controls compact on small screens */
-@media (max-width: 768px) {
-  .auth-content {
-    flex-direction: column;
-  }
-
-  .auth-sidebar {
-    order: 2;
-    display: flex;
-    border-left: none;
-    border-top: 1px solid var(--gray-200);
-    background: transparent;
-    padding: var(--space-4) 0;
-    gap: var(--space-4);
-  }
-
-  .signup-progress-controls {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .step-actions {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    /* Space out buttons on mobile */
-    gap: var(--space-3);
-  }
-
-  .signup-step {
-    padding: 1.25rem;
-    border-radius: var(--radius-xl);
-  }
-
-  .step-actions .btn {
+  .signup-step .form-group.form-half {
     width: 100%;
   }
-}
 
-/* Wrapper for the full-width signup method section */
-.signup-method-wrapper {
-  padding: 0 clamp(8px, 1vw, 16px);
-  width: 100%;
-  box-sizing: border-box;
-}
+  @media (min-width: 1024px) {
+    .signup-step {
+      display: flex;
+      flex-direction: column;
+    }
 
-@media (min-width: 1024px) {
-  .signup-method-wrapper {
-    padding: 0 3rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .signup-method-wrapper {
-    padding: 0 3rem;
-    /* Keep aligned with auth-content */
-  }
-}
-
-/* Ensure the section inside doesn't have conflicting margins */
-.signup-method-section {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Restore grid layout for main column */
-.signup-method-grid {
-  margin-top: clamp(16px, 2vw, 24px);
-  /* removed display grid */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: clamp(12px, 1.25vw, 18px);
-}
-
-.signup-method-card {
-  width: 100%;
-  /* Reset flex properties if any */
-  flex: initial;
-  padding: clamp(16px, 1.5vw, 24px);
-  flex-direction: row;
-  text-align: left;
-}
-
-.signup-method-card .method-copy,
-.signup-method-card .method-chevron {
-  display: block;
-  /* Restore visibility */
-}
-
-.signup-method-card .method-body {
-  align-items: flex-start;
-}
-
-/* Responsive: Stack on small screens */
-@media (max-width: 768px) {
-  .auth-extras-row {
-    flex-direction: column;
-  }
-}
-
-/* Disabled summary state for inactive review section */
-.review-summary-disabled {
-  color: var(--gray-400);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Progressive Signup Styles */
-.signup-progress-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
-}
-
-.signup-progress-bar {
-  width: 100%;
-  height: 6px;
-  background-color: var(--gray-200);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.signup-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
-  border-radius: 999px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.signup-progress-label {
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  font-weight: 500;
-  text-align: right;
-}
-
-.signup-step {
-  animation: fadeInSignup 0.3s ease-out;
-}
-
-/* Step Titles */
-.step-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--gray-100);
-}
-
-/* Actions */
-.signup-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--gray-100);
-}
-
-@keyframes fadeInSignup {
-  from {
-    opacity: 0;
-    transform: translateY(0);
+    .signup-step .form-group {
+      width: 100%;
+    }
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Dark Mode Overrides for Signup Method Cards */
-.signup-method-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: var(--text-light);
-  border-radius: var(--radius-lg);
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-
-
-.signup-method-card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--glass-border);
-  transform: translateY(-2px);
-}
-
-.method-title {
-  color: var(--text-light);
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 0.25rem;
-}
-
-.method-copy {
-  color: var(--text-dim);
-  font-size: 0.9rem;
-}
-
-.method-chevron {
-  color: var(--text-dim);
-}
-
-.step-title {
-  color: var(--text-light);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.signup-progress-label {
-  color: var(--text-dim);
-}
-
-/* Ensure OAuth buttons in the grid follow dark theme */
-.signup-method-card.oauth {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-}
-
-.signup-method-card.oauth:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Method Header Text */
-.method-header h2 {
-  color: var(--text-light);
-}
-
-.method-header p {
-  color: var(--text-dim);
-}
-
-.method-eyebrow {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--primary-400);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  opacity: 0.9;
-}
-
-/* =========================================
-   FIX: Signup Method Card Contrast
-   ========================================= */
-.signup-method-card {
-  display: flex !important;
-  align-items: center !important;
-  gap: 1rem !important;
-  width: 100% !important;
-  padding: 1.25rem !important;
-  background: #ffffff !important;
-  /* Force white bg */
-  border: 1px solid #e2e8f0 !important;
-  /* gray-200 */
-  border-radius: 12px !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  text-align: left !important;
-  margin-bottom: 1rem !important;
-}
-
-.signup-method-card:hover {
-  border-color: #3b82f6 !important;
-  /* primary-500 */
-  background: #f8fafc !important;
-  /* gray-50 */
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-}
-
-.signup-method-card .method-body h3 {
-  color: #0f172a !important;
-  /* Slate 900 - Dark text */
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  margin: 0 0 0.25rem 0 !important;
-}
-
-.signup-method-card .method-body p {
-  color: #64748b !important;
-  /* Slate 500 - Dim text */
-  font-size: 0.875rem !important;
-  margin: 0 !important;
-}
-
-.signup-method-card .method-icon-wrap {
-  width: 40px !important;
-  height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: #f1f5f9 !important;
-  border-radius: 50% !important;
-  color: #3b82f6 !important;
-}
-
-.signup-method-card .method-chevron {
-  display: block;
-  margin-left: auto !important;
-  color: #94a3b8 !important;
-  font-weight: bold !important;
-}
-
-/* Ensure SVG icons inside method-icon-wrap are sized correctly */
-.signup-method-card .method-icon-wrap svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-}
-
-/* COMPACT OVERRIDES FOR SIGNUP METHOD CARDS - ULTRA COMPACT */
-.signup-method-card {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  /* Tighter gap */
-  padding: 0.625rem;
-  /* Tighter padding */
-  background: rgba(255, 255, 255, 0.06) !important;
-  /* Increased contrast */
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  /* Increased contrast */
-  border-radius: var(--radius-md);
-  /* Smaller radius */
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: left;
-  width: 100%;
-}
-
-.signup-method-card:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  /* Increased hover contrast */
-  transform: translateY(-2px);
-  border-color: var(--primary-500) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.signup-method-grid {
-  /* removed display grid */
-  grid-template-columns: 1fr;
-  /* Force single column for ultra squeeze */
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-@media (min-width: 640px) {
-  .signup-method-grid {
-    grid-template-columns: 1fr;
-    /* Keep single column even on desktop to save width */
-  }
-}
-
-.method-icon-wrap {
-  width: 28px;
-  /* Ultra small */
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  /* Increased contrast */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--primary-color) !important;
-}
-
-/* Resize internal SVGs */
-.method-icon-wrap svg {
-  width: 16px;
-  height: 16px;
-}
-
-.method-body h3 {
-  font-size: 0.85rem;
-  /* Smaller font */
-  font-weight: 600;
-  margin: 0 0 0.1rem 0;
-  color: var(--text-light) !important;
-}
-
-.method-body p {
-  font-size: 0.65rem;
-  /* Tiny text */
-  color: var(--text-dim) !important;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.method-chevron {
-  margin-left: auto;
-  color: var(--text-dim);
-  font-size: 0.9rem;
-  opacity: 0.6;
-}
-
-.method-header {
-  text-align: center;
-  margin-bottom: 0.75rem;
-}
-
-.method-header h2 {
-  font-size: 1.15rem;
-  margin: 0.25rem 0;
-  color: var(--text-light);
-}
-
-.method-eyebrow {
-  text-transform: uppercase;
-  font-size: 0.65rem;
-  letter-spacing: 0.05em;
-  color: var(--primary-color);
-  font-weight: 600;
-  margin: 0;
-}
-
-/* Ensure container fits */
-.signup-method-section {
-  width: 100%;
-  margin: 0 auto;
-}
-
-/* Force Auth Card to be ultra compact on desktop */
-@media (min-width: 1024px) {
-  .auth-card {
-    max-width: 420px !important;
-    /* ULTRA NARROW */
+  .signup-step[hidden] {
+    display: none;
   }
 
-  .auth-content {
-    padding: 1rem;
-    gap: 0.5rem;
+  .step-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    padding-bottom: clamp(8px, 1vw, 12px);
   }
 
-  .auth-header {
-    padding: 1rem 1rem 0.25rem;
+  .step-chip {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 0.25rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-700);
+    border: 1px solid rgba(59, 130, 246, 0.2);
   }
 
-  .auth-title {
-    font-size: 1.25rem;
+  .step-card-copy h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--gray-900);
   }
 
-  .auth-subtitle {
-    font-size: 0.85rem;
+  .step-card-copy p {
+    margin: 4px 0 0;
+    color: var(--gray-600);
+    font-size: 0.95rem;
+    line-height: 1.45;
   }
 
-  .form-group {
-    margin-bottom: 0.5rem;
+  .signup-step .form-group {
+    margin-bottom: 12px;
   }
 
-  .input {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    background: rgba(255, 255, 255, 0.05) !important;
-    /* Added input contrast */
-    border-color: rgba(255, 255, 255, 0.15) !important;
+  .signup-step .input,
+  .signup-step .phone-input,
+  .signup-step .phone-input-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--glass-border);
+    transition: border-color 160ms ease, background 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .signup-step .phone-prefix {
+    background: transparent !important;
+    border-right: 1px solid var(--glass-border) !important;
     color: var(--text-light) !important;
   }
 
-  .input:focus {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-color: var(--primary-500) !important;
+  .signup-step .input:focus,
+  .signup-step .phone-input-wrapper:focus-within {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
-  .input-icon {
+  .signup-progress-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    width: 100%;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-100);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-500), var(--primary-700));
+    width: 0%;
+    transition: width 240ms ease;
+  }
+
+  .step-actions {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: flex-end;
+    /* Align buttons to the right */
+    margin-top: var(--space-4);
+  }
+
+  .step-actions .btn {
+    min-width: 120px;
+  }
+
+  /* Keep controls compact on small screens */
+  @media (max-width: 768px) {
+    .auth-content {
+      flex-direction: column;
+    }
+
+    .auth-sidebar {
+      order: 2;
+      display: flex;
+      border-left: none;
+      border-top: 1px solid var(--gray-200);
+      background: transparent;
+      padding: var(--space-4) 0;
+      gap: var(--space-4);
+    }
+
+    .signup-progress-controls {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+
+    .step-actions {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      /* Space out buttons on mobile */
+      gap: var(--space-3);
+    }
+
+    .signup-step {
+      padding: 1.25rem;
+      border-radius: var(--radius-xl);
+    }
+
+    .step-actions .btn {
+      width: 100%;
+    }
+  }
+
+  /* Wrapper for the full-width signup method section */
+  .signup-method-wrapper {
+    padding: 0 clamp(8px, 1vw, 16px);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 1024px) {
+    .signup-method-wrapper {
+      padding: 0 3rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .signup-method-wrapper {
+      padding: 0 3rem;
+      /* Keep aligned with auth-content */
+    }
+  }
+
+  /* Ensure the section inside doesn't have conflicting margins */
+  .signup-method-section {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Restore grid layout for main column */
+  .signup-method-grid {
+    margin-top: clamp(16px, 2vw, 24px);
+    /* removed display grid */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(12px, 1.25vw, 18px);
+  }
+
+  .signup-method-card {
+    width: 100%;
+    /* Reset flex properties if any */
+    flex: initial;
+    padding: clamp(16px, 1.5vw, 24px);
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .signup-method-card .method-copy,
+  .signup-method-card .method-chevron {
+    display: block;
+    /* Restore visibility */
+  }
+
+  .signup-method-card .method-body {
+    align-items: flex-start;
+  }
+
+  /* Responsive: Stack on small screens */
+  @media (max-width: 768px) {
+    .auth-extras-row {
+      flex-direction: column;
+    }
+  }
+
+  /* Disabled summary state for inactive review section */
+  .review-summary-disabled {
+    color: var(--gray-400);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* Progressive Signup Styles */
+  .signup-progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+  }
+
+  .signup-progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--gray-200);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .signup-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+    border-radius: 999px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .signup-progress-label {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .signup-step {
+    animation: fadeInSignup 0.3s ease-out;
+  }
+
+  /* Step Titles */
+  .step-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  /* Actions */
+  .signup-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--gray-100);
+  }
+
+  @keyframes fadeInSignup {
+    from {
+      opacity: 0;
+      transform: translateY(0);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Dark Mode Overrides for Signup Method Cards */
+  .signup-method-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    border-radius: var(--radius-lg);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+
+
+  .signup-method-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--glass-border);
+    transform: translateY(-2px);
+  }
+
+  .method-title {
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .method-copy {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+
+  .method-chevron {
+    color: var(--text-dim);
+  }
+
+  .step-title {
+    color: var(--text-light);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .signup-progress-label {
+    color: var(--text-dim);
+  }
+
+  /* Ensure OAuth buttons in the grid follow dark theme */
+  .signup-method-card.oauth {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+  }
+
+  .signup-method-card.oauth:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Method Header Text */
+  .method-header h2 {
+    color: var(--text-light);
+  }
+
+  .method-header p {
+    color: var(--text-dim);
+  }
+
+  .method-eyebrow {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--primary-400);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+  }
+
+  /* =========================================
+   FIX: Signup Method Card Contrast
+   ========================================= */
+  .signup-method-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    padding: 1.25rem !important;
+    background: #ffffff !important;
+    /* Force white bg */
+    border: 1px solid #e2e8f0 !important;
+    /* gray-200 */
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-align: left !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .signup-method-card:hover {
+    border-color: #3b82f6 !important;
+    /* primary-500 */
+    background: #f8fafc !important;
+    /* gray-50 */
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .signup-method-card .method-body h3 {
+    color: #0f172a !important;
+    /* Slate 900 - Dark text */
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin: 0 0 0.25rem 0 !important;
+  }
+
+  .signup-method-card .method-body p {
+    color: #64748b !important;
+    /* Slate 500 - Dim text */
+    font-size: 0.875rem !important;
+    margin: 0 !important;
+  }
+
+  .signup-method-card .method-icon-wrap {
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #f1f5f9 !important;
+    border-radius: 50% !important;
+    color: #3b82f6 !important;
+  }
+
+  .signup-method-card .method-chevron {
+    display: block;
+    margin-left: auto !important;
+    color: #94a3b8 !important;
+    font-weight: bold !important;
+  }
+
+  /* Ensure SVG icons inside method-icon-wrap are sized correctly */
+  .signup-method-card .method-icon-wrap svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+
+  /* COMPACT OVERRIDES FOR SIGNUP METHOD CARDS - ULTRA COMPACT */
+  .signup-method-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    /* Tighter gap */
+    padding: 0.625rem;
+    /* Tighter padding */
+    background: rgba(255, 255, 255, 0.06) !important;
+    /* Increased contrast */
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    /* Increased contrast */
+    border-radius: var(--radius-md);
+    /* Smaller radius */
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    width: 100%;
+  }
+
+  .signup-method-card:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    /* Increased hover contrast */
+    transform: translateY(-2px);
+    border-color: var(--primary-500) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .signup-method-grid {
+    /* removed display grid */
+    grid-template-columns: 1fr;
+    /* Force single column for ultra squeeze */
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .signup-method-grid {
+      grid-template-columns: 1fr;
+      /* Keep single column even on desktop to save width */
+    }
+  }
+
+  .method-icon-wrap {
+    width: 28px;
+    /* Ultra small */
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    /* Increased contrast */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--primary-color) !important;
+  }
+
+  /* Resize internal SVGs */
+  .method-icon-wrap svg {
     width: 16px;
     height: 16px;
   }
 
-  .btn {
-    padding: 0.5rem 1rem;
-    min-height: 2.5rem;
-    font-size: 0.9rem;
-  }
-
-  /* High contrast for labels in compact mode */
-  .form-label {
-    color: #ffffff !important;
+  .method-body h3 {
+    font-size: 0.85rem;
+    /* Smaller font */
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    opacity: 1 !important;
-  }
-
-  /* Widen container when email flow is active */
-  body:has(#signup-email-flow:not([hidden])) .auth-card,
-  html:has(#signup-email-flow:not([hidden])) .auth-card {
-    max-width: 720px !important;
-  }
-}
-
-/* Removed MERGED COMPACT MODE OVERRIDES that were breaking layout */
-
-.auth-card {
-  max-height: 95vh;
-  height: auto;
-  overflow-y: auto;
-  /* Allow internal scrolling if strictly needed, but try to fit */
-  transform-origin: center;
-  /* Optional: Scale down if screen is too short, can be handled by media queries if needed */
-  transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s ease, max-height 0.4s ease;
-  scrollbar-width: none !important;
-  /* Firefox */
-  -ms-overflow-style: none !important;
-  /* IE and Edge */
-}
-
-.auth-card::-webkit-scrollbar {
-  display: none !important;
-}
-
-/* Compact Auth Form Spacing */
-.auth-header {
-  margin-bottom: 0.25rem !important;
-}
-
-.auth-title {
-  font-size: 1.5rem !important;
-  margin-bottom: 0.25rem !important;
-}
-
-.auth-subtitle {
-  font-size: 0.875rem !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.form-group {
-  margin-bottom: 0.75rem !important;
-}
-
-.form-label {
-  margin-bottom: 0.25rem !important;
-  font-size: 0.8rem !important;
-  color: var(--text-color);
-}
-
-.input {
-  padding: 0.5rem 0.75rem !important;
-  font-size: 0.9rem !important;
-  height: auto !important;
-}
-
-.btn-lg {
-  padding: 0.6rem !important;
-  font-size: 0.95rem !important;
-}
-
-.auth-footer {
-  margin-top: 0.5rem !important;
-  padding-top: 0.25rem !important;
-}
-
-/* =========================================
-   COMPRESSION OVERRIDES (Match Login Page)
-   ========================================= */
-@media (min-width: 1024px) {
-  .signup-form {
-    gap: 0.15rem !important;
-    /* Ultra tight gap */
-  }
-
-  .form-group {
-    margin-bottom: 0.25rem !important;
-    /* Reduced from 0.35rem */
-  }
-
-  /* Force label compression */
-  .auth-form .form-label,
-  .form-label {
-    margin-bottom: 0 !important;
-    /* Removed margin */
-    font-size: 0.75rem !important;
-    /* Slightly smaller */
-    line-height: 1.2 !important;
-  }
-
-  /* Force input compression */
-  .auth-form .input,
-  .input {
-    padding: 0.25rem 0.6rem !important;
-    /* Reduced padding */
-    min-height: 32px !important;
-    /* Reduced from 36px */
-    font-size: 0.85rem !important;
-  }
-
-  .auth-main {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-
-  .auth-content {
-    gap: 0 !important;
-  }
-
-  h3.step-title {
-    margin-bottom: 0.35rem !important;
-    padding-bottom: 0.25rem !important;
-    font-size: 1rem !important;
-    /* Contrast Fix */
+    margin: 0 0 0.1rem 0;
     color: var(--text-light) !important;
-    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
-    width: 100% !important;
-    grid-column: 1 / -1 !important;
   }
 
-  /* GRID LAYOUT FOR STEPS */
-  .signup-step:not([hidden]) {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.1rem 0.5rem !important;
-    /* Reduced row gap */
-    align-content: start;
-    width: 100% !important;
+  .method-body p {
+    font-size: 0.65rem;
+    /* Tiny text */
+    color: var(--text-dim) !important;
+    margin: 0;
+    line-height: 1.2;
   }
 
-  .signup-step[hidden],
-  button[hidden],
-  .btn[hidden] {
+  .method-chevron {
+    margin-left: auto;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    opacity: 0.6;
+  }
+
+  .method-header {
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .method-header h2 {
+    font-size: 1.15rem;
+    margin: 0.25rem 0;
+    color: var(--text-light);
+  }
+
+  .method-eyebrow {
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  /* Ensure container fits */
+  .signup-method-section {
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Force Auth Card to be ultra compact on desktop */
+  @media (min-width: 1024px) {
+    .auth-card {
+      max-width: 420px !important;
+      /* ULTRA NARROW */
+    }
+
+    .auth-content {
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+
+    .auth-header {
+      padding: 1rem 1rem 0.25rem;
+    }
+
+    .auth-title {
+      font-size: 1.25rem;
+    }
+
+    .auth-subtitle {
+      font-size: 0.85rem;
+    }
+
+    .form-group {
+      margin-bottom: 0.5rem;
+    }
+
+    .input {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.05) !important;
+      /* Added input contrast */
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      color: var(--text-light) !important;
+    }
+
+    .input:focus {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: var(--primary-500) !important;
+    }
+
+    .input-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      min-height: 2.5rem;
+      font-size: 0.9rem;
+    }
+
+    /* High contrast for labels in compact mode */
+    .form-label {
+      color: #ffffff !important;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      opacity: 1 !important;
+    }
+
+    /* Widen container when email flow is active */
+    body:has(#signup-email-flow:not([hidden])) .auth-card,
+    html:has(#signup-email-flow:not([hidden])) .auth-card {
+      max-width: 720px !important;
+    }
+  }
+
+  /* Removed MERGED COMPACT MODE OVERRIDES that were breaking layout */
+
+  .auth-card {
+    max-height: 95vh;
+    height: auto;
+    overflow-y: auto;
+    /* Allow internal scrolling if strictly needed, but try to fit */
+    transform-origin: center;
+    /* Optional: Scale down if screen is too short, can be handled by media queries if needed */
+    transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s ease, max-height 0.4s ease;
+    scrollbar-width: none !important;
+    /* Firefox */
+    -ms-overflow-style: none !important;
+    /* IE and Edge */
+  }
+
+  .auth-card::-webkit-scrollbar {
     display: none !important;
   }
 
-  .signup-step .form-group {
-    width: 100% !important;
-    margin-bottom: 0 !important;
-    grid-column: span 1 !important;
-    /* Default to half width */
+  /* Compact Auth Form Spacing */
+  .auth-header {
+    margin-bottom: 0.25rem !important;
   }
 
-  /* Force "full width" fields to be full width */
-  .signup-step .form-full {
-    grid-column: 1 / -1 !important;
+  .auth-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
-  /* Exceptions that MUST be full width */
-  .signup-step p,
-  .captcha-container,
-  .terms-checkbox,
-  .alert,
-  .id-verify-body,
-  .alert-warning {
-    grid-column: 1 / -1 !important;
-    width: 100% !important;
-  }
-
-  /* Handle ID Verify Section */
-  .id-mode .id-dropzone {
-    min-height: 80px !important;
-    /* Reduced from 100px */
-    padding: 0.5rem !important;
-  }
-
-  .id-dropzone .dz-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  /* Fix Contrast Issues */
-  .signup-progress-label {
-    color: var(--text-dim) !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  .auth-subtitle {
+    font-size: 0.875rem !important;
     margin-bottom: 0.5rem !important;
   }
 
-  .signup-actions {
-    margin-top: 0.5rem !important;
+  .form-group {
+    margin-bottom: 0.75rem !important;
   }
-}
+
+  .form-label {
+    margin-bottom: 0.25rem !important;
+    font-size: 0.8rem !important;
+    color: var(--text-color);
+  }
+
+  .input {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem !important;
+    height: auto !important;
+  }
+
+  .btn-lg {
+    padding: 0.6rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .auth-footer {
+    margin-top: 0.5rem !important;
+    padding-top: 0.25rem !important;
+  }
+
+  /* =========================================
+   COMPRESSION OVERRIDES (Match Login Page)
+   ========================================= */
+  @media (min-width: 1024px) {
+    .signup-form {
+      gap: 0.15rem !important;
+      /* Ultra tight gap */
+    }
+
+    .form-group {
+      margin-bottom: 0.25rem !important;
+      /* Reduced from 0.35rem */
+    }
+
+    /* Force label compression */
+    .auth-form .form-label,
+    .form-label {
+      margin-bottom: 0 !important;
+      /* Removed margin */
+      font-size: 0.75rem !important;
+      /* Slightly smaller */
+      line-height: 1.2 !important;
+    }
+
+    /* Force input compression */
+    .auth-form .input,
+    .input {
+      padding: 0.25rem 0.6rem !important;
+      /* Reduced padding */
+      min-height: 32px !important;
+      /* Reduced from 36px */
+      font-size: 0.85rem !important;
+    }
+
+    .auth-main {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .auth-content {
+      gap: 0 !important;
+    }
+
+    h3.step-title {
+      margin-bottom: 0.35rem !important;
+      padding-bottom: 0.25rem !important;
+      font-size: 1rem !important;
+      /* Contrast Fix */
+      color: var(--text-light) !important;
+      border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+      width: 100% !important;
+      grid-column: 1 / -1 !important;
+    }
+
+    /* GRID LAYOUT FOR STEPS */
+    .signup-step:not([hidden]) {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.1rem 0.5rem !important;
+      /* Reduced row gap */
+      align-content: start;
+      width: 100% !important;
+    }
+
+    .signup-step[hidden],
+    button[hidden],
+    .btn[hidden] {
+      display: none !important;
+    }
+
+    .signup-step .form-group {
+      width: 100% !important;
+      margin-bottom: 0 !important;
+      grid-column: span 1 !important;
+      /* Default to half width */
+    }
+
+    /* Force "full width" fields to be full width */
+    .signup-step .form-full {
+      grid-column: 1 / -1 !important;
+    }
+
+    /* Exceptions that MUST be full width */
+    .signup-step p,
+    .captcha-container,
+    .terms-checkbox,
+    .alert,
+    .id-verify-body,
+    .alert-warning {
+      grid-column: 1 / -1 !important;
+      width: 100% !important;
+    }
+
+    /* Handle ID Verify Section */
+    .id-mode .id-dropzone {
+      min-height: 80px !important;
+      /* Reduced from 100px */
+      padding: 0.5rem !important;
+    }
+
+    .id-dropzone .dz-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Fix Contrast Issues */
+    .signup-progress-label {
+      color: var(--text-dim) !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      margin-bottom: 0.5rem !important;
+    }
+
+    .signup-actions {
+      margin-top: 0.5rem !important;
+    }
+  }
 
 
-/* =========================================
+  /* =========================================
    CONTRAST FIXES - GLOBAL OVERRIDES
    ========================================= */
-/* Ensure these apply everywhere, regardless of screen size */
-button.signup-method-card h3,
-.signup-method-card h3,
-.signup-method-card .method-body h3 {
-  color: #ffffff !important;
-}
+  /* Ensure these apply everywhere, regardless of screen size */
+  button.signup-method-card h3,
+  .signup-method-card h3,
+  .signup-method-card .method-body h3 {
+    color: #ffffff !important;
+  }
 
-button.signup-method-card p,
-.signup-method-card p,
-.signup-method-card .method-body p {
-  color: #cbd5e1 !important;
-}
+  button.signup-method-card p,
+  .signup-method-card p,
+  .signup-method-card .method-body p {
+    color: #cbd5e1 !important;
+  }
 
-button.signup-method-card .method-icon-wrap,
-.signup-method-card .method-icon-wrap {
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-}
+  button.signup-method-card .method-icon-wrap,
+  .signup-method-card .method-icon-wrap {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
 
-button.signup-method-card .method-chevron,
-.signup-method-card .method-chevron {
-  color: #cbd5e1 !important;
-}
+  button.signup-method-card .method-chevron,
+  .signup-method-card .method-chevron {
+    color: #cbd5e1 !important;
+  }
 
-/* =========================================
+  /* =========================================
    FIELD VISUAL MATCHING (LOGIN STYLE)
    ========================================= */
-/* Match the specific dark glass look of login.css */
-.auth-form .input,
-.input,
-.select,
-.textarea {
-  background: rgba(15, 23, 42, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-  color: #f8fafc !important;
-  transition: all 0.25s ease;
-  color-scheme: dark !important;
-  /* Forces browser controls like select dropdowns to use dark theme */
-}
+  /* Match the specific dark glass look of login.css */
+  .auth-form .input,
+  .input,
+  .select,
+  .textarea {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    color: #f8fafc !important;
+    transition: all 0.25s ease;
+    color-scheme: dark !important;
+    /* Forces browser controls like select dropdowns to use dark theme */
+  }
 
-/* Fix for Select Options (Dropdown) - ensure visible on dark background */
-.auth-form select option,
-.input option,
-.select option {
-  background-color: #0f172a !important;
-  /* Dark background */
-  color: #f8fafc !important;
-  /* Light text */
-}
+  /* Fix for Select Options (Dropdown) - ensure visible on dark background */
+  .auth-form select option,
+  .input option,
+  .select option {
+    background-color: #0f172a !important;
+    /* Dark background */
+    color: #f8fafc !important;
+    /* Light text */
+  }
 
-.auth-form .input:focus,
-.input:focus,
-.select:focus,
-.textarea:focus {
-  outline: none !important;
-  border-color: #3b82f6 !important;
-  background: rgba(15, 23, 42, 0.7) !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  transform: translateY(-1px);
-}
+  .auth-form .input:focus,
+  .input:focus,
+  .select:focus,
+  .textarea:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-1px);
+  }
 
-.auth-form .input::placeholder,
-.input::placeholder {
-  color: rgba(248, 250, 252, 0.5) !important;
-}
+  .auth-form .input::placeholder,
+  .input::placeholder {
+    color: rgba(248, 250, 252, 0.5) !important;
+  }
 
-/* =========================================
+  /* =========================================
    HEADER COMPRESSION (Auth Card Header)
    ========================================= */
-/* Reverting Navbar changes as user specified "not the navbar" */
+  /* Reverting Navbar changes as user specified "not the navbar" */
 
-/* Compress the Form Header to match Login page style */
-.auth-header {
-  padding: 1rem 1.5rem 0.5rem !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
+  /* Compress the Form Header to match Login page style */
+  .auth-header {
+    padding: 1rem 1.5rem 0.5rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
 
-.auth-title {
-  font-size: 1.5rem !important;
-  /* Reduced from 1.75-2rem */
-  margin-bottom: 0.25rem !important;
-}
+  .auth-title {
+    font-size: 1.5rem !important;
+    /* Reduced from 1.75-2rem */
+    margin-bottom: 0.25rem !important;
+  }
 
-.auth-subtitle {
-  font-size: 0.9rem !important;
-}
+  .auth-subtitle {
+    font-size: 0.9rem !important;
+  }
 
-/* Adjust top padding to restore original spacing since navbar is back to 70px */
+  /* Adjust top padding to restore original spacing since navbar is back to 70px */
 
 
-/* =========================================
+  /* =========================================
    FIX: Icon Padding Override
    ========================================= */
-/* Ensure input text doesn't overlap with icons, overriding compact mode !important */
-/* Ensure input text doesn't overlap with icons, overriding compact mode !important */
-.input.has-icon,
-.auth-form .input.has-icon,
-.signup-form .input.has-icon {
-  padding-left: 3rem !important;
+  /* Ensure input text doesn't overlap with icons, overriding compact mode !important */
+  .input.has-icon,
+  .auth-form .input.has-icon,
+  .signup-form .input.has-icon {
+    padding-left: 3rem !important;
+  }
 }
-

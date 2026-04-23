@@ -603,7 +603,7 @@ html.dark .logout-link:hover {
 .menu-children a:hover {
   opacity: 1;
 }
-/* Make brand-logo act as a hamburger menu when deflated */
+/* Restore brand-logo as a hamburger menu when deflated */
 @media (min-width: 1025px) {
   /* Hide the actual image when deflated */
   body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .brand-logo img {

@@ -13,6 +13,8 @@ router.use(requireRole(["lgu", "super-admin"])); // Allow both, logic inside con
  * Returns statistics, charts, and recent activity for the department dashboard
  */
 router.get("/dashboard-stats", (req, res) => lguDashboardController.getDashboardStats(req, res));
-router.get("/department-assignments", (req, res) => lguDashboardController.getDepartmentAssignments(req, res));
+router.get("/department-queue", (req, res) => lguDashboardController.getDepartmentAssignments(req, res));
+router.get("/department-officers", (req, res) => lguDashboardController.getDepartmentOfficers(req, res));
+router.post("/complaints/:id/assign", (req, res) => lguDashboardController.assignToOfficer(req, res));
 
 module.exports = router;

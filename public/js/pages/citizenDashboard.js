@@ -109,11 +109,15 @@ function hideDashboardLoader() {
   const content = document.getElementById("dashboard-main-content");
 
   if (loader) {
-    loader.style.setProperty("display", "none", "important");
+    loader.classList.add("skeleton-fade-out");
+    // Remove from DOM after animation completes
+    setTimeout(() => {
+      loader.style.display = "none";
+    }, 400);
   }
 
   if (content) {
-    content.style.setProperty("display", "block", "important");
+    content.style.display = "block";
     // Small delay to allow display:block to apply before changing opacity for transition
     setTimeout(() => {
       content.style.opacity = "1";

@@ -1,5 +1,5 @@
 // LGU Admin department Queue JavaScript
-import showToast from "../components/toast.js";
+import BarangayPrioritization from "../components/barangayPrioritization.js";
 
 class departmentQueue {
   constructor() {
@@ -28,6 +28,10 @@ class departmentQueue {
       { key: "low", label: "Low", color: "#059669", track: "#d1fae5" },
       { key: "other", label: "Unlabeled", color: "#64748b", track: "#e5e7eb" },
     ];
+    
+    // Initialize Barangay Prioritization Component
+    this.bpWidget = new BarangayPrioritization("barangay-prioritization-container");
+    
     this.init();
   }
 
@@ -53,7 +57,38 @@ class departmentQueue {
   init() {
     this.setupEventListeners();
     this.loadcomplaints();
+    this.setupTabs();
   }
+
+  setupTabs() {
+    const tabs = document.querySelectorAll(".perspective-btn");
+    const queueView = document.getElementById("queue-view");
+    const insightsView = document.getElementById("insights-view");
+    const statsSummary = document.getElementById("stats-summary");
+    const widgetsPanel = document.getElementById("widgets-panel");
+
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            
+            const target = tab.dataset.tab;
+            if (target === "queue") {
+                queueView.style.display = "flex";
+                insightsView.style.display = "none";
+                if (statsSummary) statsSummary.style.display = "grid";
+                if (widgetsPanel) widgetsPanel.style.display = "block";
+            } else {
+                queueView.style.display = "none";
+                insightsView.style.display = "block";
+                if (statsSummary) statsSummary.style.display = "none";
+                if (widgetsPanel) widgetsPanel.style.display = "none";
+                this.bpWidget.loadInsights();
+            }
+        });
+    });
+  }
+
   setupEventListeners() {
     // Filter controls
     const statusFilter = document.getElementById("status-filter");

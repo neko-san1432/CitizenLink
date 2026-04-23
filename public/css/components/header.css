@@ -1146,6 +1146,7 @@ html.dark .profile-btn:hover {
   color: #9ca3af;
 }
 
+/* Reduced motion DISABLED per user request
 @media (prefers-reduced-motion: reduce) {
 
   .header-container,
@@ -1161,6 +1162,7 @@ html.dark .profile-btn:hover {
     animation: none;
   }
 }
+*/
 
 @media (prefers-contrast: high) {
 

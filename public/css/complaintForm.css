@@ -58,12 +58,7 @@
 
 /* Description header row (label + hint + voice controls) */
 .description-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 .description-header-row label {
@@ -77,16 +72,6 @@
   flex: 1 1 100%;
 }
 
-.voice-controls {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex: 0 0 auto;
-}
-
-.voice-controls select {
-  max-width: 100%;
-}
 
 @media (min-width: 640px) {
   .description-hint {
@@ -755,7 +740,7 @@ html.dark .duplicate-meta {
   color: #9a3412;
   /* Orange-700 */
   font-size: 0.85rem;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -775,28 +760,6 @@ html.dark .btn-dismiss {
   }
 }
 
-.mic-listening {
-  animation: pulse 1.5s infinite;
-  background-color: rgba(220, 38, 38, 0.2) !important;
-  color: #ef4444 !important;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-
-  70% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
-  }
-
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-  }
-}
 
 /* Blocking Mode Styles */
 .duplicate-warning-container.blocking-mode {

@@ -304,8 +304,7 @@ function getMenuItemsForRole(role) {
       { url: "/review-queue", icon: "review-queue", label: "Review Queue" },
 
       { url: "/heatmap", icon: "heatmap", label: "Heatmap" },
-      { url: "/publish", icon: "publish", label: "Publish Content" },
-      { url: "/publication", icon: "publication", label: "Publications" },
+      { url: "/publish", icon: "publication", label: "Public Bulletins" },
       {
         label: "Analytics",
         icon: "analytics",

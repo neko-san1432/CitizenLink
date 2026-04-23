@@ -629,6 +629,7 @@
    ACCESSIBILITY
    ============================================================================ */
 
+/* Reduced motion DISABLED per user request
 @media (prefers-reduced-motion: reduce) {
   .news-item,
   .event-item,
@@ -652,6 +653,7 @@
     transition: none;
   }
 }
+*/
 
 @media (prefers-contrast: high) {
   .news-widget,

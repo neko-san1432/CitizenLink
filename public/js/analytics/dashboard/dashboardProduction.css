@@ -2878,7 +2878,7 @@ body {
 
 /* ==================== GLOBAL PERFORMANCE OPTIMIZATIONS ==================== */
 
-/* Reduce motion for users who prefer reduced motion */
+/* Reduced motion DISABLED per user request
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -2886,6 +2886,7 @@ body {
         transition-duration: 0.01ms !important;
     }
 }
+*/
 
 /* GPU Acceleration for animated elements */
 .stat-card,

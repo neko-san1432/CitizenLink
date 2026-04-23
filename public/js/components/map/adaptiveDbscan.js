@@ -645,6 +645,7 @@ class AdaptiveDBSCAN {
       metadata
     };
   }
+}
 
 // Expose to global scope for HeatmapVisualization
 window.AdaptiveDBSCAN = AdaptiveDBSCAN;

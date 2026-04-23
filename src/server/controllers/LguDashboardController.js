@@ -14,165 +14,131 @@ class LguDashboardController {
      */
   async getDashboardStats(req, res) {
     try {
-      // Extract department from user metadata
-      const departmentCode =
-        req.user.department ||
-        req.user.metadata?.department ||
-        req.user.raw_user_meta_data?.department ||
-        req.user.raw_user_meta_data?.dpt;
+      const client = Database.getServiceClient();
+      
+      // Role-based filtering removed at user request - LGU role is global view
+      console.log(`[LGU_DASH] Global Dashboard View for User: ${req.user.id} (${req.user.role})`);
 
-      if (!departmentCode) {
-        return res.status(400).json({
-          success: false,
-          error: "department not specified in user metadata.",
-        });
+      // 1. Calculate Timeframe
+      const timeframe = req.query.timeframe || "weekly";
+      const target = req.query.target || "all";
+      const now = new Date();
+      let dateLimit = new Date();
+      
+      if (timeframe === "daily") dateLimit.setDate(now.getDate() - 1);
+      else if (timeframe === "weekly") dateLimit.setDate(now.getDate() - 7);
+      else if (timeframe === "monthly") dateLimit.setMonth(now.getMonth() - 1);
+      else if (timeframe === "yearly") dateLimit.setFullYear(now.getFullYear() - 1);
+      else dateLimit.setFullYear(now.getFullYear() - 1); // Default to yearly for better initial visibility
+
+
+      const responseData = {};
+      const tasks = [];
+
+      // Task: Stats & Priority
+      if (target === "all" || target === "stats") {
+        const activeStatuses = ["submitted", "new", "pending", "unassigned", "verified", "under_review", "assigned", "action_taken", "in_progress", "pending_approval"];
+        const getBaseQuery = () => client.from("complaints").select("id", { count: "exact" });
+        tasks.push(
+          Promise.all([
+            getBaseQuery().not("workflow_status", "in", '("completed","cancelled")'),
+            getBaseQuery().in("workflow_status", ["submitted", "new", "unassigned"]), // Truly pending/unassigned
+            getBaseQuery().ilike("priority", "urgent").not("workflow_status", "in", '("completed","cancelled")'),
+            getBaseQuery().ilike("priority", "high").not("workflow_status", "in", '("completed","cancelled")'),
+            getBaseQuery().ilike("priority", "medium").not("workflow_status", "in", '("completed","cancelled")'),
+            getBaseQuery().ilike("priority", "low").not("workflow_status", "in", '("completed","cancelled")'),
+          ]).then(results => {
+            const urgent = results[2].count || 0;
+            const high = results[3].count || 0;
+            const medium = results[4].count || 0;
+            const low = results[5].count || 0;
+            const total = results[0].count || 0;
+            
+            // Calculate Avg Priority Score (0-100)
+            let avgScore = 0;
+            if (total > 0) {
+              avgScore = Math.round(((urgent * 100) + (high * 75) + (medium * 50) + (low * 25)) / total);
+            }
+
+            responseData.stats = {
+              total_active: total,
+              unassigned: results[1].count || 0,
+              priority: { urgent, high, medium, low },
+              avg_priority_score: avgScore
+            };
+          })
+        );
       }
 
-      // Get department details
-      const { data: department, error: deptError } = await supabase
-        .from("departments")
-        .select("id, name, code")
-        .eq("code", departmentCode)
-        .single();
-
-      if (deptError || !department) {
-        return res
-          .status(404)
-          .json({ success: false, error: "department not found" });
+      // Task: Activity
+      if (target === "all" || target === "activity") {
+        tasks.push(
+          client.from("complaints")
+            .select("id, description, submitted_at, location_text, priority, category_id, workflow_status")
+            .not("workflow_status", "in", '("completed","cancelled")')
+            .order("submitted_at", { ascending: false })
+            .limit(5)
+            .then(({ data }) => responseData.recent_activity = data || [])
+        );
       }
 
-      // 1. Parallel Count Queries (Case Insensitive)
-      // Note: We use raw string matching for performance rather than regex
-      const [totalActive, unassigned, urgent, high, medium, low] =
-        await Promise.all([
-          // Total Active (Not completed)
-          supabase
-            .from("complaints")
-            .select("id", { count: "exact", head: true })
-            .contains("departments", [departmentCode])
-            .not("workflow_status", "ilike", "completed")
-            .then((res) => res.count || 0),
-
-          // Unassigned (New/Pending/Unassigned)
-          supabase
-            .from("complaints")
-            .select("id", { count: "exact", head: true })
-            .contains("departments", [departmentCode])
-            .in("workflow_status", [
-              "new", "pending", "unassigned",
-              "New", "Pending", "Unassigned",
-              "NEW", "PENDING", "UNASSIGNED",
-            ])
-            .then((res) => res.count || 0),
-
-          // Priority Counts (Active Only)
-          supabase
-            .from("complaints")
-            .select("id", { count: "exact", head: true })
-            .contains("departments", [departmentCode])
-            .ilike("priority", "urgent")
-            .not("workflow_status", "ilike", "completed")
-            .then((res) => res.count || 0),
-
-          supabase
-            .from("complaints")
-            .select("id", { count: "exact", head: true })
-            .contains("departments", [departmentCode])
-            .ilike("priority", "high")
-            .not("workflow_status", "ilike", "completed")
-            .then((res) => res.count || 0),
-
-          supabase
-            .from("complaints")
-            .select("id", { count: "exact", head: true })
-            .contains("departments", [departmentCode])
-            .ilike("priority", "medium")
-            .not("workflow_status", "ilike", "completed")
-            .then((res) => res.count || 0),
-
-          supabase
-            .from("complaints")
-            .select("id", { count: "exact", head: true })
-            .contains("departments", [departmentCode])
-            .ilike("priority", "low")
-            .not("workflow_status", "ilike", "completed")
-            .then((res) => res.count || 0),
-        ]);
-
-      // 2. Recent Unassigned (Limit 5)
-      const { data: recentUnassigned } = await supabase
-        .from("complaints")
-        .select("id, description, submitted_at, location_text, priority")
-        .contains("departments", [departmentCode])
-        .in("workflow_status", [
-          "new", "pending", "unassigned",
-          "New", "Pending", "Unassigned",
-          "NEW", "PENDING", "UNASSIGNED",
-        ])
-        .order("submitted_at", { ascending: false })
-        .limit(5);
-
-      // 3. Trend Data (Last 7 Days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-      const { data: trendData } = await supabase
-        .from("complaints")
-        .select("submitted_at")
-        .contains("departments", [departmentCode])
-        .gte("submitted_at", sevenDaysAgo.toISOString());
-
-      // Aggregate trend in JS
-      const dailyCounts = {};
-      if (trendData) {
-        trendData.forEach((c) => {
-          const date = new Date(c.submitted_at).toISOString().split("T")[0];
-          dailyCounts[date] = (dailyCounts[date] || 0) + 1;
-        });
+      // Task: Trend
+      if (target === "all" || target === "trend") {
+        tasks.push(
+          client.from("complaints")
+            .select("submitted_at")
+            .gte("submitted_at", dateLimit.toISOString())
+            .then(({ data }) => {
+              const trendCounts = {};
+              if (data) {
+                data.forEach(c => {
+                  const date = new Date(c.submitted_at).toISOString().split("T")[0];
+                  trendCounts[date] = (trendCounts[date] || 0) + 1;
+                });
+              }
+              responseData.charts = responseData.charts || {};
+              responseData.charts.trend = trendCounts;
+            })
+        );
       }
 
-      // 4. Category Distribution
-      const { data: categoryData } = await supabase
-        .from("complaints")
-        .select("category")
-        .contains("departments", [departmentCode])
-        .not("workflow_status", "in", ["cancelled", "rejected"]);
+      // Task: Distribution (Split for independence)
+      if (target === "all" || target === "distribution" || target === "distribution_pie" || target === "distribution_bar") {
+        tasks.push(
+          (async () => {
+            const { data: categoryDataRes } = await client.from("complaints")
+              .select("category_id")
+              .gte("submitted_at", dateLimit.toISOString())
+              .not("workflow_status", "in", '("completed","cancelled")');
 
-      const categoryDistribution = {};
-      if (categoryData) {
-        categoryData.forEach((c) => {
-          const cat = c.category || "Uncategorized";
-          categoryDistribution[cat] = (categoryDistribution[cat] || 0) + 1;
-        });
+            const categoryDistribution = {};
+            if (categoryDataRes) {
+              const uniqueCatIds = [...new Set(categoryDataRes.filter(c => c.category_id).map(c => c.category_id))];
+              const knownCategoryLabels = {};
+              if (uniqueCatIds.length > 0) {
+                const { data: catLookups } = await client.from("categories").select("id, name").in("id", uniqueCatIds);
+                if (catLookups) catLookups.forEach(cat => knownCategoryLabels[cat.id] = cat.name);
+              }
+              categoryDataRes.forEach(c => {
+                const catName = knownCategoryLabels[c.category_id] || "Uncategorized";
+                categoryDistribution[catName] = (categoryDistribution[catName] || 0) + 1;
+              });
+            }
+            
+            responseData.charts = responseData.charts || {};
+            // Determine which specific data to return based on target
+            if (target === "all" || target === "distribution" || target === "distribution_pie") {
+              responseData.charts.distribution_pie = categoryDistribution;
+            }
+            if (target === "all" || target === "distribution" || target === "distribution_bar") {
+              responseData.charts.distribution_bar = categoryDistribution;
+            }
+          })()
+        );
       }
 
-      res.json({
-        success: true,
-        data: {
-          total_complaints: totalActive,
-          pending_complaints: unassigned,
-          in_progress_complaints: totalActive - unassigned,
-          resolved_complaints: 0,
-          stats: {
-            total_active: totalActive,
-            unassigned,
-            priority: {
-              urgent,
-              high,
-              medium,
-              low,
-            },
-          },
-          charts: {
-            trend: dailyCounts,
-            category_distribution: categoryDistribution,
-          },
-          recent_activity: recentUnassigned || [],
-          lists: {
-            recent_unassigned: recentUnassigned || [],
-          }
-        }
-      });
+      await Promise.all(tasks);
+      res.json({ success: true, data: responseData });
     } catch (error) {
       console.error("[LGU_DASHBOARD] Get dashboard stats error:", error);
       res.status(500).json({
@@ -189,15 +155,12 @@ class LguDashboardController {
    */
   async getDepartmentAssignments(req, res) {
     try {
+      const client = Database.getServiceClient();
       const departmentCode =
         req.user.department ||
         req.user.metadata?.department ||
         req.user.raw_user_meta_data?.department ||
         req.user.raw_user_meta_data?.dpt;
-
-      if (!departmentCode) {
-        return res.status(400).json({ success: false, error: "department not specified" });
-      }
 
       const {
         status,
@@ -266,11 +229,11 @@ class LguDashboardController {
         data = data.filter(d => Boolean(d.assigned_to));
       }
 
-      // Calculate stats for the cards
+      // Calculate stats for the cards (Global city-wide for consistent view)
       const [unassignedCount, urgentCount, highCount] = await Promise.all([
-        supabase.from("complaints").select("id", { count: "exact", head: true }).contains("departments", [departmentCode]).in("workflow_status", ["new", "pending", "unassigned"]).then(r => r.count || 0),
-        supabase.from("complaints").select("id", { count: "exact", head: true }).contains("departments", [departmentCode]).ilike("priority", "urgent").not("workflow_status", "ilike", "completed").then(r => r.count || 0),
-        supabase.from("complaints").select("id", { count: "exact", head: true }).contains("departments", [departmentCode]).ilike("priority", "high").not("workflow_status", "ilike", "completed").then(r => r.count || 0)
+        client.from("complaints").select("id", { count: "exact", head: true }).in("workflow_status", ["new", "pending", "unassigned"]).then(r => r.count || 0),
+        client.from("complaints").select("id", { count: "exact", head: true }).ilike("priority", "urgent").not("workflow_status", "in", '("completed","cancelled")').then(r => r.count || 0),
+        client.from("complaints").select("id", { count: "exact", head: true }).ilike("priority", "high").not("workflow_status", "in", '("completed","cancelled")').then(r => r.count || 0)
       ]);
 
       return res.json({
@@ -288,8 +251,118 @@ class LguDashboardController {
         }
       });
     } catch (error) {
-      console.error("[LGU_DASHBOARD] Get assignments error:", error);
       res.status(500).json({ success: false, error: "Failed to fetch assignments" });
+    }
+  }
+
+  /**
+   * Get officers for the current department
+   */
+  async getDepartmentOfficers(req, res) {
+    try {
+      const userService = require("../services/user/UserService");
+      
+      const departmentCode =
+        req.user.department ||
+        req.user.metadata?.department ||
+        req.user.raw_user_meta_data?.department ||
+        req.user.raw_user_meta_data?.dpt;
+
+      const filters = { 
+        role: "lgu", 
+        department: departmentCode,
+        status: "active" 
+      };
+      
+      // If no department specified and not super-admin, this might return nothing
+      // We'll allow it; listUsers will return what's available
+      const result = await userService.getUsers(filters, { limit: 100 });
+      
+      return res.json({
+        success: true,
+        data: result.users || []
+      });
+    } catch (error) {
+      console.error("[LGU_DASHBOARD] Get officers error:", error);
+      res.status(500).json({ success: false, error: "Failed to fetch officers" });
+    }
+  }
+
+  /**
+   * Assign a complaint to an officer
+   */
+  async assignToOfficer(req, res) {
+    try {
+      const client = Database.getServiceClient();
+      const complaintId = req.params.id;
+      const { officerId, priority, deadline, notes } = req.body;
+      const assignedBy = req.user.id;
+
+      if (!officerId) {
+        return res.status(400).json({ success: false, error: "Officer ID is required" });
+      }
+
+      // 1. Get complaint to find its primary department
+      const { data: complaint, error: compError } = await client
+        .from("complaints")
+        .select("departments, description")
+        .eq("id", complaintId)
+        .single();
+
+      if (compError || !complaint) {
+        return res.status(404).json({ success: false, error: "Complaint not found" });
+      }
+
+      const primaryDept = (complaint.departments && complaint.departments.length > 0) 
+        ? complaint.departments[0] 
+        : "GENERAL";
+
+      // 2. Create the assignment
+      const { data: assignment, error: assignError } = await client
+        .from("complaint_assignments")
+        .insert({
+          complaint_id: complaintId,
+          assigned_to: officerId,
+          assigned_by: assignedBy,
+          department_id: primaryDept,
+          status: "assigned",
+          priority: priority || "medium",
+          deadline: deadline || null,
+          notes: notes || null
+        })
+        .select()
+        .single();
+
+      if (assignError) throw assignError;
+
+      // 3. Update complaint status to 'assigned'
+      await client
+        .from("complaints")
+        .update({ 
+          workflow_status: "assigned",
+          last_activity_at: new Date().toISOString()
+        })
+        .eq("id", complaintId);
+
+      // 4. Log to history
+      await client.from("complaint_history").insert({
+        complaint_id: complaintId,
+        action_type: "assignment",
+        user_id: assignedBy,
+        details: JSON.stringify({
+          officer_id: officerId,
+          priority: priority,
+          notes: notes
+        })
+      });
+
+      return res.json({
+        success: true,
+        data: assignment
+      });
+    } catch (error) {
+      console.error("[LGU_DASHBOARD] Assign error:", error);
+      res.status(500).json({ success: false, error: "Failed to assign complaint" });
     }
   }
 }

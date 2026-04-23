@@ -10,7 +10,7 @@ const ocrRoutes = require("./ocrRoutes");
 const verificationRoutes = require("./verificationRoutes");
 const { _apiLimiter } = require("../middleware/rateLimiting");
 const superAdminRoutes = require("./superAdminRoutes");
-const lguRoutes = require("./lguOfficerRoutes");
+const lguRoutes = require("./lguRoutes");
 const notificationRoutes = require("./notificationRoutes");
 const storageRoutes = require("./storageRoutes");
 const contentRoutes = require("./contentRoutes");
@@ -21,7 +21,7 @@ const complianceRoutes = require("./complianceRoutes");
 const officeConfirmationRoutes = require("./officeConfirmationRoutes");
 const publicApiRoutes = require("./publicApiRoutes");
 const brainDashboardRoutes = require("./brainDashboardRoutes");
-const lguAdminRoutes = require("./lguAdminRoutes");
+
 
 const router = express.Router();
 // CAPTCHA routes
@@ -38,8 +38,8 @@ router.use("/coordinator", coordinatorRoutes);
 router.use("/identity", ocrRoutes);
 router.use("/verification", verificationRoutes);
 router.use("/superadmin", superAdminRoutes);
-router.use("/lgu-admin", lguAdminRoutes);
 router.use("/lgu", lguRoutes);
+router.use("/lgu-admin", lguRoutes); // Backward compatibility
 router.use("/notifications", notificationRoutes);
 router.use("/storage", storageRoutes);
 router.use("/content", contentRoutes);

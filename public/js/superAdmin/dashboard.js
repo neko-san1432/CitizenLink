@@ -1,3 +1,16 @@
+// Generic fetch with retry helper
+async function fetchWithRetry(url, options = {}, retries = 3, backoff = 500) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response;
+    } catch (error) {
+      if (attempt === retries - 1) throw error;
+      await new Promise((res) => setTimeout(res, backoff * Math.pow(2, attempt)));
+    }
+  }
+}
 /**
  * Super Admin Dashboard
  * System-wide management interface
@@ -65,15 +78,23 @@ const charts = {
  * Load dashboard stats
  */
 async function loadDashboardData() {
+  let loaderHandled = false;
   try {
-    const statsResponse = await fetch("/api/superadmin/statistics");
+    const statsResponse = await fetchWithRetry("/api/superadmin/statistics");
     const statsResult = await statsResponse.json();
 
     if (statsResult.success) {
       updateStatistics(statsResult.statistics);
+    } else {
+      showMessage("error", "Failed to load dashboard statistics.");
     }
   } catch (error) {
     console.error("[SUPERADMIN] Load dashboard error:", error);
+    showMessage("error", "Error loading dashboard statistics. Please try again later.");
+  } finally {
+    // Always hide loader and show content, even on error
+    hideDashboardLoader();
+    loaderHandled = true;
   }
 }
 
@@ -93,8 +114,9 @@ function updateStatistics(stats) {
 }
 
 async function loadRoleCounts() {
+  let loaderHandled = false;
   try {
-    const res = await fetch("/api/superadmin/role-distribution");
+    const res = await fetchWithRetry("/api/superadmin/role-distribution");
     const result = await res.json();
 
     if (result.success && result.distribution) {
@@ -107,15 +129,22 @@ async function loadRoleCounts() {
 
       // Update distribution chart if it exists
       updateDistributionChart(result.distribution);
+    } else {
+      showMessage("error", "Failed to load user role distribution.");
     }
   } catch (error) {
     console.error("[SUPERADMIN] Load users error:", error);
+    showMessage("error", "Error loading user role distribution. Please try again later.");
+  } finally {
+    // Always hide loader and show content, even on error
+    hideDashboardLoader();
+    loaderHandled = true;
   }
 }
 
 async function loadGrowthTrends() {
   try {
-    const res = await fetch("/api/superadmin/growth-trends");
+    const res = await fetchWithRetry("/api/superadmin/growth-trends");
     const result = await res.json();
 
     if (result.success && result.trends) {
@@ -128,7 +157,7 @@ async function loadGrowthTrends() {
 
 async function loadApiHealth() {
   try {
-    const res = await fetch("/api/health");
+    const res = await fetchWithRetry("/api/health");
     const data = await res.json();
     const el = document.getElementById("stat-health");
     if (el) {
@@ -155,7 +184,7 @@ async function loadApiHealth() {
 
 async function loadLogs() {
   try {
-    const response = await fetch("/api/superadmin/logs?limit=5");
+    const response = await fetchWithRetry("/api/superadmin/logs?limit=5");
     const result = await response.json();
     const container = document.getElementById("recent-activity-list");
 
@@ -209,20 +238,30 @@ async function loadLogs() {
           .join("");
       } else {
         container.innerHTML = `<div class="text-center py-4 text-gray-500">No logs found</div>`;
-      }
-    }
-  } catch (error) {
-    console.error("[SUPERADMIN] logs error", error);
-  }
-}
-
-function initTrendChart(trends) {
-  const trendCtx = document.getElementById("trendChart");
-  if (!trendCtx) return;
-
-  if (charts.trend) {
-    charts.trend.destroy();
-  }
+        if (result.logs.role_changes) {
+          logs.push(
+            ...result.logs.role_changes.map((l) => ({
+              ...l,
+              type: "Role Change",
+            }))
+          );
+        }
+        if (result.logs.department_transfers) {
+          logs.push(
+            ...result.logs.department_transfers.map((l) => ({
+              ...l,
+              type: "Transfer",
+            }))
+          );
+        }
+        if (result.logs.complaint_workflow) {
+          logs.push(
+            ...result.logs.complaint_workflow.map((l) => ({
+              ...l,
+              type: "complaint",
+            }))
+          );
+        }
 
   charts.trend = new Chart(trendCtx, {
     type: "line",
@@ -276,6 +315,13 @@ function initTrendChart(trends) {
 function updateDistributionChart(distribution) {
   const distCtx = document.getElementById("distributionChart");
   if (!distCtx) return;
+
+  // Validate distribution data
+  if (!distribution || typeof distribution !== "object") {
+    showMessage("warning", "Distribution chart data is missing or malformed.");
+    distCtx.parentElement.innerHTML = '<div class="text-center text-gray-500 py-4">No distribution data available</div>';
+    return;
+  }
 
   if (charts.distribution) {
     charts.distribution.destroy();

@@ -176,9 +176,12 @@ function normalizeRole(role) {
   const roleLower = role.toLowerCase().trim();
 
   // Standard roles that don't need normalization
-  if (["citizen", "super-admin", "complaint-coordinator"].includes(roleLower)) {
+  if (["citizen", "super-admin"].includes(roleLower)) {
     return roleLower;
   }
+
+  // Handle complaint-coordinator normalization
+  if (roleLower === "complaint-coordinator") return "lgu";
 
   // Handle simplified LGU roles
   if (roleLower === "lgu-admin") return "lgu-admin";

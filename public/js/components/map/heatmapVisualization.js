@@ -1874,24 +1874,18 @@ class HeatmapVisualization {
 
       // Create cluster circle
       const clusterCircle = L.circle(clusterCenter, {
-        radius: clusterRadius * 1000, // Convert km to meters
-        color:
-          this.clusterConfig.clusterColors[
-            index % this.clusterConfig.clusterColors.length
-          ],
-        weight: 2,
-        opacity: 0.8,
-        fillOpacity: 0.2,
+        radius: Math.max(clusterRadius * 1000, 100), // Minimum 100m, Convert km to meters
+        color: this.clusterConfig.clusterColors[index % this.clusterConfig.clusterColors.length],
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.4,
       });
 
       // Create cluster marker
       const clusterMarker = L.marker(clusterCenter, {
         icon: L.divIcon({
           html: `<div style="
-            background-color: ${this.clusterConfig.clusterColors[
-    index % this.clusterConfig.clusterColors.length
-  ]
-};
+            background-color: ${this.clusterConfig.clusterColors[index % this.clusterConfig.clusterColors.length]};
             color: white;
             border-radius: 50%;
             width: 40px;
@@ -2223,8 +2217,10 @@ class HeatmapVisualization {
    * Show clusters on map
    */
   showClusters() {
+    console.log("[HEATMAP] showClusters: clusterLayer=" + !!this.clusterLayer + ", map=" + !!this.map + ", layers=" + (this.clusterLayer ? this.clusterLayer.getLayers().length : 0));
     if (this.clusterLayer) {
       this.clusterLayer.addTo(this.map);
+      console.log("[HEATMAP] clusterLayer added to map, current layers on map:", this.clusterLayer.getLayers().length);
     }
   }
 

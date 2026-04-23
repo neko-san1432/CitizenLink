@@ -41,9 +41,10 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.dash-card:hover {
+.dash-card:hover, .action-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    text-decoration: none !important;
 }
 
 .dash-card-blue {
@@ -530,3 +531,156 @@ html body .menu-toggle {
         display: none !important;
     }
 }
+
+/* ============================ */
+/* Merged LGU-specific overrides */
+/* Source: public/css/pages/lguOverride.css (merged 2026-04-19) */
+/* These rules are LGU-specific visual overrides consolidated here to avoid per-page CSS file. */
+
+:root {
+    --lgubg-1: #071026;
+    --lgubg-2: #0b1220;
+    --lgucard-shadow: 0 10px 30px rgba(2,6,23,0.6);
+}
+
+/* Page background */
+.app-container {
+    background: linear-gradient(180deg, var(--lgubg-1) 0%, var(--lgubg-2) 100%) !important;
+}
+
+/* Status bar */
+.dashboard-status-bar {
+    background: rgba(255,255,255,0.02) !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 6px 18px rgba(2,6,23,0.6) !important;
+    border: 1px solid rgba(255,255,255,0.02) !important;
+}
+
+/* Stat cards (top row) */
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card {
+    min-height: 92px;
+    padding: 18px !important;
+    border-radius: 14px !important;
+    box-shadow: var(--lgucard-shadow) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card .dash-card-text h3 {
+    font-size: 28px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card .dash-card-text p { color: rgba(255,255,255,0.9) !important; font-weight:600 !important }
+
+/* Ensure the number and label stack vertically inside stat cards */
+.dash-card-text { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
+
+/* Per-stat gradients */
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(1) { background: linear-gradient(180deg,#60a5fa,#2563eb) !important }
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(2) { background: linear-gradient(180deg,#ef4444,#dc2626) !important }
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(3) { background: linear-gradient(180deg,#f59e0b,#f97316) !important }
+.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(4) { background: linear-gradient(180deg,#a78bfa,#7c3aed) !important }
+
+/* Icon container inside stat cards */
+.dashboard-row .dash-card > span {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(255,255,255,0.12) !important;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.45) inset !important;
+}
+
+/* Alerts card */
+.high-priority-card {
+    border-radius: 14px !important;
+    border: 2px solid rgba(220,38,38,0.6) !important;
+    background: linear-gradient(180deg,#0f172a,#0b1220) !important;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6) !important;
+    padding: 18px !important;
+}
+.high-priority-card h3 { color: #ef4444 !important; }
+.high-priority-card .alert-card { background: rgba(255,255,255,0.02) !important; color: rgba(255,255,255,0.92) !important; padding: 12px !important; border-radius: 10px !important; box-shadow:none !important }
+
+/* Chart containers: make the doughnut larger and widgets visually consistent */
+.dash-card canvas { background: transparent !important; }
+.category-chart-wrap { height: 340px !important; }
+.complaints-chart-wrap { height: 140px !important; }
+.nlp-chart-wrap { height: 140px !important; }
+
+/* Quick action buttons inside the quick-actions card */
+.quick-actions .dash-card.dash-card-blue { display: inline-flex !important; align-items:center !important; justify-content:center !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.45) !important }
+
+/* Chart legend neutralization (safety) */
+.chart-legend > span { background: transparent !important; box-shadow: none !important; padding: 0 !important; display:flex !important; align-items:center !important; gap:8px !important }
+.chart-legend > span > span { width: 12px !important; height: 12px !important; border-radius:50% !important; display:inline-block !important }
+
+/* Misc tweaks */
+.dash-box { border-radius: 14px !important }
+.dash-box h3 { color: rgba(255,255,255,0.95) !important }
+
+@media (max-width: 900px) {
+    .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card { grid-column: span 1 !important }
+}
+
+/* Fix label orientation and header spacing for LGU dashboard */
+.high-priority-title {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    display: block !important;
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    margin: 0 0 12px 0 !important;
+    color: #ef4444 !important;
+}
+
+.dash-box-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+.dash-box-header h3 { margin: 0 !important; font-size: 1.125rem !important; color: rgba(255,255,255,0.95) !important }
+.dash-box-link { color: #3b82f6 !important; font-size: 0.95em !important; margin-left: auto !important }
+
+/* Safety: neutralize any accidental vertical writing mode on card headers */
+.dash-card h3, .dash-box-title h3 { writing-mode: horizontal-tb !important; transform: none !important; white-space: normal !important }
+
+
+/* Remove legacy vertical side-labels that some pages used */
+.high-priority-card::before,
+.high-priority-card::after,
+.high-priority-card .vertical-label,
+.high-priority-card .side-label,
+.high-priority-card .headline-vertical {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transform: none !important;
+    content: none !important;
+}
+
+.high-priority-card { position: relative !important; overflow: visible !important; }
+
+/* If a vertical pseudo-label was added to the dashboard row, hide it for the alerts row */
+.dashboard-grid > .dashboard-row:nth-of-type(2)::before,
+.dashboard-grid > .dashboard-row:nth-of-type(2)::after {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    content: none !important;
+    transform: none !important;
+}
+
+/* Fallback: hide common class names used for side labels */
+.dashboard-grid .vertical-label,
+.dashboard-grid .side-label,
+.dashboard-grid .headline-vertical {
+    display: none !important;
+}
+
+

@@ -144,7 +144,7 @@
   color: var(--primary-600);
   border: none;
   padding: var(--space-2) var(--space-3);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .btn-text:hover:not(:disabled) {

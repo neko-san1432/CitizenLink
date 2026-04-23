@@ -121,6 +121,10 @@ class ComplaintService {
     return await this.readService.getComplaintLocations(filters);
   }
 
+  async getcomplaintLocationSlim(filters = {}) {
+    return await this.readService.getComplaintLocationSlim(filters);
+  }
+
   async getFalsecomplaints(filters = {}) {
     return await this.readService.getFalseComplaints(filters);
   }

@@ -13,6 +13,12 @@ let currentFilters = {
 let isInitialLoad = false;
 window.isInitialLoad = false;
 
+// Helper function to get checked values from checkbox group (needed by background refresh)
+function getCheckedValues(checkboxClass) {
+  const checkboxes = document.querySelectorAll(`.${checkboxClass}:checked`);
+  return Array.from(checkboxes).map((cb) => cb.value);
+}
+
 // Simple initialization - map with heatmap and controls
 (async function () {
   try {
@@ -147,6 +153,9 @@ window.isInitialLoad = false;
 
     // Setup sidebar toggle
     setupSidebarToggle();
+    
+    // Setup toggle buttons
+    setupToggleButtons();
 
     // Wait a bit for boundaries to load, then load complaint data
     // This ensures boundary filtering works correctly
@@ -686,12 +695,6 @@ function setupControlPanel() {
     });
   }
 
-  // Helper function to get checked values from checkbox group
-  function getCheckedValues(checkboxClass) {
-    const checkboxes = document.querySelectorAll(`.${checkboxClass}:checked`);
-    return Array.from(checkboxes).map((cb) => cb.value);
-  }
-
   // Helper function to reset checkboxes
   function resetCheckboxes(checkboxClass) {
     document
@@ -748,9 +751,8 @@ function setupControlPanel() {
     currentFilters = {
       status: statusValues.length > 0 ? statusValues : "",
       category: categoryValues.length > 0 ? categoryValues : "",
-      department:
-        departmentValues && departmentValues.length > 0 ? departmentValues : "",
-      includeResolved: document.getElementById("include-resolved").checked,
+      department: departmentValues && departmentValues.length > 0 ? departmentValues : "",
+      includeResolved: document.getElementById("include-resolved")?.checked ?? true,
       startDate,
       endDate,
     };
@@ -1094,6 +1096,10 @@ async function loadCategories() {
     );
 
     const group = document.getElementById("category-filter-group");
+    if (!group) {
+      console.warn("[HEATMAP] category-filter-group not found, skipping categories");
+      return;
+    }
     const loading = document.getElementById("category-loading");
     if (loading) loading.remove();
 
@@ -1388,8 +1394,11 @@ function updateStatistics() {
     ? heatmapViz.markerLayer.getLayers().length
     : 0;
 
-  document.getElementById("total-complaints-stat").textContent = total;
-  document.getElementById("visible-markers-stat").textContent = visible;
+  const totalStat = document.getElementById("total-complaints-stat");
+  const visibleStat = document.getElementById("visible-markers-stat");
+  
+  if (totalStat) totalStat.textContent = total;
+  if (visibleStat) visibleStat.textContent = visible;
 
   // Reposition gear button after stats update (panel height might change)
 }
@@ -1476,6 +1485,71 @@ function setupSidebarToggle() {
     console.error("[SIDEBAR] Menu toggle or sidebar not found!", {
       menuToggle,
       sidebar,
+    });
+  }
+}
+
+// Setup toggle buttons for markers, heatmap and clusters
+function setupToggleButtons() {
+  console.log("[HEATMAP] Setting up toggle buttons...");
+  
+  // Toggle markers button
+  const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
+  if (toggleMarkersBtn) {
+    toggleMarkersBtn.addEventListener("click", () => {
+      console.log("[HEATMAP] Markers toggle clicked");
+      
+      // Create markers if they don't exist
+      if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
+        heatmapViz.createMarkerLayer();
+      }
+      
+      // Toggle visibility
+      const isVisible = map.hasLayer(heatmapViz.markerLayer);
+      if (isVisible) {
+        heatmapViz.hideMarkers();
+        toggleMarkersBtn.classList.remove("active", "text-blue-400");
+      } else {
+        heatmapViz.showMarkers();
+        toggleMarkersBtn.classList.add("active", "text-blue-400");
+      }
+    });
+  }
+  
+  // Toggle heatmap button
+  const toggleHeatmapBtn = document.getElementById("toggle-heatmap-btn");
+  if (toggleHeatmapBtn) {
+    toggleHeatmapBtn.addEventListener("click", () => {
+      console.log("[HEATMAP] Heatmap toggle clicked");
+      
+      const isVisible = heatmapViz.heatmapLayer && map.hasLayer(heatmapViz.heatmapLayer);
+      if (isVisible) {
+        heatmapViz.hideHeatmap();
+        toggleHeatmapBtn.classList.remove("active", "text-blue-400");
+      } else {
+        if (!heatmapViz.heatmapLayer) {
+          heatmapViz.createHeatmapLayer();
+        }
+        heatmapViz.showHeatmap();
+        toggleHeatmapBtn.classList.add("active", "text-blue-400");
+      }
+    });
+  }
+  
+  // Toggle clusters button
+  const toggleClustersBtn = document.getElementById("toggle-clusters-btn");
+  if (toggleClustersBtn) {
+    toggleClustersBtn.addEventListener("click", () => {
+      console.log("[HEATMAP] Clusters toggle clicked");
+      
+      const isForced = toggleClustersBtn.classList.contains("active");
+      if (isForced) {
+        heatmapViz.toggleClustering(false);
+        toggleClustersBtn.classList.remove("active", "text-blue-400");
+      } else {
+        heatmapViz.toggleClustering(true);
+        toggleClustersBtn.classList.add("active", "text-blue-400");
+      }
     });
   }
 }

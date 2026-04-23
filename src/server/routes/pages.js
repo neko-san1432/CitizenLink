@@ -22,12 +22,12 @@ const getDashboardPath = (userRole) => {
       "citizen",
       "dashboard.html"
     ),
-    // LGU Role now uses the Coordinator Dashboard (as per user request)
+    // LGU Role now uses its own dashboard
     lgu: path.join(
       config.rootDir,
       "views",
       "pages",
-      "coordinator",
+      "lgu",
       "dashboard.html"
     ),
     "super-admin": path.join(
@@ -104,6 +104,14 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.redirect("/dictionary-manager");
+  }
+);
+router.get(
+  "/lgu/dashboard",
+  authenticateUser,
+  requireRole(["lgu"]),
+  (req, res) => {
+    res.redirect("/dashboard");
   }
 );
 router.get(
@@ -241,22 +249,6 @@ router.get(
 );
 
 // LGU-specific pages (simplified URLs)
-router.get(
-  "/task-assigned",
-  authenticateUser,
-  requireRole(["lgu"]),
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        config.rootDir,
-        "views",
-        "pages",
-        "lgu",
-        "taskAssigned.html"
-      )
-    );
-  }
-);
 
 // LGU Admin specific pages (simplified URLs)
 router.get(
@@ -269,7 +261,7 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "lguAdmin",
+        "lgu",
         "assignments.html"
       )
     );
@@ -281,7 +273,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lguAdmin", "heatmap.html")
+      path.join(config.rootDir, "views", "pages", "lgu", "heatmap.html")
     );
   }
 );
@@ -295,7 +287,7 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "lguAdmin",
+        "lgu",
         "brainAnalytics.html"
       )
     );
@@ -311,7 +303,7 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "lguAdmin",
+        "lgu",
         "dictionaryManager.html"
       )
     );
@@ -323,7 +315,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lguAdmin", "publish.html")
+      path.join(config.rootDir, "views", "pages", "publication.html")
     );
   }
 );
@@ -333,7 +325,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "lguAdmin", "reports.html")
+      path.join(config.rootDir, "views", "pages", "lgu", "assignments.html")
     );
   }
 );
@@ -404,7 +396,7 @@ router.get(
         config.rootDir,
         "views",
         "pages",
-        "coordinator",
+        "lgu",
         "reviewQueue.html"
       )
     );
@@ -419,7 +411,7 @@ router.get(
   requireRole(["lgu"]),
   (req, res) => {
     res.sendFile(
-      path.join(config.rootDir, "views", "pages", "coordinator", "review.html")
+      path.join(config.rootDir, "views", "pages", "lgu", "review.html")
     );
   }
 );

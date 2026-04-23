@@ -196,7 +196,7 @@
   text-decoration: none}
 
 .checkbox-group label a:hover {
-  text-decoration: underline}
+  text-decoration: none}
 
 .btn {
   padding: 14px 24px;
@@ -250,7 +250,7 @@
   font-weight: 500}
 
 .auth-footer a:hover {
-  text-decoration: underline}
+  text-decoration: none}
 
 .loading {
   display: inline-block;

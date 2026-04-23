@@ -598,6 +598,7 @@ span {
 }
 
 /* Reduced motion support */
+/* Reduced motion DISABLED per user request
 @media (prefers-reduced-motion: reduce) {
   #sidebar.heatmap-sidebar {
     transition: none;
@@ -611,6 +612,7 @@ span {
     animation: none;
   }
 }
+*/
 
 /* Heatmap Controls Styling */
 .view-buttons {
@@ -1645,3 +1647,17 @@ span {
 
 
 
+
+/* AI Cluster markers */
+.cluster-marker {
+  z-index: 1000 !important;
+}
+.cluster-marker-leaflet {
+  z-index: 1000 !important;
+}
+.ai-cluster-circle {
+  z-index: 999 !important;
+}
+.cluster-popup {
+  z-index: 1001 !important;
+}

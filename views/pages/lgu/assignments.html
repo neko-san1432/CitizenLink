@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>Office Assignments | DRIMS</title>
+    
+    <!-- System Styles -->
+    <link rel="stylesheet" href="/css/base/style.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <link rel="stylesheet" href="/css/components/sidebar.css">
+    <link rel="stylesheet" href="/css/base/app.css">
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/pages/departmentQueue.css">
+    <link rel="stylesheet" href="/css/components/barangayPrioritization.css" />
+    
+    <style>
+        :root {
+            --font-family: 'Outfit', sans-serif;
+            --obsidian-bg: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.4);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-blue: #3b82f6;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--obsidian-bg);
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        .assignments-page {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-title p {
+            margin: 4px 0 0 0;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Perspective Switcher */
+        .perspective-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+        }
+
+        .perspective-btn {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 7px;
+            transition: all 0.2s;
+        }
+
+        .perspective-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .perspective-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main Content Layout */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+        }
+
+        /* Queue Panel */
+        .rq-panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            height: clamp(600px, 75vh, 900px); /* Adjusted height as requested */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Filters Bar */
+        .intelligence-strip {
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .filter-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        /* complaint list */
+        #complaints-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .complaint-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .complaint-card:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Insights View */
+        #insights-view {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            min-height: 600px;
+        }
+
+        /* Sidebar Widgets */
+        .widget {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .widget-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #f1f5f9;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #1e293b;
+            width: 500px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="dark overflow-hidden">
+    <div class="app-container">
+        <div id="sidebar" class="collapsible"></div>
+
+        <div id="app" class="collapsible">
+            <div class="header-container"></div>
+
+            <main class="assignments-page">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="header-title">
+                        <p id="department-name" style="font-weight: 600; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1px; margin: 0;">Loading...</p>
+                        <h1>Operational Queue</h1>
+                    </div>
+                </div>
+
+                <!-- Perspective Switcher -->
+                <div class="perspective-tabs">
+                    <button class="perspective-btn active" data-tab="queue">Assignment Queue</button>
+                    <button class="perspective-btn" data-tab="insights">Barangay Prioritization</button>
+                </div>
+
+                <!-- Global Stats (Hidden in Insights mode) -->
+                <div class="stats-grid" id="stats-summary">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-complaints">0</div>
+                        <div class="stat-label">Total in Queue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="pending-assignment" style="color: #f59e0b;">0</div>
+                        <div class="stat-label">Pending Action</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="in-progress" style="color: #3b82f6;">0</div>
+                        <div class="stat-label">Actively Handled</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="resolved" style="color: #10b981;">0</div>
+                        <div class="stat-label">Resolved Units</div>
+                    </div>
+                </div>
+
+                <!-- Content Layout -->
+                <div class="content-layout">
+                    <!-- Left Column -->
+                    <div class="main-column">
+                        <!-- Queue View -->
+                        <div id="queue-view" class="rq-panel">
+                            <div class="intelligence-strip">
+                                <div style="flex: 2; position: relative;">
+                                    <input type="text" id="search-input" class="filter-input" style="width: 100%; padding-left: 35px;" placeholder="Search by ID or description...">
+                                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.8rem;"></i>
+                                </div>
+                                <select id="status-filter" class="filter-input">
+                                    <option value="">All Statuses</option>
+                                    <option value="submitted">Submitted</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="under_review">Under Review</option>
+                                    <option value="assigned">Assigned</option>
+                                </select>
+                                <select id="priority-filter" class="filter-input">
+                                    <option value="">All Priorities</option>
+                                    <option value="urgent">Urgent</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+
+                            <div id="loading" style="text-align: center; padding: 100px;">
+                                <div class="spinner"></div>
+                                <p style="margin-top: 16px; color: #64748b;">Syncing with HQ...</p>
+                            </div>
+                            
+                            <div id="empty-state" style="text-align: center; padding: 100px; display: none;">
+                                <h3 style="color: #64748b;">No items found</h3>
+                            </div>
+
+                            <div id="complaints-list">
+                                <!-- Data rows injected by departmentQueue.js -->
+                            </div>
+                        </div>
+
+                        <!-- Insights View (Initially Hidden) -->
+                        <div id="insights-view" style="display: none;">
+                           <div id="barangay-prioritization-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Analytics Widgets (Hidden in Insights mode) -->
+                    <div class="widgets-section" id="widgets-panel">
+                        <div class="widget">
+                            <h3 class="widget-title">Status Pulse</h3>
+                            <div style="height: 160px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; position: relative;">
+                                <svg id="complaint-status-chart" viewBox="0 0 160 160" style="width: 130px; height: 130px;"></svg>
+                                <div style="position: absolute; text-align: center;">
+                                    <div id="donut-total" style="font-size: 1.5rem; font-weight: 700;">0</div>
+                                    <div style="font-size: 0.65rem; color: #94a3b8; text-transform: uppercase;">Total</div>
+                                </div>
+                            </div>
+                            <div id="complaint-status-legend"></div>
+                        </div>
+
+                        <div class="widget">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 class="widget-title" style="margin:0;">Priority Intensity</h3>
+                                <span id="priority-total-label" style="font-size: 0.75rem; color: #64748b;">0 items</span>
+                            </div>
+                            <div id="priority-bars"></div>
+                        </div>
+
+                        <div style="text-align: center; font-size: 0.75rem; color: #475569;" id="insights-updated-text">
+                            Last sync: Calculating...
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Officer Assignment Modal -->
+    <div id="officer-assignment-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin:0; font-size: 1.25rem;">Command Dispatch</h2>
+                <button class="modal-close" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer;">&times;</button>
+            </div>
+            
+            <form id="officer-assignment-form">
+                <input type="hidden" id="assignment-complaint-id">
+                
+                <div class="form-group">
+                    <label class="form-label">OPERATIVE OFFICER</label>
+                    <select id="officer-select" class="filter-input" style="width: 100%;" required>
+                        <option value="">Select available operative...</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">PRIORITY LEVEL</label>
+                        <select id="assignment-priority" class="filter-input" style="width: 100%;">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">TARGET DEADLINE</label>
+                        <input type="date" id="assignment-deadline" class="filter-input" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">OPERATIONAL BRIEFING</label>
+                    <textarea id="assignment-notes" class="filter-input" style="width: 100%; height: 80px; resize: none;" placeholder="Provide specific mission objectives..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="button" id="confirm-assignment" class="btn btn-primary" style="flex: 2; padding: 12px; font-weight: 600;">Deploy Officer</button>
+                    <button type="button" id="cancel-assignment" class="btn btn-outline" style="flex: 1; padding: 12px;">Abort</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Scripts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    
+    <!-- Page Logic -->
+    <script type="module" src="/js/lguAdmin/departmentQueue.js"></script>
+</body>
+
+</html>

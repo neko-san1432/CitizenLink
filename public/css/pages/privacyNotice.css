@@ -104,7 +104,7 @@
 }
 
 .privacy-actions a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .footer {
@@ -133,7 +133,7 @@
 }
 
 .footer-links a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 @media (max-width: 640px) {

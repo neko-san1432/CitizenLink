@@ -5,16 +5,25 @@ import themeManager from "../utils/theme.js";
 // Header component for easy modification
 
 export function createHeader() {
+  const isMapView = window.location.pathname === "/heatmap" || 
+                    window.location.pathname === "/digos-map" || 
+                    window.location.pathname === "/map" ||
+                    window.location.pathname.includes("heatmap");
+  
+  const menuToggleHTML = isMapView ? `
+    <button id="menu-toggle" class="menu-toggle header-action" aria-label="Toggle menu" title="Toggle menu" style="background:none;border:none;padding:8px;border-radius:8px;margin-right:8px;">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="4" y1="6" x2="20" y2="6"></line>
+        <line x1="4" y1="12" x2="20" y2="12"></line>
+        <line x1="4" y1="18" x2="20" y2="18"></line>
+      </svg>
+    </button>
+  ` : '';
+
   return `
     <div class="header-content">
       <div class="header-left">
-        <button id="menu-toggle" class="menu-toggle" aria-label="Toggle sidebar" title="Toggle menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
+        ${menuToggleHTML}
         <a href="${brandConfig.dashboardUrl}" class="brand-logo">
           <div class="brand-icon"></div>
           <span class="brand-text">${brandConfig.name}</span>
@@ -462,7 +471,10 @@ document.addEventListener("DOMContentLoaded", () => {
       */
       const appContainer = document.getElementById("app");
       const headerContainer = document.querySelector(".header-container");
-      const isMapView = window.location.pathname.includes("heatmap") || window.location.pathname.includes("map");
+      const isMapView = window.location.pathname === "/heatmap" || 
+                        window.location.pathname === "/digos-map" || 
+                        window.location.pathname === "/map" ||
+                        window.location.pathname.includes("heatmap");
 
       if (appContainer && headerContainer && appContainer.parentNode && !isMapView) {
         const ensureDashboardWrapper = () => {

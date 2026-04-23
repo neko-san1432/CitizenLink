@@ -349,21 +349,6 @@ class ComplaintController {
       : category
         ? [category]
         : [];
-    let departmentArray = Array.isArray(department)
-      ? department
-      : department
-        ? [department]
-        : [];
-
-    // ROLE-BASED FILTERING: Enforce department restrictions
-    const userRole = req.user?.role || "citizen";
-    const userdepartment = req.user?.department;
-
-    // LGU staff can ONLY see their own department's data
-    if (userRole === "lgu" && userdepartment) {
-      departmentArray = [userdepartment];
-    }
-
     // Process status filters - separate workflow_status and confirmation_status
     const workflowStatuses = [];
     const confirmationStatuses = [];
@@ -405,7 +390,6 @@ class ComplaintController {
         confirmationStatuses.length > 0 ? confirmationStatuses : undefined,
       category: categoryArray.length > 0 ? categoryArray : undefined,
       subcategory: req.query.subcategory || undefined,
-      department: departmentArray.length > 0 ? departmentArray : undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       includeResolved: includeResolved === "true",
@@ -777,7 +761,7 @@ class ComplaintController {
 
       // Fetch all relevant complaints (last 30 days for recency calculations)
       const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 365); // Expanded to 365 days to show historical data logic
 
       const { data: complaints, error } = await supabase
         .from("complaints")

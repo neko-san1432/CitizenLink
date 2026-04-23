@@ -19,7 +19,7 @@ class AdvancedDecisionEngine {
     this.initialized = false;
 
     // HITL Configuration
-    this.CONFIDENCE_THRESHOLD = 0.7;  // Below this, add to pending reviews
+    this.CONFIDENCE_THRESHOLD = 0.6;  // Below this, add to pending reviews
     this.enableAutoQueue = true;      // Set false to disable HITL queueing
   }
 
@@ -237,7 +237,7 @@ class AdvancedDecisionEngine {
     try {
       const aiResult = await tensorFlowService.classify(normalizedText);
 
-      if (aiResult && aiResult.category && aiResult.confidence > 0.6) {
+      if (aiResult && aiResult.category && aiResult.confidence > 0.7) {
         const result = {
           category: aiResult.category,
           // subcategory: aiResult.category, // Removed

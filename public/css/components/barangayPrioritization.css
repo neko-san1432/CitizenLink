@@ -1,34 +1,38 @@
 /* Barangay Prioritization Widget Styles */
 
 .bp-widget {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
 .bp-graph-section {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
-  padding: 0.875rem;
-}
-
-html.dark .bp-graph-section {
-  background: rgba(30, 41, 59, 0.5);
-  border-color: rgba(255, 255, 255, 0.05);
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
 }
 
 .bp-graph-title {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gray-600, #475569);
-  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.1em;
+  color: var(--rq-accent-blue);
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-html.dark .bp-graph-title {
-  color: var(--gray-400, #94a3b8);
+.bp-graph-title::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 12px;
+  background: currentColor;
+  border-radius: 2px;
 }
 
 .bp-bar-list {
@@ -58,53 +62,80 @@ html.dark .bp-bar-label {
 }
 
 .bp-bar-track {
-  height: 6px;
-  background: rgba(0, 0, 0, 0.06);
-  border-radius: 999px;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 4px;
   overflow: hidden;
-}
-
-html.dark .bp-bar-track {
-  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
 }
 
 .bp-bar-fill {
   height: 100%;
-  border-radius: 999px;
-  transition: width 0.4s ease;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px currentColor;
 }
 
 .bp-bar-value {
-  font-size: 0.625rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: var(--gray-500, #64748b);
+  color: var(--rq-text-secondary);
   text-align: right;
+  font-family: monospace;
 }
 
-html.dark .bp-bar-value {
-  color: var(--gray-400, #94a3b8);
+/* Empty State - Premium Intelligence Variant */
+.bp-empty-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  min-height: 250px;
 }
 
-/* Empty State */
-.bp-empty {
+.bp-empty-card {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 2.5rem;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.bp-empty-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
-  text-align: center;
-  color: var(--gray-400, #94a3b8);
+  margin-bottom: 1.5rem;
+  color: var(--primary-400);
 }
 
 .bp-empty-icon {
   width: 32px;
   height: 32px;
-  margin-bottom: 0.75rem;
-  opacity: 0.5;
 }
 
-.bp-empty p {
-  font-size: 0.75rem;
+.bp-empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: -0.01em;
+}
+
+.bp-empty-text {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--gray-400);
   margin: 0;
 }
 
