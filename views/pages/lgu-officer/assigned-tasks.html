@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Assigned Tasks - CitizenLink</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/header-redesign.css" />
+    <link rel="stylesheet" href="/css/pages/lgu-officer-tasks.css" />
+    <link rel="stylesheet" href="/css/components/barangay-prioritization.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Header -->
+      <header id="header" class="header-container"></header>
+
+      <!-- Sidebar -->
+      <div id="sidebar" class="collapsible"></div>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="container-fluid">
+          <!-- Page Header -->
+          <div class="page-header-modern">
+            <div class="page-title-wrapper">
+              <h1 class="page-title">My Assigned Tasks</h1>
+              <p class="page-subtitle">
+                Manage, track, and resolve citizen complaints assigned to you.
+              </p>
+            </div>
+
+            <!-- Stats Overview - Now at the top -->
+            <div class="stats-grid">
+              <div class="stat-card gradient-blue">
+                <div class="stat-icon">📋</div>
+                <div class="stat-info">
+                  <div class="stat-number" id="total-tasks">0</div>
+                  <div class="stat-label">Total Assigned</div>
+                </div>
+              </div>
+              <div class="stat-card gradient-orange">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                  <div class="stat-number" id="pending-tasks">0</div>
+                  <div class="stat-label">Pending Action</div>
+                </div>
+              </div>
+              <div class="stat-card gradient-purple">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                  <div class="stat-number" id="in-progress-tasks">0</div>
+                  <div class="stat-label">In Progress</div>
+                </div>
+              </div>
+              <div class="stat-card gradient-green">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                  <div class="stat-number" id="completed-tasks">0</div>
+                  <div class="stat-label">Resolved</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Layout -->
+          <div class="dashboard-layout">
+            <!-- Tasks Section -->
+            <div class="tasks-section-wrapper">
+              <!-- Control Bar -->
+              <div class="control-bar glass-panel">
+                <div class="search-wrapper">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="search-icon"
+                  >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input
+                    type="text"
+                    id="search-input"
+                    class="modern-input"
+                    placeholder="Search by ID, title, or content..."
+                  />
+                </div>
+
+                <div class="filters-wrapper">
+                  <div class="select-wrapper">
+                    <select id="status-filter" class="modern-select">
+                      <option value="">All Status</option>
+                      <option value="assigned">Assigned</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div class="select-wrapper">
+                    <select id="priority-filter" class="modern-select">
+                      <option value="">All Priority</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+
+                  <div class="select-wrapper">
+                    <select id="prioritization-filter" class="modern-select">
+                      <option value="">Sort By</option>
+                      <option value="desc">Highest Priority</option>
+                      <option value="asc">Lowest Priority</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content Area -->
+              <div id="loading" class="loading-state">
+                <div class="spinner-modern"></div>
+                <p>Loading your tasks...</p>
+              </div>
+
+              <div
+                id="empty-state"
+                class="empty-state-modern"
+                style="display: none"
+              >
+                <div class="empty-icon">📝</div>
+                <h2>No tasks found</h2>
+                <p>There are no tasks matching your current filters.</p>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="location.reload()"
+                >
+                  Refresh Page
+                </button>
+              </div>
+
+              <div
+                id="tasks-list"
+                class="tasks-grid-layout"
+                style="display: none"
+              >
+                <!-- Javascript will populate this -->
+              </div>
+            </div>
+
+            <!-- Sidebar / Widgets -->
+            <aside class="dashboard-sidebar">
+              <div class="widget-card glass-panel">
+                <div class="widget-header">
+                  <h3>Insights</h3>
+                </div>
+                <div
+                  id="barangay-prioritization-container"
+                  class="widget-content"
+                >
+                  <!-- Widget Content -->
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer id="footer"></footer>
+    </div>
+
+    <!-- Resolution Modal -->
+    <div id="resolution-modal" class="modal-overlay-modern">
+      <div class="modal-container glass-modal">
+        <div class="modal-header">
+          <div class="modal-title-wrapper">
+            <div class="modal-icon-bg success">
+              <span>✓</span>
+            </div>
+            <div>
+              <h3>Resolve Task</h3>
+              <p class="text-sm text-muted">
+                Complete the assignment and archive it.
+              </p>
+            </div>
+          </div>
+          <button class="modal-close-btn modal-close" type="button">
+            &times;
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <form id="resolution-form">
+            <input type="hidden" id="resolution-complaint-id" />
+
+            <div class="form-group-modern">
+              <label for="resolution-notes">Resolution Notes</label>
+              <textarea
+                id="resolution-notes"
+                class="modern-textarea"
+                rows="5"
+                placeholder="Describe the actions taken to resolve this complaint..."
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group-modern">
+              <label for="resolution-evidence" class="file-upload-label">
+                <span class="upload-icon">📎</span>
+                <span>Attach Evidence (Photos/Docs)</span>
+                <input
+                  type="file"
+                  id="resolution-evidence"
+                  class="file-input-hidden"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                />
+              </label>
+              <div id="file-list-preview" class="file-preview"></div>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modern btn-ghost"
+            id="cancel-resolution"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn-modern btn-success"
+            id="confirm-resolution"
+          >
+            Confirm Resolution
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/auth/roleToggle.js"></script>
+    <script type="module" src="/js/components/toast.js"></script>
+    <script type="module" src="/js/lgu-officer/assigned-tasks.js"></script>
+  </body>
+</html>
