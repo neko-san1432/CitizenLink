@@ -9,13 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300..800;1,300..800&display=swap"
         rel="stylesheet" />
     <title id="profile">profile - D.R.I.M.S.</title>
-    <link rel="stylesheet" href="../css/base/style.css" />
-    <link rel="stylesheet" href="../css/components/toast.css" />
-    <link rel="stylesheet" href="../css/components/sidebar.css" />
-    <link rel="stylesheet" href="../css/base/app.css" />
-    <link rel="stylesheet" href="../css/components/clock.css" />
-    <link rel="stylesheet" href="../css/components/header.css" />
-    <link rel="stylesheet" href="../css/layouts/viewportFix.css" />
+    <link rel="stylesheet" href="/css/base/style.css" />
+    <link rel="stylesheet" href="/css/components/toast.css" />
+    <link rel="stylesheet" href="/css/components/sidebar.css" />
+    <link rel="stylesheet" href="/css/base/app.css" />
+    <link rel="stylesheet" href="/css/components/clock.css" />
+    <link rel="stylesheet" href="/css/components/header.css" />
+    <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
     <script type="module" src="/js/utils/theme.js"></script>
     <link rel="stylesheet" href="/css/pages/profile.css" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -71,8 +71,16 @@
                                 <span id="profile-mobile-display" class="font-medium text-gray-800">loading...</span>
                             </div>
                         </div>
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                    </div>
+                </aside>
+
+                <main class="profile-main-content">
+                    <div id="profile-reports-section" class="profile-reports-section">
+                        <h2 class="text-lg font-bold mb-4">Recent Reports</h2>
+                        <div id="reports-list" class="space-y-4">
+                            <!-- Skeleton loader -->
+                            <div class="skeleton h-20 bg-gray-100 rounded-lg"></div>
+                            <div class="skeleton h-20 bg-gray-100 rounded-lg"></div>
                         </div>
                     </div>
                 </main>
@@ -82,11 +90,11 @@
     <div id="toast-container" class="toast-container"></div>
 
     <script type="module" src="/js/lib/supabaseBoot.js"></script>
-    <script type="module" src="../js/components/header.js"></script>
-    <script type="module" src="../js/components/sidebar.js"></script>
-    <script type="module" src="../js/auth/authChecker.js"></script>
-    <script type="module" src="../js/components/clock.js"></script>
-    <script type="module" src="../js/pages/profile.js"></script>
+    <script type="module" src="/js/components/header.js"></script>
+    <script type="module" src="/js/components/sidebar.js"></script>
+    <script type="module" src="/js/auth/authChecker.js"></script>
+    <script type="module" src="/js/components/clock.js"></script>
+    <script type="module" src="/js/pages/profile.js"></script>
 </body>
 
 </html>

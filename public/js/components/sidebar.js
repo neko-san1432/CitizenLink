@@ -358,11 +358,6 @@ function getMenuItemsForRole(role) {
         label: "User Manager",
       },
       {
-        url: "/super-admin/link-generator",
-        icon: "link-generator",
-        label: "Link Generator",
-      },
-      {
         url: "/super-admin/server-logs",
         icon: "server-logs",
         label: "Server logs",

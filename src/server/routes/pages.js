@@ -168,10 +168,10 @@ router.get("/filecomplaint", authenticateUser, (req, res) => {
   );
 });
 
-// departments page (role-aware)
+// Departments page (role-aware)
 router.get("/departments", authenticateUser, (req, res) => {
   const userRole = req.user?.role || "citizen";
-  if (userRole === "super-admin") {
+  if (userRole === "super-admin" || userRole === "lgu") {
     res.sendFile(
       path.join(
         config.rootDir,
@@ -182,9 +182,8 @@ router.get("/departments", authenticateUser, (req, res) => {
       )
     );
   } else {
-    res.sendFile(
-      path.join(config.rootDir, "views", "pages", "citizen", "departments.html")
-    );
+    // Citizen departments.html is missing, redirect to dashboard
+    res.redirect("/dashboard");
   }
 });
 
@@ -352,18 +351,6 @@ router.get(
 router.get("/lgu", authenticateUser, requireRole(["lgu"]), (req, res) => {
   res.redirect("/dashboard");
 });
-
-// Super Admin access to HR Link Generator
-router.get(
-  "/super-admin/link-generator",
-  authenticateUser,
-  requireRole(["super-admin"]),
-  (req, res) => {
-    res.sendFile(
-      path.join(config.rootDir, "views", "pages", "hr", "link-generator.html")
-    );
-  }
-);
 
 // Super Admin server logs route below
 

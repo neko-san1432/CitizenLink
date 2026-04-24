@@ -101,11 +101,12 @@
 </head>
 
 <body>
-  <header class="header-container"></header>
-  <div id="sidebar" class="collapsible"></div>
+  <div class="app-container">
+    <div id="sidebar" class="collapsible"></div>
 
-  <div id="app" class="coordinator-review">
-    <main class="main-content">
+    <div id="app" class="coordinator-review">
+      <div class="header-container"></div>
+      <main class="main-content">
       <div class="container">
         <div class="review-wrapper" id="complaint-details">
 
@@ -353,12 +354,12 @@
     </div>
   </div><!-- /.reject-modal -->
 
-  <!-- Toast container -->
-  <div id="toast-container"></div>
-
       </div><!-- /.container -->
     </main><!-- /.main-content -->
   </div><!-- /#app -->
+  </div><!-- /.app-container -->
+
+  <div id="toast-container" class="toast-container"></div>
 
   <script type="module" src="/js/components/header.js"></script>
   <script type="module" src="/js/components/sidebar.js"></script>

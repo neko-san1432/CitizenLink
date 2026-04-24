@@ -78,70 +78,23 @@ async function validateUserRole(role) {
   // Simple Workflow Mode Check
   const isSimpleMode = process.env.SIMPLE_WORKFLOW_MODE === "true";
 
-  if (isSimpleMode) {
-    // In simple mode, only citizen, lgu (as lgu-officer), and super-admin are allowed
-    const allowedRoles = ["citizen", "lgu", "lgu-officer", "super-admin"];
+    const allowedRoles = ["citizen", "lgu", "super-admin"];
     if (!allowedRoles.includes(roleLower)) {
       return {
         isValid: false,
         roleType: null,
         departmentCode: null,
-        error: "Role not allowed in Simple Workflow mode (Citizen, LGU, Super Admin only)"
+        error: "Invalid role. Only Citizen, LGU, and Super Admin are supported."
       };
     }
 
-
-    // Map 'lgu' to 'lgu' (user requested plain "lgu")
-    // We accept lgu-officer as input but normalize to lgu for consistency in this mode if desired,
-    // or just allow both but preferring lgu.
-    if (roleLower === "lgu" || roleLower === "lgu-officer") {
-      roleType = "lgu";
-      departmentCode = null;
-    } else {
-      roleType = roleLower;
-      departmentCode = null;
-    }
-
-    return {
-      isValid: true,
-      roleType,
-      departmentCode,
-      error: null
-    };
-  }
-
-  // Legacy/Complex Workflow Logic
-  // Simplified LGU roles
-  if (roleLower === "lgu-admin") {
-    roleType = "lgu-admin";
-    departmentCode = null; // department stored separately in metadata
-  }
-  else if (roleLower === "lgu-hr") {
-    roleType = "lgu-hr";
-    departmentCode = null; // department stored separately in metadata
-  }
-  else if (roleLower === "lgu" || roleLower === "lgu-officer") {
-    // Accept both 'lgu' and 'lgu-officer' for backward compatibility
-    roleType = "lgu-officer";
-    departmentCode = null; // department stored separately in metadata
-  }
-  // Other valid roles (citizen, complaint-coordinator, super-admin)
-  else if (["citizen", "complaint-coordinator", "super-admin"].includes(roleLower)) {
     return {
       isValid: true,
       roleType: roleLower,
       departmentCode: null,
       error: null
     };
-  }
-  else {
-    return {
-      isValid: false,
-      roleType: null,
-      departmentCode: null,
-      error: "Invalid role format. Must be lgu-admin-{dept}, lgu-hr-{dept}, lgu-{dept}, or system role"
-    };
-  }
+
   // Validate department code for LGU roles
   if (departmentCode) {
     const isValidDept = await isValiddepartmentCode(departmentCode);
@@ -175,39 +128,20 @@ function normalizeRole(role) {
 
   const roleLower = role.toLowerCase().trim();
 
-  // Standard roles that don't need normalization
-  if (["citizen", "super-admin"].includes(roleLower)) {
-    return roleLower;
+  // 3-Role System Mapping
+  if (roleLower === "super-admin") return "super-admin";
+  if (roleLower === "citizen") return "citizen";
+  
+  // Legacy or complex roles map to 'lgu'
+  if (
+    roleLower === "lgu" || 
+    roleLower.startsWith("lgu-") || 
+    roleLower === "complaint-coordinator"
+  ) {
+    return "lgu";
   }
 
-  // Handle complaint-coordinator normalization
-  if (roleLower === "complaint-coordinator") return "lgu";
-
-  // Handle simplified LGU roles
-  if (roleLower === "lgu-admin") return "lgu-admin";
-  if (roleLower === "lgu-hr") return "lgu-hr";
-  if (roleLower === "lgu") return "lgu";
-
-  // Normalize any role ending with -officer to base role
-  // e.g., lgu-officer → lgu, anyrole-officer → anyrole
-  if (roleLower.endsWith("-officer")) {
-    const baseRole = roleLower.replace(/-officer$/, "");
-    // If base role is valid, return it; otherwise keep original
-    if (["lgu", "lgu-admin", "lgu-hr"].includes(baseRole)) {
-      return baseRole;
-    }
-    // For other roles ending in -officer, remove the suffix
-    return baseRole || "citizen";
-  }
-
-  // Handle legacy department-scoped roles (optional normalization)
-  // lgu-admin-{dept} → lgu-admin (if you want to simplify)
-  // Currently keeping as-is, but can be enabled if needed:
-  // if (roleLower.startsWith('lgu-admin-')) return 'lgu-admin';
-  // if (roleLower.startsWith('lgu-hr-')) return 'lgu-hr';
-
-  // Default: return as-is or citizen
-  return roleLower || "citizen";
+  return "citizen";
 }
 
 /**

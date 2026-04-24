@@ -14,22 +14,19 @@ function normalizeRole(role) {
 
   const roleLower = role.toLowerCase().trim();
 
-  // Standard roles
-  if (roleLower === "citizen") return "citizen";
+  // 3-Role System Mapping
   if (roleLower === "super-admin") return "super-admin";
-
-  // All LGU variants normalize to 'lgu'
-  // Covers: lgu, lgu-admin, lgu-hr, lgu-officer, complaint-coordinator,
-  //         lgu-admin-{dept}, lgu-hr-{dept}, etc.
+  if (roleLower === "citizen") return "citizen";
+  
+  // Legacy or complex roles map to 'lgu'
   if (
-    roleLower === "lgu" ||
-    roleLower === "complaint-coordinator" ||
-    roleLower.startsWith("lgu-")
+    roleLower === "lgu" || 
+    roleLower.startsWith("lgu-") || 
+    roleLower === "complaint-coordinator"
   ) {
     return "lgu";
   }
 
-  // Default: citizen
   return "citizen";
 }
 

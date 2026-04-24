@@ -1,0 +1,118 @@
+/* 
+   Obsidian Dark Theme - Department Queue / Assignments
+   Standardized layout for LGU department task management
+*/
+
+:root {
+  --rq-bg: #0f172a;
+  --rq-panel-bg: rgba(30, 41, 59, 0.4);
+  --rq-panel-border: rgba(255, 255, 255, 0.05);
+  --rq-accent-blue: #3b82f6;
+  --rq-text-primary: #ffffff;
+  --rq-text-secondary: #cbd5e1;
+  --rq-text-muted: #94a3b8;
+  --rq-border-light: rgba(255, 255, 255, 0.03);
+}
+
+/* Panel & Layout */
+.rq-panel {
+  background: var(--rq-panel-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--rq-panel-border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Intelligence Strip (Filter Bar) */
+.intelligence-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid var(--rq-panel-border);
+}
+
+.filter-input {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--rq-text-primary) !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  padding: 8px 12px !important;
+  outline: none;
+}
+
+.filter-input:focus {
+  border-color: var(--rq-accent-blue) !important;
+}
+
+/* Table / List Items */
+.complaint-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 120px 100px;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--rq-border-light);
+  align-items: center;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.complaint-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.complaint-id {
+  font-family: monospace;
+  color: var(--rq-text-muted);
+  font-size: 0.8rem;
+}
+
+.complaint-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.complaint-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.complaint-sub {
+  font-size: 0.8rem;
+  color: var(--rq-text-muted);
+}
+
+/* Priority & Status Badges */
+.badge {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.badge-urgent { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-high { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-medium { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-low { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+/* Custom Scrollbar */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}

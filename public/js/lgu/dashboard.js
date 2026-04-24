@@ -459,4 +459,3 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-if (document.readyState !== "loading") init();

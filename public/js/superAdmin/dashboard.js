@@ -238,30 +238,20 @@ async function loadLogs() {
           .join("");
       } else {
         container.innerHTML = `<div class="text-center py-4 text-gray-500">No logs found</div>`;
-        if (result.logs.role_changes) {
-          logs.push(
-            ...result.logs.role_changes.map((l) => ({
-              ...l,
-              type: "Role Change",
-            }))
-          );
-        }
-        if (result.logs.department_transfers) {
-          logs.push(
-            ...result.logs.department_transfers.map((l) => ({
-              ...l,
-              type: "Transfer",
-            }))
-          );
-        }
-        if (result.logs.complaint_workflow) {
-          logs.push(
-            ...result.logs.complaint_workflow.map((l) => ({
-              ...l,
-              type: "complaint",
-            }))
-          );
-        }
+      }
+    }
+  } catch (error) {
+    console.error("[SUPERADMIN] Load logs error:", error);
+  }
+}
+
+function initTrendChart(trends) {
+  const trendCtx = document.getElementById("trendChart");
+  if (!trendCtx) return;
+
+  if (charts.trend) {
+    charts.trend.destroy();
+  }
 
   charts.trend = new Chart(trendCtx, {
     type: "line",
