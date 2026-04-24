@@ -35,6 +35,8 @@ function renderTrainingSparkline(canvasId, data, color) {
   if (!canvas) return;
   destroyTrainingChart(canvasId);
 
+  const isDark = document.documentElement.classList.contains("dark");
+
   trainingCharts[canvasId] = new Chart(canvas, {
     type: "line",
     data: {
@@ -52,7 +54,7 @@ function renderTrainingSparkline(canvasId, data, color) {
           if (!chartArea) return null;
           const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
           gradient.addColorStop(0, "rgba(255, 255, 255, 0)");
-          gradient.addColorStop(1, color.replace("1)", "0.1)"));
+          gradient.addColorStop(1, isDark ? color.replace("1)", "0.1)") : color.replace("1)", "0.2)"));
           return gradient;
         },
       }]
@@ -89,6 +91,10 @@ async function init() {
   // Setup Event Listeners
   setupEventListeners();
 
+  window.addEventListener("themeChanged", () => {
+    renderImpactCharts();
+  });
+
   // Pre-populate category dropdown so it's ready even without items
   populateCategoryDropdown();
 
@@ -104,13 +110,14 @@ function renderImpactCharts() {
   const trainedCanvas = $("itemsTrainedChart");
   if (trainedCanvas) {
     destroyTrainingChart("itemsTrainedChart");
+    const isDark = document.documentElement.classList.contains("dark");
     trainingCharts["itemsTrainedChart"] = new Chart(trainedCanvas, {
       type: "doughnut",
       data: {
         labels: ["Trained", "Remaining"],
         datasets: [{
           data: [trainedToday, Math.max(1, pendingReviews.length)],
-          backgroundColor: ["#8b5cf6", "rgba(255, 255, 255, 0.05)"],
+          backgroundColor: ["#8b5cf6", isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)"],
           borderWidth: 0,
           cutout: "85%"
         }]

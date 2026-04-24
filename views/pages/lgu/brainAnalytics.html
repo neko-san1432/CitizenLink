@@ -30,14 +30,14 @@
 
 <body>
     <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
-    <div class="app-container">
+    <div class="app-container analytics-mode">
         <div class="header-container"></div>
         <div id="sidebar" class="collapsible"></div>
         <div id="app" class="collapsible">
             <!-- Main Content Container with New Layout -->
             <div class="dashboard-content p-6">
                 <!-- Tab Navigation (Styled as Pills) -->
-                <div class="flex items-center gap-2 mb-8 bg-white/5 p-1.5 rounded-xl border border-white/5 w-fit">
+                <div class="flex items-center gap-2 mb-8 bg-nav p-1.5 rounded-xl border-nav w-fit">
                     <button class="nav-tab active px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2" data-tab="temporal">
                         <i class="fas fa-chart-line text-xs"></i> Temporal
                     </button>
@@ -738,9 +738,9 @@
                         </div>
 
                         <!-- Charts Row 1 -->
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                        <div class="flex flex-col md:flex-row gap-6 mb-6">
                             <!-- Figurative Breakdown -->
-                            <div class="glass-card p-4 rounded-xl flex flex-col lg:col-span-5 h-[300px]">
+                            <div class="glass-card p-4 rounded-xl flex flex-col md:w-1/2 h-[300px]">
                                 <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-chart-pie"></i> Figurative Language Breakdown
@@ -756,7 +756,7 @@
                                     </div>
                                 </div>
                             </div>                            <!-- Detections Over Time -->
-                            <div class="glass-card p-4 rounded-xl flex flex-col lg:col-span-7 h-[300px]">
+                            <div class="glass-card p-4 rounded-xl flex flex-col md:w-1/2 h-[300px]">
                                 <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-chart-line"></i> Detections Over Time
@@ -777,7 +777,7 @@
                         <!-- Row 3: Mismatches, Recent cases, Methods -->
                         <div class="row-3-grid">
                             <!-- Top Mismatched Categories -->
-                            <div class="glass-card p-4 rounded-xl flex flex-col h-[220px]">
+                            <div class="glass-card p-4 rounded-xl flex flex-col">
                                 <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-layer-group"></i> Top Mismatches
@@ -792,7 +792,7 @@
                             </div>
 
                             <!-- Recent Edge Cases -->
-                            <div class="glass-card p-4 rounded-xl flex flex-col h-[220px]">
+                            <div class="glass-card p-4 rounded-xl flex flex-col">
                                 <div class="chart-card-header mb-3">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-history"></i> Recent Edge Cases
@@ -805,7 +805,7 @@
                             </div>
 
                             <!-- NLP Detection Methods (Re-used) -->
-                            <div class="glass-card p-4 rounded-xl flex flex-col h-[220px]">
+                            <div class="glass-card p-4 rounded-xl flex flex-col">
                                 <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-microscope"></i> NLP Detection Methods
@@ -1107,7 +1107,7 @@
     <!-- Brain Analytics Scripts -->
     <script src="/js/analytics/dashboard/shared/taxonomy.js"></script>
     <script src="/js/analytics/dashboard/nlpProcessor.js"></script>
-    <script src="/js/analytics/dashboard/simulationEngine.js?v=3.0.2"></script>
+    <script src="/js/analytics/dashboard/simulationEngine.js"></script>
     <script src="/js/analytics/ml/analytics.js"></script>
     <script type="module" src="/js/analytics/ml/trainSystem.js"></script>
 </body>
