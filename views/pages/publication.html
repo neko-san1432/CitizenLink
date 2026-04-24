@@ -19,61 +19,12 @@
     <link rel="stylesheet" href="/css/pages/publication.css" />
     <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
     <style>
-        :root {
-            --font-family: 'Outfit', sans-serif;
-            --bg-dark: #0f172a;
-            --panel-bg: rgba(30, 41, 59, 0.4);
-            --border-glow: rgba(59, 130, 246, 0.3);
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-dark);
-            color: #f1f5f9;
-        }
-
-        .pub-tab {
-            padding: 8px 24px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .pub-tab.active {
-            color: #3b82f6;
-            border-bottom: 2px solid #3b82f6;
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .pub-card {
-            background: rgba(30, 41, 59, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 12px;
-        }
-
-        .pub-card:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--border-glow);
-        }
-
-        .pub-card.selected {
-            border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.15);
-        }
-
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -81,38 +32,46 @@
         }
 
         .modal-body {
-            background: #1e293b;
+            background: #111827;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             width: 100%;
             max-width: 600px;
-            padding: 24px;
+            padding: 32px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            font-family: 'Outfit', sans-serif;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 6px;
-            font-size: 0.9em;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
             color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .form-input {
             width: 100%;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(31, 41, 55, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #fff;
-            padding: 10px 12px;
+            padding: 12px 16px;
             border-radius: 8px;
             outline: none;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
 
         .form-input:focus {
             border-color: #3b82f6;
+            background: rgba(31, 41, 55, 0.8);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
     </style>
     <script type="module" src="/js/utils/theme.js"></script>
@@ -134,32 +93,39 @@
             <main style="padding: 8px 32px 32px 32px;">
                 <div class="glass-panel" style="border-radius: 16px; overflow: hidden; background: rgba(30, 41, 59, 0.2);">
                     <!-- Toolbar -->
-                    <div style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.3);">
-                        <div class="pub-tabs" style="display: flex; gap: 8px;">
+                    <div style="padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: flex-end; background: transparent;">
+                        <div class="pub-tabs" style="display: flex; gap: 24px;">
                             <button class="pub-tab active" data-type="news">News</button>
                             <button class="pub-tab" data-type="notices">Notices</button>
                             <button class="pub-tab" data-type="events">Upcoming Events</button>
                         </div>
-                        <button id="btn-create" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 6px 16px; font-size: 0.9em;">
-                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                        <button id="btn-create" style="background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 0.9em; display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
+                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                             Create Bulletin
                         </button>
                     </div>
 
-                    <!-- Intelligence Filters (Matching Review Queue Design) -->
-                    <div class="intelligence-strip" style="display: flex; gap: 12px; padding: 12px 16px; background: rgba(15, 23, 42, 0.4); border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; flex-wrap: wrap;">
-                        <div style="position: relative; flex: 1; min-width: 250px;">
+                    <!-- Intelligence Filters -->
+                    <div class="intelligence-strip" style="display: flex; gap: 12px; padding: 16px; align-items: center; flex-wrap: wrap;">
+                        <div style="position: relative; width: 280px;">
                             <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #64748b;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" id="search-input" class="form-input" placeholder="Search bulletins, locations, or IDs..." style="padding-left: 36px; height: 36px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05);">
+                            <input type="text" id="search-input" placeholder="Search bulletins..." style="width: 100%; padding-left: 36px; height: 38px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; color: #fff; outline: none;">
                         </div>
                         
-                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 2px 12px; height: 36px;">
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 2px 12px; height: 38px;">
                            <input type="date" id="filter-start-date" style="background: transparent; border: none; color: #fff; font-size: 0.85em; outline: none; cursor: pointer;">
                            <span style="color: #64748b;">–</span>
                            <input type="date" id="filter-end-date" style="background: transparent; border: none; color: #fff; font-size: 0.85em; outline: none; cursor: pointer;">
                         </div>
 
-                        <select id="filter-category" class="form-select" style="height: 36px; padding: 0 32px 0 12px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; min-width: 140px;">
+                        <select id="filter-priority" style="height: 38px; padding: 0 16px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; min-width: 120px; outline: none;">
+                            <option value="">Priority: All</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+
+                        <select id="filter-category" style="height: 38px; padding: 0 16px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; min-width: 140px; outline: none;">
                             <option value="">Category: All</option>
                             <option value="Infrastructure">Infrastructure</option>
                             <option value="Public Safety">Public Safety</option>
@@ -168,30 +134,59 @@
                             <option value="Environment">Environment</option>
                         </select>
 
-                        <select id="filter-sort" class="form-select" style="height: 36px; padding: 0 32px 0 12px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px;">
+                        <select id="filter-duplicates" style="height: 38px; padding: 0 16px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; min-width: 140px; outline: none;">
+                            <option value="">Duplicates: All</option>
+                        </select>
+
+                        <select id="filter-sort" style="height: 38px; padding: 0 16px; font-size: 0.9em; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; outline: none;">
                             <option value="newest">Sort: Newest</option>
                             <option value="oldest">Sort: Oldest</option>
                         </select>
 
-                        <button id="btn-clear-filters" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #60a5fa; border-radius: 8px; padding: 0 12px; height: 36px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                           Clear Filters
-                        </button>
+                        <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 0 16px; height: 38px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; color: #60a5fa; font-weight: 600; font-size: 0.9em;">
+                            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            288 Pending
+                        </div>
                     </div>
 
                     <!-- Split View -->
-                    <div style="display: grid; grid-template-columns: 380px 1fr; height: calc(100vh - 230px);">
+                    <div style="display: grid; grid-template-columns: 420px 1fr; height: calc(100vh - 270px);">
                         <!-- Sidebar List -->
-                        <div style="border-right: 1px solid rgba(255,255,255,0.05); overflow-y: auto; padding: 16px;" id="pub-list">
+                        <div style="overflow-y: auto; padding: 16px 8px 16px 16px;" id="pub-list">
                             <!-- Injected -->
                         </div>
 
                         <!-- Viewer -->
-                        <div style="padding: 40px; overflow-y: auto;" id="pub-detail">
+                        <div style="padding: 16px 24px; overflow-y: auto;" id="pub-detail">
                             <div style="text-align: center; margin-top: 100px; color: #64748b;">
                                 <div style="font-size: 3em; margin-bottom: 20px;">📄</div>
                                 <h3>Select a bulletin to preview</h3>
                                 <p>Select an item from the sidebar to view full details.</p>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom Pagination Footer -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.05); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4);">
+                        <div style="display: flex; align-items: center; gap: 16px; color: #94a3b8; font-size: 0.85em;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                Rows per page: 
+                                <select style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 4px 8px; border-radius: 4px; outline: none;">
+                                    <option>50</option>
+                                    <option>100</option>
+                                </select>
+                            </div>
+                            <div>Page 1 of 6 • Total: 288 bulletins</div>
+                        </div>
+                        <div style="display: flex; gap: 4px;">
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg> Previous</button>
+                            <button style="padding: 6px 12px; background: #3b82f6; border: none; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.9em;">1</button>
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9em;">2</button>
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9em;">3</button>
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9em;">4</button>
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9em;">5</button>
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9em;">6</button>
+                            <button style="padding: 6px 12px; background: transparent; border: none; color: #fff; cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px;">Next <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
                         </div>
                     </div>
                 </div>

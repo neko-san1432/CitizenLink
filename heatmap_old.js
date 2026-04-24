@@ -1162,33 +1162,26 @@ class HeatmapVisualization {
     //   return this.markerLayer;
     // }
 
-    // Use filtered complaint data (this.complaintData) — NOT allcomplaintData.
-    // this.complaintData is set by applyClientSideFilters() and respects all active filters.
-    // Role-based scoping is applied on top of filters.
-
-    // Super-admin: All filtered markers
+    // Super-admin: All markers
     if (
       this.userRole === "super-admin"
     ) {
-      complaintsForMarkers = this.complaintData;
-      console.log(`[HEATMAP] Super-admin: Showing ${complaintsForMarkers.length} filtered markers`);
+      complaintsForMarkers = this.allcomplaintData;
+      console.log("[HEATMAP] Super-admin: Showing all markers");
     }
-    // LGU Staff: Only filtered complaints assigned to their office/department
+    // LGU Staff: Only complaints assigned to their office/department
     else if (this.userRole === "lgu" && this.userdepartment) {
-      // Start from filtered data, then scope to department
-      const filteredData = this.complaintData || [];
-      complaintsForMarkers = filteredData.filter(c => {
-        const dept = (c.department || c.assignedDepartment || "").toUpperCase();
-        return dept === this.userdepartment.toUpperCase() || dept === "";
-      });
+      complaintsForMarkers = this.getRoleScopedcomplaints();
       console.log(
-        `[HEATMAP] LGU Staff (${this.userdepartment}): Showing ${complaintsForMarkers.length} filtered+scoped markers`
+        `[HEATMAP] LGU Staff (${this.userdepartment}): Showing ${complaintsForMarkers.length} assigned complaints out of ${this.allcomplaintData.length} total`
       );
     }
-    // All other roles: Show all filtered markers
+    // Default: No markers
     else {
-      complaintsForMarkers = this.complaintData;
-      console.log(`[HEATMAP] Role ${this.userRole}: Showing ${complaintsForMarkers.length} filtered markers`);
+      console.log(`[HEATMAP] Role ${this.userRole}: Markers disabled`);
+      this.markerLayer = L.layerGroup(); // Empty layer group
+      this.markerMap.clear();
+      return this.markerLayer;
     }
 
     // Create marker layer and store all markers
@@ -1828,9 +1821,6 @@ class HeatmapVisualization {
             ...complaint, // Spread properties so AdaptiveDBSCAN can access category, subcategory, etc.
             lat,
             lng,
-            latitude: lat,   // AdaptiveDBSCAN also uses latitude/longitude
-            longitude: lng,  // AdaptiveDBSCAN also uses latitude/longitude
-            timestamp: complaint.submittedAt || complaint.submitted_at || new Date().toISOString(),
             data: complaint
           };
         });
@@ -1875,169 +1865,49 @@ class HeatmapVisualization {
     this.clusterLayer = L.layerGroup();
 
     this.clusters.forEach((cluster, index) => {
-      // Handle both index-based (standard DBSCAN) and object-based (AdaptiveDBSCAN) cluster results
-      let clusterPoints;
-      if (cluster.length > 0 && typeof cluster[0] === "number") {
-        // Standard DBSCAN: cluster is an array of indices
-        clusterPoints = cluster.map((i) => this.complaintData[i]).filter(Boolean);
-      } else {
-        // AdaptiveDBSCAN: cluster is an array of point objects
-        clusterPoints = cluster;
-      }
-
-      if (!clusterPoints || clusterPoints.length === 0) return;
-
+      const clusterPoints = cluster.map((i) => this.complaintData[i]);
       const clusterCenter = this.calculateClusterCenter(clusterPoints);
       const clusterRadius = this.calculateClusterRadius(
         clusterPoints,
         clusterCenter
       );
 
-      const clusterColor = this.clusterConfig.clusterColors[index % this.clusterConfig.clusterColors.length];
-      
-      // 1. Create individual point markers for each complaint in the cluster
-      clusterPoints.forEach(point => {
-        // Use standard lat/lng
-        const lat = point.lat || point.latitude;
-        const lng = point.lng || point.longitude;
-        
-        if (lat === undefined || lng === undefined) return;
-        
-        // Spotlight style marker (white border, colored inner, glowing effect)
-        const size = 20;
-        const html = `
-          <div class="spotlight-marker-inner" style="
-              width: ${size}px;
-              height: ${size}px;
-              background: ${clusterColor};
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 3px solid white;
-              box-shadow: 0 0 10px ${clusterColor};
-          ">
-            <div style="width: 8px; height: 8px; background: white; border-radius: 50%; opacity: 0.8;"></div>
-          </div>
-        `;
-        
-        const pointMarker = L.marker([lat, lng], {
-          icon: L.divIcon({
-            className: "spotlight-marker",
-            html: html,
-            iconSize: [size, size],
-            iconAnchor: [size / 2, size / 2]
-          }),
-          zIndexOffset: 800
-        });
-        
-        // Bind the standard complaint popup to individual points
-        const pointPopupContent = this.createcomplaintPopup(point);
-        pointMarker.bindPopup(pointPopupContent, {
-          maxWidth: 250,
-          className: "complaint-popup"
-        });
-        
-        this.clusterLayer.addLayer(pointMarker);
+      // Create cluster circle
+      const clusterCircle = L.circle(clusterCenter, {
+        radius: clusterRadius * 1000, // Convert km to meters
+        color:
+          this.clusterConfig.clusterColors[
+            index % this.clusterConfig.clusterColors.length
+          ],
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.2,
       });
 
-      // 1.5. Draw distance-limited connecting lines (MST-style)
-      if (clusterPoints.length > 1) {
-        const MAX_LINE_DISTANCE = 0.05; // ~50 meters in km
-        const drawnConnections = new Set();
-        
-        for (let i = 0; i < clusterPoints.length; i++) {
-          const from = clusterPoints[i];
-          const fromLat = from.lat || from.latitude;
-          const fromLng = from.lng || from.longitude;
-          if (!fromLat || !fromLng) continue;
-          
-          let nearestDist = Infinity;
-          let nearestIdx = -1;
-          
-          for (let j = 0; j < clusterPoints.length; j++) {
-            if (i === j) continue;
-            const to = clusterPoints[j];
-            const toLat = to.lat || to.latitude;
-            const toLng = to.lng || to.longitude;
-            if (!toLat || !toLng) continue;
-            
-            // calculateDistance returns km
-            const dist = this.dbscan.calculateDistance({lat: fromLat, lng: fromLng}, {lat: toLat, lng: toLng});
-            if (dist < nearestDist) {
-              nearestDist = dist;
-              nearestIdx = j;
-            }
-          }
-          
-          if (nearestIdx !== -1 && nearestDist <= MAX_LINE_DISTANCE) {
-            const connectionKey = [Math.min(i, nearestIdx), Math.max(i, nearestIdx)].join("-");
-            if (!drawnConnections.has(connectionKey)) {
-              drawnConnections.add(connectionKey);
-              const to = clusterPoints[nearestIdx];
-              const toLat = to.lat || to.latitude;
-              const toLng = to.lng || to.longitude;
-              
-              const line = L.polyline(
-                [[fromLat, fromLng], [toLat, toLng]],
-                {
-                  color: clusterColor,
-                  weight: 1,        // Subtle
-                  opacity: 0.3,     // Low opacity
-                  dashArray: "5, 5" // Dashed
-                }
-              );
-              this.clusterLayer.addLayer(line);
-            }
-          }
-        }
-      }
-
-      // 1.6. CONVEX HULL POLYGON - Wraps cluster points to show "Area of Effect"
-      if (clusterPoints.length >= 3) {
-        const pointsForHull = clusterPoints.map(p => [p.lat || p.latitude, p.lng || p.longitude]).filter(p => p[0] && p[1]);
-        const hullPoints = this.computeConvexHull(pointsForHull);
-        
-        if (hullPoints && hullPoints.length >= 3) {
-          const hullPolygon = L.polygon(hullPoints, {
-            color: clusterColor,
-            weight: 2,
-            opacity: 0.7,
-            fillColor: clusterColor,
-            fillOpacity: 0.12,
-            dashArray: "4, 4",
-            className: "cluster-convex-hull"
-          });
-          this.clusterLayer.addLayer(hullPolygon);
-        }
-      }
-
-      // 2. Create the central HOT SPOT label
-      const clusterMarker = L.marker([clusterCenter.lat, clusterCenter.lng], {
+      // Create cluster marker
+      const clusterMarker = L.marker(clusterCenter, {
         icon: L.divIcon({
-          className: "cluster-label multi-report-label",
-          html: `
-            <div style="
-                background: ${clusterColor};
-                color: white;
-                padding: 8px 12px;
-                border-radius: 8px;
-                font-size: 11px;
-                font-weight: 600;
-                white-space: nowrap;
-                cursor: pointer;
-                text-align: center;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                border: 1px solid rgba(255,255,255,0.2);
-            ">
-                <div style="margin-bottom: 2px;"><i class="fas fa-map-marker-alt"></i> HOT SPOT</div>
-                <div style="font-size: 10px; opacity: 0.9; font-weight: normal;">${clusterPoints.length} reports</div>
-            </div>
-          `,
-          iconSize: [80, 45],
-          iconAnchor: [40, 22]
+          html: `<div style="
+            background-color: ${this.clusterConfig.clusterColors[
+    index % this.clusterConfig.clusterColors.length
+  ]
+};
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          ">${cluster.length}</div>`,
+          className: "cluster-marker",
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
         }),
-        zIndexOffset: 1000
       });
 
       // Create cluster popup
@@ -2047,6 +1917,7 @@ class HeatmapVisualization {
         className: "cluster-popup",
       });
 
+      this.clusterLayer.addLayer(clusterCircle);
       this.clusterLayer.addLayer(clusterMarker);
     });
 
@@ -2073,16 +1944,8 @@ class HeatmapVisualization {
    */
   calculateClusterRadius(points, center) {
     let maxDistance = 0;
-    const R = 6371; // Earth's radius in km
-    const toRad = (deg) => deg * (Math.PI / 180);
     points.forEach((point) => {
-      const dLat = toRad((point.lat || point.latitude) - center.lat);
-      const dLng = toRad((point.lng || point.longitude) - center.lng);
-      const a = (Math.sin(dLat / 2) * Math.sin(dLat / 2)) +
-                (Math.cos(toRad(center.lat)) * Math.cos(toRad(point.lat || point.latitude)) *
-                 Math.sin(dLng / 2) * Math.sin(dLng / 2));
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c;
+      const distance = this.dbscan.calculateDistance(center, point);
       maxDistance = Math.max(maxDistance, distance);
     });
     return maxDistance;
@@ -2360,10 +2223,8 @@ class HeatmapVisualization {
    * Show clusters on map
    */
   showClusters() {
-    console.log("[HEATMAP] showClusters: clusterLayer=" + !!this.clusterLayer + ", map=" + !!this.map + ", layers=" + (this.clusterLayer ? this.clusterLayer.getLayers().length : 0));
     if (this.clusterLayer) {
       this.clusterLayer.addTo(this.map);
-      console.log("[HEATMAP] clusterLayer added to map, current layers on map:", this.clusterLayer.getLayers().length);
     }
   }
 
@@ -2451,68 +2312,6 @@ class HeatmapVisualization {
         this.showClusters();
       }
     }
-  }
-
-  /**
-   * Compute the convex hull of a set of points using Graham Scan algorithm.
-   * Used to draw "Area of Effect" polygons around DBSCAN clusters.
-   *
-   * @param {Array} points - Array of [lat, lng] pairs
-   * @returns {Array} Array of [lat, lng] pairs forming the convex hull (clockwise)
-   */
-  computeConvexHull(points) {
-    if (!points || points.length < 3) return points;
-
-    // Find the point with lowest y-coordinate (and leftmost if tie)
-    let pivot = points[0];
-    let pivotIdx = 0;
-
-    for (let i = 1; i < points.length; i++) {
-      if (points[i][0] < pivot[0] ||
-              (points[i][0] === pivot[0] && points[i][1] < pivot[1])) {
-        pivot = points[i];
-        pivotIdx = i;
-      }
-    }
-
-    // Swap pivot to first position
-    [points[0], points[pivotIdx]] = [points[pivotIdx], points[0]];
-    pivot = points[0];
-
-    // Sort points by polar angle with respect to pivot
-    const sorted = points.slice(1).sort((a, b) => {
-      const angleA = Math.atan2(a[0] - pivot[0], a[1] - pivot[1]);
-      const angleB = Math.atan2(b[0] - pivot[0], b[1] - pivot[1]);
-
-      if (angleA !== angleB) return angleA - angleB;
-
-      // If same angle, keep the farther point
-      const distA = Math.pow(a[0] - pivot[0], 2) + Math.pow(a[1] - pivot[1], 2);
-      const distB = Math.pow(b[0] - pivot[0], 2) + Math.pow(b[1] - pivot[1], 2);
-      return distA - distB;
-    });
-
-    // Build hull using stack
-    const hull = [pivot];
-
-    for (const point of sorted) {
-      // Remove points that make clockwise turn
-      while (hull.length >= 2 &&
-              this.crossProduct(hull[hull.length - 2], hull[hull.length - 1], point) <= 0) {
-        hull.pop();
-      }
-      hull.push(point);
-    }
-
-    return hull;
-  }
-
-  /**
-   * Calculate cross product of vectors OA and OB
-   * Positive = counterclockwise, Negative = clockwise, Zero = collinear
-   */
-  crossProduct(O, A, B) {
-    return (A[1] - O[1]) * (B[0] - O[0]) - (A[0] - O[0]) * (B[1] - O[1]);
   }
 }
 

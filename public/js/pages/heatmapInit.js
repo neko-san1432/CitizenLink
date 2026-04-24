@@ -154,8 +154,12 @@ function getCheckedValues(checkboxClass) {
     // Setup sidebar toggle
     setupSidebarToggle();
     
-    // Setup toggle buttons
-    setupToggleButtons();
+    // Setup toggle buttons — ONLY if the tactical HUD inline script hasn't already handled them.
+    // The inline <script> in heatmap.html clones the buttons and attaches mutually-exclusive handlers.
+    // If that script ran, `#hud-left` exists and buttons are already wired.
+    if (!document.getElementById('hud-left')) {
+      setupToggleButtons();
+    }
 
     // Wait a bit for boundaries to load, then load complaint data
     // This ensures boundary filtering works correctly
@@ -487,6 +491,17 @@ function stopBackgroundRefresh() {
 function updateZoomBasedVisibility(zoom) {
   if (!heatmapViz) return;
 
+  // When the tactical HUD is present (heatmap.html), layer visibility is managed
+  // exclusively by the inline HUD toggle script (mutually-exclusive buttons).
+  // Do NOT auto-show/hide layers here — it fights with the user's toggle choices.
+  if (document.getElementById('hud-left')) {
+    // Only ensure markers are lazily built on first zoom-in so they're ready when toggled
+    if (zoom > 10 && !heatmapViz.markerLayer && !heatmapViz._markersBuilding) {
+      heatmapViz.createMarkerLayer();
+    }
+    return;
+  }
+
   const zoomThreshold = 10;
   const heatmapToggle = document.getElementById("toggle-heatmap-btn");
   const isHeatmapForced =
@@ -516,25 +531,6 @@ function updateZoomBasedVisibility(zoom) {
     }
   } else {
     // Zoom > 11: Show markers that pass filters, hide heatmap unless forced
-    // Role-based: Citizens don't see markers (only heatmap), others see markers based on role
-    const userRole = heatmapViz.userRole || "citizen";
-
-    // ALLOW MARKERS FOR ALL ROLES (Debug fix)
-    // Citizens: Always show only heatmap, never markers
-    // if (userRole === "citizen") {
-    //   if (heatmapViz.heatmapLayer) {
-    //     heatmapViz.showHeatmap();
-    //   }
-    //   if (heatmapViz.markerLayer) {
-    //     heatmapViz.hideMarkers();
-    //   }
-    //   // Hide toggle markers button for citizens
-    //   const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
-    //   if (toggleMarkersBtn) {
-    //     toggleMarkersBtn.style.display = "none";
-    //   }
-    // } else {
-    // Non-citizens: Show markers based on zoom and filters
     // Create markers lazily if they don't exist yet (first time user zooms in).
     // _markersBuilding: async build is in progress — don't retrigger.
     if (
@@ -543,8 +539,6 @@ function updateZoomBasedVisibility(zoom) {
         !heatmapViz._markersBuilding)
     ) {
       heatmapViz.createMarkerLayer();
-      // Markers are being built asynchronously. _buildMarkersAsync will call
-      // updateMarkerVisibility() when the batch is complete — nothing else to do here.
     }
 
     if (
@@ -563,14 +557,6 @@ function updateZoomBasedVisibility(zoom) {
       } else {
         heatmapViz.showMarkers();
       }
-
-      // Update toggle button state
-      const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
-      if (toggleMarkersBtn) {
-        toggleMarkersBtn.textContent = "Hide Markers";
-        toggleMarkersBtn.classList.add("active");
-        toggleMarkersBtn.style.display = "block";
-      }
     }
 
     // Hide heatmap unless forced on
@@ -581,7 +567,6 @@ function updateZoomBasedVisibility(zoom) {
         heatmapViz.hideHeatmap();
       }
     }
-    // }
   }
 }
 
@@ -589,7 +574,7 @@ function updateZoomBasedVisibility(zoom) {
 function positionResetViewButton() {
   const customControlsRow = document.querySelector(".map-custom-controls-row");
   const resetViewButton = document.getElementById("reset-view-btn");
-  const menuToggle = document.getElementById("menu-toggle");
+  const menuToggle = document.getElementById("menu-toggle") || document.getElementById("floating-menu-btn");
 
   if (!customControlsRow) return;
 
@@ -757,21 +742,42 @@ function setupControlPanel() {
       endDate,
     };
 
-    // Update marker visibility without reloading data
+    // Update heatmapViz with current filters and apply client-side filtering
     if (heatmapViz) {
       heatmapViz.currentFilters = currentFilters;
+      heatmapViz.applyClientSideFilters(currentFilters);
 
-      // Update heatmap layer with filtered data
-      if (heatmapViz.heatmapLayer) {
-        heatmapViz.hideHeatmap();
+      // Detect which HUD layer is currently active and refresh it
+      const hudLeft = document.getElementById('hud-left');
+      if (hudLeft) {
+        // Tactical HUD mode: refresh whichever layer is currently active
+        const activeHeatmap = document.getElementById('toggle-heatmap-btn')?.classList.contains('active');
+        const activeMarkers = document.getElementById('toggle-markers-btn')?.classList.contains('active');
+        const activeClusters = document.getElementById('toggle-clusters-btn')?.classList.contains('active');
+
+        if (activeHeatmap) {
+          if (heatmapViz.heatmapLayer) heatmapViz.hideHeatmap();
+          heatmapViz.createHeatmapLayer();
+          heatmapViz.showHeatmap();
+        } else if (activeMarkers) {
+          heatmapViz.hideMarkers();
+          heatmapViz.createMarkerLayer();
+          heatmapViz.showMarkers();
+        } else if (activeClusters) {
+          heatmapViz.toggleClustering(false);
+          heatmapViz.toggleClustering(true);
+        } else {
+          // No layer active — just update heatmap data (default layer)
+          heatmapViz.createHeatmapLayer();
+        }
+      } else {
+        // Non-tactical page: use original zoom-based behavior
+        if (heatmapViz.heatmapLayer) heatmapViz.hideHeatmap();
+        heatmapViz.createHeatmapLayer();
+        const currentZoom = map ? map.getZoom() : 11;
+        updateZoomBasedVisibility(currentZoom);
       }
-      heatmapViz.createHeatmapLayer();
 
-      // Apply zoom-based visibility — this handles both heatmap and markers in one pass,
-      // including calling updateMarkerVisibility() when zoom > threshold.
-      // Do NOT call updateMarkerVisibility() directly here to avoid running it twice.
-      const currentZoom = map ? map.getZoom() : 11;
-      updateZoomBasedVisibility(currentZoom);
       updateStatistics();
     }
   }
@@ -864,80 +870,10 @@ function setupControlPanel() {
       }
     }
 
-    // Toggle markers button (hidden for citizens)
-    const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
-    if (toggleMarkersBtn) {
-      // Hide toggle button for citizens (they only see heatmap)
-      const userRole = heatmapViz?.userRole || "citizen";
-      if (userRole === "citizen") {
-        toggleMarkersBtn.style.display = "none";
-      }
-
-      toggleMarkersBtn.addEventListener("click", () => {
-        if (!heatmapViz) return;
-
-        // Citizens shouldn't be able to toggle markers
-        if (heatmapViz.userRole === "citizen") {
-          return;
-        }
-
-        // Check if markers are currently visible
-        const markersVisible =
-          heatmapViz.markerLayer && map && map.hasLayer(heatmapViz.markerLayer);
-
-        if (markersVisible) {
-          // Hide markers
-          heatmapViz.hideMarkers();
-          toggleMarkersBtn.textContent = "Show Markers";
-          toggleMarkersBtn.classList.remove("active");
-          console.log("[HEATMAP] Markers hidden via toggle");
-        } else {
-          // Show markers - ensure layer exists first
-          if (
-            !heatmapViz.markerLayer ||
-            heatmapViz.markerLayer.getLayers().length === 0
-          ) {
-            heatmapViz.createMarkerLayer();
-          }
-
-          // Apply current filters to determine which markers should be visible
-          if (heatmapViz.updateMarkerVisibility) {
-            heatmapViz.updateMarkerVisibility();
-          } else {
-            heatmapViz.showMarkers();
-          }
-
-          toggleMarkersBtn.textContent = "Hide Markers";
-          toggleMarkersBtn.classList.add("active");
-          console.log("[HEATMAP] Markers shown via toggle");
-        }
-      });
-    }
-
-    // Toggle heatmap button
-    const toggleHeatmapBtn = document.getElementById("toggle-heatmap-btn");
-    if (toggleHeatmapBtn) {
-      toggleHeatmapBtn.addEventListener("click", () => {
-        if (!heatmapViz) return;
-
-        const isForced = toggleHeatmapBtn.classList.contains("forced-on");
-        const currentZoom = map ? map.getZoom() : 11;
-
-        if (isForced) {
-          // Turn off forced mode - return to zoom-based visibility
-          toggleHeatmapBtn.classList.remove("forced-on");
-          toggleHeatmapBtn.textContent = "Toggle Heatmap";
-          updateZoomBasedVisibility(currentZoom);
-        } else {
-          // Force heatmap on
-          toggleHeatmapBtn.classList.add("forced-on");
-          toggleHeatmapBtn.textContent = "Heatmap: ON";
-          if (heatmapViz.heatmapLayer) {
-            heatmapViz.showHeatmap();
-          }
-        }
-      });
-    }
+    // Toggle markers / heatmap button handlers are NOT attached here.
+    // They are managed by the inline HUD script in heatmap.html (mutually-exclusive layer toggles)
+    // or by setupToggleButtons() on non-tactical pages.
+    // Attaching handlers here would create duplicates that cancel each other out.
   }
 
   // Reset filters
@@ -1463,7 +1399,7 @@ function fitToAllMarkers() {
 
 // Setup sidebar toggle
 function setupSidebarToggle() {
-  const menuToggle = document.getElementById("menu-toggle");
+  const menuToggle = document.getElementById("menu-toggle") || document.getElementById("floating-menu-btn");
   const sidebar = document.getElementById("sidebar");
 
   if (menuToggle && sidebar) {

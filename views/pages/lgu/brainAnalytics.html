@@ -37,512 +37,1042 @@
             <!-- Main Content Container with New Layout -->
             <div class="dashboard-content p-6">
                 <!-- Tab Navigation (Styled as Pills) -->
+                <div class="flex items-center gap-2 mb-8 bg-white/5 p-1.5 rounded-xl border border-white/5 w-fit">
+                    <button class="nav-tab active px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2" data-tab="temporal">
+                        <i class="fas fa-chart-line text-xs"></i> Temporal
+                    </button>
+                    <button class="nav-tab px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2" data-tab="categories">
+                        <i class="fas fa-tags text-xs"></i> Categories
+                    </button>
+                    <button class="nav-tab px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2" data-tab="edge-cases">
+                        <i class="fas fa-sparkles text-xs"></i> Smart Detection
+                    </button>
+                    <button class="nav-tab px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2" data-tab="data-table">
+                        <i class="fas fa-database text-xs"></i> Dataset
+                    </button>
+                    <button class="nav-tab px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2" data-tab="system-training">
+                        <i class="fas fa-brain text-xs"></i> Training
+                    </button>
+                </div>
 
 
                 <!-- Time Trends Section -->
-                <section id="temporal" class="tab-content" style="display: block;">
-                    <div class="dashboard-header-section mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">Time Trend Analysis</h2>
-                        <p class="text-gray-600">Analyze complaint patterns over time to identify peak periods and
-                            seasonal trends.</p>
-                    </div>
+                <section id="temporal" class="tab-content text-gray-200">
+                    <div class="tactical-container">
+                        <!-- Header -->
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white flex items-center gap-2 tactical-header">
+                                    <i class="fas fa-chart-line text-purple-500"></i> Time Trend Analysis
+                                </h2>
+                                <p class="text-gray-400 text-sm mt-1">Analyze complaint patterns over time to identify peak periods and seasonal trends.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="relative">
+                                    <i class="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-400 text-xs pointer-events-none"></i>
+                                    <select class="filter-select rounded-lg focus:outline-none">
+                                        <option>Last 30 Days</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <div class="relative">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                        <option>All Categories</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <div class="relative">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                        <option>All Barangays</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <button class="px-5 py-2 btn-filter text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-all border border-blue-400/30">
+                                    <i class="fas fa-filter text-xs"></i> Filter
+                                </button>
+                            </div>
+                        </div>
 
                     <!-- Metrics Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Today's complaints</p>
-                                <h3 class="text-2xl font-bold text-blue-600" id="todayCount">-</h3>
+                    <div class="summary-grid">
+                        <!-- Card 1 -->
+                        <div class="glass-card summary-card rounded-xl">
+                            <div class="summary-card-content">
+                                <div class="icon-circle text-blue-500">
+                                    <i class="fas fa-calendar-day"></i>
+                                </div>
+                                <div class="summary-card-metrics">
+                                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Today</p>
+                                    <h3 class="data-monospace" id="todayCount">0</h3>
+                                    <p class="trend-indicator text-blue-400" id="todayTrend">
+                                        <i class="fas fa-minus text-gray-500"></i> 0.0%
+                                    </p>
+                                </div>
                             </div>
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                                <i class="fas fa-calendar-day text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">This Week</p>
-                                <h3 class="text-2xl font-bold text-orange-600" id="weekCount">-</h3>
-                            </div>
-                            <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
-                                <i class="fas fa-calendar-week text-xl"></i>
+                            <div class="w-28 h-12 flex-shrink-0">
+                                <canvas id="todaySparkline"></canvas>
                             </div>
                         </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">This Month</p>
-                                <h3 class="text-2xl font-bold text-green-600" id="monthCount">-</h3>
+                        <!-- Card 2 -->
+                        <div class="glass-card summary-card rounded-xl">
+                            <div class="summary-card-content">
+                                <div class="icon-circle text-emerald-500">
+                                    <i class="fas fa-calendar-week"></i>
+                                </div>
+                                <div class="summary-card-metrics">
+                                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">This Week</p>
+                                    <h3 class="data-monospace" id="weekCount">0</h3>
+                                    <p class="trend-indicator text-emerald-400" id="weekTrend">
+                                        <i class="fas fa-minus text-gray-500"></i> 0.0%
+                                    </p>
+                                </div>
                             </div>
-                            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                                <i class="fas fa-calendar text-xl"></i>
+                            <div class="w-28 h-12 flex-shrink-0">
+                                <canvas id="weekSparkline"></canvas>
                             </div>
                         </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Peak Hour</p>
-                                <h3 class="text-2xl font-bold text-purple-600" id="peakHour">-</h3>
+                        <!-- Card 3 -->
+                        <div class="glass-card summary-card rounded-xl">
+                            <div class="summary-card-content">
+                                <div class="icon-circle text-orange-500">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="summary-card-metrics">
+                                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">This Month</p>
+                                    <h3 class="data-monospace" id="monthCount">0</h3>
+                                    <p class="trend-indicator text-orange-400" id="monthTrend">
+                                        <i class="fas fa-minus text-gray-500"></i> 0.0%
+                                    </p>
+                                </div>
                             </div>
-                            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                                <i class="fas fa-fire-alt text-xl"></i>
+                            <div class="w-28 h-12 flex-shrink-0">
+                                <canvas id="monthSparkline"></canvas>
+                            </div>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="glass-card summary-card rounded-xl">
+                            <div class="summary-card-content">
+                                <div class="icon-circle text-purple-500">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="summary-card-metrics">
+                                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Peak Hour</p>
+                                    <h3 class="data-monospace" id="peakHour">12 AM</h3>
+                                    <p class="trend-indicator text-gray-400">NO PEAK</p>
+                                </div>
+                            </div>
+                            <div class="w-28 h-12 flex-shrink-0">
+                                <canvas id="peakSparkline"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Charts Grid -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-                        <h3 class="font-semibold text-gray-800 mb-4"><i
-                                class="fas fa-chart-line mr-2 text-gray-500"></i> complaints Over Time (Last 30 Days)
-                        </h3>
-                        <div class="h-[300px] relative">
-                            <canvas id="timeTrendChart"></canvas>
-                        </div>
-                    </div>
+                        <!-- Row 2 Grid -->
+                        <div class="row-2-grid mb-6">
+                            <!-- Time Trend Chart -->
+                            <div class="col-complaints glass-card p-5 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-chart-line"></i> Complaints Over Time
+                                    </h3>
+                                    <div class="relative">
+                                        <select class="header-select appearance-none">
+                                            <option>Daily</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-[8px] pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-h-[220px] relative w-full">
+                                    <canvas id="timeTrendChart"></canvas>
+                                </div>
+                            </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i
-                                    class="fas fa-calendar-alt mr-2 text-gray-500"></i> Monthly Distribution</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="monthlyChart"></canvas>
+                            <!-- Priority Trend Chart -->
+                            <div class="col-priority glass-card p-5 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-stream"></i> Priority Trend
+                                    </h3>
+                                    <div class="relative">
+                                        <select class="header-select appearance-none">
+                                            <option>Daily</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-[8px] pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <!-- Custom Legend -->
+                                <div class="flex items-center justify-center gap-6 mb-4">
+                                    <div class="priority-legend-item"><span class="priority-dot high"></span> High</div>
+                                    <div class="priority-legend-item"><span class="priority-dot med"></span> Med</div>
+                                    <div class="priority-legend-item"><span class="priority-dot low"></span> Low</div>
+                                </div>
+                                <div class="flex-1 min-h-[200px] relative w-full">
+                                    <canvas id="priorityTrendChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Insights -->
+                            <div class="col-insights glass-card p-5 rounded-xl flex flex-col">
+                                <h3 class="chart-card-title mb-6">
+                                    <i class="fas fa-lightbulb"></i> AI Insights
+                                </h3>
+                                <div class="flex flex-col gap-4 flex-1 justify-center">
+                                    <div class="insight-item">
+                                        <div class="insight-icon text-purple-400">
+                                            <i class="fas fa-arrow-trend-up text-xs"></i>
+                                        </div>
+                                        <p class="text-xs text-gray-300 leading-snug">Peak complaints occur at <span class="text-purple-400 font-bold">12 AM</span>.</p>
+                                    </div>
+                                    <div class="insight-item">
+                                        <div class="insight-icon text-emerald-400">
+                                            <i class="fas fa-calendar-day text-xs"></i>
+                                        </div>
+                                        <p class="text-xs text-gray-300 leading-snug">Most reports happen <span class="text-emerald-400 font-bold">on Mondays</span>.</p>
+                                    </div>
+                                    <div class="insight-item">
+                                        <div class="insight-icon text-blue-400">
+                                            <i class="fas fa-arrow-trend-down text-xs"></i>
+                                        </div>
+                                        <p class="text-xs text-gray-300 leading-snug">Activity dropped <span class="text-blue-400 font-bold">35% this week</span>.</p>
+                                    </div>
+                                    <div class="insight-item">
+                                        <div class="insight-icon text-orange-400">
+                                            <i class="fas fa-clock text-xs"></i>
+                                        </div>
+                                        <p class="text-xs text-gray-300 leading-snug">Weekend activity is <span class="text-orange-400 font-bold">consistently lower</span>.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-clock mr-2 text-gray-500"></i>
-                                complaints by Hour of Day</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="hourlyChart"></canvas>
+
+                        <!-- Row 3 Grid -->
+                        <div class="row-3-grid mb-6">
+                            <!-- Day of Week Pattern -->
+                            <div class="glass-card p-5 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-calendar-week"></i> Day of Week Pattern
+                                    </h3>
+                                </div>
+                                <div class="flex-1 min-h-[200px] relative w-full">
+                                    <canvas id="dayOfWeekChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Complaints by Hour -->
+                            <div class="glass-card p-5 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-clock"></i> Complaints by Hour
+                                    </h3>
+                                </div>
+                                <div class="flex-1 min-h-[200px] relative w-full">
+                                    <canvas id="hourlyChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Monthly Distribution -->
+                            <div class="glass-card p-5 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-calendar-alt"></i> Monthly Distribution
+                                    </h3>
+                                    <div class="relative">
+                                        <select class="header-select appearance-none">
+                                            <option>Last 6 Mo</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-[8px] pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-h-[200px] relative w-full">
+                                    <canvas id="monthlyChart"></canvas>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i
-                                    class="fas fa-calendar-week mr-2 text-gray-500"></i> Day of Week Pattern</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="dayOfWeekChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i
-                                    class="fas fa-chart-area mr-2 text-gray-500"></i> Priority Trend Over Time</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="priorityTrendChart"></canvas>
+
+                        <!-- Footer -->
+                        <div class="dashboard-footer flex flex-col md:flex-row justify-between items-center text-xs">
+                            <div class="text-gray-500 font-medium">SHOWING 6 ANALYTICAL TREND MODULES</div>
+                            <div class="flex items-center gap-6 mt-4 md:mt-0">
+                                <span class="data-timestamp uppercase tracking-tighter">System Synchronized: <span id="dataAsOfText" class="text-gray-400">Apr 24, 2026 11:27 AM</span></span>
+                                <button class="btn-refresh group">
+                                    <i class="fas fa-sync-alt group-hover:rotate-180 transition-transform duration-500"></i> REFRESH DATA
+                                </button>
                             </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Categories Section -->
-                <section id="categories" class="tab-content" style="display: none;">
-                    <div class="dashboard-header-section mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">Category Intelligence</h2>
-                        <p class="text-gray-600">Deep dive into complaint categories, priority levels, and keyword
-                            analysis powered by NLP.</p>
-                    </div>
+                <section id="categories" class="tab-content text-gray-200">
+                    <div class="tactical-container">
+                        <!-- Header -->
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white flex items-center gap-2 tactical-header">
+                                    <i class="fas fa-brain text-purple-500"></i> Category Intelligence
+                                </h2>
+                                <p class="text-gray-400 text-sm mt-1">Deep dive into complaint categories, priority levels, and keyword analysis powered by NLP.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="relative">
+                                    <i class="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-400 text-xs pointer-events-none"></i>
+                                    <select class="filter-select rounded-lg focus:outline-none">
+                                        <option>Last 30 Days</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <div class="relative">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                        <option>All Categories</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <div class="relative">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                        <option>All Barangays</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <button class="px-5 py-2 btn-filter text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-all border border-blue-400/30">
+                                    <i class="fas fa-filter text-xs"></i> Filter
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Metrics Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Active Categories</p>
-                                <h3 class="text-2xl font-bold text-blue-600" id="uniqueCategoryCount">-</h3>
+                        <!-- Metrics Grid -->
+                        <div class="summary-grid mb-8">
+                            <!-- Active Categories -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-blue-500">
+                                        <i class="fas fa-folder"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Active Categories</p>
+                                        <h3 class="data-monospace" id="uniqueCategoryCount">0</h3>
+                                        <p class="trend-indicator text-gray-500">
+                                            <i class="fas fa-minus"></i> No change
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="activeCategoriesSparkline"></canvas>
+                                </div>
                             </div>
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                                <i class="fas fa-folder-open text-xl"></i>
+                            <!-- Top Category -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-emerald-500">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Top Category</p>
+                                        <h3 class="text-lg font-bold text-white leading-tight truncate max-w-[120px]" id="topCategoryName">Infrastructure</h3>
+                                        <p class="trend-indicator text-emerald-400">
+                                            <i class="fas fa-caret-up"></i> 18% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="topCategorySparkline"></canvas>
+                                </div>
+                            </div>
+                            <!-- NLP Confidence -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-orange-500">
+                                        <i class="fas fa-shield-halved"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">NLP Confidence</p>
+                                        <h3 class="data-monospace" id="nlpAccuracy">50%</h3>
+                                        <p class="trend-indicator text-orange-400">
+                                            <i class="fas fa-caret-up"></i> 5% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="nlpConfidenceSparkline"></canvas>
+                                </div>
+                            </div>
+                            <!-- AI Reclassified -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-purple-500">
+                                        <i class="fas fa-microchip"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">AI Reclassified</p>
+                                        <h3 class="data-monospace" id="reclassifiedCount">16</h3>
+                                        <p class="trend-indicator text-purple-400">
+                                            <i class="fas fa-caret-up"></i> 3% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="reclassifiedSparkline"></canvas>
+                                </div>
                             </div>
                         </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Top Category</p>
-                                <h3 class="text-2xl font-bold text-red-600 truncate max-w-[150px]" id="topCategoryName">
-                                    -</h3>
-                            </div>
-                            <div class="p-3 bg-red-50 text-red-600 rounded-lg">
-                                <i class="fas fa-arrow-up text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">NLP Confidence</p>
-                                <h3 class="text-2xl font-bold text-indigo-600" id="nlpAccuracy">-</h3>
-                            </div>
-                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-                                <i class="fas fa-robot text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">AI Reclassified</p>
-                                <h3 class="text-2xl font-bold text-yellow-600" id="reclassifiedCount">-</h3>
-                            </div>
-                            <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-                                <i class="fas fa-sync-alt text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i
-                                    class="fas fa-chart-pie mr-2 text-gray-500"></i> Category Distribution</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="categoryDistChart"></canvas>
+                        <!-- Charts Row 1 -->
+                        <div class="row-2-grid mb-6">
+                            <!-- Category Distribution -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col col-complaints">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-chart-pie"></i> Category Distribution
+                                    </h3>
+                                    <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Details <i class="fas fa-external-link-alt ml-1"></i></button>
+                                </div>
+                                <div class="flex flex-col md:flex-row items-center gap-6">
+                                    <div class="w-full md:w-1/2 aspect-square relative">
+                                        <canvas id="categoryDistChart"></canvas>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                            <span class="text-[10px] text-gray-400 uppercase font-bold">Total</span>
+                                            <span class="text-2xl font-black text-white" id="totalComplaintsDonut">1,248</span>
+                                            <span class="text-[10px] text-gray-500 uppercase font-bold">complaints</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full md:w-1/2 space-y-3" id="categoryLegendContainer">
+                                        <!-- Legend populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Priority by Category -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col col-priority">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-layer-group"></i> Priority by Category
+                                    </h3>
+                                    <div class="flex items-center gap-4">
+                                        <div class="priority-legend-item"><div class="priority-dot high"></div> High (≥80%)</div>
+                                        <div class="priority-legend-item"><div class="priority-dot med"></div> Medium (50-79%)</div>
+                                        <div class="priority-legend-item"><div class="priority-dot low"></div> Low (<50%)</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-h-[300px] relative w-full">
+                                    <canvas id="categoryPriorityChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- AI Insights for Categories (Replacing row-2-grid ratio) -->
+                            <!-- Re-adjusting layout to 12 columns: 5 (Dist), 7 (Priority) maybe? 
+                                 Screenshot shows 2 charts in the middle row. I'll use col-complaints (6) and col-priority (6) if needed.
+                            -->
+                        </div>
+
+                        <!-- Row 3: Keywords, Subcategories, Methods -->
+                        <div class="row-3-grid">
+                            <!-- Top Keywords -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-key"></i> Top Keywords Detected by NLP
+                                    </h3>
+                                </div>
+                                <div id="keywordCloud" class="flex flex-wrap gap-2 p-2">
+                                    <!-- Populated by JS -->
+                                </div>
+                                <button class="mt-auto pt-4 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors border-t border-white/5">
+                                    View All Keywords <i class="fas fa-chevron-right ml-1 text-[8px]"></i>
+                                </button>
+                            </div>
+
+                            <!-- Subcategory Breakdown -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-chart-bar"></i> Subcategory Breakdown
+                                    </h3>
+                                    <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Details <i class="fas fa-external-link-alt ml-1"></i></button>
+                                </div>
+                                <div class="flex-1 min-h-[300px] relative w-full">
+                                    <canvas id="subcategoryChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- NLP Detection Methods -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col">
+                                <div class="chart-card-header">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-microscope"></i> NLP Detection Methods
+                                    </h3>
+                                </div>
+                                <div class="aspect-square relative mb-4">
+                                    <canvas id="nlpMethodChart"></canvas>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span class="text-[8px] text-gray-400 uppercase font-bold">Total</span>
+                                        <span class="text-xl font-black text-white" id="nlpMethodTotal">1,248</span>
+                                    </div>
+                                </div>
+                                <div id="nlpMethodLegend" class="space-y-2">
+                                    <!-- Populated by JS -->
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i
-                                    class="fas fa-layer-group mr-2 text-gray-500"></i> Priority by Category</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="categoryPriorityChart"></canvas>
-                            </div>
-                        </div>
+
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-                        <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-key mr-2 text-gray-500"></i> Top
-                            Keywords Detected by NLP</h3>
-                        <div id="keywordCloud" class="flex flex-wrap gap-2 justify-center p-4 min-h-[120px]"></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i
-                                    class="fas fa-chart-bar mr-2 text-gray-500"></i> Subcategory Breakdown</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="subcategoryChart"></canvas>
+                </section>
+
+
+                <!-- Data Table Section -->
+                <section id="data-table" class="tab-content text-gray-200">
+                    <div class="tactical-container">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center mb-8">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white flex items-center gap-2 tactical-header">
+                                    <i class="fas fa-database text-blue-400"></i> Complete Dataset
+                                </h2>
+                                <p class="text-gray-400 text-sm mt-1">Search, filter, and examine all complaints in the system.</p>
+                            </div>
+                            <button id="exportCSV" class="px-5 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+
+                        <!-- Filters Bar -->
+                        <div class="glass-card p-4 rounded-xl mb-6 flex flex-wrap gap-4 items-center">
+                            <div class="relative flex-1 min-w-[200px]">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                                <input type="text" id="searchInput" placeholder="Search ID, Barangay, or Description..." 
+                                    class="w-full pl-11 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 transition-all">
+                            </div>
+                            <div class="relative min-w-[150px]">
+                                <select id="tierFilter" class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 appearance-none">
+                                    <option value="all">All Priorities</option>
+                                    <option value="1">High Priority (Tier 1)</option>
+                                    <option value="2">Medium Priority (Tier 2)</option>
+                                    <option value="3">Low Priority (Tier 3)</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-[10px] pointer-events-none"></i>
+                            </div>
+                            <div class="relative min-w-[150px]">
+                                <select id="categoryFilter" class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 appearance-none">
+                                    <option value="all">All Categories</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-[10px] pointer-events-none"></i>
+                            </div>
+                            <div class="relative min-w-[150px]">
+                                <select id="filterType" class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 appearance-none">
+                                    <option value="all">All Types</option>
+                                    <option value="critical">Emergency Only</option>
+                                    <option value="metaphor">Figurative Language</option>
+                                    <option value="speculation">Conditional Reports</option>
+                                    <option value="mismatch">Category Mismatch</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-[10px] pointer-events-none"></i>
                             </div>
                         </div>
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-brain mr-2 text-gray-500"></i>
-                                NLP Detection Methods</h3>
-                            <div class="h-[300px] relative">
-                                <canvas id="nlpMethodChart"></canvas>
+
+                        <!-- Data Table -->
+                        <div class="glass-card rounded-xl overflow-hidden border border-white/5">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-white/5 text-[10px] text-gray-500 font-black uppercase tracking-widest border-b border-white/5">
+                                            <th class="p-4 cursor-pointer hover:text-white transition-colors" data-sort="id">ID <i class="fas fa-sort ml-1"></i></th>
+                                            <th class="p-4 cursor-pointer hover:text-white transition-colors" data-sort="category">Category <i class="fas fa-sort ml-1"></i></th>
+                                            <th class="p-4 cursor-pointer hover:text-white transition-colors" data-sort="barangay">Barangay <i class="fas fa-sort ml-1"></i></th>
+                                            <th class="p-4 cursor-pointer hover:text-white transition-colors text-center" data-sort="triage_score">Priority <i class="fas fa-sort ml-1"></i></th>
+                                            <th class="p-4">Description</th>
+                                            <th class="p-4 text-center">Flags</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBody" class="text-sm divide-y divide-white/[0.03]">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="flex justify-between items-center mt-6 pt-4 border-t border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1">
+                                    <button id="prevPage" class="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 disabled:pointer-events-none transition-all">
+                                        <i class="fas fa-chevron-left text-xs"></i>
+                                    </button>
+                                    <div class="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-xs font-bold text-white">
+                                        Page <span id="pageInfo">1</span>
+                                    </div>
+                                    <button id="nextPage" class="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 disabled:opacity-30 disabled:pointer-events-none transition-all">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                                    Items per page
+                                </div>
+                                <div class="relative">
+                                    <select id="itemsPerPage" class="pl-3 pr-8 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-bold text-gray-400 focus:outline-none appearance-none">
+                                        <option value="10">10</option>
+                                        <option value="20" selected>20</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-[8px] pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div id="tableStats" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                                Showing 1-20 of 1,248 complaints
                             </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Smart Detection Section -->
-                <section id="edge-cases" class="tab-content" style="display: none;">
-                    <div class="dashboard-header-section mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">Smart Detection Analysis</h2>
-                        <p class="text-gray-600">Review edge cases where NLP detected figurative language, conditional
-                            statements, or category mismatches.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <section id="edge-cases" class="tab-content text-gray-200">
+                    <div class="tactical-container">
+                        <!-- Header -->
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
                             <div>
-                                <p class="text-sm text-gray-500 font-medium">Figurative Detected</p>
-                                <h3 class="text-2xl font-bold text-purple-600" id="totalMetaphors">0</h3>
+                                <h2 class="text-2xl font-bold text-white flex items-center gap-2 tactical-header">
+                                    <i class="fas fa-sparkles text-purple-400"></i> Smart Detection Analysis
+                                </h2>
+                                <p class="text-gray-400 text-sm mt-1">Review edge cases where NLP detected figurative language, conditional statements, or category mismatches.</p>
                             </div>
-                            <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                                <i class="fas fa-theater-masks text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Conditional Reports</p>
-                                <h3 class="text-2xl font-bold text-orange-600" id="totalSpeculation">0</h3>
-                            </div>
-                            <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
-                                <i class="fas fa-question-circle text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Mismatches Found</p>
-                                <h3 class="text-2xl font-bold text-red-600" id="totalMismatch">0</h3>
-                            </div>
-                            <div class="p-3 bg-red-50 text-red-600 rounded-lg">
-                                <i class="fas fa-not-equal text-xl"></i>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="relative">
+                                    <i class="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-400 text-xs pointer-events-none"></i>
+                                    <select class="filter-select rounded-lg focus:outline-none">
+                                        <option>Last 30 Days</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                </div>
+                                <button class="px-5 py-2 btn-filter text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-all border border-blue-400/30">
+                                    <i class="fas fa-filter text-xs"></i> Filter
+                                </button>
                             </div>
                         </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Edge Case Rate</p>
-                                <h3 class="text-2xl font-bold text-green-600" id="edgeCaseRate">0%</h3>
-                            </div>
-                            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                                <i class="fas fa-percentage text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Figurative Language -->
-                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-purple-600 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-purple-50">
-                                <h3 class="font-semibold text-purple-800"><i class="fas fa-theater-masks mr-2"></i>
-                                    Figurative Language</h3>
-                                <span class="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-bold"
-                                    id="metaphorCount">0</span>
+                        <!-- Metrics Grid -->
+                        <div class="summary-grid mb-8">
+                            <!-- Figurative -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-purple-500">
+                                        <i class="fas fa-theater-masks"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Figurative Detected</p>
+                                        <h3 class="data-monospace" id="totalMetaphors">4</h3>
+                                        <p class="trend-indicator text-emerald-400">
+                                            <i class="fas fa-caret-down"></i> 11% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="figurativeSparkline"></canvas>
+                                </div>
                             </div>
-                            <div id="metaphorList" class="p-0 overflow-y-auto max-h-[280px]"></div>
-                        </div>
-                        <!-- Conditional Reports -->
-                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-orange-600 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-orange-50">
-                                <h3 class="font-semibold text-orange-800"><i class="fas fa-question-circle mr-2"></i>
-                                    Conditional Reports</h3>
-                                <span class="bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs font-bold"
-                                    id="speculationCount">0</span>
+                            <!-- Conditional -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-blue-500">
+                                        <i class="fas fa-question-circle"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Conditional Reports</p>
+                                        <h3 class="data-monospace" id="totalSpeculation">4</h3>
+                                        <p class="trend-indicator text-emerald-400">
+                                            <i class="fas fa-caret-down"></i> 20% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="conditionalSparkline"></canvas>
+                                </div>
                             </div>
-                            <div id="speculationList" class="p-0 overflow-y-auto max-h-[280px]"></div>
-                        </div>
-                        <!-- Category Mismatches -->
-                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-600 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-red-50">
-                                <h3 class="font-semibold text-red-800"><i class="fas fa-not-equal mr-2"></i> Category
-                                    Mismatches</h3>
-                                <span class="bg-red-200 text-red-800 px-2 py-1 rounded text-xs font-bold"
-                                    id="mismatchCount">0</span>
+                            <!-- Mismatches -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-orange-500">
+                                        <i class="fas fa-not-equal"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mismatches Found</p>
+                                        <h3 class="data-monospace" id="totalMismatch">25</h3>
+                                        <p class="trend-indicator text-red-400">
+                                            <i class="fas fa-caret-up"></i> 8% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="mismatchSparkline"></canvas>
+                                </div>
                             </div>
-                            <div id="mismatchList" class="p-0 overflow-y-auto max-h-[280px]"></div>
-                        </div>
-                        <!-- Critical Alerts -->
-                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-red-100">
-                                <h3 class="font-semibold text-red-900"><i class="fas fa-exclamation-circle mr-2"></i>
-                                    Critical Alerts</h3>
-                                <span class="bg-red-200 text-red-900 px-2 py-1 rounded text-xs font-bold"
-                                    id="alertCount">0</span>
+                            <!-- Edge Case Rate -->
+                            <div class="glass-card summary-card rounded-xl">
+                                <div class="summary-card-content">
+                                    <div class="icon-circle text-emerald-500">
+                                        <i class="fas fa-percentage"></i>
+                                    </div>
+                                    <div class="summary-card-metrics">
+                                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Edge Case Rate</p>
+                                        <h3 class="data-monospace" id="edgeCaseRate">11%</h3>
+                                        <p class="trend-indicator text-emerald-400">
+                                            <i class="fas fa-caret-down"></i> 3% vs last 30d
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-12 flex-shrink-0">
+                                    <canvas id="edgeCaseRateSparkline"></canvas>
+                                </div>
                             </div>
-                            <div id="alertList" class="p-0 overflow-y-auto max-h-[280px]"></div>
                         </div>
-                    </div>
-                </section>
 
-                <!-- Data Table Section -->
-                <section id="data-table" class="tab-content" style="display: none;">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-800">Complete Dataset</h2>
-                            <p class="text-gray-600">Search, filter, and examine all complaints in the system.</p>
-                        </div>
-                        <button id="exportCSV"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-colors shadow-sm font-medium">
-                            <i class="fas fa-file-excel"></i> Export Excel
-                        </button>
-                    </div>
+                        <!-- Charts Row 1 -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                            <!-- Figurative Breakdown -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-5">
+                                <div class="chart-card-header mb-6">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-chart-pie"></i> Figurative Language Breakdown
+                                    </h3>
+                                    <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Details <i class="fas fa-external-link-alt ml-1"></i></button>
+                                </div>
+                                <div class="flex flex-col md:flex-row items-center gap-8">
+                                    <div class="w-full md:w-1/2 aspect-square relative">
+                                        <canvas id="figurativeDistChart"></canvas>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                            <span class="text-[10px] text-gray-400 uppercase font-bold">Total</span>
+                                            <span class="text-2xl font-black text-white" id="totalFigurativeDonut">4</span>
+                                            <span class="text-[10px] text-gray-500 uppercase font-bold">Detections</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full md:w-1/2 space-y-4" id="figurativeLegend">
+                                        <!-- Legend populated by JS -->
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div
-                        class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-center">
-                        <div class="relative flex-1 min-w-[200px]">
-                            <i
-                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="searchInput" placeholder="Search complaints..."
-                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <!-- Detections Over Time -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-7">
+                                <div class="chart-card-header mb-4">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-chart-line"></i> Detections Over Time
+                                    </h3>
+                                    <div class="relative">
+                                        <select class="header-select appearance-none">
+                                            <option>Daily</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-h-[300px] relative w-full">
+                                    <canvas id="edgeCaseTimelineChart"></canvas>
+                                </div>
+                            </div>
                         </div>
-                        <select id="tierFilter"
-                            class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">All Priorities</option>
-                            <option value="1">High Priority (Tier 1)</option>
-                            <option value="2">Medium Priority (Tier 2)</option>
-                            <option value="3">Low Priority (Tier 3)</option>
-                        </select>
-                        <select id="categoryFilter"
-                            class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">All Categories</option>
-                        </select>
-                        <select id="filterType"
-                            class="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">All Types</option>
-                            <option value="critical">Emergency Only</option>
-                            <option value="metaphor">Figurative Language</option>
-                            <option value="speculation">Conditional Reports</option>
-                            <option value="mismatch">Category Mismatch</option>
-                        </select>
-                    </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
-                                    <tr>
-                                        <th class="p-4" data-sort="id">ID <i class="fas fa-sort ml-1 text-gray-400"></i>
-                                        </th>
-                                        <th class="p-4" data-sort="category">Category <i
-                                                class="fas fa-sort ml-1 text-gray-400"></i></th>
-                                        <th class="p-4" data-sort="barangay">Barangay <i
-                                                class="fas fa-sort ml-1 text-gray-400"></i></th>
-                                        <th class="p-4" data-sort="triage_score">Priority <i
-                                                class="fas fa-sort ml-1 text-gray-400"></i></th>
-                                        <th class="p-4">Description</th>
-                                        <th class="p-4">Flags</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBody" class="text-gray-600 text-sm"></tbody>
-                            </table>
+                        <!-- Row 3: Mismatches, Recent cases, Methods -->
+                        <div class="row-3-grid">
+                            <!-- Top Mismatched Categories -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col">
+                                <div class="chart-card-header mb-6">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-layer-group"></i> Top Mismatched Categories
+                                    </h3>
+                                </div>
+                                <div id="mismatchList" class="space-y-5">
+                                    <!-- Populated by JS -->
+                                </div>
+                                <button class="mt-auto pt-6 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors border-t border-white/5">
+                                    View All Mismatches <i class="fas fa-chevron-right ml-1 text-[8px]"></i>
+                                </button>
+                            </div>
+
+                            <!-- Recent Edge Cases -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col h-[400px]">
+                                <div class="chart-card-header mb-4">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-history"></i> Recent Edge Cases
+                                    </h3>
+                                    <button class="text-[10px] bg-white/5 px-3 py-1.5 rounded border border-white/10 hover:bg-white/10 transition-all font-bold uppercase">View All</button>
+                                </div>
+                                <div id="recentEdgeCasesList" class="flex-1 overflow-y-auto pr-2 space-y-4">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- NLP Detection Methods (Re-used) -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col">
+                                <div class="chart-card-header mb-6">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-microscope"></i> NLP Detection Methods
+                                    </h3>
+                                </div>
+                                <div class="aspect-square relative mb-4">
+                                    <canvas id="edgeNLPMethodChart"></canvas>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span class="text-[8px] text-gray-400 uppercase font-bold">Total</span>
+                                        <span class="text-xl font-black text-white" id="edgeNLPMethodTotal">4</span>
+                                        <span class="text-[8px] text-gray-500 uppercase font-bold">Detections</span>
+                                    </div>
+                                </div>
+                                <div id="edgeNLPMethodLegend" class="space-y-2">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex justify-between items-center mt-4 p-2">
-                        <div class="flex items-center gap-2">
-                            <button id="prevPage"
-                                class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"><i
-                                    class="fas fa-chevron-left"></i> Prev</button>
-                            <span id="pageInfo" class="text-sm text-gray-600 font-medium">Page 1</span>
-                            <button id="nextPage"
-                                class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Next
-                                <i class="fas fa-chevron-right"></i></button>
+
+                        <!-- Footer -->
+                        <div class="dashboard-footer mt-8 pt-4 flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest border-t border-white/5">
+                            <div>Showing 1 to 7 of 7 edge cases</div>
+                            <div class="flex items-center gap-6">
+                                <span>Data as of: <span id="edgeDataTimestamp" class="text-gray-400">Apr 24, 2026 02:04 PM</span></span>
+                                <button class="flex items-center gap-2 hover:text-white transition-colors">
+                                    <i class="fas fa-sync-alt"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
-                        <select id="itemsPerPage" class="px-2 py-1 border border-gray-300 rounded-lg text-sm bg-white">
-                            <option value="10">10</option>
-                            <option value="20" selected>20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
                     </div>
                 </section>
 
                 <!-- Train System Section -->
-                <section id="system-training" class="tab-content" style="display: none;">
-                    <div class="dashboard-header-section mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">Train the System</h2>
-                        <p class="text-gray-600">Help improve the system by reviewing complaints it wasn't sure about.
-                            Your corrections teach it to be more accurate.</p>
-                    </div>
+                <section id="system-training" class="tab-content text-gray-200">
+                    <div class="tactical-container">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center mb-8">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white flex items-center gap-2 tactical-header">
+                                    <i class="fas fa-brain text-purple-500"></i> Train the System
+                                </h2>
+                                <p class="text-gray-400 text-sm mt-1">Review complaints the system isn't sure about and teach it to be more accurate over time.</p>
+                            </div>
+                            <button class="px-4 py-2 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-white/5 transition-all flex items-center gap-2">
+                                <i class="far fa-question-circle text-purple-400"></i> How Training Works
+                            </button>
+                        </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Pending Review</p>
-                                <h3 class="text-2xl font-bold text-yellow-600" id="pendingTrainCount">0</h3>
-                            </div>
-                            <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-                                <i class="fas fa-hourglass-half text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Trained Today</p>
-                                <h3 class="text-2xl font-bold text-green-600" id="trainedTodayCount">0</h3>
-                            </div>
-                            <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                                <i class="fas fa-check-double text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Avg Confidence</p>
-                                <h3 class="text-2xl font-bold text-blue-600" id="avgConfidenceScore">-</h3>
-                            </div>
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                                <i class="fas fa-percentage text-xl"></i>
-                            </div>
-                        </div>
-                        <div
-                            class="stat-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 font-medium">Model Accuracy</p>
-                                <h3 class="text-2xl font-bold text-indigo-600" id="modelAccuracy">-</h3>
-                            </div>
-                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-                                <i class="fas fa-chart-line text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left Panel -->
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:col-span-1 flex flex-col h-[600px]">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                <h3 class="font-semibold text-gray-800"><i class="fas fa-list-ul mr-2"></i> Pending
-                                    Reviews</h3>
-                                <div class="flex gap-2">
-                                    <button id="refreshPendingBtn"
-                                        class="p-1 px-2 hover:bg-gray-200 rounded text-gray-600 transition"
-                                        title="Refresh"><i class="fas fa-sync-alt"></i></button>
-                                    <button id="fetchLowConfidenceBtn"
-                                        class="p-1 px-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded transition text-xs font-semibold"><i
-                                            class="fas fa-download mr-1"></i> Fetch</button>
+                        <!-- Summary Row -->
+                        <div class="summary-grid-5">
+                            <!-- Pending -->
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+                                <div class="icon-circle text-purple-500 bg-purple-500/10 border-purple-500/20">
+                                    <i class="fas fa-hourglass-half"></i>
                                 </div>
-                            </div>
-                            <div id="trainingList" class="flex-1 overflow-y-auto p-2 bg-gray-50">
-                                <div class="flex flex-col items-center justify-center h-full text-gray-400">
-                                    <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
-                                    <p class="text-sm">Click "Fetch" to load items</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Panel -->
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:col-span-2 flex flex-col h-[600px]">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                <h3 class="font-semibold text-gray-800"><i class="fas fa-edit mr-2"></i> Training
-                                    Console</h3>
-                                <span id="trainingStatusBadge"
-                                    class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-bold">No Item
-                                    Selected</span>
-                            </div>
-                            <div id="trainingForm" class="p-6 flex-1 flex flex-col gap-4">
-                                <!-- Content will be populated by JS -->
-                                <div
-                                    class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
-                                    <span class="text-blue-800 font-semibold text-sm">Predicted Category:</span>
-                                    <span id="lblSystemGuess" class="font-bold text-blue-700">-</span>
-                                </div>
-
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Original complaint
-                                        Text</label>
-                                    <div id="lblOriginalText"
-                                        class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-800 text-sm min-h-[80px]">
-                                        Select an item from the left to view details.</div>
+                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Pending Review</p>
+                                    <h3 class="text-xl font-black text-white" id="pendingTrainCount">0</h3>
+                                    <p class="text-[9px] text-gray-500 mt-0.5"><i class="fas fa-circle text-[6px] mr-1 text-purple-400"></i> No items to review</p>
                                 </div>
-
+                            </div>
+                            <!-- Trained Today -->
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+                                <div class="icon-circle text-blue-500 bg-blue-500/10 border-blue-500/20">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Identify Key
-                                        Term</label>
-                                    <input type="text" id="inputTrainKeyword" disabled
-                                        class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="e.g., 'lubak', 'baha', 'walay tubig'">
-                                    <small class="text-xs text-gray-500">Extract the specific word that defines the
-                                        category.</small>
+                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Trained Today</p>
+                                    <h3 class="text-xl font-black text-white" id="trainedTodayCount">0</h3>
+                                    <p class="text-[9px] text-gray-500 mt-0.5"><i class="fas fa-circle text-[6px] mr-1 text-blue-400"></i> Keep it up!</p>
                                 </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Correct
-                                            Category</label>
-                                        <select id="selectTrainCategory" disabled
-                                            class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">-- Select Category --</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Subcategory
-                                            (Optional)</label>
-                                        <select id="selectTrainSubcategory" disabled
-                                            class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">-- Select Subcategory --</option>
-                                        </select>
+                            </div>
+                            <!-- Avg Confidence -->
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+                                <div class="icon-circle text-emerald-500 bg-emerald-500/10 border-emerald-500/20">
+                                    <i class="fas fa-shield-check"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Avg Confidence</p>
+                                    <h3 class="text-xl font-black text-white" id="avgConfidenceScore">--</h3>
+                                    <p class="text-[9px] text-gray-500 mt-0.5"><i class="fas fa-circle text-[6px] mr-1 text-emerald-400"></i> Not enough data</p>
+                                </div>
+                            </div>
+                            <!-- Model Accuracy -->
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+                                <div class="icon-circle text-orange-500 bg-orange-500/10 border-orange-500/20">
+                                    <i class="fas fa-bullseye-arrow"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Model Accuracy</p>
+                                    <h3 class="text-xl font-black text-white" id="modelAccuracy">--</h3>
+                                    <p class="text-[9px] text-gray-500 mt-0.5"><i class="fas fa-circle text-[6px] mr-1 text-orange-400"></i> Not enough data</p>
+                                </div>
+                            </div>
+                            <!-- Progress -->
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+                                <div class="icon-circle text-purple-400 bg-purple-400/10 border-purple-400/20">
+                                    <i class="fas fa-chart-line-up"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Training Progress</p>
+                                    <h3 class="text-xl font-black text-white">0%</h3>
+                                    <div class="w-full bg-white/5 h-1 rounded-full mt-2 overflow-hidden">
+                                        <div class="bg-purple-500 h-full w-0"></div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div class="mt-auto flex gap-4 pt-4 border-t border-gray-100">
-                                    <button id="btnSkipTrain"
-                                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition flex-1"
-                                        disabled>Skip</button>
-                                    <button id="btnSaveTrain"
-                                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex-[2]"
-                                        disabled>
-                                        <i class="fas fa-check mr-2"></i> Save & Update
+                        <!-- Middle Row: Queue & Impact -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+                            <!-- Pending Reviews List -->
+                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-5 h-[400px]">
+                                <div class="chart-card-header mb-4">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-list-ul"></i> Pending Reviews
+                                    </h3>
+                                    <button id="refreshPendingBtn" class="text-[10px] bg-white/5 px-3 py-1.5 rounded border border-white/10 hover:bg-white/10 transition-all font-bold uppercase flex items-center gap-2">
+                                        <i class="fas fa-sync-alt text-[8px]"></i> Refresh
                                     </button>
+                                </div>
+                                <div id="trainingList" class="flex-1 overflow-y-auto pr-2 space-y-3">
+                                    <!-- Empty State -->
+                                    <div class="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+                                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/5">
+                                            <i class="fas fa-inbox-full text-3xl text-gray-500"></i>
+                                        </div>
+                                        <h4 class="text-lg font-bold text-white mb-1">All caught up! 🎉</h4>
+                                        <p class="text-xs text-gray-500">There are no complaints pending review.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Training Impact -->
+                            <div class="glass-card p-6 rounded-xl lg:col-span-7 flex flex-col">
+                                <div class="chart-card-header mb-6">
+                                    <h3 class="chart-card-title">
+                                        <i class="fas fa-chart-line"></i> Training Impact
+                                    </h3>
+                                    <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Analytics</button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                                    <!-- Confidence Trend -->
+                                    <div class="bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col">
+                                        <p class="text-[11px] font-bold text-gray-300">Confidence Trend</p>
+                                        <p class="text-[9px] text-gray-500 mb-4">No data yet</p>
+                                        <div class="flex-1 min-h-[100px] relative">
+                                            <canvas id="trainingConfidenceTrend"></canvas>
+                                        </div>
+                                        <p class="mt-4 text-center text-[9px] text-gray-500 uppercase tracking-tighter">More training improves confidence</p>
+                                    </div>
+                                    <!-- Accuracy Trend -->
+                                    <div class="bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col">
+                                        <p class="text-[11px] font-bold text-gray-300">Accuracy Trend</p>
+                                        <p class="text-[9px] text-gray-500 mb-4">No data yet</p>
+                                        <div class="flex-1 min-h-[100px] relative">
+                                            <canvas id="trainingAccuracyTrend"></canvas>
+                                        </div>
+                                        <p class="mt-4 text-center text-[9px] text-gray-500 uppercase tracking-tighter">Higher accuracy with more training</p>
+                                    </div>
+                                    <!-- Items Trained -->
+                                    <div class="bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col">
+                                        <p class="text-[11px] font-bold text-gray-300">Items Trained</p>
+                                        <h4 class="text-2xl font-black text-white mt-1">0</h4>
+                                        <div class="flex-1 aspect-square relative mt-4">
+                                            <canvas id="itemsTrainedChart"></canvas>
+                                            <div class="absolute inset-0 flex items-center justify-center text-[8px] text-gray-500 font-bold uppercase">Total items trained</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Training Console -->
+                        <div class="glass-card rounded-xl overflow-hidden flex flex-col">
+                            <div class="chart-card-header p-5 border-b border-white/5">
+                                <h3 class="chart-card-title">
+                                    <i class="fas fa-edit"></i> Training Console
+                                </h3>
+                                <button id="btnClearSelection" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">Clear Selection</button>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-4 min-h-[450px]">
+                                <!-- Steps Sidebar -->
+                                <div class="bg-white/[0.02] border-r border-white/5 p-6 space-y-6">
+                                    <!-- Step 1 -->
+                                    <div class="flex items-start gap-4 opacity-100 group">
+                                        <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-[0_0_15px_rgba(147,51,234,0.5)]">1</div>
+                                        <div>
+                                            <p class="text-sm font-bold text-white">Select Item</p>
+                                            <p class="text-[10px] text-gray-500">Choose a complaint to review</p>
+                                        </div>
+                                    </div>
+                                    <!-- Step 2 -->
+                                    <div class="flex items-start gap-4 opacity-40">
+                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">2</div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-300">Identify Key Term</p>
+                                            <p class="text-[10px] text-gray-500">Extract the key term/issue</p>
+                                        </div>
+                                    </div>
+                                    <!-- Step 3 -->
+                                    <div class="flex items-start gap-4 opacity-40">
+                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">3</div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-300">Correct Category</p>
+                                            <p class="text-[10px] text-gray-500">Select the right category</p>
+                                        </div>
+                                    </div>
+                                    <!-- Step 4 -->
+                                    <div class="flex items-start gap-4 opacity-40">
+                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">4</div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-300">Review & Save</p>
+                                            <p class="text-[10px] text-gray-500">Confirm and update the model</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Form Content -->
+                                <div class="lg:col-span-3 p-8 flex flex-col gap-8">
+                                    <!-- Text Section -->
+                                    <div class="space-y-3">
+                                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Original Complaint Text</label>
+                                        <div class="bg-black/20 rounded-xl border border-white/5 p-8 min-h-[120px] flex items-center justify-center text-center">
+                                            <div class="max-w-md">
+                                                <i class="fas fa-file-alt text-gray-600 text-2xl mb-4 opacity-40"></i>
+                                                <p id="lblOriginalText" class="text-sm text-gray-400 leading-relaxed italic">Select an item from the left to view details</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Fields Grid -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div class="space-y-3">
+                                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Key Term / Issue</label>
+                                            <input type="text" id="inputTrainKeyword" disabled
+                                                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 transition-all"
+                                                placeholder="e.g., 'lubak', 'baha', 'walay tubig'">
+                                            <p class="text-[9px] text-gray-500">Extract the specific word or phrase that defines the issue.</p>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Correct Category</label>
+                                            <div class="relative">
+                                                <select id="selectTrainCategory" disabled
+                                                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none">
+                                                    <option value="">-- Select correct category --</option>
+                                                </select>
+                                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-[10px]"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Subcategory -->
+                                    <div class="space-y-3">
+                                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-500">Subcategory (Optional)</label>
+                                        <div class="relative max-w-lg">
+                                            <select id="selectTrainSubcategory" disabled
+                                                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none">
+                                                <option value="">-- Select subcategory (optional) --</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-[10px]"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="mt-auto pt-8 border-t border-white/5 flex gap-4">
+                                        <button id="btnSkipTrain" disabled class="px-8 py-3 bg-white/5 hover:bg-white/10 text-gray-400 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                                            <i class="fas fa-forward"></i> Skip
+                                        </button>
+                                        <button id="btnSaveTrain" disabled class="px-10 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/30 hover:bg-purple-600/30 rounded-lg text-sm font-bold transition-all ml-auto flex items-center gap-2">
+                                            <i class="fas fa-check-circle"></i> Save & Update
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -562,15 +1092,6 @@
                 </div>
             </div>
 
-            <div id="presentationOverlay" class="presentation-overlay">
-                <div class="presentation-controls">
-                    <button id="prevSlide"><i class="fas fa-chevron-left"></i> Previous</button>
-                    <span id="slideIndicator">1 / 7</span>
-                    <button id="nextSlide">Next <i class="fas fa-chevron-right"></i></button>
-                    <button id="exitPresentation"><i class="fas fa-times"></i> Exit</button>
-                </div>
-                <div class="presentation-content" id="presentationContent"></div>
-            </div>
         </div><!-- end #app -->
     </div><!-- end .app-container -->
 

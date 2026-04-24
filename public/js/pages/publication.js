@@ -194,41 +194,56 @@ async function loadContent(type) {
         }
 
         const iconMap = {
-            "Infrastructure": "🏛️",
-            "Public Safety": "🛡️",
-            "Utilities": "💡",
-            "Health": "🏥",
-            "Environment": "🌿",
-            "Technology": "💻",
-            "General": "📄"
+            "Infrastructure": { icon: "A", bg: "#2563eb", prefix: "INFRA" }, 
+            "Public Safety": { icon: "S", bg: "#eab308", prefix: "SAFE" }, 
+            "Utilities": { icon: "U", bg: "#eab308", prefix: "UTIL" }, 
+            "Health": { icon: "H", bg: "#16a34a", prefix: "HLTH" }, 
+            "Environment": { icon: "E", bg: "#9333ea", prefix: "ENV" }, 
+            "Technology": { icon: "T", bg: "#0d9488", prefix: "TECH" }, 
+            "General": { icon: "G", bg: "#64748b", prefix: "GEN" }
+        };
+
+        const priorityColors = {
+            "Low": { color: "#60a5fa", border: "rgba(96, 165, 250, 0.4)", led: "led-blue" },
+            "Medium": { color: "#fbbf24", border: "rgba(251, 191, 36, 0.4)", led: "led-yellow" },
+            "High": { color: "#ef4444", border: "rgba(239, 68, 68, 0.4)", led: "led-red" },
+            "default": { color: "#94a3b8", border: "rgba(148, 163, 184, 0.4)", led: "led-gray" }
         };
 
         list.innerHTML = `
             <div class="pub-list-container" style="display: flex; flex-direction: column; height: 100%; position: relative;">
-                <div class="pub-cards-scroll" style="flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 70px;">
+                <div class="pub-cards-scroll" style="flex: 1; overflow-y: auto; padding-right: 8px; padding-bottom: 70px;">
                     ${currentList.map((item, idx) => {
-                        const icon = iconMap[item.category] || iconMap[item.organizer] || "📄";
+                        const catInfo = iconMap[item.category] || iconMap[item.organizer] || iconMap["General"];
+                        const priority = item.priority || "Low";
+                        const pColor = priorityColors[priority] || priorityColors["default"];
+                        
                         return `
-                            <div class="pub-card" data-idx="${idx}" style="display: flex; gap: 16px; align-items: flex-start; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
-                                <div style="width: 42px; height: 42px; background: rgba(59, 130, 246, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25em; flex-shrink: 0; border: 1px solid rgba(59, 130, 246, 0.15);">
-                                    ${icon}
+                            <div class="pub-card" data-idx="${idx}" style="display: flex; gap: 16px; align-items: center; padding: 16px; margin-bottom: 12px;">
+                                <div style="width: 44px; height: 44px; background: ${catInfo.bg}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3em; font-weight: 900; color: #fff; flex-shrink: 0; box-shadow: 0 0 15px ${catInfo.bg}44;">
+                                    ${catInfo.icon}
                                 </div>
                                 <div style="flex: 1; min-width: 0; pointer-events: none;">
-                                    <div style="font-weight: 600; font-size: 1rem; color: #fff; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.title}</div>
-                                    <div style="font-size: 0.85em; color: #94a3b8; display: flex; gap: 8px; align-items: center;">
-                                        <span>${new Date(item.published_at || item.created_at || item.event_date).toLocaleDateString()}</span>
-                                        <span style="opacity: 0.3;">|</span>
-                                        <span style="font-weight: 500;">${item.category || item.organizer || "General"}</span>
+                                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: ${pColor.color}; margin-bottom: 2px; opacity: 0.8; letter-spacing: 0.05em;">
+                                        ${catInfo.prefix} // PRTY: ${priority.toUpperCase()}
                                     </div>
+                                    <div style="font-weight: 700; font-size: 0.95rem; color: #fff; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.title}</div>
+                                    <div style="font-size: 0.75rem; color: #94a3b8; display: flex; gap: 6px; align-items: center; font-family: 'JetBrains Mono', monospace;">
+                                        <span>${new Date(item.published_at || item.created_at || item.event_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                                    </div>
+                                </div>
+                                <div style="flex-shrink: 0; padding: 3px 8px; border: 1px solid ${pColor.border}; border-radius: 4px; color: ${pColor.color}; font-size: 0.7rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                                    ${priority}
                                 </div>
                             </div>
                         `;
                     }).join("")}
                 </div>
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(transparent, rgba(15, 23, 42, 0.95) 20%); pointer-events: none;">
-                    <button class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85em; pointer-events: auto; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.05);">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 0 0 0; background: #020617; pointer-events: none;">
+                    <button style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.75rem; pointer-events: auto; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 12px; color: #3b82f6; border-radius: 8px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
                         <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
                         View all bulletins
+                        <svg style="width: 14px; height: 14px; margin-left: auto;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                     </button>
                 </div>
             </div>
@@ -245,59 +260,100 @@ function renderDetail(item) {
     });
     
     detail.innerHTML = `
-        <div style="animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); max-width: 800px;">
-            <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-                <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 4px 12px; border-radius: 99px; font-size: 0.75em; font-weight: 700;">${currentType.toUpperCase()}</span>
-                <span style="color: #64748b; font-size: 0.85em;">Published on ${date}</span>
+        <div style="animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; height: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span class="tactical-badge" style="border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; background: rgba(255,255,255,0.03);">${currentType}</span>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; letter-spacing: 0.05em;">
+                        REF_ID: ${item.id || 'N/A'} // PUB_DATE: ${date.toUpperCase()}
+                    </div>
+                </div>
+                <div class="tactical-badge" style="border: 1px solid rgba(96, 165, 250, 0.4); color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 6px 16px;">
+                    ${item.priority || "Low"} Priority
+                </div>
             </div>
             
-            <h2 style="font-size: 2.4em; font-weight: 800; color: #fff; margin: 0 0 12px 0; line-height: 1.2;">${item.title}</h2>
+            <h2 style="font-size: 2.2em; font-weight: 800; color: #fff; margin: 0 0 16px 0; line-height: 1.2; letter-spacing: -0.02em;">${item.title}</h2>
             
-            <div style="display: flex; gap: 16px; align-items: center; color: #94a3b8; font-size: 0.9em; margin-bottom: 32px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="opacity: 0.7;">📍</span> Digos City, Davao del Sur
+            <div style="display: flex; gap: 32px; align-items: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 32px; font-family: 'JetBrains Mono', monospace;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg style="width: 16px; height: 16px; color: #3b82f6;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    DIGOS_CITY.SYS
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="opacity: 0.7;">🏛️</span> ${item.category || item.organizer || "General"}
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg style="width: 16px; height: 16px; color: #cbd5e1;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    ${item.category || item.organizer || "GENERAL_COMM"}
                 </div>
             </div>
 
-            <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 12px; padding: 20px; display: flex; gap: 16px; margin-bottom: 32px;">
-                <div style="color: #60a5fa; font-size: 1.4em;">ℹ️</div>
-                <div style="font-size: 0.95em; color: #cbd5e1; line-height: 1.6;">
-                    Please be advised that this bulletin contains official information regarding ${item.title.toLowerCase()}. Follow any instructions provided below carefully.
+            <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 20px; display: flex; gap: 16px; margin-bottom: 40px; align-items: flex-start; box-shadow: 0 0 20px rgba(59, 130, 246, 0.05);">
+                <svg style="width: 24px; height: 24px; color: #60a5fa; flex-shrink: 0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div style="font-size: 1rem; color: #cbd5e1; line-height: 1.7;">
+                    ${item.content || item.description || "No detailed mission data provided."}
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px;">
-                <div style="background: rgba(30, 41, 59, 0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="color: #64748b; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Start Date</div>
-                    <div style="color: #fff; font-weight: 600;">${new Date(item.created_at).toLocaleDateString()}</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;">
+                <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                        Start Date
+                    </div>
+                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">${new Date(item.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</div>
                 </div>
-                <div style="background: rgba(30, 41, 59, 0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="color: #64748b; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">End Date</div>
-                    <div style="color: #fff; font-weight: 600;">${item.event_date ? new Date(item.event_date).toLocaleDateString() : "Indefinite"}</div>
+                <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                        End Date
+                    </div>
+                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">${item.event_date ? new Date(item.event_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : "PERMANENT"}</div>
                 </div>
-                <div style="background: rgba(30, 41, 59, 0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="color: #64748b; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Target Audience</div>
-                    <div style="color: #fff; font-weight: 600;">All Residents</div>
+                <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                        Status
+                    </div>
+                    <div style="color: #4ade80; font-weight: 700; font-size: 0.95rem;">ACTIVE_SYS</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                        Target
+                    </div>
+                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">PUBLIC_ALL</div>
                 </div>
             </div>
 
-            <div style="color: #cbd5e1; line-height: 1.8; font-size: 1.1em; white-space: pre-wrap; margin-bottom: 40px;">${item.content || item.description}</div>
+            <div style="margin-bottom: 40px;">
+                <div style="font-family: 'JetBrains Mono', monospace; color: #f8fafc; font-size: 0.75rem; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6;">Attachments // Link_Count: 02</div>
+                <div style="display: flex; gap: 20px;">
+                    <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 16px; min-width: 240px; cursor: pointer; transition: all 0.2s;">
+                        <div style="background: #ef4444; color: #fff; border-radius: 6px; padding: 8px; font-size: 0.75rem; font-weight: 900; font-family: 'JetBrains Mono', monospace;">PDF</div>
+                        <div style="flex: 1;">
+                            <div style="color: #fff; font-size: 0.9rem; font-weight: 600;">MISSION_PARAM.PDF</div>
+                            <div style="color: #64748b; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">DATA_PKG // 1.2 MB</div>
+                        </div>
+                        <svg style="width: 18px; height: 18px; color: #64748b;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 16px; min-width: 240px; cursor: pointer; transition: all 0.2s;">
+                        <div style="background: #3b82f6; color: #fff; border-radius: 6px; padding: 8px; font-size: 0.75rem; font-weight: 900; font-family: 'JetBrains Mono', monospace;">IMG</div>
+                        <div style="flex: 1;">
+                            <div style="color: #fff; font-size: 0.9rem; font-weight: 600;">VISUAL_RECON.JPG</div>
+                            <div style="color: #64748b; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">DATA_PKG // 845 KB</div>
+                        </div>
+                        <svg style="width: 18px; height: 18px; color: #64748b;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    </div>
+                </div>
+            </div>
             
-            <div style="display: flex; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 24px; margin-top: auto;">
-                <button class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px;">
-                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    Edit
+            <div style="display: flex; gap: 16px; margin-top: auto; justify-content: flex-end; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #f8fafc; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    Modify
                 </button>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
-                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    Publish Now
+                <button style="background: #2563eb; border: none; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);">
+                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    Deploy_Now
                 </button>
-                <button class="btn btn-danger" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
-                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    Delete
+                <button style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
+                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Purge
                 </button>
             </div>
         </div>

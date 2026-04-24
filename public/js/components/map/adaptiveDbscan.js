@@ -464,10 +464,13 @@ function checkLogic(pointA, pointB) {
     verdict: "REJECTED"
   };
 
-  result.distance = haversineDistance(
-    pointA.latitude, pointA.longitude,
-    pointB.latitude, pointB.longitude
-  );
+  // Support both lat/lng and latitude/longitude property names
+  const latA = pointA.latitude != null ? pointA.latitude : pointA.lat;
+  const lngA = pointA.longitude != null ? pointA.longitude : pointA.lng;
+  const latB = pointB.latitude != null ? pointB.latitude : pointB.lat;
+  const lngB = pointB.longitude != null ? pointB.longitude : pointB.lng;
+
+  result.distance = haversineDistance(latA, lngA, latB, lngB);
 
   const epsilonA = getAdaptiveEpsilon(pointA);
   const epsilonB = getAdaptiveEpsilon(pointB);
@@ -505,7 +508,10 @@ function getSemanticallyRelatedNeighbors(point, allPoints, visited = new Set()) 
   for (const candidate of allPoints) {
     if (candidate.id === point.id) continue;
     if (visited.has(candidate.id)) continue;
-    if (candidate.latitude == null || candidate.longitude == null) continue;
+    // Support both lat/lng and latitude/longitude property names
+    const candidateLat = candidate.latitude != null ? candidate.latitude : candidate.lat;
+    const candidateLng = candidate.longitude != null ? candidate.longitude : candidate.lng;
+    if (candidateLat == null || candidateLng == null) continue;
 
     const logicResult = checkLogic(point, candidate);
 
@@ -579,14 +585,20 @@ class AdaptiveDBSCAN {
       return { clusters: [], noise: [], metadata: {} };
     }
 
-    const validData = data.filter(p =>
-      p.latitude != null &&
-            p.longitude != null &&
-            (p.category || p.subcategory)
-    );
+    // Support both lat/lng and latitude/longitude property names
+    const validData = data.filter(p => {
+      const hasLat = p.latitude != null || p.lat != null;
+      const hasLng = p.longitude != null || p.lng != null;
+      return hasLat && hasLng && (p.category || p.subcategory);
+    });
 
+    // Normalize: ensure both latitude/longitude AND lat/lng exist on each point
     validData.forEach(p => {
-      if (!p.timestamp) p.timestamp = normalizeTimestamp(p.timestamp);
+      if (p.latitude == null && p.lat != null) p.latitude = p.lat;
+      if (p.longitude == null && p.lng != null) p.longitude = p.lng;
+      if (p.lat == null && p.latitude != null) p.lat = p.latitude;
+      if (p.lng == null && p.longitude != null) p.lng = p.longitude;
+      if (!p.timestamp) p.timestamp = normalizeTimestamp(p.submittedAt || p.submitted_at || p.timestamp);
     });
 
     const visited = new Set();
@@ -644,6 +656,75 @@ class AdaptiveDBSCAN {
       clusterChains,
       metadata
     };
+  }
+
+  /**
+   * Calculate distance between two points using Haversine formula
+   * (API-compatible with standard DBSCAN class)
+   * @param {Object} point1 - {lat, lng}
+   * @param {Object} point2 - {lat, lng}
+   * @returns {number} Distance in kilometers
+   */
+  calculateDistance(point1, point2) {
+    const lat1 = point1.latitude || point1.lat;
+    const lng1 = point1.longitude || point1.lng;
+    const lat2 = point2.latitude || point2.lat;
+    const lng2 = point2.longitude || point2.lng;
+    return haversineDistance(lat1, lng1, lat2, lng2) / 1000; // Convert meters to km
+  }
+
+  /**
+   * Calculate cluster statistics
+   * (API-compatible with standard DBSCAN class)
+   * @param {Array} points - Original points array
+   * @param {Object} clusteringResult - Result from cluster() method
+   * @returns {Object} Statistics about the clustering
+   */
+  calculateStatistics(points, clusteringResult) {
+    const clusters = clusteringResult.clusters || [];
+    const noise = clusteringResult.noise || [];
+
+    const stats = {
+      totalPoints: points.length,
+      numClusters: clusters.length,
+      numNoise: noise.length,
+      clusterDetails: []
+    };
+
+    clusters.forEach((cluster, index) => {
+      // Handle both object-based and index-based clusters
+      const clusterPoints = cluster.map(item => {
+        if (typeof item === "number") return points[item];
+        return item;
+      }).filter(Boolean);
+
+      if (clusterPoints.length === 0) return;
+
+      const centerLat = clusterPoints.reduce((sum, p) => sum + (p.lat || p.latitude || 0), 0) / clusterPoints.length;
+      const centerLng = clusterPoints.reduce((sum, p) => sum + (p.lng || p.longitude || 0), 0) / clusterPoints.length;
+
+      let maxRadius = 0;
+      clusterPoints.forEach(point => {
+        const pLat = point.lat || point.latitude || 0;
+        const pLng = point.lng || point.longitude || 0;
+        const distance = haversineDistance(centerLat, centerLng, pLat, pLng) / 1000;
+        maxRadius = Math.max(maxRadius, distance);
+      });
+
+      const area = Math.PI * maxRadius * maxRadius;
+      const density = clusterPoints.length / Math.max(area, 0.01);
+
+      stats.clusterDetails.push({
+        id: index,
+        size: clusterPoints.length,
+        center: { lat: centerLat, lng: centerLng },
+        radius: maxRadius,
+        density,
+        points: clusterPoints
+      });
+    });
+
+    return stats;
   }
 }
 

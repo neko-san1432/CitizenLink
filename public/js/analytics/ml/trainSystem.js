@@ -20,6 +20,52 @@ function $(id) {
   return document.getElementById(id);
 }
 
+// Global charts registry for training tab
+const trainingCharts = {};
+
+function destroyTrainingChart(id) {
+  if (trainingCharts[id]) {
+    trainingCharts[id].destroy();
+    delete trainingCharts[id];
+  }
+}
+
+function renderTrainingSparkline(canvasId, data, color) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  destroyTrainingChart(canvasId);
+
+  trainingCharts[canvasId] = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: data.map((_, i) => i),
+      datasets: [{
+        data,
+        borderColor: color,
+        borderWidth: 2,
+        tension: 0.5,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return null;
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, "rgba(255, 255, 255, 0)");
+          gradient.addColorStop(1, color.replace("1)", "0.1)"));
+          return gradient;
+        },
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+}
+
 function safeText(value) {
   return typeof value === "string" ? value : value === null || value === undefined ? "" : String(value);
 }
@@ -47,6 +93,35 @@ async function init() {
   populateCategoryDropdown();
 
   updateHITLStats();
+  renderImpactCharts();
+}
+
+function renderImpactCharts() {
+  const mockHistory = Array.from({length: 12}, (_, i) => 50 + Math.sin(i * 0.5) * 10 + Math.random() * 5);
+  renderTrainingSparkline("trainingConfidenceTrend", mockHistory, "#8b5cf6");
+  renderTrainingSparkline("trainingAccuracyTrend", mockHistory.map(x => x + 5), "#10b981");
+
+  const trainedCanvas = $("itemsTrainedChart");
+  if (trainedCanvas) {
+    destroyTrainingChart("itemsTrainedChart");
+    trainingCharts["itemsTrainedChart"] = new Chart(trainedCanvas, {
+      type: "doughnut",
+      data: {
+        labels: ["Trained", "Remaining"],
+        datasets: [{
+          data: [trainedToday, Math.max(1, pendingReviews.length)],
+          backgroundColor: ["#8b5cf6", "rgba(255, 255, 255, 0.05)"],
+          borderWidth: 0,
+          cutout: "85%"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 }
 
 // Pre-populate category dropdown on page load
@@ -270,17 +345,12 @@ function renderTrainingList() {
 
   if (pendingReviews.length === 0) {
     listContainer.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: var(--gray-600);">
-                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
-                <p style="font-weight: 600;">No items in the training queue</p>
-                <p style="font-size: 12px; color: var(--gray-500); margin-top: 8px;">
-                    Items appear here when:<br>
-                    • New complaints are submitted with low NLP confidence (&lt;70%)<br>
-                    • complaints are classified as "Others" or use FALLBACK method
-                </p>
-                <p style="font-size: 11px; color: var(--gray-400); margin-top: 12px;">
-                    💡 Submit a new Complaint to see the auto-queue in action!
-                </p>
+            <div class="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/5">
+                    <i class="fas fa-inbox-full text-3xl text-gray-500"></i>
+                </div>
+                <h4 class="text-lg font-bold text-white mb-1">All caught up! 🎉</h4>
+                <p class="text-xs text-gray-500">There are no complaints pending review.</p>
             </div>
         `;
     resetForm();
@@ -288,37 +358,19 @@ function renderTrainingList() {
   }
 
   listContainer.innerHTML = pendingReviews.map(c => {
-    // Build NLP context badges
-    let nlpBadges = "";
-
-    // Source badge (database vs memory)
-    if (c.source === "database") {
-      nlpBadges += '<span class="badge badge-primary" style="font-size:9px;margin-right:4px;" title="From auto-queue">DB</span>';
-    }
-    if (c.method) {
-      nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;margin-right:4px;">${c.method}</span>`;
-    }
-    if (c.is_speculation) {
-      nlpBadges += '<span class="badge badge-info" style="font-size:9px;margin-right:4px;">Speculation</span>';
-    }
-    if (c.is_metaphor) {
-      nlpBadges += '<span class="badge badge-warning" style="font-size:9px;margin-right:4px;">Metaphor</span>';
-    }
-    if (c.temporal_tag) {
-      nlpBadges += `<span class="badge badge-secondary" style="font-size:9px;">${c.temporal_tag}</span>`;
-    }
-
     return `
-        <div class="train-item" onclick="window.selectTrainingItem('${c.id}')" id="train-item-${c.id}">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span style="font-weight:600; font-size:13px;">${c.id.substring(0, 8)}...</span>
+        <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-white/5 transition-all border border-white/5 group ${currentTrainingItem?.id === c.id ? 'bg-white/10 border-purple-500/50' : ''}" 
+             onclick="window.selectTrainingItem('${c.id}')" id="train-item-${c.id}">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">${c.id.substring(0, 8)}</span>
+                <span class="text-[9px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20 font-bold uppercase">${c.method || 'NLP'}</span>
             </div>
-            ${nlpBadges ? `<div style="margin-bottom:4px;">${nlpBadges}</div>` : ""}
-            <div style="font-size:12px; color:var(--gray-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            <div class="text-xs text-gray-300 line-clamp-2 mb-3 leading-relaxed">
                 ${c.text}
             </div>
-            <div style="font-size:11px; color:var(--gray-400); margin-top:3px;">
-                Predicted: <strong style="color:var(--primary);">${c.ai_suggestion}</strong>
+            <div class="flex items-center justify-between pt-2 border-t border-white/5">
+                <span class="text-[9px] text-gray-500 font-bold uppercase">Predicted</span>
+                <span class="text-[10px] text-purple-400 font-black">${c.ai_suggestion}</span>
             </div>
         </div>
     `;}).join("");
@@ -343,23 +395,32 @@ window.selectTrainingItem = function (id) {
   currentTrainingItem = item;
 
   // UI Updates
-  document.querySelectorAll(".train-item").forEach(el => el.classList.remove("active"));
-  document.getElementById(`train-item-${id}`)?.classList.add("active");
-
-  // Populate Form
-  const badge = document.getElementById("trainingStatusBadge");
-  if (badge) {
-    badge.textContent = "Reviewing";
-    badge.className = "badge badge-primary";
+  document.querySelectorAll("[id^='train-item-']").forEach(el => {
+    el.classList.remove("bg-white/10", "border-purple-500/50");
+    el.classList.add("border-white/5");
+  });
+  const activeEl = document.getElementById(`train-item-${id}`);
+  if (activeEl) {
+    activeEl.classList.remove("border-white/5");
+    activeEl.classList.add("bg-white/10", "border-purple-500/50");
   }
 
+  // Update step indicators
+  updateTrainingSteps(2);
+
+  document.getElementById("lblOriginalText").classList.remove("italic", "text-gray-400");
+  document.getElementById("lblOriginalText").classList.add("text-white", "font-medium");
   document.getElementById("lblOriginalText").textContent = item.text;
-  document.getElementById("lblSystemGuess").textContent = item.ai_suggestion;
 
   // Enable Form
   const keyInput = document.getElementById("inputTrainKeyword");
   keyInput.disabled = false;
   keyInput.value = "";
+  keyInput.focus();
+  
+  keyInput.addEventListener('input', () => {
+    if (keyInput.value.trim().length > 2) updateTrainingSteps(3);
+  });
 
   // Populate and select the AI suggestion in the category dropdown
   const catSelect = document.getElementById("selectTrainCategory");
@@ -375,6 +436,9 @@ window.selectTrainingItem = function (id) {
   });
 
   catSelect.disabled = false;
+  catSelect.addEventListener('change', () => {
+    if (catSelect.value) updateTrainingSteps(4);
+  });
 
   // Set the value to AI suggestion if it exists in the options
   if (item.ai_suggestion && CATEGORY_TAXONOMY[item.ai_suggestion]) {
@@ -383,12 +447,42 @@ window.selectTrainingItem = function (id) {
     catSelect.value = ""; // Reset to default
   }
 
-  // updateSubcategories(); // Removed
-
   // Enable Buttons
   document.getElementById("btnSaveTrain").disabled = false;
+  document.getElementById("btnSaveTrain").classList.remove("bg-purple-600/20", "text-purple-400");
+  document.getElementById("btnSaveTrain").classList.add("bg-purple-600", "text-white");
   document.getElementById("btnSkipTrain").disabled = false;
 };
+
+function updateTrainingSteps(activeStep) {
+  const steps = document.querySelectorAll("#system-training .bg-white\/\\[0\\.02\\] > div");
+  steps.forEach((step, i) => {
+    const stepNum = i + 1;
+    const circle = step.querySelector("div:first-child");
+    if (stepNum < activeStep) {
+      // Completed
+      step.classList.remove("opacity-40");
+      step.classList.add("opacity-100");
+      circle.classList.remove("bg-purple-600", "bg-white/10", "shadow-[0_0_15px_rgba(147,51,234,0.5)]");
+      circle.classList.add("bg-emerald-500");
+      circle.innerHTML = '<i class="fas fa-check"></i>';
+    } else if (stepNum === activeStep) {
+      // Active
+      step.classList.remove("opacity-40");
+      step.classList.add("opacity-100");
+      circle.classList.remove("bg-white/10", "bg-emerald-500");
+      circle.classList.add("bg-purple-600", "shadow-[0_0_15px_rgba(147,51,234,0.5)]");
+      circle.innerHTML = stepNum;
+    } else {
+      // Future
+      step.classList.add("opacity-40");
+      step.classList.remove("opacity-100");
+      circle.classList.remove("bg-purple-600", "bg-emerald-500", "shadow-[0_0_15px_rgba(147,51,234,0.5)]");
+      circle.classList.add("bg-white/10");
+      circle.innerHTML = stepNum;
+    }
+  });
+}
 
 function updateSubcategories() {
   console.log("[TRAIN] updateSubcategories called");
@@ -524,14 +618,14 @@ async function skipCurrentItem() {
 
 function resetForm() {
   currentTrainingItem = null;
-  const badge = document.getElementById("trainingStatusBadge");
-  if (badge) {
-    badge.textContent = "No Item Selected";
-    badge.className = "badge badge-noise";
-  }
+  updateTrainingSteps(1);
 
-  document.getElementById("lblOriginalText").textContent = "Select an item from the left to view details.";
-  document.getElementById("lblSystemGuess").textContent = "-";
+  const lbl = document.getElementById("lblOriginalText");
+  if (lbl) {
+    lbl.textContent = "Select an item from the left to view details";
+    lbl.classList.add("italic", "text-gray-400");
+    lbl.classList.remove("text-white", "font-medium");
+  }
 
   const keyInput = document.getElementById("inputTrainKeyword");
   if (keyInput) {
@@ -541,19 +635,21 @@ function resetForm() {
 
   const catSelect = document.getElementById("selectTrainCategory");
   if (catSelect) {
-    // Keep categories populated but reset selection and disable
     catSelect.value = "";
     catSelect.disabled = true;
   }
 
   const subSelect = document.getElementById("selectTrainSubcategory");
   if (subSelect) {
-    // subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
     subSelect.disabled = true;
   }
 
   const saveBtn = document.getElementById("btnSaveTrain");
-  if (saveBtn) saveBtn.disabled = true;
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.classList.add("bg-purple-600/20", "text-purple-400");
+    saveBtn.classList.remove("bg-purple-600", "text-white");
+  }
 
   const skipBtn = document.getElementById("btnSkipTrain");
   if (skipBtn) skipBtn.disabled = true;
@@ -587,10 +683,19 @@ function updateHITLStats() {
   const avgConf = confCount > 0 ? Math.round((totalConf / confCount) * 100) : 0;
   set("avgConfidenceScore", avgConf > 0 ? `${avgConf  }%` : "-");
 
-  // Model accuracy estimation (based on training history vs total processed)
+  // Model accuracy estimation
   const totalTrained = trainingHistory.length;
-  const accuracy = totalTrained > 10 ? Math.min(95, 70 + Math.round(totalTrained / 5)) : "-";
-  set("modelAccuracy", accuracy === "-" ? accuracy : `${accuracy  }%`);
+  const accuracy = totalTrained > 10 ? Math.min(95, 70 + Math.round(totalTrained / 5)) : "--";
+  set("modelAccuracy", accuracy === "--" ? accuracy : `${accuracy}%`);
+
+  // Progress Bar
+  const progress = Math.min(100, Math.round((trainedToday / 20) * 100)); // Target 20 a day
+  const progressBar = document.querySelector("#system-training .bg-purple-500.h-full");
+  if (progressBar) progressBar.style.width = `${progress}%`;
+  const progressText = progressBar?.parentElement?.previousElementSibling;
+  if (progressText) progressText.textContent = `${progress}%`;
+
+  renderImpactCharts();
 }
 
 function addTrainingHistory(title, detail) {

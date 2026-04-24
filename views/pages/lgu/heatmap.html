@@ -249,15 +249,25 @@
             const viz = getViz();
             if (!viz) { console.warn('[HUD-INLINE] heatmapViz not ready'); return; }
             try {
-                if (type === 'heatmap') viz.showHeatmap();
+                // Apply current filters so all layers use filtered data
+                if (viz.currentFilters) {
+                    viz.applyClientSideFilters(viz.currentFilters);
+                }
+
+                if (type === 'heatmap') {
+                    // Recreate heatmap from filtered data
+                    viz.createHeatmapLayer();
+                    viz.showHeatmap();
+                }
                 if (type === 'markers') {
-                    // Ensure marker layer exists before showing
-                    if (!viz.markerLayer || (viz.markerLayer.getLayers && viz.markerLayer.getLayers().length === 0)) {
-                        viz.createMarkerLayer();
-                    }
+                    // Recreate markers from filtered data
+                    viz.createMarkerLayer();
                     viz.showMarkers();
                 }
-                if (type === 'clusters') viz.toggleClustering(true);
+                if (type === 'clusters') {
+                    // toggleClustering calls performClustering → uses filtered complaintData
+                    viz.toggleClustering(true);
+                }
             } catch(e) { console.error('[HUD-INLINE] showLayer error:', e); }
         }
 
