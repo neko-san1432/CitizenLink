@@ -424,9 +424,60 @@ function calcStats(data) {
 }
 
 function destroyChart(id) {
-  const chart = charts[id];
-  if (chart && typeof chart.destroy === "function") chart.destroy();
-  delete charts[id];
+  if (charts[id]) {
+    charts[id].destroy();
+    delete charts[id];
+  }
+}
+
+function renderDonutChart(canvasId, data, colors) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  destroyChart(canvasId);
+
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+
+  charts[canvasId] = new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 12,
+        cutout: "70%"
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+function renderTacticalLegend(containerId, data, colors, isSimple = false) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const entries = Object.entries(data);
+  const total = entries.reduce((sum, [, v]) => sum + v, 0);
+
+  container.innerHTML = entries.map(([name, val], i) => {
+    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+    return `
+      <div class="flex items-center gap-3 text-[9px] font-bold">
+        <div class="flex items-center gap-2 flex-1 min-w-0">
+          <div class="w-1.5 h-1.5 rounded-sm flex-shrink-0" style="background: ${colors[i % colors.length]}"></div>
+          <span class="text-gray-400 uppercase truncate">${name}</span>
+        </div>
+        <span class="text-white data-monospace flex-shrink-0">${val} <span class="text-gray-600 font-normal">(${pct}%)</span></span>
+      </div>`;
+  }).join("");
 }
 
 function renderPieChart(canvasId, labels, values, colors) {
@@ -973,7 +1024,7 @@ function renderCategories(stats) {
           backgroundColor: catColors,
           borderWidth: 0,
           hoverOffset: 15,
-          cutout: "75%"
+          cutout: "70%"
         }]
       },
       options: {
@@ -990,12 +1041,12 @@ function renderCategories(stats) {
     legendContainer.innerHTML = dist.map(([name, val], i) => {
       const pct = ((val / stats.total) * 100).toFixed(1);
       return `
-        <div class="flex items-center justify-between text-[11px] font-bold">
-          <div class="flex items-center gap-3">
-            <div class="w-2.5 h-2.5 rounded-full" style="background: ${catColors[i]}"></div>
-            <span class="text-gray-300 uppercase tracking-wider">${name}</span>
+        <div class="flex items-center gap-3 text-[9px] font-bold">
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <div class="w-1.5 h-1.5 rounded-sm flex-shrink-0" style="background: ${catColors[i]}"></div>
+            <span class="text-gray-400 uppercase truncate">${name}</span>
           </div>
-          <span class="text-white data-monospace">${val} <span class="text-gray-500 font-normal">(${pct}%)</span></span>
+          <span class="text-white data-monospace flex-shrink-0">${val} <span class="text-gray-600 font-normal">(${pct}%)</span></span>
         </div>`;
     }).join("");
   }
@@ -1107,7 +1158,7 @@ function renderCategories(stats) {
           data: methodData.map(([, v]) => v),
           backgroundColor: methodColors,
           borderWidth: 0,
-          cutout: "80%"
+          cutout: "70%"
         }]
       },
       options: {
@@ -1415,6 +1466,43 @@ function renderEdgeCaseTimeline() {
   });
 }
 
+function renderOverview(stats) {
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    
+    // Calculate Today, Week, Month
+    const now = new Date();
+    const todayKey = now.toISOString().slice(0, 10);
+    const last7Days = Array.from({length: 7}, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toISOString().slice(0, 10);
+    });
+    const currentMonthKey = now.toISOString().slice(0, 7);
+
+    const todayCount = stats.byDay.get(todayKey) || 0;
+    const weekCount = last7Days.reduce((sum, key) => sum + (stats.byDay.get(key) || 0), 0);
+    const monthCount = stats.byMonth.get(currentMonthKey) || 0;
+
+    set("todayCount", todayCount);
+    set("weekCount", weekCount);
+    set("monthCount", monthCount);
+    
+    const hourEntries = Array.from(stats.byHour.entries());
+    const peakHourEntry = hourEntries.sort((a, b) => b[1] - a[1])[0];
+    set("peakIntensity", peakHourEntry ? peakHourEntry[1] : 0);
+    set("peakHour", peakHourEntry !== undefined ? `${peakHourEntry[0]}:00` : "--:--");
+
+    // Sparklines for overview
+    const history = Array.from({length: 10}, () => Math.floor(Math.random() * 20));
+    renderSparkline("todaySparkline", history, "#3b82f6");
+    renderSparkline("weekSparkline", history.map(v => v + 5), "#10b981");
+    renderSparkline("monthSparkline", history.map(v => v + 10), "#f59e0b");
+    renderSparkline("intensitySparkline", history.map(v => v + 2), "#8b5cf6");
+}
+
 function applyFilters() {
   const search = safeText(document.getElementById("searchInput")?.value).toLowerCase();
   const tierFilter = safeText(document.getElementById("tierFilter")?.value);
@@ -1622,7 +1710,12 @@ function setupListeners() {
         renderCategories(globalStats);
       } else if (tabId === "temporal" && globalStats) {
         renderTemporal(globalStats);
+      } else if (tabId === "data-table") {
+        renderTable();
       }
+
+      // Re-trigger global layout fixes
+      window.dispatchEvent(new Event('resize'));
 
       if (history && typeof history.replaceState === "function") {
         history.replaceState(null, "", `#${tabId}`);
@@ -1953,6 +2046,7 @@ async function init() {
     const stats = calcStats(processedcomplaints);
     setupListeners();
     renderAll(stats);
+    renderTable(); // Force initial table render
     initStream();
     publishAnalyticsState();
     setLoading(false);

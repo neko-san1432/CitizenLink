@@ -68,24 +68,26 @@
                                 <p class="text-gray-400 text-sm mt-1">Analyze complaint patterns over time to identify peak periods and seasonal trends.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-3">
-                                <div class="relative">
-                                    <i class="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-400 text-xs pointer-events-none"></i>
-                                    <select class="filter-select rounded-lg focus:outline-none">
-                                        <option>Last 30 Days</option>
+                                <div class="relative h-[38px]">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <select id="temporalTimeFilter" class="filter-select rounded-lg focus:outline-none h-full">
+                                        <option value="30">Last 30 Days</option>
+                                        <option value="7">Last 7 Days</option>
+                                        <option value="90">Last 90 Days</option>
                                     </select>
-                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                    <i class="fas fa-chevron-down"></i>
                                 </div>
-                                <div class="relative">
-                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                <div class="relative h-[38px]">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none h-full">
                                         <option>All Categories</option>
                                     </select>
-                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                    <i class="fas fa-chevron-down"></i>
                                 </div>
-                                <div class="relative">
-                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
-                                        <option>All Barangays</option>
+                                <div class="relative h-[38px]">
+                                    <select id="temporalBarangayFilter" class="filter-select filter-select-no-icon rounded-lg focus:outline-none h-full">
+                                        <option value="all">All Barangays</option>
                                     </select>
-                                    <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
+                                    <i class="fas fa-chevron-down"></i>
                                 </div>
                                 <button class="px-5 py-2 btn-filter text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-all border border-blue-400/30">
                                     <i class="fas fa-filter text-xs"></i> Filter
@@ -147,6 +149,24 @@
                             </div>
                             <div class="w-28 h-12 flex-shrink-0">
                                 <canvas id="monthSparkline"></canvas>
+                            </div>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="glass-card summary-card rounded-xl">
+                            <div class="summary-card-content">
+                                <div class="icon-circle text-purple-500">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="summary-card-metrics">
+                                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Peak Intensity</p>
+                                    <h3 class="data-monospace" id="peakIntensity">0</h3>
+                                    <p class="trend-indicator text-purple-400">
+                                        <i class="fas fa-clock text-[8px]"></i> <span id="peakHour">--:--</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="w-28 h-12 flex-shrink-0">
+                                <canvas id="intensitySparkline"></canvas>
                             </div>
                         </div>
                         <!-- Card 4 -->
@@ -322,14 +342,14 @@
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
                                 </div>
-                                <div class="relative">
-                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                <div class="relative h-[38px]">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none h-full">
                                         <option>All Categories</option>
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
                                 </div>
-                                <div class="relative">
-                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none">
+                                <div class="relative h-[38px]">
+                                    <select class="filter-select filter-select-no-icon rounded-lg focus:outline-none h-full">
                                         <option>All Barangays</option>
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none"></i>
@@ -417,32 +437,27 @@
                         </div>
 
                         <!-- Charts Row 1 -->
-                        <div class="row-2-grid mb-6">
+                        <div class="row-2-grid mb-8">
                             <!-- Category Distribution -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col col-complaints">
+                            <div class="glass-card p-4 rounded-xl flex flex-col col-complaints h-[300px]">
                                 <div class="chart-card-header">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-chart-pie"></i> Category Distribution
                                     </h3>
                                     <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Details <i class="fas fa-external-link-alt ml-1"></i></button>
                                 </div>
-                                <div class="flex flex-col md:flex-row items-center gap-6">
-                                    <div class="w-full md:w-1/2 aspect-square relative">
+                                <div class="grid grid-cols-[140px_1fr] items-center gap-6 py-2">
+                                    <div class="relative tactical-donut-container" style="width: 140px; height: 140px;">
                                         <canvas id="categoryDistChart"></canvas>
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                            <span class="text-[10px] text-gray-400 uppercase font-bold">Total</span>
-                                            <span class="text-2xl font-black text-white" id="totalComplaintsDonut">1,248</span>
-                                            <span class="text-[10px] text-gray-500 uppercase font-bold">complaints</span>
-                                        </div>
                                     </div>
-                                    <div class="w-full md:w-1/2 space-y-3" id="categoryLegendContainer">
+                                    <div class="space-y-1.5 min-w-0" id="categoryLegendContainer">
                                         <!-- Legend populated by JS -->
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Priority by Category -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col col-priority">
+                            <div class="glass-card p-4 rounded-xl flex flex-col col-priority h-[300px]">
                                 <div class="chart-card-header">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-layer-group"></i> Priority by Category
@@ -453,7 +468,7 @@
                                         <div class="priority-legend-item"><div class="priority-dot low"></div> Low (<50%)</div>
                                     </div>
                                 </div>
-                                <div class="flex-1 min-h-[300px] relative w-full">
+                                <div class="tactical-chart-container mb-0">
                                     <canvas id="categoryPriorityChart"></canvas>
                                 </div>
                             </div>
@@ -489,7 +504,7 @@
                                     </h3>
                                     <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Details <i class="fas fa-external-link-alt ml-1"></i></button>
                                 </div>
-                                <div class="flex-1 min-h-[300px] relative w-full">
+                                <div class="tactical-chart-container mb-0">
                                     <canvas id="subcategoryChart"></canvas>
                                 </div>
                             </div>
@@ -501,15 +516,13 @@
                                         <i class="fas fa-microscope"></i> NLP Detection Methods
                                     </h3>
                                 </div>
-                                <div class="aspect-square relative mb-4">
-                                    <canvas id="nlpMethodChart"></canvas>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                        <span class="text-[8px] text-gray-400 uppercase font-bold">Total</span>
-                                        <span class="text-xl font-black text-white" id="nlpMethodTotal">1,248</span>
+                                <div class="grid grid-cols-[120px_1fr] items-center gap-4 py-1">
+                                    <div class="relative tactical-donut-container" style="width: 120px; height: 120px;">
+                                        <canvas id="nlpMethodChart"></canvas>
                                     </div>
-                                </div>
-                                <div id="nlpMethodLegend" class="space-y-2">
-                                    <!-- Populated by JS -->
+                                    <div id="nlpMethodLegend" class="space-y-1 min-w-0">
+                                        <!-- Populated by JS -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -727,43 +740,36 @@
                         <!-- Charts Row 1 -->
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                             <!-- Figurative Breakdown -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-5">
-                                <div class="chart-card-header mb-6">
+                            <div class="glass-card p-4 rounded-xl flex flex-col lg:col-span-5 h-[300px]">
+                                <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-chart-pie"></i> Figurative Language Breakdown
                                     </h3>
                                     <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Details <i class="fas fa-external-link-alt ml-1"></i></button>
                                 </div>
-                                <div class="flex flex-col md:flex-row items-center gap-8">
-                                    <div class="w-full md:w-1/2 aspect-square relative">
+                                <div class="grid grid-cols-[120px_1fr] items-center gap-6 py-2">
+                                    <div class="relative tactical-donut-container" style="width: 120px; height: 120px;">
                                         <canvas id="figurativeDistChart"></canvas>
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                            <span class="text-[10px] text-gray-400 uppercase font-bold">Total</span>
-                                            <span class="text-2xl font-black text-white" id="totalFigurativeDonut">4</span>
-                                            <span class="text-[10px] text-gray-500 uppercase font-bold">Detections</span>
-                                        </div>
                                     </div>
-                                    <div class="w-full md:w-1/2 space-y-4" id="figurativeLegend">
+                                    <div class="space-y-1.5 min-w-0" id="figurativeLegend">
                                         <!-- Legend populated by JS -->
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Detections Over Time -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-7">
+                            </div>                            <!-- Detections Over Time -->
+                            <div class="glass-card p-4 rounded-xl flex flex-col lg:col-span-7 h-[300px]">
                                 <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-chart-line"></i> Detections Over Time
                                     </h3>
-                                    <div class="relative">
-                                        <select class="header-select appearance-none">
+                                    <div class="relative h-[24px]">
+                                        <select class="header-select appearance-none h-full">
                                             <option>Daily</option>
                                         </select>
-                                        <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"></i>
+                                        <i class="fas fa-chevron-down"></i>
                                     </div>
                                 </div>
-                                <div class="flex-1 min-h-[300px] relative w-full">
-                                    <canvas id="edgeCaseTimelineChart"></canvas>
+                                <div class="tactical-chart-container mb-0">
+                                    <canvas id="figurativeTimeChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -771,64 +777,51 @@
                         <!-- Row 3: Mismatches, Recent cases, Methods -->
                         <div class="row-3-grid">
                             <!-- Top Mismatched Categories -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col">
-                                <div class="chart-card-header mb-6">
+                            <div class="glass-card p-4 rounded-xl flex flex-col h-[220px]">
+                                <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
-                                        <i class="fas fa-layer-group"></i> Top Mismatched Categories
+                                        <i class="fas fa-layer-group"></i> Top Mismatches
                                     </h3>
                                 </div>
-                                <div id="mismatchList" class="space-y-5">
+                                <div id="mismatchList" class="space-y-3 flex-1 overflow-y-auto pr-2">
                                     <!-- Populated by JS -->
                                 </div>
-                                <button class="mt-auto pt-6 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors border-t border-white/5">
-                                    View All Mismatches <i class="fas fa-chevron-right ml-1 text-[8px]"></i>
+                                <button class="mt-2 pt-3 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors border-t border-white/5">
+                                    View All <i class="fas fa-chevron-right ml-1 text-[8px]"></i>
                                 </button>
                             </div>
 
                             <!-- Recent Edge Cases -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col h-[400px]">
-                                <div class="chart-card-header mb-4">
+                            <div class="glass-card p-4 rounded-xl flex flex-col h-[220px]">
+                                <div class="chart-card-header mb-3">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-history"></i> Recent Edge Cases
                                     </h3>
-                                    <button class="text-[10px] bg-white/5 px-3 py-1.5 rounded border border-white/10 hover:bg-white/10 transition-all font-bold uppercase">View All</button>
+                                    <button class="text-[9px] bg-white/5 px-2 py-1 rounded border border-white/10 hover:bg-white/10 transition-all font-bold uppercase">View All</button>
                                 </div>
-                                <div id="recentEdgeCasesList" class="flex-1 overflow-y-auto pr-2 space-y-4">
+                                <div id="recentEdgeCasesList" class="flex-1 overflow-y-auto pr-2 space-y-3">
                                     <!-- Populated by JS -->
                                 </div>
                             </div>
 
                             <!-- NLP Detection Methods (Re-used) -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col">
-                                <div class="chart-card-header mb-6">
+                            <div class="glass-card p-4 rounded-xl flex flex-col h-[220px]">
+                                <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-microscope"></i> NLP Detection Methods
                                     </h3>
                                 </div>
-                                <div class="aspect-square relative mb-4">
-                                    <canvas id="edgeNLPMethodChart"></canvas>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                        <span class="text-[8px] text-gray-400 uppercase font-bold">Total</span>
-                                        <span class="text-xl font-black text-white" id="edgeNLPMethodTotal">4</span>
-                                        <span class="text-[8px] text-gray-500 uppercase font-bold">Detections</span>
+                                <div class="grid grid-cols-[120px_1fr] items-center gap-4 py-1">
+                                    <div class="relative tactical-donut-container" style="width: 120px; height: 120px;">
+                                        <canvas id="edgeNLPMethodChart"></canvas>
                                     </div>
-                                </div>
-                                <div id="edgeNLPMethodLegend" class="space-y-2">
-                                    <!-- Populated by JS -->
+                                    <div id="edgeNLPMethodLegend" class="space-y-1 min-w-0">
+                                        <!-- Populated by JS -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Footer -->
-                        <div class="dashboard-footer mt-8 pt-4 flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest border-t border-white/5">
-                            <div>Showing 1 to 7 of 7 edge cases</div>
-                            <div class="flex items-center gap-6">
-                                <span>Data as of: <span id="edgeDataTimestamp" class="text-gray-400">Apr 24, 2026 02:04 PM</span></span>
-                                <button class="flex items-center gap-2 hover:text-white transition-colors">
-                                    <i class="fas fa-sync-alt"></i> Refresh Data
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </section>
 
@@ -851,25 +844,31 @@
                         <!-- Summary Row -->
                         <div class="summary-grid-5">
                             <!-- Pending -->
-                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
-                                <div class="icon-circle text-purple-500 bg-purple-500/10 border-purple-500/20">
-                                    <i class="fas fa-hourglass-half"></i>
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4 border border-white/5">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-purple-500 bg-purple-500/10 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                                    <i class="fas fa-hourglass-half text-sm"></i>
                                 </div>
-                                <div>
-                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Pending Review</p>
-                                    <h3 class="text-xl font-black text-white" id="pendingTrainCount">0</h3>
-                                    <p class="text-[9px] text-gray-500 mt-0.5"><i class="fas fa-circle text-[6px] mr-1 text-purple-400"></i> No items to review</p>
+                                <div class="min-w-0">
+                                    <p class="text-[9px] uppercase font-black text-gray-500 tracking-widest">Pending Review</p>
+                                    <h3 class="text-2xl font-black text-white leading-none mt-1" id="pendingTrainCount">0</h3>
+                                    <div class="flex items-center gap-1 mt-1.5">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+                                        <p class="text-[8px] text-gray-500 font-bold uppercase">No items</p>
+                                    </div>
                                 </div>
                             </div>
                             <!-- Trained Today -->
-                            <div class="glass-card p-4 rounded-xl flex items-center gap-4">
-                                <div class="icon-circle text-blue-500 bg-blue-500/10 border-blue-500/20">
-                                    <i class="fas fa-user-graduate"></i>
+                            <div class="glass-card p-4 rounded-xl flex items-center gap-4 border border-white/5">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-500 bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                                    <i class="fas fa-user-graduate text-sm"></i>
                                 </div>
-                                <div>
-                                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Trained Today</p>
-                                    <h3 class="text-xl font-black text-white" id="trainedTodayCount">0</h3>
-                                    <p class="text-[9px] text-gray-500 mt-0.5"><i class="fas fa-circle text-[6px] mr-1 text-blue-400"></i> Keep it up!</p>
+                                <div class="min-w-0">
+                                    <p class="text-[9px] uppercase font-black text-gray-500 tracking-widest">Trained Today</p>
+                                    <h3 class="text-2xl font-black text-white leading-none mt-1" id="trainedTodayCount">0</h3>
+                                    <div class="flex items-center gap-1 mt-1.5">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                        <p class="text-[8px] text-gray-500 font-bold uppercase">Keep it up!</p>
+                                    </div>
                                 </div>
                             </div>
                             <!-- Avg Confidence -->
@@ -909,10 +908,9 @@
                             </div>
                         </div>
 
-                        <!-- Middle Row: Queue & Impact -->
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                             <!-- Pending Reviews List -->
-                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-5 h-[400px]">
+                            <div class="glass-card p-6 rounded-xl flex flex-col lg:col-span-5 h-[300px]">
                                 <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-list-ul"></i> Pending Reviews
@@ -934,39 +932,39 @@
                             </div>
 
                             <!-- Training Impact -->
-                            <div class="glass-card p-6 rounded-xl lg:col-span-7 flex flex-col">
-                                <div class="chart-card-header mb-6">
+                            <div class="glass-card p-4 rounded-xl lg:col-span-7 flex flex-col h-[300px]">
+                                <div class="chart-card-header mb-4">
                                     <h3 class="chart-card-title">
                                         <i class="fas fa-chart-line"></i> Training Impact
                                     </h3>
                                     <button class="text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">View Analytics</button>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                                <div class="grid grid-cols-3 gap-4 flex-1">
                                     <!-- Confidence Trend -->
                                     <div class="bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col">
                                         <p class="text-[11px] font-bold text-gray-300">Confidence Trend</p>
-                                        <p class="text-[9px] text-gray-500 mb-4">No data yet</p>
-                                        <div class="flex-1 min-h-[100px] relative">
+                                        <p class="text-[9px] text-gray-500 mb-2">No data yet</p>
+                                        <div class="tactical-chart-container flex-1 min-h-0">
                                             <canvas id="trainingConfidenceTrend"></canvas>
                                         </div>
-                                        <p class="mt-4 text-center text-[9px] text-gray-500 uppercase tracking-tighter">More training improves confidence</p>
+                                        <p class="mt-2 text-center text-[8px] text-gray-500 uppercase tracking-tighter">More training improves confidence</p>
                                     </div>
                                     <!-- Accuracy Trend -->
                                     <div class="bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col">
                                         <p class="text-[11px] font-bold text-gray-300">Accuracy Trend</p>
-                                        <p class="text-[9px] text-gray-500 mb-4">No data yet</p>
-                                        <div class="flex-1 min-h-[100px] relative">
+                                        <p class="text-[9px] text-gray-500 mb-2">No data yet</p>
+                                        <div class="tactical-chart-container flex-1 min-h-0">
                                             <canvas id="trainingAccuracyTrend"></canvas>
                                         </div>
-                                        <p class="mt-4 text-center text-[9px] text-gray-500 uppercase tracking-tighter">Higher accuracy with more training</p>
+                                        <p class="mt-2 text-center text-[8px] text-gray-500 uppercase tracking-tighter">Higher accuracy with more training</p>
                                     </div>
                                     <!-- Items Trained -->
                                     <div class="bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col">
                                         <p class="text-[11px] font-bold text-gray-300">Items Trained</p>
                                         <h4 class="text-2xl font-black text-white mt-1">0</h4>
-                                        <div class="flex-1 aspect-square relative mt-4">
+                                        <div class="tactical-chart-container flex-1 min-h-0 relative">
                                             <canvas id="itemsTrainedChart"></canvas>
-                                            <div class="absolute inset-0 flex items-center justify-center text-[8px] text-gray-500 font-bold uppercase">Total items trained</div>
+                                            <div class="absolute inset-0 flex items-center justify-center text-[7px] text-gray-500 font-bold uppercase">Total items trained</div>
                                         </div>
                                     </div>
                                 </div>
@@ -983,37 +981,39 @@
                             </div>
                             <div class="grid grid-cols-1 lg:grid-cols-4 min-h-[450px]">
                                 <!-- Steps Sidebar -->
-                                <div class="bg-white/[0.02] border-r border-white/5 p-6 space-y-6">
+                                <div class="bg-white/[0.02] border-r border-white/5 p-6 space-y-3 relative">
                                     <!-- Step 1 -->
-                                    <div class="flex items-start gap-4 opacity-100 group">
-                                        <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-[0_0_15px_rgba(147,51,234,0.5)]">1</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-white">Select Item</p>
-                                            <p class="text-[10px] text-gray-500">Choose a complaint to review</p>
+                                    <div class="flex items-center gap-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.05)] relative">
+                                        <div class="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.4)]">1</div>
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] font-black text-white uppercase tracking-wider">Select Item</p>
+                                            <p class="text-[9px] text-gray-500 truncate">Choose a complaint</p>
                                         </div>
+                                        <!-- Active Indicator Arrow -->
+                                        <div class="absolute -right-[25px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent border-l-[8px] border-l-purple-500/40"></div>
                                     </div>
                                     <!-- Step 2 -->
-                                    <div class="flex items-start gap-4 opacity-40">
-                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">2</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-300">Identify Key Term</p>
-                                            <p class="text-[10px] text-gray-500">Extract the key term/issue</p>
+                                    <div class="flex items-center gap-4 p-3 rounded-xl border border-transparent opacity-40">
+                                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs font-black text-gray-400 flex-shrink-0">2</div>
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] font-black text-gray-400 uppercase tracking-wider">Key Term</p>
+                                            <p class="text-[9px] text-gray-600 truncate">Extract issue</p>
                                         </div>
                                     </div>
                                     <!-- Step 3 -->
-                                    <div class="flex items-start gap-4 opacity-40">
-                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">3</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-300">Correct Category</p>
-                                            <p class="text-[10px] text-gray-500">Select the right category</p>
+                                    <div class="flex items-center gap-4 p-3 rounded-xl border border-transparent opacity-40">
+                                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs font-black text-gray-400 flex-shrink-0">3</div>
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] font-black text-gray-400 uppercase tracking-wider">Category</p>
+                                            <p class="text-[9px] text-gray-600 truncate">Select right one</p>
                                         </div>
                                     </div>
                                     <!-- Step 4 -->
-                                    <div class="flex items-start gap-4 opacity-40">
-                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">4</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-300">Review & Save</p>
-                                            <p class="text-[10px] text-gray-500">Confirm and update the model</p>
+                                    <div class="flex items-center gap-4 p-3 rounded-xl border border-transparent opacity-40">
+                                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs font-black text-gray-400 flex-shrink-0">4</div>
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] font-black text-gray-400 uppercase tracking-wider">Save</p>
+                                            <p class="text-[9px] text-gray-600 truncate">Confirm update</p>
                                         </div>
                                     </div>
                                 </div>

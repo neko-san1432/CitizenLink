@@ -1,13 +1,38 @@
-/* CitizenLink Analytics Dashboard - Tactical HUD Theme */
+:root {
+  --bg-main: #0f1523;
+  --bg-gradient: radial-gradient(circle at top right, rgba(30, 41, 59, 0.4), transparent),
+                 radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.4), transparent);
+  --card-bg: rgba(15, 23, 42, 0.75);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --shadow-main: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --input-bg: rgba(255, 255, 255, 0.05);
+}
+
+.light-mode {
+  --bg-main: #f8fafc;
+  --bg-gradient: radial-gradient(circle at top right, rgba(203, 213, 225, 0.4), transparent),
+                 radial-gradient(circle at bottom left, rgba(241, 245, 249, 0.4), transparent);
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --shadow-main: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --input-bg: rgba(0, 0, 0, 0.03);
+}
 
 /* Global Dashboard Styling */
 .dashboard-content {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  background: radial-gradient(circle at top right, rgba(30, 41, 59, 0.4), transparent),
-              radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.4), transparent),
-              #0f1523 !important;
+  background: var(--bg-gradient), var(--bg-main) !important;
   min-height: 100vh;
-  color: #f8fafc;
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .tab-content {
@@ -34,12 +59,13 @@
 
 /* Glassmorphism Components */
 .glass-card {
-  background: rgba(15, 23, 42, 0.75) !important;
+  background: var(--card-bg) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--card-border) !important;
+  box-shadow: var(--shadow-main);
   border-radius: 12px;
+  transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Typography */
@@ -78,12 +104,13 @@
 }
 
 .summary-card {
-  height: 125px !important;
+  height: 85px !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  padding: 1.25rem 1.5rem !important;
-  gap: 1.5rem;
+  padding: 0.75rem 1.25rem !important;
+  gap: 1rem;
+  overflow: hidden;
+  position: relative;
 }
 
 .summary-card-content {
@@ -100,9 +127,9 @@
 }
 
 .summary-card-metrics h3 {
-  font-size: 1.6rem !important;
+  font-size: 1.4rem !important;
   font-weight: 900 !important;
-  margin: 2px 0 !important;
+  margin: 1px 0 !important;
   line-height: 1 !important;
 }
 
@@ -117,15 +144,21 @@
 }
 
 .icon-circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+.summary-card canvas {
+  max-width: 100% !important;
+  max-height: 48px !important;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
 }
 
 .icon-circle i {
@@ -147,19 +180,20 @@
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
   appearance: none !important;
-  background: rgba(30, 41, 59, 0.7) !important;
+  background: rgba(15, 23, 42, 0.8) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 10px !important;
-  color: #e2e8f0 !important;
-  padding: 0 2.5rem 0 2.25rem !important;
-  font-size: 0.8rem !important;
-  font-weight: 600;
-  height: 42px !important;
+  border-radius: 8px !important;
+  color: #f8fafc !important;
+  padding: 0 2.5rem 0 2.5rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  height: 38px !important;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
+  width: 100% !important;
+  outline: none !important;
 }
+
 
 /* Hide default arrow for Internet Explorer */
 .filter-select::-ms-expand {
@@ -167,13 +201,38 @@
 }
 
 .filter-select:hover {
-  background: rgba(51, 65, 85, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Fix for rumbled arrows */
+.relative i.fa-chevron-down, 
+.relative i.fa-calendar-alt,
+.relative i.fa-search {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
+}
+
+.relative i.fa-chevron-down {
+  right: 1rem !important;
+  color: #64748b !important;
+  font-size: 0.6rem !important;
+}
+
+.relative i.fa-calendar-alt,
+.relative i.fa-search {
+  left: 1rem !important;
+  color: #60a5fa !important;
 }
 
 /* Specific padding for selects without left icons */
 .filter-select-no-icon {
   padding-left: 1.25rem !important;
+  padding-right: 2.25rem !important;
 }
 
 .btn-filter {
@@ -213,9 +272,13 @@
 
 .row-3-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(12, 1fr);
   gap: 1.5rem;
 }
+
+.row-3-grid > div:nth-child(1) { grid-column: span 4; }
+.row-3-grid > div:nth-child(2) { grid-column: span 5; }
+.row-3-grid > div:nth-child(3) { grid-column: span 3; }
 
 @media (max-width: 1024px) {
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
@@ -253,6 +316,25 @@
   font-weight: 800;
   padding: 0.25rem 1.5rem 0.25rem 0.75rem;
   text-transform: uppercase;
+}
+
+.tactical-chart-container {
+  flex: 1;
+  min-height: 0;
+  width: 100% !important;
+  position: relative;
+}
+
+.tactical-donut-container {
+  height: 180px !important;
+  width: 100% !important;
+  position: relative;
+}
+
+.tactical-chart-container-large {
+  height: 320px !important;
+  width: 100% !important;
+  position: relative;
 }
 
 /* Hide default arrow for Internet Explorer */
@@ -371,7 +453,3 @@
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
 }
 
-/* Specific padding for selects without left icons */
-.filter-select-no-icon {
-  padding-left: 1.25rem !important;
-}
