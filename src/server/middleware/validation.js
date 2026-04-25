@@ -59,6 +59,7 @@ const schemas = {
     status: Joi.string()
       .valid(
         "new",
+        "pending",
         "submitted",
         "verified",
         "assigned",

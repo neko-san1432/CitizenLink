@@ -19,7 +19,7 @@
     });
   }
   async function fetchBoundaries() {
-    const res = await fetch("/api/boundaries", { credentials: "include" });
+    const res = await fetch("/api/public/boundaries", { credentials: "include" });
     if (!res.ok) throw new Error("Failed to load boundaries");
     return res.json();
   }

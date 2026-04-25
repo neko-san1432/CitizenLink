@@ -153,11 +153,11 @@ function getCheckedValues(checkboxClass) {
 
     // Setup sidebar toggle
     setupSidebarToggle();
-    
+
     // Setup toggle buttons — ONLY if the tactical HUD inline script hasn't already handled them.
     // The inline <script> in heatmap.html clones the buttons and attaches mutually-exclusive handlers.
     // If that script ran, `#hud-left` exists and buttons are already wired.
-    if (!document.getElementById('hud-left')) {
+    if (!document.getElementById("hud-left")) {
       setupToggleButtons();
     }
 
@@ -494,7 +494,7 @@ function updateZoomBasedVisibility(zoom) {
   // When the tactical HUD is present (heatmap.html), layer visibility is managed
   // exclusively by the inline HUD toggle script (mutually-exclusive buttons).
   // Do NOT auto-show/hide layers here — it fights with the user's toggle choices.
-  if (document.getElementById('hud-left')) {
+  if (document.getElementById("hud-left")) {
     // Only ensure markers are lazily built on first zoom-in so they're ready when toggled
     if (zoom > 10 && !heatmapViz.markerLayer && !heatmapViz._markersBuilding) {
       heatmapViz.createMarkerLayer();
@@ -733,9 +733,20 @@ function setupControlPanel() {
     const startDate = document.getElementById("date-range-start")?.value || "";
     const endDate = document.getElementById("date-range-end")?.value || "";
 
+    // HUD Filters
+    const hudCategory = document.getElementById("category-filter-preset")?.value;
+    const hudSubcategory = document.getElementById("subcategory-filter-preset")?.value;
+    const hudBarangay = document.getElementById("barangay-filter-preset")?.value;
+
+    // Merge sidebar and HUD category filters
+    // If HUD category is selected, it takes precedence for single-category view
+    const finalCategories = hudCategory ? [hudCategory] : (categoryValues.length > 0 ? categoryValues : "");
+
     currentFilters = {
       status: statusValues.length > 0 ? statusValues : "",
-      category: categoryValues.length > 0 ? categoryValues : "",
+      category: finalCategories,
+      subcategory: hudSubcategory || "",
+      barangay: hudBarangay || "",
       department: departmentValues && departmentValues.length > 0 ? departmentValues : "",
       includeResolved: document.getElementById("include-resolved")?.checked ?? true,
       startDate,
@@ -748,12 +759,12 @@ function setupControlPanel() {
       heatmapViz.applyClientSideFilters(currentFilters);
 
       // Detect which HUD layer is currently active and refresh it
-      const hudLeft = document.getElementById('hud-left');
+      const hudLeft = document.getElementById("hud-left");
       if (hudLeft) {
         // Tactical HUD mode: refresh whichever layer is currently active
-        const activeHeatmap = document.getElementById('toggle-heatmap-btn')?.classList.contains('active');
-        const activeMarkers = document.getElementById('toggle-markers-btn')?.classList.contains('active');
-        const activeClusters = document.getElementById('toggle-clusters-btn')?.classList.contains('active');
+        const activeHeatmap = document.getElementById("toggle-heatmap-btn")?.classList.contains("active");
+        const activeMarkers = document.getElementById("toggle-markers-btn")?.classList.contains("active");
+        const activeClusters = document.getElementById("toggle-clusters-btn")?.classList.contains("active");
 
         if (activeHeatmap) {
           if (heatmapViz.heatmapLayer) heatmapViz.hideHeatmap();
@@ -972,6 +983,7 @@ function setupControlPanel() {
   loadStatusFilters();
   loadCategories();
   loaddepartments();
+  loadBarangays();
 
   // Setup auto-filtering immediately
   setupAutoFiltering();
@@ -1118,6 +1130,26 @@ async function loadCategories() {
       // console.log(
       //   `[HEATMAP] Loaded ${sortedData.length} categories (Prioritized for ${userdepartmentCode})`
       // );
+
+      // Populate HUD Category Dropdown
+      const hudCategorySelect = document.getElementById("category-filter-preset");
+      if (hudCategorySelect) {
+        hudCategorySelect.innerHTML = '<option value="">Category</option>';
+        data.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat.id; // Use UUID for filtering
+          opt.textContent = cat.name;
+          hudCategorySelect.appendChild(opt);
+        });
+
+        // Add listener for category change to update subcategories
+        hudCategorySelect.addEventListener("change", () => {
+          const selectedCatId = hudCategorySelect.value;
+          const selectedCat = data.find(c => c.id === selectedCatId);
+          populateHUDSubcategories(selectedCat);
+          debounceFilterUpdate(applyFiltersAndUpdate, 500);
+        });
+      }
     }
   } catch (error) {
     console.error("[HEATMAP] Failed to load categories:", error);
@@ -1332,7 +1364,7 @@ function updateStatistics() {
 
   const totalStat = document.getElementById("total-complaints-stat");
   const visibleStat = document.getElementById("visible-markers-stat");
-  
+
   if (totalStat) totalStat.textContent = total;
   if (visibleStat) visibleStat.textContent = visible;
 
@@ -1428,18 +1460,18 @@ function setupSidebarToggle() {
 // Setup toggle buttons for markers, heatmap and clusters
 function setupToggleButtons() {
   console.log("[HEATMAP] Setting up toggle buttons...");
-  
+
   // Toggle markers button
   const toggleMarkersBtn = document.getElementById("toggle-markers-btn");
   if (toggleMarkersBtn) {
     toggleMarkersBtn.addEventListener("click", () => {
       console.log("[HEATMAP] Markers toggle clicked");
-      
+
       // Create markers if they don't exist
       if (!heatmapViz.markerLayer || heatmapViz.markerLayer.getLayers().length === 0) {
         heatmapViz.createMarkerLayer();
       }
-      
+
       // Toggle visibility
       const isVisible = map.hasLayer(heatmapViz.markerLayer);
       if (isVisible) {
@@ -1451,13 +1483,13 @@ function setupToggleButtons() {
       }
     });
   }
-  
+
   // Toggle heatmap button
   const toggleHeatmapBtn = document.getElementById("toggle-heatmap-btn");
   if (toggleHeatmapBtn) {
     toggleHeatmapBtn.addEventListener("click", () => {
       console.log("[HEATMAP] Heatmap toggle clicked");
-      
+
       const isVisible = heatmapViz.heatmapLayer && map.hasLayer(heatmapViz.heatmapLayer);
       if (isVisible) {
         heatmapViz.hideHeatmap();
@@ -1471,13 +1503,13 @@ function setupToggleButtons() {
       }
     });
   }
-  
+
   // Toggle clusters button
   const toggleClustersBtn = document.getElementById("toggle-clusters-btn");
   if (toggleClustersBtn) {
     toggleClustersBtn.addEventListener("click", () => {
       console.log("[HEATMAP] Clusters toggle clicked");
-      
+
       const isForced = toggleClustersBtn.classList.contains("active");
       if (isForced) {
         heatmapViz.toggleClustering(false);
@@ -1488,4 +1520,76 @@ function setupToggleButtons() {
       }
     });
   }
+}
+
+// Populate HUD Subcategories
+function populateHUDSubcategories(category) {
+  const hudSubSelect = document.getElementById("subcategory-filter-preset");
+  if (!hudSubSelect) return;
+
+  hudSubSelect.innerHTML = '<option value="">Sub</option>';
+
+  if (category && category.subcategories && category.subcategories.length > 0) {
+    category.subcategories.forEach(sub => {
+      const opt = document.createElement("option");
+      opt.value = sub.id || sub.name;
+      opt.textContent = sub.name;
+      hudSubSelect.appendChild(opt);
+    });
+    hudSubSelect.disabled = false;
+  } else {
+    hudSubSelect.disabled = true;
+  }
+}
+
+// Load Barangays
+async function loadBarangays() {
+  try {
+    const barangaySelect = document.getElementById("barangay-filter-preset");
+    if (!barangaySelect) return;
+
+    // Load from boundaries if already loaded
+    if (window.cityBoundaries && window.cityBoundaries.length > 0) {
+      populateBarangayDropdown(window.cityBoundaries);
+    } else {
+      // Wait for boundaries
+      let attempts = 0;
+      const interval = setInterval(() => {
+        if (window.cityBoundaries && window.cityBoundaries.length > 0) {
+          populateBarangayDropdown(window.cityBoundaries);
+          clearInterval(interval);
+        }
+        if (++attempts > 50) clearInterval(interval);
+      }, 200);
+    }
+
+    barangaySelect.addEventListener("change", () => {
+      if (window.debounceFilterUpdate && window.applyFiltersAndUpdate) {
+        window.debounceFilterUpdate(window.applyFiltersAndUpdate, 500);
+      }
+    });
+  } catch (error) {
+    console.error("[HEATMAP] Failed to load barangays:", error);
+  }
+}
+
+function populateBarangayDropdown(boundaries) {
+  const select = document.getElementById("barangay-filter-preset");
+  if (!select) return;
+
+  // Preserve "All Barangays" option
+  select.innerHTML = '<option value="">All Barangays</option>';
+
+  // Sort barangays alphabetically
+  const sortedNames = boundaries
+    .map(b => b.name)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+
+  sortedNames.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
 }

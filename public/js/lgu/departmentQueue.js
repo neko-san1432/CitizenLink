@@ -11,6 +11,7 @@ class departmentQueue {
       status: "",
       priority: "",
       search: "",
+      barangay: "",
     };
     this.statusPalette = [
       { key: "approved", label: "Approved", color: "#3b82f6" },
@@ -28,10 +29,10 @@ class departmentQueue {
       { key: "low", label: "Low", color: "#059669", track: "#d1fae5" },
       { key: "other", label: "Unlabeled", color: "#64748b", track: "#e5e7eb" },
     ];
-    
+
     // Initialize Barangay Prioritization Component
     this.bpWidget = new BarangayPrioritization("barangay-prioritization-container");
-    
+
     this.init();
   }
 
@@ -57,6 +58,7 @@ class departmentQueue {
   init() {
     this.setupEventListeners();
     this.loadcomplaints();
+    this.loadBarangays();
     this.setupTabs();
   }
 
@@ -68,24 +70,24 @@ class departmentQueue {
     const widgetsPanel = document.getElementById("widgets-panel");
 
     tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
-            
-            const target = tab.dataset.tab;
-            if (target === "queue") {
-                queueView.style.display = "flex";
-                insightsView.style.display = "none";
-                if (statsSummary) statsSummary.style.display = "grid";
-                if (widgetsPanel) widgetsPanel.style.display = "block";
-            } else {
-                queueView.style.display = "none";
-                insightsView.style.display = "block";
-                if (statsSummary) statsSummary.style.display = "none";
-                if (widgetsPanel) widgetsPanel.style.display = "none";
-                this.bpWidget.loadInsights();
-            }
-        });
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const target = tab.dataset.tab;
+        if (target === "queue") {
+          queueView.style.display = "flex";
+          insightsView.style.display = "none";
+          if (statsSummary) statsSummary.style.display = "grid";
+          if (widgetsPanel) widgetsPanel.style.display = "block";
+        } else {
+          queueView.style.display = "none";
+          insightsView.style.display = "block";
+          if (statsSummary) statsSummary.style.display = "none";
+          if (widgetsPanel) widgetsPanel.style.display = "none";
+          this.bpWidget.loadInsights();
+        }
+      });
     });
   }
 
@@ -110,6 +112,14 @@ class departmentQueue {
       searchInput.addEventListener("input", (e) => {
         this.filters.search = e.target.value;
         this.debounce(() => this.loadcomplaints(), 300)();
+      });
+    }
+
+    const barangayFilter = document.getElementById("barangay-filter");
+    if (barangayFilter) {
+      barangayFilter.addEventListener("change", (e) => {
+        this.filters.barangay = e.target.value;
+        this.loadcomplaints();
       });
     }
     // Modal controls
@@ -148,6 +158,8 @@ class departmentQueue {
         queryParams.append("priority", this.filters.priority);
       if (this.filters.search)
         queryParams.append("search", this.filters.search);
+      if (this.filters.barangay)
+        queryParams.append("barangay", this.filters.barangay);
       queryParams.append("limit", this.itemsPerPage);
       const response = await fetch(
         `/api/lgu-admin/department-queue?${queryParams}`,
@@ -673,6 +685,25 @@ class departmentQueue {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  async loadBarangays() {
+    try {
+      const response = await fetch("/api/public/boundaries");
+      const boundaries = await response.json();
+      const select = document.getElementById("barangay-filter");
+      if (!select || !boundaries) return;
+
+      const names = boundaries.map((b) => b.name).filter(Boolean).sort();
+      names.forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Load Barangays Error:", err);
+    }
   }
 }
 // Initialize when DOM is loaded

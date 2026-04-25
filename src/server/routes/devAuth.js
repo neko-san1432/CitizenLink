@@ -12,7 +12,7 @@ const ALLOWED_ROLES = ["citizen", "lgu", "superAdmin"];
 router.post("/login", async (req, res) => {
   try {
     // Enabled in production by user request
-    const isDevEnv = config.env === "development" || config.env === "production";    
+    const isDevEnv = config.env === "development" || config.env === "production";
     const hostname = req.hostname || req.get("host")?.split(":")[0] || "";
     const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "0.0.0.0";
     const requestIp = req.ip || req.connection.remoteAddress || "";

@@ -118,51 +118,28 @@ function isPointInPolygonCoords(lat, lng, coordinates) {
   return inside;
 }
 
-// Check if coordinates are within any barangay boundary
-function isWithinCityBoundary(lat, lng) {
-  if (typeof lat !== "number" || typeof lng !== "number") return false;
+// Check if coordinates are within any barangay boundary and return barangay name
+function getBarangayForPoint(lat, lng) {
+  if (typeof lat !== "number" || typeof lng !== "number") return null;
 
-  // Check if boundaries are loaded
   if (!window.cityBoundaries || !Array.isArray(window.cityBoundaries)) {
-    // Fallback to bounding box if boundaries not loaded
-    const minLat = 6.6;
-    const maxLat = 7.0;
-    const minLng = 125.0;
-    const maxLng = 125.7;
-    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+    return null;
   }
 
-  // Debug: Log boundary structure once
-  if (!window._boundaryDebugged && window.cityBoundaries.length > 0) {
-    window._boundaryDebugged = true;
-    const _firstBoundary = window.cityBoundaries[0];
-
-    // Test with a known point inside Digos City (approximate center)
-    const testLat = 6.85;
-    const testLng = 125.35;
-    let _testResult = false;
-    for (const boundary of window.cityBoundaries) {
-      if (
-        boundary &&
-        boundary.geojson &&
-        isPointInPolygon(testLat, testLng, boundary.geojson)
-      ) {
-        _testResult = true;
-        break;
-      }
-    }
-  }
-
-  // Check if point is within any barangay boundary
   for (const boundary of window.cityBoundaries) {
     if (boundary && boundary.geojson) {
       if (isPointInPolygon(lat, lng, boundary.geojson)) {
-        return true;
+        return boundary.name;
       }
     }
   }
 
-  return false;
+  return null;
+}
+
+// Check if coordinates are within any barangay boundary
+function isWithinCityBoundary(lat, lng) {
+  return Boolean(getBarangayForPoint(lat, lng));
 }
 
 class HeatmapVisualization {
@@ -550,7 +527,9 @@ class HeatmapVisualization {
           };
 
           // Cache boundary check to avoid recalculating on filter changes
-          itemWrapper._inBoundary = isWithinCityBoundary(lat, lng);
+          const barangayName = getBarangayForPoint(lat, lng);
+          itemWrapper.barangay = item.barangay || barangayName;
+          itemWrapper._inBoundary = Boolean(barangayName);
 
           // Apply Context-Aware Intelligence Analysis
           if (this.intelligence) {
@@ -1113,6 +1092,15 @@ class HeatmapVisualization {
           if (complaintDate > endDate) {
             return false;
           }
+        }
+      }
+
+      // Filter by barangay
+      if (effectiveFilters.barangay && effectiveFilters.barangay !== "") {
+        const complaintBarangay = (complaint.barangay || "").toLowerCase();
+        const filterBarangay = effectiveFilters.barangay.toLowerCase();
+        if (complaintBarangay !== filterBarangay) {
+          return false;
         }
       }
 
@@ -1894,15 +1882,15 @@ class HeatmapVisualization {
       );
 
       const clusterColor = this.clusterConfig.clusterColors[index % this.clusterConfig.clusterColors.length];
-      
+
       // 1. Create individual point markers for each complaint in the cluster
       clusterPoints.forEach(point => {
         // Use standard lat/lng
         const lat = point.lat || point.latitude;
         const lng = point.lng || point.longitude;
-        
+
         if (lat === undefined || lng === undefined) return;
-        
+
         // Spotlight style marker (white border, colored inner, glowing effect)
         const size = 20;
         const html = `
@@ -1920,24 +1908,24 @@ class HeatmapVisualization {
             <div style="width: 8px; height: 8px; background: white; border-radius: 50%; opacity: 0.8;"></div>
           </div>
         `;
-        
+
         const pointMarker = L.marker([lat, lng], {
           icon: L.divIcon({
             className: "spotlight-marker",
-            html: html,
+            html,
             iconSize: [size, size],
             iconAnchor: [size / 2, size / 2]
           }),
           zIndexOffset: 800
         });
-        
+
         // Bind the standard complaint popup to individual points
         const pointPopupContent = this.createcomplaintPopup(point);
         pointMarker.bindPopup(pointPopupContent, {
           maxWidth: 250,
           className: "complaint-popup"
         });
-        
+
         this.clusterLayer.addLayer(pointMarker);
       });
 
@@ -1945,23 +1933,23 @@ class HeatmapVisualization {
       if (clusterPoints.length > 1) {
         const MAX_LINE_DISTANCE = 0.05; // ~50 meters in km
         const drawnConnections = new Set();
-        
+
         for (let i = 0; i < clusterPoints.length; i++) {
           const from = clusterPoints[i];
           const fromLat = from.lat || from.latitude;
           const fromLng = from.lng || from.longitude;
           if (!fromLat || !fromLng) continue;
-          
+
           let nearestDist = Infinity;
           let nearestIdx = -1;
-          
+
           for (let j = 0; j < clusterPoints.length; j++) {
             if (i === j) continue;
             const to = clusterPoints[j];
             const toLat = to.lat || to.latitude;
             const toLng = to.lng || to.longitude;
             if (!toLat || !toLng) continue;
-            
+
             // calculateDistance returns km
             const dist = this.dbscan.calculateDistance({lat: fromLat, lng: fromLng}, {lat: toLat, lng: toLng});
             if (dist < nearestDist) {
@@ -1969,7 +1957,7 @@ class HeatmapVisualization {
               nearestIdx = j;
             }
           }
-          
+
           if (nearestIdx !== -1 && nearestDist <= MAX_LINE_DISTANCE) {
             const connectionKey = [Math.min(i, nearestIdx), Math.max(i, nearestIdx)].join("-");
             if (!drawnConnections.has(connectionKey)) {
@@ -1977,7 +1965,7 @@ class HeatmapVisualization {
               const to = clusterPoints[nearestIdx];
               const toLat = to.lat || to.latitude;
               const toLng = to.lng || to.longitude;
-              
+
               const line = L.polyline(
                 [[fromLat, fromLng], [toLat, toLng]],
                 {
@@ -1997,7 +1985,7 @@ class HeatmapVisualization {
       if (clusterPoints.length >= 3) {
         const pointsForHull = clusterPoints.map(p => [p.lat || p.latitude, p.lng || p.longitude]).filter(p => p[0] && p[1]);
         const hullPoints = this.computeConvexHull(pointsForHull);
-        
+
         if (hullPoints && hullPoints.length >= 3) {
           const hullPolygon = L.polygon(hullPoints, {
             color: clusterColor,
@@ -2360,7 +2348,7 @@ class HeatmapVisualization {
    * Show clusters on map
    */
   showClusters() {
-    console.log("[HEATMAP] showClusters: clusterLayer=" + !!this.clusterLayer + ", map=" + !!this.map + ", layers=" + (this.clusterLayer ? this.clusterLayer.getLayers().length : 0));
+    console.log(`[HEATMAP] showClusters: clusterLayer=${  Boolean(this.clusterLayer)  }, map=${  Boolean(this.map)  }, layers=${  this.clusterLayer ? this.clusterLayer.getLayers().length : 0}`);
     if (this.clusterLayer) {
       this.clusterLayer.addTo(this.map);
       console.log("[HEATMAP] clusterLayer added to map, current layers on map:", this.clusterLayer.getLayers().length);

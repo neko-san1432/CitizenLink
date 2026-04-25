@@ -151,10 +151,10 @@ class ComplaintRepository {
         .eq("submitted_by", userId)
         .order("submitted_at", { ascending: false })
         .then(() => {
-          // Diagnostic query removed for cleaner logs
+          // Diagnostic query completed
         })
-        .catch(() => {
-          // Silent catch for diagnostic query
+        .catch((err) => {
+          console.warn("[COMPLAINT_REPO] Diagnostic query warning:", err?.message || "Unknown error");
         });
       // Then get the paginated data
       const { data, error } = await query.range(offset, offset + limit - 1);
@@ -256,7 +256,7 @@ class ComplaintRepository {
 
   async findAll(options = {}) {
     // Extract filter parameters
-    const { page = 1, limit = 20, status, type, department, search, startDate, endDate } = options;
+    const { page = 1, limit = 20, status, type, department, search, startDate, endDate, barangay } = options;
     const offset = (page - 1) * limit;
 
     console.log("[DEBUG-REPO] findAll called with options:", JSON.stringify(options));
@@ -300,6 +300,9 @@ class ComplaintRepository {
       query = query.or(
         `description.ilike.%${search}%,location_text.ilike.%${search}%`
       );
+    }
+    if (barangay) {
+      query = query.ilike("barangay", `%${barangay}%`);
     }
     const { data, error, count } = await query.range(
       offset,
@@ -622,6 +625,7 @@ class ComplaintRepository {
         startDate,
         endDate,
         includeResolved = true,
+        barangay
       } = filters;
 
       let query = client
@@ -723,6 +727,10 @@ class ComplaintRepository {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         query = query.lte("submitted_at", end.toISOString());
+      }
+
+      if (barangay) {
+        query = query.ilike("barangay", `%${barangay}%`);
       }
 
       // v4.5.3: Explicitly increase limit to 25000 for heatmap clustering

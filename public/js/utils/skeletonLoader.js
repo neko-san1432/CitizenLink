@@ -44,14 +44,14 @@ class SkeletonLoader {
   shouldShow() {
     try {
       const path = (window.location.pathname || "").toLowerCase();
-      
+
       // 1. Check exclusion list (expanded)
       const isExcluded = [
-        "/", "/login", "/signup", "/signup-with-code", 
-        "/reset-password", "/resetpassword", "/success", 
+        "/", "/login", "/signup", "/signup-with-code",
+        "/reset-password", "/resetpassword", "/success",
         "/oauth-callback", "/privacy", "/terms", "/404", "/500"
-      ].some(p => path === p || path.startsWith(p + "/"));
-      
+      ].some(p => path === p || path.startsWith(`${p  }/`));
+
       if (isExcluded) return false;
 
       // 2. Exclude all Dashboard variants

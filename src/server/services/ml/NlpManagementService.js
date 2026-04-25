@@ -339,16 +339,24 @@ class NlpManagementService {
      * Get summary stats for management view
      */
   async getManagementStats() {
-    const [keywords, categories, anchors] = await Promise.all([
+    const [keywords, categories, anchors, pending, resolved] = await Promise.all([
       this.supabase.from("nlp_keywords").select("*", { count: "exact", head: true }),
       this.supabase.from("nlp_category_config").select("*", { count: "exact", head: true }),
-      this.supabase.from("nlp_anchors").select("*", { count: "exact", head: true })
+      this.supabase.from("nlp_anchors").select("*", { count: "exact", head: true }),
+      this.supabase.from("nlp_pending_reviews").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      this.supabase.from("nlp_pending_reviews").select("confidence").eq("status", "resolved")
     ]);
+
+    const totalConfidence = (resolved.data || []).reduce((acc, curr) => acc + (curr.confidence || 0), 0);
+    const avgConfidence = resolved.data?.length > 0 ? (totalConfidence / resolved.data.length) : 0.85;
 
     return {
       keywords: keywords.count || 0,
       categories: categories.count || 0,
-      anchors: anchors.count || 0
+      anchors: anchors.count || 0,
+      pendingReviews: pending.count || 0,
+      itemsTrained: resolved.data?.length || 0,
+      avgConfidence
     };
   }
 

@@ -72,28 +72,28 @@ async function validateUserRole(role) {
   }
   const roleLower = role.toLowerCase().trim();
   // Check for valid role patterns
-  let roleType = null;
-  let departmentCode = null;
+  const roleType = null;
+  const departmentCode = null;
 
   // Simple Workflow Mode Check
   const isSimpleMode = process.env.SIMPLE_WORKFLOW_MODE === "true";
 
-    const allowedRoles = ["citizen", "lgu", "super-admin"];
-    if (!allowedRoles.includes(roleLower)) {
-      return {
-        isValid: false,
-        roleType: null,
-        departmentCode: null,
-        error: "Invalid role. Only Citizen, LGU, and Super Admin are supported."
-      };
-    }
-
+  const allowedRoles = ["citizen", "lgu", "super-admin"];
+  if (!allowedRoles.includes(roleLower)) {
     return {
-      isValid: true,
-      roleType: roleLower,
+      isValid: false,
+      roleType: null,
       departmentCode: null,
-      error: null
+      error: "Invalid role. Only Citizen, LGU, and Super Admin are supported."
     };
+  }
+
+  return {
+    isValid: true,
+    roleType: roleLower,
+    departmentCode: null,
+    error: null
+  };
 
   // Validate department code for LGU roles
   if (departmentCode) {
@@ -131,11 +131,11 @@ function normalizeRole(role) {
   // 3-Role System Mapping
   if (roleLower === "super-admin") return "super-admin";
   if (roleLower === "citizen") return "citizen";
-  
+
   // Legacy or complex roles map to 'lgu'
   if (
-    roleLower === "lgu" || 
-    roleLower.startsWith("lgu-") || 
+    roleLower === "lgu" ||
+    roleLower.startsWith("lgu-") ||
     roleLower === "complaint-coordinator"
   ) {
     return "lgu";

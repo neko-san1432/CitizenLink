@@ -2844,57 +2844,54 @@ function extractKeywordsWithCategory(description) {
 
   const text = description.toLowerCase();
   const matchedKeywordsSet = new Set();
-
-  // Priority-ordered keyword patterns (check highest priority first)
-  const CATEGORY_PATTERNS = {
-    "Fire": ["sunog", "fire", "nasusunog", "apoy", "burning", "flames", "ablaze"],
-    "Explosion": ["explosion", "explode", "pumutok", "sumabog", "blast", "bomba"],
-    "Collapse": ["collapse", "gumuho", "bumagsak", "nawasak", "crumbling"],
-    "Trapped": ["trapped", "nakulong", "naiipit", "stuck", "stranded person"],
-    "Gunshot": ["gunshot", "baril", "binaril", "putok ng baril", "shooting"],
-    "Crime": ["crime", "robbery", "holdup", "nakaw", "snatcher", "holdap", "theft"],
-    "Accident": ["accident", "aksidente", "nabangga", "bumangga", "collision", "vehicular"],
-    "Flood": ["flood", "baha", "binabaha", "bumabaha", "tubig-baha", "rising water", "flash flood"],
-    "Medical": ["medical", "emergency", "injured", "sugatan", "ambulance", "heart attack", "stroke"],
-    "Rescue": ["rescue", "saklolo", "tulong", "help", "save", "iligtas"],
-    "Traffic": ["traffic", "trapik", "congestion", "gridlock", "jam"],
-    "Pothole": ["pothole", "butas", "lubak", "hole in road"],
-    "Garbage": ["garbage", "basura", "trash", "waste", "kalat"],
-    "Streetlight": ["streetlight", "ilaw", "no light", "walang ilaw", "dark street"]
-  };
-
   let highestCategory = null;
   let highestPriority = 0;
 
-  if (typeof detectFilipinoKeywords === "function") {
+  // 1. INTEGRATION: Use the dynamic database-driven index if available
+  if (typeof NLP_KEYWORD_INDEX !== "undefined" && NLP_KEYWORD_INDEX.size > 0) {
     const dictResult = detectFilipinoKeywords(description);
-    if (dictResult && dictResult.suggestedCategory && Array.isArray(dictResult.matches) && dictResult.matches.length > 0) {
+    if (dictResult && dictResult.matches.length > 0) {
       for (const match of dictResult.matches) {
-        if (match && match.term) matchedKeywordsSet.add(String(match.term).toLowerCase());
+        matchedKeywordsSet.add(match.term);
       }
-
-      const dictPriority = getCategoryPriority(dictResult.suggestedCategory);
-      if (dictPriority > highestPriority) {
-        highestPriority = dictPriority;
-        highestCategory = dictResult.suggestedCategory;
-      }
+      
+      highestCategory = dictResult.suggestedCategory;
+      highestPriority = getCategoryPriority(highestCategory);
     }
   }
 
-  for (const [category, keywords] of Object.entries(CATEGORY_PATTERNS)) {
-    for (const keyword of keywords) {
-      // v3.7: Use Tagalog-aware checkKeywordMatch instead of simple includes
-      // This prevents false positives like "bahay" matching "baha"
-      const isMatch = typeof checkKeywordMatch === "function"
-        ? checkKeywordMatch(description, keyword)
-        : text.includes(keyword);
+  // 2. FALLBACK: Priority-ordered hardcoded patterns (for safety)
+  if (matchedKeywordsSet.size === 0) {
+    const CATEGORY_PATTERNS = {
+      "Fire": ["sunog", "fire", "nasusunog", "apoy", "burning", "flames", "ablaze"],
+      "Explosion": ["explosion", "explode", "pumutok", "sumabog", "blast", "bomba"],
+      "Collapse": ["collapse", "gumuho", "bumagsak", "nawasak", "crumbling"],
+      "Trapped": ["trapped", "nakulong", "naiipit", "stuck", "stranded person"],
+      "Gunshot": ["gunshot", "baril", "binaril", "putok ng baril", "shooting"],
+      "Crime": ["crime", "robbery", "holdup", "nakaw", "snatcher", "holdap", "theft"],
+      "Accident": ["accident", "aksidente", "nabangga", "bumangga", "collision", "vehicular"],
+      "Flood": ["flood", "baha", "binabaha", "bumabaha", "tubig-baha", "rising water", "flash flood"],
+      "Medical": ["medical", "emergency", "injured", "sugatan", "ambulance", "heart attack", "stroke"],
+      "Rescue": ["rescue", "saklolo", "tulong", "help", "save", "iligtas"],
+      "Traffic": ["traffic", "trapik", "congestion", "gridlock", "jam"],
+      "Pothole": ["pothole", "butas", "lubak", "hole in road"],
+      "Garbage": ["garbage", "basura", "trash", "waste", "kalat"],
+      "Streetlight": ["streetlight", "ilaw", "no light", "walang ilaw", "dark street"]
+    };
 
-      if (isMatch) {
-        matchedKeywordsSet.add(keyword);
-        const priority = getCategoryPriority(category);
-        if (priority > highestPriority) {
-          highestPriority = priority;
-          highestCategory = category;
+    for (const [category, keywords] of Object.entries(CATEGORY_PATTERNS)) {
+      for (const keyword of keywords) {
+        const isMatch = typeof checkKeywordMatch === "function"
+          ? checkKeywordMatch(description, keyword)
+          : text.includes(keyword);
+
+        if (isMatch) {
+          matchedKeywordsSet.add(keyword);
+          const priority = getCategoryPriority(category);
+          if (priority > highestPriority) {
+            highestPriority = priority;
+            highestCategory = category;
+          }
         }
       }
     }
@@ -3167,11 +3164,48 @@ function analyzecomplaintIntelligence(point) {
   // ==================== LAYER B: SEMANTIC OVERRIDE ====================
   // Run AFTER Layer A to apply context-based caps [cite: 18]
 
+  // ================================================================
+  // LAYER B: SEMANTIC OVERRIDE
+  // ================================================================
   let overrideType = null;
   let suggestedAction = null;
   let isCapped = false;
   let temporalOverrideType = null;
   let temporalStatus = null;
+  let isMetaphorical = false;
+  let isSpeculative = false;
+  let figurativeType = null;
+
+  // 1. DYNAMIC METAPHOR DETECTION (Synced from DB)
+  const metaphorInfo = typeof detectMetaphoricalLanguage === "function"
+    ? detectMetaphoricalLanguage(description)
+    : { isMetaphorical: false, matchedPattern: null };
+  
+  if (metaphorInfo.isMetaphorical) {
+    isMetaphorical = true;
+    figurativeType = metaphorInfo.matchedPattern?.actualMeaning || "metaphor";
+    urgencyScore = Math.min(urgencyScore, 10); // Massive reduction for figurative language
+    isCritical = false;
+    isCapped = true;
+    overrideType = "METAPHOR_FILTER";
+    suggestedAction = `🎭 FIGURATIVE: ${figurativeType.toUpperCase()}`;
+  }
+
+  // 2. DYNAMIC SPECULATION DETECTION (Synced from DB)
+  const speculationInfo = typeof detectSpeculativeLanguage === "function"
+    ? detectSpeculativeLanguage(description)
+    : { isSpeculative: false, matchedPatterns: [] };
+
+  if (speculationInfo.isSpeculative) {
+    isSpeculative = true;
+    urgencyScore = Math.min(urgencyScore, 20); // Significant reduction for speculation
+    isCritical = false;
+    isCapped = true;
+    overrideType = "SPECULATION_OVERRIDE";
+    if (!suggestedAction) {
+      suggestedAction = "🤔 SPECULATIVE / UNCERTAIN";
+    }
+  }
 
   const noIssueInfo = typeof detectNoIssue === "function"
     ? detectNoIssue(description)
@@ -3184,18 +3218,11 @@ function analyzecomplaintIntelligence(point) {
   // ================================================================
   // B0. GEOSPATIAL VERIFICATION v3.7 [NEW]
   // ================================================================
-  // Uses Nominatim address data to adjust scores based on location context:
-  // 1. HIGHWAY PRIORITY: Potholes on highways get +15 boost
-  // 2. HYDROLOGICAL VALIDATION: Floods near rivers/bridges get +10 confidence
-  // ================================================================
   let geospatialBoostInfo = null;
-
-  // Check if point has geocoded address data (from reverseGeocode cache)
   const addressData = point.geocodedAddress || null;
   const streetName = addressData?.street?.toLowerCase() || "";
   const fullAddress = addressData?.fullAddress?.toLowerCase() || "";
 
-  // B0.1: HIGHWAY PRIORITY BOOST (+15 for Pothole/Road Damage on major roads)
   const HIGHWAY_KEYWORDS = ["highway", "national road", "expressway", "avenue", "boulevard",
     "national highway", "maharlika", "diversion road", "bypass"];
   const isOnHighway = HIGHWAY_KEYWORDS.some(hw => streetName.includes(hw) || fullAddress.includes(hw));
@@ -3210,10 +3237,8 @@ function analyzecomplaintIntelligence(point) {
       matched: streetName || fullAddress,
       reason: "Pothole on major road - higher traffic impact"
     };
-    _NLP_DEBUG && console.log(`[GEOSPATIAL v3.7] 🛣️ +${highwayBoost} HIGHWAY PRIORITY: "${streetName || fullAddress}"`);
   }
 
-  // B0.2: HYDROLOGICAL VALIDATION (+10 for Flood near water features)
   const HYDRO_KEYWORDS = ["river", "creek", "bridge", "estero", "canal", "ilog", "sapa",
     "crossing", "riverside", "waterway", "stream", "tulay"];
   const isNearWater = HYDRO_KEYWORDS.some(hw => streetName.includes(hw) || fullAddress.includes(hw));
@@ -3228,9 +3253,8 @@ function analyzecomplaintIntelligence(point) {
       matched: streetName || fullAddress,
       reason: "Flood near water feature - validated high risk"
     };
-    veracityScore += 5; // Extra confidence for validated location
+    veracityScore += 5;
     veracityLabel = "GEO-VERIFIED";
-    _NLP_DEBUG && console.log(`[GEOSPATIAL v3.7] 🌊 +${hydroBoost} HYDRO VALIDATION: "${streetName || fullAddress}"`);
   }
 
   // Check for Inanimate Stranded (treat as traffic)
@@ -3238,30 +3262,27 @@ function analyzecomplaintIntelligence(point) {
         descLower.includes("nastranded") || descLower.includes("stuck");
   const hasVehicle = VEHICLE_KEYWORDS.some(v => descLower.includes(v));
 
-  // v3.6.1: Track emergency boost info for breakdown
   let emergencyBoostInfo = null;
 
-  // B1. TRAFFIC CONTEXT OVERRIDE [cite: 18]
+  // B1. TRAFFIC CONTEXT OVERRIDE
   const matchedTrafficContext = TRAFFIC_CONTEXT.find(kw => descLower.includes(kw));
-
   if (matchedTrafficContext || (hasStranded && hasVehicle)) {
     urgencyScore = Math.min(urgencyScore, 35);
     isCritical = false;
     isCapped = true;
-    suggestedAction = "⚠️ DEPLOY TRAFFIC CONTROL";
-    overrideType = "TRAFFIC_CONTEXT";
+    suggestedAction = suggestedAction || "⚠️ DEPLOY TRAFFIC CONTROL";
+    overrideType = overrideType || "TRAFFIC_CONTEXT";
   }
 
-  // B2. MAINTENANCE CONTEXT OVERRIDE (Higher priority - runs after traffic)
+  // B2. MAINTENANCE CONTEXT OVERRIDE
   const matchedMaintenanceContext = MAINTENANCE_CONTEXT.find(kw => descLower.includes(kw));
-
   if (matchedMaintenanceContext) {
     urgencyScore = Math.min(urgencyScore, 30);
     isCritical = false;
     isCapped = true;
     veracityLabel = "MAINTENANCE";
-    suggestedAction = "🔧 SCHEDULE MAINTENANCE";
-    overrideType = "MAINTENANCE_CONTEXT";
+    suggestedAction = suggestedAction || "🔧 SCHEDULE MAINTENANCE";
+    overrideType = overrideType || "MAINTENANCE_CONTEXT";
   }
 
   if (noIssueInfo && noIssueInfo.isNoIssue) {
@@ -3270,9 +3291,7 @@ function analyzecomplaintIntelligence(point) {
     isCapped = true;
     temporalOverrideType = "NO_ISSUE_PATTERN";
     temporalStatus = "RESOLVED";
-    if (!suggestedAction) {
-      suggestedAction = "✅ RESOLVED / NO ISSUE";
-    }
+    suggestedAction = "✅ RESOLVED / NO ISSUE";
   }
 
   if (temporalInfo && temporalInfo.tag) {
@@ -3282,18 +3301,14 @@ function analyzecomplaintIntelligence(point) {
       isCapped = true;
       temporalOverrideType = "TEMPORAL_FUTURE";
       temporalStatus = "ADVISORY";
-      if (!suggestedAction) {
-        suggestedAction = "ℹ️ ADVISORY (FUTURE)";
-      }
+      suggestedAction = suggestedAction || "ℹ️ ADVISORY (FUTURE)";
     } else if (temporalInfo.tag === "past") {
       urgencyScore = Math.round(Math.max(0, Math.min(100, urgencyScore * 0.1)));
       isCritical = false;
       isCapped = true;
       temporalOverrideType = "TEMPORAL_PAST";
       temporalStatus = "LOG";
-      if (!suggestedAction) {
-        suggestedAction = "🗒️ LOG / RESOLVED";
-      }
+      suggestedAction = suggestedAction || "🗒️ LOG / RESOLVED";
     } else if (temporalInfo.tag === "present" && !isCapped) {
       urgencyScore = Math.round(Math.max(0, Math.min(100, urgencyScore * 2.0)));
       isCritical = urgencyScore >= 70;
@@ -3302,30 +3317,18 @@ function analyzecomplaintIntelligence(point) {
     }
   }
 
-  // ================================================================
-  // B3. LITERAL EMERGENCY BOOST v3.6.1 [NEW]
-  // ================================================================
-  // When description contains LITERAL emergency keywords (Fire, Accident, etc.)
-  // that are NOT metaphorical, boost the score to ensure EMERGENCY status.
-  // This counteracts cases where user selects wrong category but describes
-  // a real emergency (e.g., Category="Pothole", Description="HOUSE FIRE").
-  // ================================================================
-  if (!isCapped) { // Only boost if not already capped by traffic/maintenance
+  // B3. LITERAL EMERGENCY BOOST
+  if (!isCapped) {
     const LITERAL_EMERGENCY_KEYWORDS = {
-      // Fire emergencies
       "fire": "FIRE", "sunog": "FIRE", "nasusunog": "FIRE", "apoy": "FIRE", "burning": "FIRE",
-      // Vehicular accidents (v3.9.1: expanded keywords)
       "accident": "ACCIDENT", "aksidente": "ACCIDENT", "nabangga": "ACCIDENT", "sagasa": "ACCIDENT",
       "collision": "ACCIDENT", "crash": "ACCIDENT", "banggaan": "ACCIDENT", "nasagasaan": "ACCIDENT",
       "vehicular": "ACCIDENT", "car crash": "ACCIDENT", "hit and run": "ACCIDENT", "overturn": "ACCIDENT",
       "tumaob": "ACCIDENT", "bumagsak": "ACCIDENT", "sumalpok": "ACCIDENT", "bumangga": "ACCIDENT",
       "nabanggaan": "ACCIDENT", "nagsalpokan": "ACCIDENT", "bangga": "ACCIDENT",
-      // Crime emergencies
       "crime": "CRIME", "holdup": "CRIME", "holdap": "CRIME", "robbery": "CRIME", "stabbed": "CRIME",
       "gun": "CRIME", "baril": "CRIME", "binaril": "CRIME", "sinaksak": "CRIME", "snatching": "CRIME",
-      // Rescue emergencies
       "trapped": "RESCUE", "collapse": "RESCUE", "gumuho": "RESCUE", "nabagsakan": "RESCUE",
-      // Medical emergencies (v3.9.1: added)
       "injured": "MEDICAL", "nasugatan": "MEDICAL", "bleeding": "MEDICAL", "dumudugo": "MEDICAL",
       "unconscious": "MEDICAL", "nawalan ng malay": "MEDICAL", "heart attack": "MEDICAL",
       "naligsan": "MEDICAL", "stroke": "MEDICAL", "atake sa puso": "MEDICAL"
@@ -3334,12 +3337,8 @@ function analyzecomplaintIntelligence(point) {
     let literalEmergencyFound = null;
     for (const [keyword, emergencyType] of Object.entries(LITERAL_EMERGENCY_KEYWORDS)) {
       if (descLower.includes(keyword)) {
-        // Check if it's NOT metaphorical
-        const metaphorCheck = typeof isMetaphoricalUsage === "function"
-          ? isMetaphoricalUsage(description, keyword)
-          : { isMetaphorical: false };
-
-        if (!metaphorCheck.isMetaphorical) {
+        const metCheck = typeof isMetaphoricalUsage === "function" ? isMetaphoricalUsage(description, keyword) : { isMetaphorical: false };
+        if (!metCheck.isMetaphorical) {
           literalEmergencyFound = { keyword, emergencyType };
           break;
         }
@@ -3347,30 +3346,16 @@ function analyzecomplaintIntelligence(point) {
     }
 
     if (literalEmergencyFound) {
-      // v3.9.1 FIX: Boost score by +20 to GUARANTEE EMERGENCY threshold
       const boostAmount = 20;
       urgencyScore = Math.min(100, urgencyScore + boostAmount);
       isCritical = urgencyScore >= 70;
       overrideType = "LITERAL_EMERGENCY_BOOST";
-      suggestedAction = `🚨 LITERAL ${literalEmergencyFound.emergencyType} DETECTED`;
-
-      // Store boost info for breakdown
-      emergencyBoostInfo = {
-        amount: boostAmount,
-        keyword: literalEmergencyFound.keyword,
-        type: literalEmergencyFound.emergencyType
-      };
-
-      _NLP_DEBUG && console.log(`[BOOST v3.6.1] 🚀 +${boostAmount} points for literal "${literalEmergencyFound.keyword}" → Score: ${urgencyScore}`);
+      suggestedAction = suggestedAction || `🚨 LITERAL ${literalEmergencyFound.emergencyType} DETECTED`;
+      emergencyBoostInfo = { amount: boostAmount, keyword: literalEmergencyFound.keyword, type: literalEmergencyFound.emergencyType };
     }
   }
 
-  // ================================================================
-  // B4. NEGATION OVERRIDE v3.9.5 [NEW]
-  // ================================================================
-  // If the primary category keyword is explicitly negated (e.g. "No fire"),
-  // zero out the score to prevent false alarms.
-  // ================================================================
+  // B4. NEGATION OVERRIDE
   const primaryNegation = checkNegation(description, category);
   if (primaryNegation.isNegated) {
     urgencyScore = 0;
@@ -3378,29 +3363,9 @@ function analyzecomplaintIntelligence(point) {
     isCapped = true;
     overrideType = "NEGATION_OVERRIDE";
     suggestedAction = `🚫 NEGATED: "${primaryNegation.negationWord} ${category}"`;
-    _NLP_DEBUG && console.log(`[NEGATION v3.9.5] 🛑 SCORE ZEROED: "${primaryNegation.negationWord}" negates "${category}"`);
   }
 
-  const baseRisk = Math.max(0, Math.min(10, Math.round(getCategoryPriority(category) / 10)));
-  let riskValue = baseRisk;
-
-  if (severityInfo && Array.isArray(severityInfo.amplifiers) && severityInfo.amplifiers.length > 0) {
-    riskValue *= 1.5;
-  }
-  if (severityInfo && Array.isArray(severityInfo.diminishers) && severityInfo.diminishers.length > 0) {
-    riskValue *= 0.5;
-  }
-
-  if ((noIssueInfo && noIssueInfo.isNoIssue) || primaryNegation.isNegated) {
-    riskValue = 0;
-  } else if (temporalInfo && temporalInfo.tag === "future") {
-    riskValue = 0;
-  } else if (temporalInfo && temporalInfo.tag === "past") {
-    riskValue *= 0.1;
-  } else if (temporalInfo && temporalInfo.tag === "present") {
-    riskValue *= 2.0;
-  }
-
+  const riskValue = urgencyScore / 10; // Normalize urgency to 0-10 scale for risk calculation
   const riskScore = Math.max(0, Math.min(100, Math.round(riskValue * 10)));
   const riskStatus = temporalInfo?.tag === "future" ? "ADVISORY"
     : (noIssueInfo && noIssueInfo.isNoIssue) || temporalInfo?.tag === "past" ? "RESOLVED"
@@ -3408,15 +3373,21 @@ function analyzecomplaintIntelligence(point) {
 
   // ==================== RETURN EXACT OUTPUT STRUCTURE ====================
   return {
-    urgencyScore,               // The capped score (e.g., 35)
-    veracityLabel,              // "UNVERIFIED", "MODERATE", "HIGH CONFIDENCE", "MAINTENANCE", "GEO-VERIFIED"
-    suggestedAction,            // e.g., "🔧 SCHEDULE MAINTENANCE"
+    urgencyScore,
+    veracityLabel,
+    suggestedAction,
     isCritical,
     wordCount,
     temporalTag: temporalInfo?.tag || null,
     temporalStatus,
     riskScore,
     riskStatus,
+    confidence: isMetaphorical ? 0.3 : (isSpeculative ? 0.4 : 0.9),
+    veracityScore: isMetaphorical || isSpeculative ? 30 : (wordCount > 5 ? 90 : 70),
+    method: isMetaphorical ? "METAPHOR_FILTER" : (nlpResult.matchedKeywords.length > 0 ? "Slow Path" : "Fallback"),
+    isMetaphorical,
+    isSpeculative,
+    figurative_type: figurativeType,
 
     // Breakdown object for UI transparency
     breakdown: {
@@ -3432,16 +3403,15 @@ function analyzecomplaintIntelligence(point) {
       riskBase: baseRisk,
       riskScore,
       riskStatus,
-      emergencyBoost: emergencyBoostInfo,     // v3.6.1: Literal emergency boost info
-      geospatialBoost: geospatialBoostInfo,   // v3.7: Geospatial verification boost
-      isCapped,                     // TRUE if an override was applied
-      overrideType,             // Type of override applied
-      negation: primaryNegation.isNegated ? primaryNegation.negationWord : null,
-      originalScore,           // The uncapped score (for transparency)
-
-      // Additional debug info
+      emergencyBoost: emergencyBoostInfo,
+      geospatialBoost: geospatialBoostInfo,
+      isCapped,
       overrideType,
-      matchedContext: matchedTrafficContext || matchedMaintenanceContext || null,
+      negation: primaryNegation.isNegated ? primaryNegation.negationWord : null,
+      originalScore,
+      matchedKeywords: nlpResult.matchedKeywords,
+      
+      // Additional debug info
       capsRatio: Math.round(capsRatio * 100),
       exclamationCount,
       foundFearKeyword: foundFearKeyword || null
@@ -8563,7 +8533,8 @@ let NLP_TEMPORAL_FUTURE = [];
  * Called automatically after loading.
  */
 function buildDictionaryIndices() {
-  if (!NLP_DICTIONARIES) return;
+  // If we have dynamic data, we can proceed even if static dictionaries aren't loaded yet
+  if (!NLP_DICTIONARIES && (!window.DRIMS_NLP_ENGINE_DATA)) return;
 
   _NLP_DEBUG && console.log("[NLP] Building lookup indices...");
 
@@ -8577,8 +8548,76 @@ function buildDictionaryIndices() {
   NLP_TEMPORAL_PRESENT = [];
   NLP_TEMPORAL_PAST = [];
   NLP_TEMPORAL_FUTURE = [];
+  
+  // 0. INTEGRATION: Load from Dynamic Database Data (DRIMS_NLP_ENGINE_DATA)
+  if (window.DRIMS_NLP_ENGINE_DATA && Array.isArray(window.DRIMS_NLP_ENGINE_DATA.keywords)) {
+    _NLP_DEBUG && console.log(`[NLP] Syncing ${window.DRIMS_NLP_ENGINE_DATA.keywords.length} keywords from database...`);
+    window.DRIMS_NLP_ENGINE_DATA.keywords.forEach(kw => {
+      if (!kw.term) return;
+      const term = kw.term.toLowerCase().trim();
+      NLP_KEYWORD_INDEX.set(term, {
+        term: kw.term,
+        translation: kw.translation || "",
+        confidence: kw.confidence || 0.8,
+        category: kw.subcategory || kw.category,
+        mainCategory: kw.category,
+        isDatabaseDriven: true
+      });
+    });
+  }
 
-  // 1. Build keyword index from filipino_keywords
+  // 0.1 INTEGRATION: Load Rules from Dynamic Database Data
+  if (window.DRIMS_NLP_ENGINE_DATA && Array.isArray(window.DRIMS_NLP_ENGINE_DATA.rules)) {
+    _NLP_DEBUG && console.log(`[NLP] Syncing ${window.DRIMS_NLP_ENGINE_DATA.rules.length} rules from database...`);
+    window.DRIMS_NLP_ENGINE_DATA.rules.forEach(rule => {
+      if (!rule.pattern) return;
+      const pattern = rule.pattern.toLowerCase().trim();
+      const type = rule.rule_type;
+
+      if (type === "metaphor") {
+        try {
+          const regex = new RegExp(rule.pattern, "gi");
+          NLP_METAPHOR_PATTERNS.push({
+            regex,
+            literal: rule.pattern,
+            actualMeaning: rule.translation || "Figurative",
+            filterType: "metaphor",
+            isEmergency: rule.is_current_emergency === true
+          });
+        } catch (e) {}
+      } else if (type.startsWith("speculation")) {
+        NLP_SPECULATION_PATTERNS.push({
+          pattern,
+          type: type,
+          translation: rule.translation || ""
+        });
+      } else if (type === "amplifier") {
+        NLP_SEVERITY_AMPLIFIERS.set(pattern, {
+          multiplier: rule.multiplier || 1.5,
+          translation: rule.translation || ""
+        });
+      } else if (type === "diminisher") {
+        NLP_SEVERITY_DIMINISHERS.set(pattern, {
+          multiplier: rule.multiplier || 0.7,
+          translation: rule.translation || ""
+        });
+      } else if (type === "negation") {
+        NLP_NEGATION_PATTERNS.push({
+          pattern,
+          action: "filter_out",
+          translation: rule.translation || ""
+        });
+      }
+    });
+  }
+
+  if (!NLP_DICTIONARIES) {
+    _NLP_DEBUG && console.log("[NLP] Static dictionaries not loaded, using DB-only mode.");
+    NLP_DICTIONARY_LOADED = true; 
+    return;
+  }
+
+  // 1. Build keyword index from filipino_keywords (Fallback/Legacy)
   const filipinoKeywords = NLP_DICTIONARIES.filipino_keywords || {};
   for (const [mainCategory, subcategories] of Object.entries(filipinoKeywords)) {
     for (const [subCategory, terms] of Object.entries(subcategories)) {
@@ -9177,8 +9216,8 @@ window.haversineDistance = haversineDistance;
 
 // Export NLP functions
 window.loadNLPDictionaries = loadNLPDictionaries;
+window.buildDictionaryIndices = buildDictionaryIndices; // Export for external syncing
 window.analyzecomplaintIntelligence = analyzecomplaintIntelligence;
-window.extractKeywordsWithCategory = extractKeywordsWithCategory;
 window.getNLPDictionaries = getNLPDictionaries;
 window.isNLPDictionaryReady = isNLPDictionaryReady;
 

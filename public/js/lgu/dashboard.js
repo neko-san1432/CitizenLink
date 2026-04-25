@@ -5,13 +5,13 @@
 import showMessage from "../components/toast.js";
 
 // --- Global State ---
-let lastKnownStats = null;
+const lastKnownStats = null;
 const componentTimeframes = {
-  stats: 'yearly',
-  activity: 'yearly',
-  trend: 'yearly',
-  distribution_pie: 'yearly',
-  distribution_bar: 'yearly'
+  stats: "yearly",
+  activity: "yearly",
+  trend: "yearly",
+  distribution_pie: "yearly",
+  distribution_bar: "yearly"
 };
 
 const charts = {
@@ -53,18 +53,18 @@ function buildLabelsAndData(obj) {
 
 // ─── Skeleton Toggle ─────────────────────────────────────────────────────────
 function toggleSkeleton(show) {
-  const loading = document.getElementById('dashboard-loading');
-  const main = document.getElementById('dashboard-main-content');
+  const loading = document.getElementById("dashboard-loading");
+  const main = document.getElementById("dashboard-main-content");
   if (!loading || !main) return;
 
   if (show) {
-    loading.style.display = 'flex';
-    main.style.display = 'none';
-    main.style.opacity = '0';
+    loading.style.display = "flex";
+    main.style.display = "none";
+    main.style.opacity = "0";
   } else {
-    loading.style.display = 'none';
-    main.style.display = 'block';
-    setTimeout(() => { main.style.opacity = '1'; }, 50);
+    loading.style.display = "none";
+    main.style.display = "block";
+    setTimeout(() => { main.style.opacity = "1"; }, 50);
   }
 }
 
@@ -100,7 +100,7 @@ function renderCategoryBreakdown(categoryDistribution) {
   if (!ctx) return;
   const legendDiv = document.getElementById("categoryBreakdownLegend");
   const dataMap = buildLabelsAndData(categoryDistribution);
-  
+
   if (dataMap.labels.length === 0) {
     showEmptyChart("categoryBreakdownChart", "No data to be shown");
     if (legendDiv) legendDiv.innerHTML = "";
@@ -121,7 +121,7 @@ function renderCategoryBreakdown(categoryDistribution) {
         labels: dataMap.labels,
         datasets: [{ data: dataMap.data, backgroundColor: colors, borderWidth: 2, borderColor: "#1e293b" }]
       },
-      options: { responsive: true, maintainAspectRatio: false, cutout: "70%", animation: { duration: 1200, easing: 'easeOutQuart' }, plugins: { legend: { display: false } } }
+      options: { responsive: true, maintainAspectRatio: false, cutout: "70%", animation: { duration: 1200, easing: "easeOutQuart" }, plugins: { legend: { display: false } } }
     });
   }
 
@@ -167,14 +167,14 @@ function renderNlpTrend(trendObj) {
   const ctx = document.getElementById("nlpIntelligenceImpactChart");
   if (!ctx) return;
   const entries = Object.entries(trendObj || {}).sort((a,b) => a[0].localeCompare(b[0]));
-  
+
   if (entries.length === 0) {
     showEmptyChart("nlpIntelligenceImpactChart", "No data to be shown");
     return;
   }
   clearEmptyChart("nlpIntelligenceImpactChart");
 
-  const labels = entries.map(e => e[0].split('-').slice(1).join('/'));
+  const labels = entries.map(e => e[0].split("-").slice(1).join("/"));
   const data = entries.map(e => e[1]);
   const { tickColor, gridColor } = chartDefaults();
 
@@ -204,18 +204,18 @@ function renderRecentAlerts(alerts) {
     list.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b;">No high-priority alerts for this period.</div>`;
     return;
   }
-  
+
   const getAlertStyle = (priority, category) => {
-    const p = (priority || '').toLowerCase();
-    const c = (category || '').toLowerCase();
-    
-    if (p === 'urgent' || p === 'emergency' || c === 'fire' || c === 'disaster') {
-      return { icon: 'fa-fire', color: 'var(--accent-red)', bg: 'rgba(239, 68, 68, 0.05)', label: 'EMERGENCY' };
+    const p = (priority || "").toLowerCase();
+    const c = (category || "").toLowerCase();
+
+    if (p === "urgent" || p === "emergency" || c === "fire" || c === "disaster") {
+      return { icon: "fa-fire", color: "var(--accent-red)", bg: "rgba(239, 68, 68, 0.05)", label: "EMERGENCY" };
     }
-    if (p === 'high' || c === 'crime' || c === 'safety') {
-      return { icon: 'fa-shield-alt', color: 'var(--accent-orange)', bg: 'rgba(249, 115, 22, 0.05)', label: 'PUBLIC SAFETY' };
+    if (p === "high" || c === "crime" || c === "safety") {
+      return { icon: "fa-shield-alt", color: "var(--accent-orange)", bg: "rgba(249, 115, 22, 0.05)", label: "PUBLIC SAFETY" };
     }
-    return { icon: 'fa-leaf', color: 'var(--accent-green)', bg: 'rgba(16, 185, 129, 0.05)', label: 'ENVIRONMENT' };
+    return { icon: "fa-leaf", color: "var(--accent-green)", bg: "rgba(16, 185, 129, 0.05)", label: "ENVIRONMENT" };
   };
 
   list.innerHTML = alerts.slice(0, 4).map(a => {
@@ -226,9 +226,9 @@ function renderRecentAlerts(alerts) {
           <span style="color: ${style.color}; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; gap: 6px;">
             <i class="fas ${style.icon}"></i> ${style.label}
           </span>
-          <span style="color: var(--text-secondary); font-size: 0.7rem;">${new Date(a.submitted_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+          <span style="color: var(--text-secondary); font-size: 0.7rem;">${new Date(a.submitted_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span>
         </div>
-        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 2px;">${a.category || 'General'}</div>
+        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 2px;">${a.category || "General"}</div>
         <div style="color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4;">${a.description}</div>
       </div>
     `;
@@ -241,7 +241,7 @@ function renderSecondaryImpact(trendObj) {
   const entries = Object.entries(trendObj || {}).sort((a,b) => a[0].localeCompare(b[0]));
   if (entries.length === 0) return;
 
-  const labels = entries.map(e => e[0].split('-').slice(1).join('/'));
+  const labels = entries.map(e => e[0].split("-").slice(1).join("/"));
   const data = entries.map(e => e[1]);
   const { tickColor, gridColor } = chartDefaults();
 
@@ -349,15 +349,15 @@ async function loadEvents() {
 }
 
 // ─── Main Logic ───────────────────────────────────────────────────────────────
-async function loadDashboard(timeframe = null, target = 'all', showSkeleton = false) {
+async function loadDashboard(timeframe = null, target = "all", showSkeleton = false) {
   try {
     if (typeof Chart === "undefined") {
       setTimeout(() => loadDashboard(timeframe, target, showSkeleton), 500);
       return;
     }
 
-    const activeTf = timeframe || (target === 'all' ? 'yearly' : (componentTimeframes[target] || 'yearly'));
-    if (timeframe && target !== 'all') componentTimeframes[target] = timeframe;
+    const activeTf = timeframe || (target === "all" ? "yearly" : (componentTimeframes[target] || "yearly"));
+    if (timeframe && target !== "all") componentTimeframes[target] = timeframe;
 
     if (showSkeleton) toggleSkeleton(true);
 
@@ -368,20 +368,20 @@ async function loadDashboard(timeframe = null, target = 'all', showSkeleton = fa
 
     const { stats, charts: chartData } = result.data || {};
 
-    if ((target === 'all' || target === 'stats') && stats) {
+    if ((target === "all" || target === "stats") && stats) {
       setText("lgu-stat-total", stats.total_active || stats.total || 0);
       setText("lgu-stat-emergency", stats.priority?.urgent || 0);
       setText("lgu-stat-high-priority", stats.priority?.high || 0);
       setText("lgu-stat-avg-priority", stats.avg_priority_score || 0);
     }
 
-    if ((target === 'all' || target === 'trend') && chartData?.trend) {
+    if ((target === "all" || target === "trend") && chartData?.trend) {
       renderNlpTrend(chartData.trend);
       renderSecondaryImpact(chartData.trend);
     }
-    if ((target === 'all' || target === 'distribution_pie') && chartData?.distribution_pie) renderCategoryBreakdown(chartData.distribution_pie);
-    if ((target === 'all' || target === 'distribution_bar') && chartData?.distribution_bar) renderComplaintsByCategory(chartData.distribution_bar);
-    if ((target === 'all' || target === 'activity') && result.data && result.data.recent_activity) renderRecentAlerts(result.data.recent_activity);
+    if ((target === "all" || target === "distribution_pie") && chartData?.distribution_pie) renderCategoryBreakdown(chartData.distribution_pie);
+    if ((target === "all" || target === "distribution_bar") && chartData?.distribution_bar) renderComplaintsByCategory(chartData.distribution_bar);
+    if ((target === "all" || target === "activity") && result.data && result.data.recent_activity) renderRecentAlerts(result.data.recent_activity);
 
     toggleSkeleton(false);
   } catch (err) {
@@ -404,10 +404,10 @@ async function loadPersonalTasks() {
       container.innerHTML = result.data.map(task => `
         <div style="padding: 12px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.1); border-radius: 12px; transition: all 0.3s ease;">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
-            <h4 style="margin: 0; font-size: 0.85em; color: #818cf8; font-weight: 600;">${task.complaint?.category || 'Assigned Task'}</h4>
-            <span style="font-size: 0.7em; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${task.status || 'Pending'}</span>
+            <h4 style="margin: 0; font-size: 0.85em; color: #818cf8; font-weight: 600;">${task.complaint?.category || "Assigned Task"}</h4>
+            <span style="font-size: 0.7em; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${task.status || "Pending"}</span>
           </div>
-          <p style="margin: 0 0 8px 0; font-size: 0.8em; color: #f1f5f9; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${task.complaint?.description || 'No description available'}</p>
+          <p style="margin: 0 0 8px 0; font-size: 0.8em; color: #f1f5f9; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${task.complaint?.description || "No description available"}</p>
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 0.7em; color: #64748b;">Due: ${new Date(task.deadline).toLocaleDateString()}</span>
             <a href="/review/${task.complaint_id}" style="font-size: 0.75em; color: #60a5fa; text-decoration: none; font-weight: 500;">View Details →</a>
@@ -426,29 +426,29 @@ async function loadPersonalTasks() {
 
 function init() {
   const mapping = {
-    'timeframe-alerts': 'activity',
-    'timeframe-breakdown': 'distribution_pie',
-    'timeframe-category': 'distribution_bar',
-    'timeframe-trend': 'trend'
+    "timeframe-alerts": "activity",
+    "timeframe-breakdown": "distribution_pie",
+    "timeframe-category": "distribution_bar",
+    "timeframe-trend": "trend"
   };
-  
+
   Object.entries(mapping).forEach(([id, target]) => {
     const el = document.getElementById(id);
     if (el) {
-      el.value = 'yearly';
-      el.addEventListener('change', (e) => loadDashboard(e.target.value, target, false));
+      el.value = "yearly";
+      el.addEventListener("change", (e) => loadDashboard(e.target.value, target, false));
     }
   });
 
   const timeEl = document.getElementById("current-lgu-time");
-  if (timeEl) timeEl.textContent = new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  if (timeEl) timeEl.textContent = new Date().toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 
-  loadDashboard('yearly', 'all', true);
+  loadDashboard("yearly", "all", true);
   loadNotices();
   loadNews();
   loadEvents();
   loadPersonalTasks();
-  
+
   setInterval(() => {
     Object.keys(componentTimeframes).forEach(t => loadDashboard(null, t, false));
     loadNotices();

@@ -12,7 +12,7 @@ async function check() {
   const active = complaints.filter(c => c.workflow_status?.toLowerCase() !== "completed");
   console.log(`Total Complaints: ${complaints.length}`);
   console.log(`Active (Not Completed): ${active.length}`);
-  
+
   const catCounts = {};
   complaints.forEach(c => {
     const cid = c.category_id;

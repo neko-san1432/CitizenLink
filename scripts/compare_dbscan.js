@@ -22,10 +22,10 @@
     - Prints a JSON summary comparing both runs, including mixed-category merges for Fixed DBSCAN.
 */
 
-require('dotenv').config();
+require("dotenv").config();
 
-const Database = require('../src/server/config/database');
-const clusteringService = require('../src/server/services/nlp/ClusteringService');
+const Database = require("../src/server/config/database");
+const clusteringService = require("../src/server/services/nlp/ClusteringService");
 
 function toRadians(deg) {
   return (deg * Math.PI) / 180;
@@ -156,7 +156,7 @@ function summarizeAdaptive(points, clusters) {
 }
 
 function summarizeFixed(points, fixedResult) {
-  const clusters = fixedResult.clusters;
+  const {clusters} = fixedResult;
   const noiseIds = new Set(fixedResult.noiseIds);
 
   const clusterSizes = clusters.map(c => c.points.length);
@@ -182,7 +182,7 @@ function summarizeFixed(points, fixedResult) {
     clusterSize: {
       min: clusterSizes.length ? Math.min(...clusterSizes) : 0,
       max: clusterSizes.length ? Math.max(...clusterSizes) : 0,
-      avg: clusterSizes.length ? +(totalClustered / clusterSizes.length).toFixed(2) : 0,
+      avg: clusterSizes.length ? Number((totalClustered / clusterSizes.length).toFixed(2)) : 0,
     },
     mixedCategoryClusters: mixed.length,
     mixedCategoryExamples: mixed.slice(0, 5),
@@ -194,9 +194,9 @@ async function loadDatasetPoints288() {
 
   // Mirror scripts/generate_authentic_logs.js: fetch last 300, then process 288 limit.
   const { data: complaints, error } = await supabase
-    .from('complaints')
-    .select('*')
-    .order('submitted_at', { ascending: false })
+    .from("complaints")
+    .select("*")
+    .order("submitted_at", { ascending: false })
     .limit(300);
 
   if (error) throw error;
@@ -206,8 +206,8 @@ async function loadDatasetPoints288() {
 
   // Fetch categories for name mapping (category_id -> name)
   const { data: categories, error: catErr } = await supabase
-    .from('categories')
-    .select('id, name');
+    .from("categories")
+    .select("id, name");
   if (catErr) throw catErr;
 
   const catMap = {};
@@ -227,10 +227,10 @@ async function loadDatasetPoints288() {
       id: c.id,
       latitude: lat,
       longitude: lon,
-      category: catMap[c.category_id] || 'Undetermined',
+      category: catMap[c.category_id] || "Undetermined",
       timestamp: c.submitted_at || c.created_at || new Date().toISOString(),
       // Keep raw priority value (DB stores lowercase: low/medium/high)
-      priority: c.priority || 'medium',
+      priority: c.priority || "medium",
     });
   }
 
@@ -244,7 +244,7 @@ async function loadDatasetPoints288() {
 
 async function main() {
   const dataset = await loadDatasetPoints288();
-  const points = dataset.points;
+  const {points} = dataset;
 
   // Run 1: Adaptive
   const adaptiveClusters = clusteringService.clusterIncidents(points);

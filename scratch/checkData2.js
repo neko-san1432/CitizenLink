@@ -4,9 +4,9 @@ const Database = require("../src/server/config/database");
 async function check() {
   try {
     const supabase = Database.getServiceClient();
-    
+
     const departmentCode = "CDRRMO";
-    
+
     const dptToCategory = {
       "cdrrmo": "Emergency",
       "pnp": "Public Safety",
@@ -27,10 +27,10 @@ async function check() {
     if(catErr) console.error("Error:", catErr);
 
     const categoryId = categoryDataLookup ? categoryDataLookup.id : null;
-    const deptFilter = categoryId 
+    const deptFilter = categoryId
       ? `departments.cs.{${departmentCode}},category_id.eq.${categoryId}`
       : `departments.cs.{${departmentCode}}`;
-      
+
     console.log("Final filter:", deptFilter);
 
     // Now test if any complaints match this filter!
@@ -39,11 +39,11 @@ async function check() {
       .select("id", { count: "exact", head: true })
       .or(deptFilter)
       .not("workflow_status", "ilike", "completed");
-      
+
     console.log("Count of active complaints:", count);
     if(countErr) console.error("Count err:", countErr);
 
-  } catch(e) { console.error(e) }
+  } catch(e) { console.error(e); }
   process.exit(0);
 }
 check();

@@ -16,7 +16,7 @@ async function check() {
 
   const catCounts = {};
   data.forEach(c => {
-    const name = catMap[c.category_id] || "Unknown (" + c.category_id + ")";
+    const name = catMap[c.category_id] || `Unknown (${  c.category_id  })`;
     catCounts[name] = (catCounts[name] || 0) + 1;
   });
 

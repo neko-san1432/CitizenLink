@@ -5,11 +5,11 @@ import themeManager from "../utils/theme.js";
 // Header component for easy modification
 
 export function createHeader() {
-  const isMapView = window.location.pathname === "/heatmap" || 
-                    window.location.pathname === "/digos-map" || 
+  const isMapView = window.location.pathname === "/heatmap" ||
+                    window.location.pathname === "/digos-map" ||
                     window.location.pathname === "/map" ||
                     window.location.pathname.includes("heatmap");
-  
+
   const menuToggleHTML = isMapView ? `
     <button id="menu-toggle" class="menu-toggle header-action" aria-label="Toggle menu" title="Toggle menu" style="background:none;border:none;padding:8px;border-radius:8px;margin-right:8px;">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -18,7 +18,7 @@ export function createHeader() {
         <line x1="4" y1="18" x2="20" y2="18"></line>
       </svg>
     </button>
-  ` : '';
+  ` : "";
 
   return `
     <div class="header-content">
@@ -34,6 +34,16 @@ export function createHeader() {
         <div class="theme-container">
           <button id="theme-btn" class="header-action theme-btn" aria-label="Toggle Theme" title="Toggle Theme">
              <!-- Icon set by JS -->
+          </button>
+        </div>
+
+        <div class="role-switcher-container" id="role-switcher-container" style="margin-right: 8px; display: none;">
+          <button id="header-role-btn" class="header-action" title="Switch Role Perspective (Demo Mode)" style="background: var(--primary-light); color: var(--primary); border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; border: 1px solid var(--primary-border); height: 32px; cursor: pointer;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+            </svg>
+            Sim Mode
           </button>
         </div>
 
@@ -471,8 +481,8 @@ document.addEventListener("DOMContentLoaded", () => {
       */
       const appContainer = document.getElementById("app");
       const headerContainer = document.querySelector(".header-container");
-      const isMapView = window.location.pathname === "/heatmap" || 
-                        window.location.pathname === "/digos-map" || 
+      const isMapView = window.location.pathname === "/heatmap" ||
+                        window.location.pathname === "/digos-map" ||
                         window.location.pathname === "/map" ||
                         window.location.pathname.includes("heatmap");
 
@@ -529,6 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
       initializeHeaderScroll();
       initializeDropdowns();
       initializeGlobalClickHandler();
+      initializeHeaderRoleSwitcher();
 
       // Setup global handler for data-href (CSP compliance for quick actions)
       document.querySelectorAll("[data-href]").forEach(el => {
@@ -539,3 +550,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 50);
   }, 100); // Close setTimeout
 }); // Close DOMContentLoaded
+// Initialize header role switcher
+function initializeHeaderRoleSwitcher() {
+  const roleBtn = document.getElementById("header-role-btn");
+  const container = document.getElementById("role-switcher-container");
+  if (roleBtn && container) {
+    const userMeta = JSON.parse(localStorage.getItem("cl_user_meta") || "{}");
+    const realRole = (userMeta.role || "").toLowerCase();
+
+    const checkOverride = () => Boolean(localStorage.getItem("cl_role_override")) || document.cookie.match(/(^|;)\s*app_mode=citizen_mode/);
+    const isOverridden = checkOverride();
+
+    // Only show for LGU and Super Admin (or if already overridden)
+    const isSwitchable = realRole === "lgu" || realRole === "super-admin" || realRole.startsWith("lgu-") || realRole === "complaint-coordinator";
+
+    if (isSwitchable || isOverridden) {
+      container.style.display = "block";
+    }
+
+    // Update label based on state
+    if (isOverridden) {
+      roleBtn.innerHTML = `
+         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+           <polyline points="9 22 9 12 15 12 15 22"></polyline>
+         </svg>
+         <span style="white-space: nowrap;">Exit Citizen</span>
+       `;
+      roleBtn.style.background = "var(--sidebar-active)";
+      roleBtn.style.color = "white";
+      roleBtn.style.width = "auto";
+      roleBtn.style.padding = "0 12px";
+      roleBtn.style.borderRadius = "20px";
+      roleBtn.style.gap = "8px";
+    } else {
+      roleBtn.innerHTML = `
+         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+           <circle cx="12" cy="12" r="3"></circle>
+           <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+         </svg>
+         <span style="white-space: nowrap;">Enter Citizen</span>
+       `;
+      roleBtn.style.background = "rgba(59, 130, 246, 0.1)";
+      roleBtn.style.color = "#60a5fa";
+      roleBtn.style.width = "auto";
+      roleBtn.style.padding = "0 12px";
+      roleBtn.style.borderRadius = "20px";
+      roleBtn.style.gap = "8px";
+    }
+
+    roleBtn.addEventListener("click", () => {
+      // Re-check override state at click time
+      const currentlyOverridden = checkOverride();
+
+      if (currentlyOverridden) {
+        localStorage.removeItem("cl_role_override");
+        document.cookie = "app_mode=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+      } else {
+        localStorage.setItem("cl_role_override", "citizen");
+        document.cookie = "app_mode=citizen_mode; path=/; max-age=31536000;";
+      }
+      // Redirect to dashboard to let the server route to the correct role's page
+      window.location.href = "/dashboard";
+    });
+  }
+}

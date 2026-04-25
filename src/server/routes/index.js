@@ -52,7 +52,7 @@ router.use("/office-confirmation", officeConfirmationRoutes);
 router.use("/nlp", require("./nlpRoutes"));
 router.use("/brain", brainDashboardRoutes);
 // Public API routes (boundaries, geocoding)
-router.use("/", publicApiRoutes);
+router.use("/api/public", publicApiRoutes);
 // User routes (roles, profile info)
 router.use("/user", require("./userRoutes"));
 

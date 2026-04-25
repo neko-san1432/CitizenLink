@@ -116,7 +116,6 @@ export async function initializecomplaintForm() {
   setupTitleAutoGeneration(form);
 
 
-
   // Setup duplicate detection
   setupDuplicateDetection(form);
 }

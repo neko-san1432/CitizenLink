@@ -1,8 +1,8 @@
-require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
-const ExcelJS = require('exceljs');
-const Database = require('../src/server/config/database');
+require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+const ExcelJS = require("exceljs");
+const Database = require("../src/server/config/database");
 
 // Simple Haversine
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -35,7 +35,7 @@ function dbscan(points, eps, minPts) {
 
     clusterId++;
     p.cluster = clusterId;
-    
+
     // expand cluster
     let j = 0;
     while (j < neighbors.length) {
@@ -45,7 +45,7 @@ function dbscan(points, eps, minPts) {
         j++;
         continue;
       }
-      
+
       pn.cluster = clusterId;
       const pnNeighbors = getNeighbors(pn, points, eps);
       if (pnNeighbors.length >= minPts) {
@@ -63,21 +63,21 @@ function getNeighbors(point, allPoints, eps) {
 
 async function run() {
   const supabase = Database.getServiceClient();
-  
+
   // 1. Fetch Categories
-  const { data: catData } = await supabase.from('categories').select('id, name');
+  const { data: catData } = await supabase.from("categories").select("id, name");
   const catMap = {};
   if (catData) catData.forEach(c => catMap[c.id] = c.name);
 
   // 2. Fetch Complaints
   const { data: complaints, error } = await supabase
-    .from('complaints')
-    .select('*')
-    .order('submitted_at', { ascending: false })
+    .from("complaints")
+    .select("*")
+    .order("submitted_at", { ascending: false })
     .limit(300);
 
   if (error) {
-    console.error('Error fetching:', error);
+    console.error("Error fetching:", error);
     return;
   }
 
@@ -86,55 +86,55 @@ async function run() {
   const performanceLogs = [];
 
   // LGU desktop profiles
-  const deviceProfiles = ['LGU Workstation (Intel Core i5-11400)', 'LGU Response Terminal (Intel Core i7-12700K)', 'LGU Coordination Hub (Mac Mini M2)'];
+  const deviceProfiles = ["LGU Workstation (Intel Core i5-11400)", "LGU Response Terminal (Intel Core i7-12700K)", "LGU Coordination Hub (Mac Mini M2)"];
 
   const pointsForClustering = [];
 
   for (let i = 0; i < complaints.length; i++) {
     const c = complaints[i];
-    const originalCategory = catMap[c.category_id] || 'Undetermined';
-    const text = c.description || c.location_text || '';
-    
+    const originalCategory = catMap[c.category_id] || "Undetermined";
+    const text = c.description || c.location_text || "";
+
     // Tokens
-    const tokens = text.toLowerCase().replace(/[.,!?;:'"()\-\/&@#$%^*+=<>[\]{}|\\~`]/g, '').split(/\s+/).filter(t => t.length > 2);
-    const hasMatch = originalCategory !== 'Undetermined';
-    
+    const tokens = text.toLowerCase().replace(/[.,!?;:'"()\-\/&@#$%^*+=<>[\]{}|\\~`]/g, "").split(/\s+/).filter(t => t.length > 2);
+    const hasMatch = originalCategory !== "Undetermined";
+
     // Improved Semantic System Actions based on Thesis parameters
     let classification = originalCategory;
-    let action = '';
+    let action = "";
     let confBase = hasMatch ? 85 : 55;
 
     // Simulate "Linguistic Noise" vs "Valid Hazard" flag from Edge AI
     const isNoise = tokens.length < 3 && text.length < 20;
 
     if (isNoise) {
-        classification = 'Linguistic Noise / Spam';
-        action = 'Rejected';
-        confBase = 88; // High confidence that it is noise
+      classification = "Linguistic Noise / Spam";
+      action = "Rejected";
+      confBase = 88; // High confidence that it is noise
     } else if (hasMatch) {
-        classification = `Valid Hazard (${originalCategory})`;
-        action = 'Forwarded to Map & Sub-Nodes';
+      classification = `Valid Hazard (${originalCategory})`;
+      action = "Forwarded to Map & Sub-Nodes";
     } else {
-        classification = 'Unclassified Syntax';
-        action = 'Flagged for Manual Verification';
+      classification = "Unclassified Syntax";
+      action = "Flagged for Manual Verification";
     }
 
-    const confidenceScore = (Math.random() * (hasMatch ? 9 : 14) + confBase).toFixed(2) + '%';
+    const confidenceScore = `${(Math.random() * (hasMatch ? 9 : 14) + confBase).toFixed(2)  }%`;
     const processingTimeMs = (Math.random() * 20 + 5); // 5-25ms fast pipeline
-    
+
     semanticLogs.push({
       Report_ID: c.id,
       Raw_Text_Input: text,
-      NLP_Tokens: `[${tokens.join(', ')}]`,
+      NLP_Tokens: `[${tokens.join(", ")}]`,
       AI_Classification: classification,
       Confidence_Score: confidenceScore,
       System_Action: action,
       Processing_Time_ms: parseFloat(processingTimeMs.toFixed(2)),
-      Matched_Keywords: tokens.slice(0, 2).join(', ')
+      Matched_Keywords: tokens.slice(0, 2).join(", ")
     });
 
-    const isFastComputer = deviceProfiles[i % deviceProfiles.length].includes('Intel Core i7') || deviceProfiles[i % deviceProfiles.length].includes('M2');
-    
+    const isFastComputer = deviceProfiles[i % deviceProfiles.length].includes("Intel Core i7") || deviceProfiles[i % deviceProfiles.length].includes("M2");
+
     performanceLogs.push({
       Execution_ID: `EXEC-${Date.now()}-${i}`,
       Report_ID: c.id,
@@ -149,10 +149,10 @@ async function run() {
 
     if (c.latitude && c.longitude) {
       pointsForClustering.push({
-        lat: c.latitude, 
-        lon: c.longitude, 
-        cat: originalCategory, 
-        id: c.id 
+        lat: c.latitude,
+        lon: c.longitude,
+        cat: originalCategory,
+        id: c.id
       });
     }
   }
@@ -169,17 +169,17 @@ async function run() {
 
   for (const [cat, pts] of Object.entries(ptsByCategory)) {
     // Thesis parameters
-    const eps = cat.includes('Public Safety') || cat.includes('Fire') ? 150 : 50; 
-    const minPts = cat.includes('Fire') || cat.includes('Hazard') ? 2 : 4;
-    
+    const eps = cat.includes("Public Safety") || cat.includes("Fire") ? 150 : 50;
+    const minPts = cat.includes("Fire") || cat.includes("Hazard") ? 2 : 4;
+
     const maxClusters = dbscan(pts, eps, minPts);
-    
+
     // Collect clusters
     for (let cid = 1; cid <= maxClusters; cid++) {
       const cPts = pts.filter(p => p.cluster === cid);
       if (cPts.length > 0) {
         spatialLogs.push({
-          Cluster_ID: `CLST-${cat.substring(0, 3).toUpperCase().replace(/\s/g,'-')}-${String(globalClusterCounter).padStart(4, '0')}`,
+          Cluster_ID: `CLST-${cat.substring(0, 3).toUpperCase().replace(/\s/g,"-")}-${String(globalClusterCounter).padStart(4, "0")}`,
           Category: cat,
           Core_Point_Count: cPts.length,
           Epsilon_Radius_Meters: eps,
@@ -195,31 +195,31 @@ async function run() {
   }
 
   const rootDir = __dirname;
-  const baseFolder = path.join(rootDir, '..', 'deliverable_files_v2');
-  const jsonFolder = path.join(baseFolder, 'json');
-  const excelFolder = path.join(baseFolder, 'excel');
+  const baseFolder = path.join(rootDir, "..", "deliverable_files_v2");
+  const jsonFolder = path.join(baseFolder, "json");
+  const excelFolder = path.join(baseFolder, "excel");
 
   if (!fs.existsSync(baseFolder)) fs.mkdirSync(baseFolder);
   if (!fs.existsSync(jsonFolder)) fs.mkdirSync(jsonFolder);
   if (!fs.existsSync(excelFolder)) fs.mkdirSync(excelFolder);
 
   // Write JSON
-  fs.writeFileSync(path.join(jsonFolder, 'semantic_ai_logs.json'), JSON.stringify(semanticLogs, null, 2));
-  fs.writeFileSync(path.join(jsonFolder, 'spatial_clustering_logs.json'), JSON.stringify(spatialLogs, null, 2));
-  fs.writeFileSync(path.join(jsonFolder, 'edge_ai_performance_logs.json'), JSON.stringify(performanceLogs, null, 2));
+  fs.writeFileSync(path.join(jsonFolder, "semantic_ai_logs.json"), JSON.stringify(semanticLogs, null, 2));
+  fs.writeFileSync(path.join(jsonFolder, "spatial_clustering_logs.json"), JSON.stringify(spatialLogs, null, 2));
+  fs.writeFileSync(path.join(jsonFolder, "edge_ai_performance_logs.json"), JSON.stringify(performanceLogs, null, 2));
 
   // Write Excel
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Log Generator';
+  workbook.creator = "Log Generator";
   workbook.created = new Date();
 
   function addDataToSheet(sheetName, dataArray) {
     if (!dataArray || dataArray.length === 0) return;
     const worksheet = workbook.addWorksheet(sheetName);
-    
+
     const headers = Object.keys(dataArray[0]);
     worksheet.columns = headers.map(header => ({
-      header: header,
+      header,
       key: header,
       width: 25
     }));
@@ -231,12 +231,12 @@ async function run() {
     worksheet.getRow(1).font = { bold: true };
   }
 
-  addDataToSheet('Semantic_AI_Logs', semanticLogs);
-  addDataToSheet('Spatial_Clustering', spatialLogs);
-  addDataToSheet('Edge_AI_Performance', performanceLogs);
+  addDataToSheet("Semantic_AI_Logs", semanticLogs);
+  addDataToSheet("Spatial_Clustering", spatialLogs);
+  addDataToSheet("Edge_AI_Performance", performanceLogs);
 
-  await workbook.xlsx.writeFile(path.join(excelFolder, 'deliverable_logs_v2.xlsx'));
-  console.log('Successfully generated new V2 logs!');
+  await workbook.xlsx.writeFile(path.join(excelFolder, "deliverable_logs_v2.xlsx"));
+  console.log("Successfully generated new V2 logs!");
 }
 
 run().catch(console.error);

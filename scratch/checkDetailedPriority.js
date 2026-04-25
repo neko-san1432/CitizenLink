@@ -10,10 +10,10 @@ async function check() {
     return;
   }
 
-  const unassigned = data.filter(c => 
+  const unassigned = data.filter(c =>
     ["new", "pending", "unassigned"].includes(c.workflow_status?.toLowerCase())
   );
-  
+
   const highUnassigned = unassigned.filter(c => c.priority === "high").length;
   const highActive = data.filter(c => c.workflow_status !== "completed" && c.priority === "high").length;
 

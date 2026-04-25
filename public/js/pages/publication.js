@@ -7,218 +7,218 @@ import showMessage from "../components/toast.js";
 let currentType = "news";
 let currentList = [];
 let filters = {
-    search: "",
-    startDate: "",
-    endDate: "",
-    category: "",
-    sort: "newest"
+  search: "",
+  startDate: "",
+  endDate: "",
+  category: "",
+  sort: "newest"
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    initTabs();
-    initFilters();
-    initModal();
-    initListInteractions();
-    updateBranding();
-    loadContent("news");
-    checkPermissions();
+  initTabs();
+  initFilters();
+  initModal();
+  initListInteractions();
+  updateBranding();
+  loadContent("news");
+  checkPermissions();
 });
 
 function updateBranding() {
-    const titleEl = document.querySelector(".dashboard-header-section h1");
-    const subEl = document.querySelector(".dashboard-header-section p");
-    const path = window.location.pathname;
+  const titleEl = document.querySelector(".dashboard-header-section h1");
+  const subEl = document.querySelector(".dashboard-header-section p");
+  const path = window.location.pathname;
 
-    if (path.includes("/publish")) {
-        if (titleEl) titleEl.innerHTML = "📑 Public Bulletins";
-        if (subEl) subEl.innerHTML = "Broadcast alerts, news, and events to the community.";
-        document.title = "Public Bulletins | DRIMS Intelligence";
-    } else {
-        if (titleEl) titleEl.innerHTML = "📑 Public Bulletins";
-        if (subEl) subEl.innerHTML = "Browse official community announcements and upcoming events.";
-        document.title = "Public Bulletins | DRIMS Intelligence";
-    }
+  if (path.includes("/publish")) {
+    if (titleEl) titleEl.innerHTML = "📑 Public Bulletins";
+    if (subEl) subEl.innerHTML = "Broadcast alerts, news, and events to the community.";
+    document.title = "Public Bulletins | DRIMS Intelligence";
+  } else {
+    if (titleEl) titleEl.innerHTML = "📑 Public Bulletins";
+    if (subEl) subEl.innerHTML = "Browse official community announcements and upcoming events.";
+    document.title = "Public Bulletins | DRIMS Intelligence";
+  }
 }
 
 function initListInteractions() {
-    const list = document.getElementById("pub-list");
-    if (!list) return;
+  const list = document.getElementById("pub-list");
+  if (!list) return;
 
-    list.addEventListener("click", (e) => {
-        const card = e.target.closest(".pub-card");
-        if (!card) return;
+  list.addEventListener("click", (e) => {
+    const card = e.target.closest(".pub-card");
+    if (!card) return;
 
-        list.querySelectorAll(".pub-card").forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
-        
-        const index = card.dataset.idx;
-        if (currentList[index]) {
-            renderDetail(currentList[index]);
-        }
-    });
+    list.querySelectorAll(".pub-card").forEach(c => c.classList.remove("selected"));
+    card.classList.add("selected");
+
+    const index = card.dataset.idx;
+    if (currentList[index]) {
+      renderDetail(currentList[index]);
+    }
+  });
 }
 
 function initTabs() {
-    document.querySelectorAll(".pub-tab").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".pub-tab").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            const type = btn.dataset.type;
-            currentType = type;
-            loadContent(type);
-        });
+  document.querySelectorAll(".pub-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".pub-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const {type} = btn.dataset;
+      currentType = type;
+      loadContent(type);
     });
+  });
 }
 
 function initFilters() {
-    const searchInput = document.getElementById("search-input");
-    const startDate = document.getElementById("filter-start-date");
-    const endDate = document.getElementById("filter-end-date");
-    const category = document.getElementById("filter-category");
-    const sort = document.getElementById("filter-sort");
-    const clearBtn = document.getElementById("btn-clear-filters");
+  const searchInput = document.getElementById("search-input");
+  const startDate = document.getElementById("filter-start-date");
+  const endDate = document.getElementById("filter-end-date");
+  const category = document.getElementById("filter-category");
+  const sort = document.getElementById("filter-sort");
+  const clearBtn = document.getElementById("btn-clear-filters");
 
-    let debounceTimer;
-    searchInput?.addEventListener("input", (e) => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            filters.search = e.target.value;
-            loadContent(currentType);
-        }, 300);
-    });
+  let debounceTimer;
+  searchInput?.addEventListener("input", (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      filters.search = e.target.value;
+      loadContent(currentType);
+    }, 300);
+  });
 
-    [startDate, endDate, category, sort].forEach(el => {
-        el?.addEventListener("change", () => {
-            filters.startDate = startDate.value;
-            filters.endDate = endDate.value;
-            filters.category = category.value;
-            filters.sort = sort.value;
-            loadContent(currentType);
-        });
+  [startDate, endDate, category, sort].forEach(el => {
+    el?.addEventListener("change", () => {
+      filters.startDate = startDate.value;
+      filters.endDate = endDate.value;
+      filters.category = category.value;
+      filters.sort = sort.value;
+      loadContent(currentType);
     });
+  });
 
-    clearBtn?.addEventListener("click", () => {
-        searchInput.value = "";
-        startDate.value = "";
-        endDate.value = "";
-        category.value = "";
-        sort.value = "newest";
-        filters = { search: "", startDate: "", endDate: "", category: "", sort: "newest" };
-        loadContent(currentType);
-    });
+  clearBtn?.addEventListener("click", () => {
+    searchInput.value = "";
+    startDate.value = "";
+    endDate.value = "";
+    category.value = "";
+    sort.value = "newest";
+    filters = { search: "", startDate: "", endDate: "", category: "", sort: "newest" };
+    loadContent(currentType);
+  });
 }
 
 function initModal() {
-    const modal = document.getElementById("modal-create");
-    const btnCreate = document.getElementById("btn-create");
-    const btnCancel = document.getElementById("btn-cancel");
-    const typeSelect = document.getElementById("pub-type");
-    const eventGroup = document.getElementById("event-date-group");
-    const form = document.getElementById("form-publish");
+  const modal = document.getElementById("modal-create");
+  const btnCreate = document.getElementById("btn-create");
+  const btnCancel = document.getElementById("btn-cancel");
+  const typeSelect = document.getElementById("pub-type");
+  const eventGroup = document.getElementById("event-date-group");
+  const form = document.getElementById("form-publish");
 
-    btnCreate?.addEventListener("click", () => modal.style.display = "flex");
-    btnCancel?.addEventListener("click", () => modal.style.display = "none");
+  btnCreate?.addEventListener("click", () => modal.style.display = "flex");
+  btnCancel?.addEventListener("click", () => modal.style.display = "none");
 
-    typeSelect?.addEventListener("change", (e) => {
-        eventGroup.style.display = e.target.value === "events" ? "block" : "none";
-    });
+  typeSelect?.addEventListener("change", (e) => {
+    eventGroup.style.display = e.target.value === "events" ? "block" : "none";
+  });
 
-    form?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        await handlePublish();
-    });
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await handlePublish();
+  });
 }
 
 async function handlePublish() {
-    const type = document.getElementById("pub-type").value;
-    const title = document.getElementById("pub-title").value;
-    const content = document.getElementById("pub-content").value;
-    const date = document.getElementById("pub-event-date").value;
+  const type = document.getElementById("pub-type").value;
+  const title = document.getElementById("pub-title").value;
+  const content = document.getElementById("pub-content").value;
+  const date = document.getElementById("pub-event-date").value;
 
-    const payload = {
-        title,
-        content,
-        status: "published"
-    };
+  const payload = {
+    title,
+    content,
+    status: "published"
+  };
 
-    if (type === "events") {
-        payload.event_date = date || new Date().toISOString();
-        payload.description = content;
+  if (type === "events") {
+    payload.event_date = date || new Date().toISOString();
+    payload.description = content;
+  }
+
+  if (type === "notices") payload.status = "active";
+
+  try {
+    const res = await fetch(`/api/content/${type}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": getCsrfToken()
+      },
+      body: JSON.stringify(payload),
+      credentials: "include"
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      showMessage("success", "Bulletin published successfully!");
+      document.getElementById("modal-create").style.display = "none";
+      document.getElementById("form-publish").reset();
+      loadContent(type);
+    } else {
+      showMessage("error", result.error || "Failed to publish");
     }
-
-    if (type === "notices") payload.status = "active";
-
-    try {
-        const res = await fetch(`/api/content/${type}`, {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "X-CSRF-Token": getCsrfToken() 
-            },
-            body: JSON.stringify(payload),
-            credentials: "include"
-        });
-
-        const result = await res.json();
-        if (result.success) {
-            showMessage("success", "Bulletin published successfully!");
-            document.getElementById("modal-create").style.display = "none";
-            document.getElementById("form-publish").reset();
-            loadContent(type);
-        } else {
-            showMessage("error", result.error || "Failed to publish");
-        }
-    } catch (err) {
-        showMessage("error", "Network intelligence error");
-    }
+  } catch (err) {
+    showMessage("error", "Network intelligence error");
+  }
 }
 
 async function loadContent(type) {
-    const list = document.getElementById("pub-list");
-    const detail = document.getElementById("pub-detail");
-    
-    list.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b;">Syncing content...</div>`;
+  const list = document.getElementById("pub-list");
+  const detail = document.getElementById("pub-detail");
 
-    try {
-        const params = new URLSearchParams(filters);
-        const base = type === "events" ? "/api/content/events" : `/api/content/${type}`;
-        const res = await fetch(`${base}?status=${type === "notices" ? "active" : "published"}&${params.toString()}`);
-        const json = await res.json();
-        
-        currentList = json.data || [];
-        
-        if (currentList.length === 0) {
-            list.innerHTML = `<div style="padding: 40px; text-align: center; color: #64748b;">No ${type} found matching filters.</div>`;
-            renderEmptyDetail();
-            return;
-        }
+  list.innerHTML = `<div style="padding: 20px; text-align: center; color: #64748b;">Syncing content...</div>`;
 
-        const iconMap = {
-            "Infrastructure": { icon: "A", bg: "#2563eb", prefix: "INFRA" }, 
-            "Public Safety": { icon: "S", bg: "#eab308", prefix: "SAFE" }, 
-            "Utilities": { icon: "U", bg: "#eab308", prefix: "UTIL" }, 
-            "Health": { icon: "H", bg: "#16a34a", prefix: "HLTH" }, 
-            "Environment": { icon: "E", bg: "#9333ea", prefix: "ENV" }, 
-            "Technology": { icon: "T", bg: "#0d9488", prefix: "TECH" }, 
-            "General": { icon: "G", bg: "#64748b", prefix: "GEN" }
-        };
+  try {
+    const params = new URLSearchParams(filters);
+    const base = type === "events" ? "/api/content/events" : `/api/content/${type}`;
+    const res = await fetch(`${base}?status=${type === "notices" ? "active" : "published"}&${params.toString()}`);
+    const json = await res.json();
 
-        const priorityColors = {
-            "Low": { color: "#60a5fa", border: "rgba(96, 165, 250, 0.4)", led: "led-blue" },
-            "Medium": { color: "#fbbf24", border: "rgba(251, 191, 36, 0.4)", led: "led-yellow" },
-            "High": { color: "#ef4444", border: "rgba(239, 68, 68, 0.4)", led: "led-red" },
-            "default": { color: "#94a3b8", border: "rgba(148, 163, 184, 0.4)", led: "led-gray" }
-        };
+    currentList = json.data || [];
 
-        list.innerHTML = `
+    if (currentList.length === 0) {
+      list.innerHTML = `<div style="padding: 40px; text-align: center; color: #64748b;">No ${type} found matching filters.</div>`;
+      renderEmptyDetail();
+      return;
+    }
+
+    const iconMap = {
+      "Infrastructure": { icon: "A", bg: "#2563eb", prefix: "INFRA" },
+      "Public Safety": { icon: "S", bg: "#eab308", prefix: "SAFE" },
+      "Utilities": { icon: "U", bg: "#eab308", prefix: "UTIL" },
+      "Health": { icon: "H", bg: "#16a34a", prefix: "HLTH" },
+      "Environment": { icon: "E", bg: "#9333ea", prefix: "ENV" },
+      "Technology": { icon: "T", bg: "#0d9488", prefix: "TECH" },
+      "General": { icon: "G", bg: "#64748b", prefix: "GEN" }
+    };
+
+    const priorityColors = {
+      "Low": { color: "#60a5fa", border: "rgba(96, 165, 250, 0.4)", led: "led-blue" },
+      "Medium": { color: "#fbbf24", border: "rgba(251, 191, 36, 0.4)", led: "led-yellow" },
+      "High": { color: "#ef4444", border: "rgba(239, 68, 68, 0.4)", led: "led-red" },
+      "default": { color: "#94a3b8", border: "rgba(148, 163, 184, 0.4)", led: "led-gray" }
+    };
+
+    list.innerHTML = `
             <div class="pub-list-container" style="display: flex; flex-direction: column; height: 100%; position: relative;">
                 <div class="pub-cards-scroll" style="flex: 1; overflow-y: auto; padding-right: 8px; padding-bottom: 70px;">
                     ${currentList.map((item, idx) => {
-                        const catInfo = iconMap[item.category] || iconMap[item.organizer] || iconMap["General"];
-                        const priority = item.priority || "Low";
-                        const pColor = priorityColors[priority] || priorityColors["default"];
-                        
-                        return `
+    const catInfo = iconMap[item.category] || iconMap[item.organizer] || iconMap["General"];
+    const priority = item.priority || "Low";
+    const pColor = priorityColors[priority] || priorityColors["default"];
+
+    return `
                             <div class="pub-card" data-idx="${idx}" style="display: flex; gap: 16px; align-items: center; padding: 16px; margin-bottom: 12px;">
                                 <div style="width: 44px; height: 44px; background: ${catInfo.bg}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3em; font-weight: 900; color: #fff; flex-shrink: 0; box-shadow: 0 0 15px ${catInfo.bg}44;">
                                     ${catInfo.icon}
@@ -229,7 +229,7 @@ async function loadContent(type) {
                                     </div>
                                     <div style="font-weight: 700; font-size: 0.95rem; color: #fff; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.title}</div>
                                     <div style="font-size: 0.75rem; color: #94a3b8; display: flex; gap: 6px; align-items: center; font-family: 'JetBrains Mono', monospace;">
-                                        <span>${new Date(item.published_at || item.created_at || item.event_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                                        <span>${new Date(item.published_at || item.created_at || item.event_date).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}</span>
                                     </div>
                                 </div>
                                 <div style="flex-shrink: 0; padding: 3px 8px; border: 1px solid ${pColor.border}; border-radius: 4px; color: ${pColor.color}; font-size: 0.7rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
@@ -237,7 +237,7 @@ async function loadContent(type) {
                                 </div>
                             </div>
                         `;
-                    }).join("")}
+  }).join("")}
                 </div>
                 <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 0 0 0; background: #020617; pointer-events: none;">
                     <button style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.75rem; pointer-events: auto; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 12px; color: #3b82f6; border-radius: 8px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
@@ -248,24 +248,24 @@ async function loadContent(type) {
                 </div>
             </div>
         `;
-    } catch (err) {
-        list.innerHTML = `<div style="color: #ef4444; padding: 20px;">Connection failure.</div>`;
-    }
+  } catch (err) {
+    list.innerHTML = `<div style="color: #ef4444; padding: 20px;">Connection failure.</div>`;
+  }
 }
 
 function renderDetail(item) {
-    const detail = document.getElementById("pub-detail");
-    const date = new Date(item.published_at || item.created_at || item.event_date).toLocaleDateString("en-US", {
-        month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"
-    });
-    
-    detail.innerHTML = `
+  const detail = document.getElementById("pub-detail");
+  const date = new Date(item.published_at || item.created_at || item.event_date).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+
+  detail.innerHTML = `
         <div style="animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; height: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <span class="tactical-badge" style="border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; background: rgba(255,255,255,0.03);">${currentType}</span>
                     <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; letter-spacing: 0.05em;">
-                        REF_ID: ${item.id || 'N/A'} // PUB_DATE: ${date.toUpperCase()}
+                        REF_ID: ${item.id || "N/A"} // PUB_DATE: ${date.toUpperCase()}
                     </div>
                 </div>
                 <div class="tactical-badge" style="border: 1px solid rgba(96, 165, 250, 0.4); color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 6px 16px;">
@@ -298,13 +298,13 @@ function renderDetail(item) {
                     <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
                         Start Date
                     </div>
-                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">${new Date(item.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</div>
+                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">${new Date(item.created_at).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
                     <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
                         End Date
                     </div>
-                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">${item.event_date ? new Date(item.event_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : "PERMANENT"}</div>
+                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">${item.event_date ? new Date(item.event_date).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"}) : "PERMANENT"}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
                     <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 0.7rem; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase;">
@@ -361,7 +361,7 @@ function renderDetail(item) {
 }
 
 function renderEmptyDetail() {
-    document.getElementById("pub-detail").innerHTML = `
+  document.getElementById("pub-detail").innerHTML = `
         <div style="text-align: center; margin-top: 100px; color: #64748b;">
             <div style="font-size: 3em; margin-bottom: 20px;">📄</div>
             <h3>Select a bulletin to preview</h3>
@@ -371,21 +371,21 @@ function renderEmptyDetail() {
 }
 
 function getCsrfToken() {
-    return document.cookie.split("; ").find(r => r.startsWith("XSRF-TOKEN="))?.split("=")[1] || "";
+  return document.cookie.split("; ").find(r => r.startsWith("XSRF-TOKEN="))?.split("=")[1] || "";
 }
 
 async function checkPermissions() {
-    try {
-        const res = await fetch("/api/user/role", { credentials: "include" });
-        const json = await res.json();
-        const role = String(json?.data?.role || "").toLowerCase();
-        const path = window.location.pathname;
-        
-        const btn = document.getElementById("btn-create");
-        // Only hide create button for citizens; allow LGU to see it on the unified Bulletins page
-        if (role === "citizen") {
-            if (btn) btn.style.display = "none";
-        }
-    } catch (e) {}
+  try {
+    const res = await fetch("/api/user/role", { credentials: "include" });
+    const json = await res.json();
+    const role = String(json?.data?.role || "").toLowerCase();
+    const path = window.location.pathname;
+
+    const btn = document.getElementById("btn-create");
+    // Only hide create button for citizens; allow LGU to see it on the unified Bulletins page
+    if (role === "citizen") {
+      if (btn) btn.style.display = "none";
+    }
+  } catch (e) {}
 }
 

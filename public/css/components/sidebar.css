@@ -60,15 +60,15 @@ html.dark {
 
 /* Sidebar Container */
 #sidebar {
-  position: fixed !important;
-  left: calc(-1 * var(--sidebar-width-expanded));
-  top: 0;
-  bottom: 0;
   width: var(--sidebar-width-expanded);
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
   z-index: 9999 !important;
   /* Ensure sidebar is above everything */
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
   background: var(--sidebar-bg, #ffffff) !important;
@@ -113,10 +113,25 @@ html.dark {
     display: none !important;
   }
 
+  /* Force menu groups to deflate when sidebar is deflated */
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .menu-children {
+    max-height: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Anchor icons to the left even when deflated */
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-menu a,
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .menu-header {
+    justify-content: flex-start !important;
+    padding-left: 12px !important; /* (72px width - 40px bg - 8px margins) / 2 + margin = 16px total offset */
+    margin-left: 4px !important;
+    margin-right: 4px !important;
+  }
+
   
   body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .sidebar-menu a {
-    justify-content: center !important;
-    padding: 12px !important;
+    /* Padding is handled above to ensure left alignment */
   }
   
   body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .menu-icon {
@@ -125,6 +140,16 @@ html.dark {
 
   body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):hover .sidebar-backdrop {
     display: none !important;
+  }
+
+  /* When collapsed, highlight the header if a child is active */
+  body:not(.heatmap-layout) #sidebar:not(.heatmap-sidebar):not(:hover) .menu-group.child-active .menu-header {
+    background: var(--sidebar-active) !important;
+    color: white !important;
+    border-radius: 8px;
+    margin: 0 4px;
+    width: auto;
+    justify-content: center;
   }
 }
 
@@ -156,6 +181,7 @@ html.dark {
   min-height: var(--sidebar-brand-height) !important;
   background: var(--sidebar-brand-bg, #f8fafc) !important;
   border-bottom: none !important;
+  flex-shrink: 0 !important;
 }
 
 .brand-logo {
@@ -262,18 +288,41 @@ html.dark {
 
 /* Sidebar Menu */
 .sidebar-menu {
-  flex: 1 !important;
-  padding: 12px !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  padding: 8px 8px 120px 8px !important; /* Added 120px bottom padding to prevent overlap with footer */
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
+  gap: 2px !important; /* Reduced from 4px */
+  overflow-y: auto !important; /* BACK TO AUTO */
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent !important;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 6px !important;
+  display: block !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 20px !important;
+}
+
+html.dark .sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 .sidebar-menu a {
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
-  padding: 12px 16px !important;
+  padding: 10px 12px !important; 
   color: var(--sidebar-text, #1f2937) !important;
   text-decoration: none !important;
   font-size: 14px !important;
@@ -324,11 +373,16 @@ html.dark {
   height: 20px !important;
 }
 
+.menu-children {
+  max-height: 2000px !important;
+}
+
 /* Sidebar Bottom */
 .sidebar-bottom {
-  padding: 16px 20px !important;
+  padding: 8px 12px !important;
   background: var(--sidebar-footer-bg, #f8fafc) !important;
   border-top: 1px solid var(--sidebar-border, #e5e7eb) !important;
+  flex-shrink: 0 !important;
 }
 
 /* Theme Toggle */
@@ -346,9 +400,32 @@ html.dark {
   transition: all 0.2s ease;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover, .role-switcher:hover {
   background: var(--sidebar-hover);
   transform: scale(1.02);
+}
+
+.role-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.role-switcher-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sidebar-text);
 }
 
 .theme-toggle-label {
@@ -478,7 +555,7 @@ html.dark .theme-toggle:hover {
   color: var(--sidebar-text) !important;
 }
 
-html.dark .theme-toggle-label {
+html.dark .theme-toggle-label, html.dark .role-switcher-label {
   color: var(--sidebar-text) !important;
 }
 
@@ -536,8 +613,9 @@ html.dark .logout-link:hover {
 .menu-group {
   margin: 4px 0;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible !important; /* Changed to visible to allow pushing */
   transition: background-color 0.2s ease;
+  height: auto !important;
 }
 
 /* Header for the group (Analysis, etc.) */
@@ -545,7 +623,7 @@ html.dark .logout-link:hover {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 12px 16px !important;
+  padding: 10px 16px !important; /* Reduced vertical from 12px */
   color: var(--sidebar-text, #1f2937) !important;
   cursor: pointer !important;
   user-select: none;
@@ -555,8 +633,22 @@ html.dark .logout-link:hover {
   transition: all 0.2s ease;
 }
 
-.menu-header:hover {
+.menu-header:hover, .menu-header.child-active {
   background: var(--sidebar-hover, #f3f4f6) !important;
+}
+
+.menu-header.child-active {
+  color: var(--sidebar-active, #3b82f6) !important;
+}
+
+.menu-header.no-anim {
+  transition: none !important;
+  transform: none !important;
+}
+
+.menu-header.no-anim:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .menu-header-content {
@@ -587,9 +679,17 @@ html.dark .logout-link:hover {
 }
 
 .menu-group.expanded .menu-children {
-  max-height: 500px;
-  /* Arbitrary large height for animation */
-  padding-bottom: 8px;
+  max-height: 2000px !important;
+  padding-bottom: 12px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.menu-group:not(.expanded) .menu-children {
+  max-height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 /* Child Links */

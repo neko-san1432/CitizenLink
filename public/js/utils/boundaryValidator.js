@@ -26,10 +26,10 @@ async function loadDigosBoundary() {
     try {
       let response;
 
-      // 1. Try to use barangay boundaries from /api/boundaries (Visual Source)
+      // 1. Try to use barangay boundaries from /api/public/boundaries (Visual Source)
       // This ensures validation matches exactly what the user sees
       try {
-        response = await fetch("/api/boundaries");
+        response = await fetch("/api/public/boundaries");
         if (response.ok) {
           const brgyData = await response.json();
           if (Array.isArray(brgyData) && brgyData.length > 0) {
@@ -216,7 +216,7 @@ async function isWithinDigosBoundary(latitude, longitude) {
 
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
 
-  // Handle barangay boundaries format (from /api/boundaries)
+  // Handle barangay boundaries format (from /api/public/boundaries)
   let isValid = false;
 
   if (boundary.type === "barangay_boundaries" && boundary.barangays) {

@@ -89,9 +89,6 @@
                                     </select>
                                     <i class="fas fa-chevron-down"></i>
                                 </div>
-                                <button class="px-5 py-2 btn-filter text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-all border border-blue-400/30">
-                                    <i class="fas fa-filter text-xs"></i> Filter
-                                </button>
                             </div>
                         </div>
 
@@ -371,7 +368,7 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Active Categories</p>
                                         <h3 class="data-monospace" id="uniqueCategoryCount">0</h3>
-                                        <p class="trend-indicator text-gray-500">
+                                        <p class="trend-indicator text-gray-500" id="catCountTrend">
                                             <i class="fas fa-minus"></i> No change
                                         </p>
                                     </div>
@@ -389,8 +386,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Top Category</p>
                                         <h3 class="text-lg font-bold text-white leading-tight truncate max-w-[120px]" id="topCategoryName">Infrastructure</h3>
-                                        <p class="trend-indicator text-emerald-400">
-                                            <i class="fas fa-caret-up"></i> 18% vs last 30d
+                                        <p class="trend-indicator text-emerald-400" id="topCatTrend">
+                                            <i class="fas fa-caret-up"></i> 0% vs last 30d
                                         </p>
                                     </div>
                                 </div>
@@ -407,8 +404,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">NLP Confidence</p>
                                         <h3 class="data-monospace" id="nlpAccuracy">50%</h3>
-                                        <p class="trend-indicator text-orange-400">
-                                            <i class="fas fa-caret-up"></i> 5% vs last 30d
+                                        <p class="trend-indicator text-orange-400" id="nlpAccuracyTrend">
+                                            <i class="fas fa-caret-up"></i> 0% vs last 30d
                                         </p>
                                     </div>
                                 </div>
@@ -425,8 +422,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">AI Reclassified</p>
                                         <h3 class="data-monospace" id="reclassifiedCount">16</h3>
-                                        <p class="trend-indicator text-purple-400">
-                                            <i class="fas fa-caret-up"></i> 3% vs last 30d
+                                        <p class="trend-indicator text-purple-400" id="reclassifiedTrend">
+                                            <i class="fas fa-caret-up"></i> 0% vs last 30d
                                         </p>
                                     </div>
                                 </div>
@@ -672,8 +669,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Figurative Detected</p>
                                         <h3 class="data-monospace" id="totalMetaphors">4</h3>
-                                        <p class="trend-indicator text-emerald-400">
-                                            <i class="fas fa-caret-down"></i> 11% vs last 30d
+                                        <p class="trend-indicator text-emerald-400" id="figurativeTrend">
+                                            <i class="fas fa-caret-down"></i> 0%
                                         </p>
                                     </div>
                                 </div>
@@ -690,8 +687,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Conditional Reports</p>
                                         <h3 class="data-monospace" id="totalSpeculation">4</h3>
-                                        <p class="trend-indicator text-emerald-400">
-                                            <i class="fas fa-caret-down"></i> 20% vs last 30d
+                                        <p class="trend-indicator text-emerald-400" id="speculationTrend">
+                                            <i class="fas fa-caret-down"></i> 0%
                                         </p>
                                     </div>
                                 </div>
@@ -708,8 +705,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mismatches Found</p>
                                         <h3 class="data-monospace" id="totalMismatch">25</h3>
-                                        <p class="trend-indicator text-red-400">
-                                            <i class="fas fa-caret-up"></i> 8% vs last 30d
+                                        <p class="trend-indicator text-red-400" id="mismatchTrend">
+                                            <i class="fas fa-caret-up"></i> 0%
                                         </p>
                                     </div>
                                 </div>
@@ -726,8 +723,8 @@
                                     <div class="summary-card-metrics">
                                         <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Edge Case Rate</p>
                                         <h3 class="data-monospace" id="edgeCaseRate">11%</h3>
-                                        <p class="trend-indicator text-emerald-400">
-                                            <i class="fas fa-caret-down"></i> 3% vs last 30d
+                                        <p class="trend-indicator text-emerald-400" id="edgeCaseTrend">
+                                            <i class="fas fa-caret-down"></i> 0%
                                         </p>
                                     </div>
                                 </div>

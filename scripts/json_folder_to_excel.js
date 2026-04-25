@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const xlsx = require('xlsx');
+const fs = require("fs");
+const path = require("path");
+const xlsx = require("xlsx");
 
 function getArgValue(args, name, alias) {
   const idx = args.findIndex(a => a === name || (alias && a === alias));
@@ -13,21 +13,21 @@ function ensureDir(dirPath) {
 }
 
 function isPlainObject(value) {
-  return value && typeof value === 'object' && !Array.isArray(value);
+  return value && typeof value === "object" && !Array.isArray(value);
 }
 
 function normalizeCell(value) {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return "";
   if (Array.isArray(value)) {
     return value
       .map(v => {
-        if (v === null || v === undefined) return '';
-        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
+        if (v === null || v === undefined) return "";
+        if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") return String(v);
         return JSON.stringify(v);
       })
-      .join(', ');
+      .join(", ");
   }
-  if (typeof value === 'object') return JSON.stringify(value);
+  if (typeof value === "object") return JSON.stringify(value);
   return value;
 }
 
@@ -43,8 +43,8 @@ function normalizeRecords(records) {
 }
 
 function sanitizeSheetName(name, usedNames) {
-  const raw = String(name || 'Sheet');
-  const cleaned = raw.replace(/[\\/?*\[\]:]/g, '_').slice(0, 31) || 'Sheet';
+  const raw = String(name || "Sheet");
+  const cleaned = raw.replace(/[\\/?*\[\]:]/g, "_").slice(0, 31) || "Sheet";
 
   let finalName = cleaned;
   let counter = 2;
@@ -61,9 +61,9 @@ function isPrimitive(value) {
   return (
     value === null ||
     value === undefined ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean'
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
   );
 }
 
@@ -83,22 +83,22 @@ function collectArraysDeep(value, pathParts = [], out = []) {
 
 function flattenToKeyValueRows(value, prefixParts = [], rows = []) {
   if (Array.isArray(value)) {
-    const key = prefixParts.join('.');
-    rows.push({ Key: key || 'data', Value: '(see sheet)' });
+    const key = prefixParts.join(".");
+    rows.push({ Key: key || "data", Value: "(see sheet)" });
     return rows;
   }
 
   if (isPrimitive(value)) {
-    const key = prefixParts.join('.');
-    rows.push({ Key: key || 'data', Value: normalizeCell(value) });
+    const key = prefixParts.join(".");
+    rows.push({ Key: key || "data", Value: normalizeCell(value) });
     return rows;
   }
 
   if (isPlainObject(value)) {
     const entries = Object.entries(value);
     if (entries.length === 0) {
-      const key = prefixParts.join('.');
-      rows.push({ Key: key || 'data', Value: '{}' });
+      const key = prefixParts.join(".");
+      rows.push({ Key: key || "data", Value: "{}" });
       return rows;
     }
 
@@ -108,8 +108,8 @@ function flattenToKeyValueRows(value, prefixParts = [], rows = []) {
     return rows;
   }
 
-  const key = prefixParts.join('.');
-  rows.push({ Key: key || 'data', Value: normalizeCell(value) });
+  const key = prefixParts.join(".");
+  rows.push({ Key: key || "data", Value: normalizeCell(value) });
   return rows;
 }
 
@@ -119,7 +119,7 @@ function appendDataAsSheets(workbook, data) {
   if (Array.isArray(data)) {
     const rows = normalizeRecords(data);
     const sheet = xlsx.utils.json_to_sheet(rows);
-    xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName('data', usedNames));
+    xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName("data", usedNames));
     return;
   }
 
@@ -127,7 +127,7 @@ function appendDataAsSheets(workbook, data) {
     // 1) Append any arrays found anywhere in the object tree as their own sheets
     const arrays = collectArraysDeep(data);
     for (const arr of arrays) {
-      const name = arr.pathParts.length ? arr.pathParts.join('.') : 'data';
+      const name = arr.pathParts.length ? arr.pathParts.join(".") : "data";
       const rows = normalizeRecords(arr.value);
       const sheet = xlsx.utils.json_to_sheet(rows);
       xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName(name, usedNames));
@@ -136,7 +136,7 @@ function appendDataAsSheets(workbook, data) {
     // 1.5) If the top-level object has named sections (common in benchmark summaries),
     // export them as separate tables for readability.
     // Example: { adaptive: {...}, fixed: {...} }
-    const sectionKeys = ['adaptive', 'fixed', 'dataset', 'delta', 'interpretation'];
+    const sectionKeys = ["adaptive", "fixed", "dataset", "delta", "interpretation"];
     for (const key of sectionKeys) {
       if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
       const section = data[key];
@@ -149,17 +149,17 @@ function appendDataAsSheets(workbook, data) {
     // 2) Append a key/value summary sheet for all non-array content
     const kvRows = flattenToKeyValueRows(data);
     const sheet = xlsx.utils.json_to_sheet(kvRows);
-    xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName('summary', usedNames));
+    xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName("summary", usedNames));
     return;
   }
 
   // Primitive top-level JSON
   const sheet = xlsx.utils.json_to_sheet([{ value: normalizeCell(data) }]);
-  xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName('data', usedNames));
+  xlsx.utils.book_append_sheet(workbook, sheet, sanitizeSheetName("data", usedNames));
 }
 
 function convertJsonFileToXlsx(jsonPath, outputDir) {
-  const raw = fs.readFileSync(jsonPath, 'utf8');
+  const raw = fs.readFileSync(jsonPath, "utf8");
   const data = JSON.parse(raw);
 
   const workbook = xlsx.utils.book_new();
@@ -174,16 +174,16 @@ function convertJsonFileToXlsx(jsonPath, outputDir) {
 
 function main() {
   const args = process.argv.slice(2);
-  const inputDirArg = getArgValue(args, '--input', '-i');
-  const outputDirArg = getArgValue(args, '--output', '-o');
+  const inputDirArg = getArgValue(args, "--input", "-i");
+  const outputDirArg = getArgValue(args, "--output", "-o");
 
   const inputDir = inputDirArg
     ? path.resolve(process.cwd(), inputDirArg)
-    : path.join(__dirname, '..', 'deliverable_files_v2', 'json');
+    : path.join(__dirname, "..", "deliverable_files_v2", "json");
 
   const outputDir = outputDirArg
     ? path.resolve(process.cwd(), outputDirArg)
-    : path.join(__dirname, '..', 'deliverable_files_v2', 'excel');
+    : path.join(__dirname, "..", "deliverable_files_v2", "excel");
 
   if (!fs.existsSync(inputDir)) {
     console.error(`Input folder not found: ${inputDir}`);
@@ -195,7 +195,7 @@ function main() {
 
   const jsonFiles = fs
     .readdirSync(inputDir)
-    .filter(f => f.toLowerCase().endsWith('.json'))
+    .filter(f => f.toLowerCase().endsWith(".json"))
     .map(f => path.join(inputDir, f));
 
   if (jsonFiles.length === 0) {

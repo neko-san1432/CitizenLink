@@ -1314,7 +1314,7 @@ export class complaintDetails {
       return this.boundaryData;
     }
 
-    const response = await fetch("/api/boundaries");
+    const response = await fetch("/api/public/boundaries");
     if (!response.ok) {
       throw new Error("Failed to load Digos City boundary data.");
     }
@@ -1461,7 +1461,7 @@ export class complaintDetails {
 
         // Load and display Digos City boundaries in modal
         try {
-          const boundaryResponse = await fetch("/api/boundaries");
+          const boundaryResponse = await fetch("/api/public/boundaries");
           if (boundaryResponse.ok) {
             const brgyData = await boundaryResponse.json();
             if (Array.isArray(brgyData)) {

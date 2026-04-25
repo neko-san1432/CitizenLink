@@ -3,16 +3,143 @@
 import showMessage from "../components/toast.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Wait for Sidebar/Auth
   setTimeout(initPage, 100);
 });
 
+function initButtonHandlers() {
+  const returnDashboardBtn = document.getElementById("return-dashboard-btn");
+  if (returnDashboardBtn) {
+    returnDashboardBtn.addEventListener("click", () => {
+      window.location.href = "/lgu/dashboard";
+    });
+  }
+
+  const mapFullscreenBtn = document.getElementById("map-fullscreen-btn");
+  if (mapFullscreenBtn) {
+    mapFullscreenBtn.addEventListener("click", () => {
+      const mapContainer = document.getElementById("location-map");
+      if (mapContainer) {
+        mapContainer.classList.toggle("fullscreen-map");
+        if (mapContainer.classList.contains("fullscreen-map")) {
+          mapContainer.style.height = "100vh";
+          mapContainer.style.width = "100%";
+          mapContainer.style.position = "fixed";
+          mapContainer.style.top = "0";
+          mapContainer.style.left = "0";
+          mapContainer.style.zIndex = "10000";
+          mapFullscreenBtn.textContent = "Exit Fullscreen";
+        } else {
+          mapContainer.style.height = "250px";
+          mapContainer.style.width = "100%";
+          mapContainer.style.position = "";
+          mapContainer.style.top = "";
+          mapContainer.style.left = "";
+          mapContainer.style.zIndex = "";
+          mapFullscreenBtn.textContent = "Fullscreen";
+        }
+      }
+    });
+  }
+
+  const toggleBoundaryBtn = document.getElementById("toggle-boundary-btn");
+  if (toggleBoundaryBtn) {
+    toggleBoundaryBtn.addEventListener("click", () => {
+      if (window.mapBoundaryLayer) {
+        const isVisible = window.mapBoundaryLayer.getVisible();
+        window.mapBoundaryLayer.setVisible(!isVisible);
+        toggleBoundaryBtn.textContent = isVisible ? "Show Bounds" : "Hide Bounds";
+      }
+    });
+  }
+
+  const duplicateBtn = document.getElementById("duplicate-btn");
+  if (duplicateBtn) {
+    duplicateBtn.addEventListener("click", () => {
+      const duplicateModal = document.getElementById("duplicate-modal");
+      if (duplicateModal) duplicateModal.classList.add("active");
+      loadMasterComplaints();
+    });
+  }
+
+  const relatedBtn = document.getElementById("related-btn");
+  if (relatedBtn) {
+    relatedBtn.addEventListener("click", () => {
+      showMessage("info", "Link Related feature coming soon");
+    });
+  }
+
+  const uniqueBtn = document.getElementById("unique-btn");
+  if (uniqueBtn) {
+    uniqueBtn.addEventListener("click", async () => {
+      if (confirm("Mark this complaint as unique (not a duplicate)?")) {
+        try {
+          const response = await fetch(`/api/complaints/${window.currentComplaintId}/mark-unique`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+          const res = await response.json();
+          if (res.success) {
+            showMessage("success", "Complaint marked as unique");
+            uniqueBtn.style.display = "none";
+          } else {
+            showMessage("error", res.message || "Failed to mark as unique");
+          }
+        } catch (err) {
+          showMessage("error", "Error marking as unique");
+        }
+      }
+    });
+  }
+
+  const cancelDuplicateBtn = document.getElementById("cancel-duplicate-btn");
+  if (cancelDuplicateBtn) {
+    cancelDuplicateBtn.addEventListener("click", () => {
+      const duplicateModal = document.getElementById("duplicate-modal");
+      if (duplicateModal) duplicateModal.classList.remove("active");
+    });
+  }
+
+  const closeDuplicateModal = document.getElementById("close-duplicate-modal");
+  if (closeDuplicateModal) {
+    closeDuplicateModal.addEventListener("click", () => {
+      const duplicateModal = document.getElementById("duplicate-modal");
+      if (duplicateModal) duplicateModal.classList.remove("active");
+    });
+  }
+}
+
+async function loadMasterComplaints() {
+  const masterSelect = document.getElementById("master-complaint");
+  if (!masterSelect) return;
+
+  try {
+    const response = await fetch("/api/complaints?limit=100&status=verified");
+    const res = await response.json();
+    if (res.success && res.data) {
+      masterSelect.innerHTML = '<option value="">Select master complaint...</option>';
+      res.data.forEach(complaint => {
+        if (complaint.id !== window.currentComplaintId) {
+          const option = document.createElement("option");
+          option.value = complaint.id;
+          option.textContent = `#${complaint.id} - ${complaint.description?.substring(0, 50) || "No description"}`;
+          masterSelect.appendChild(option);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load master complaints:", err);
+  }
+}
+
 async function initPage() {
   const complaintId = window.location.pathname.split("/").pop();
+  window.currentComplaintId = complaintId;
   const loadingEl = document.getElementById("loading");
   const contentEl = document.getElementById("complaint-content");
   const errorEl = document.getElementById("error-message");
   const errorText = document.getElementById("error-text");
+
+  initButtonHandlers();
 
   if (!complaintId) {
     showError("Invalid complaint ID");

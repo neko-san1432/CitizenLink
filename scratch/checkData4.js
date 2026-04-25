@@ -1,4 +1,4 @@
-require('dotenv').config();
+require("dotenv").config();
 const Database = require("../src/server/config/database");
 const db = Database.getInstance();
 const supabase = db.getClient();

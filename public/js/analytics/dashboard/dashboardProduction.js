@@ -876,7 +876,7 @@ if (document.readyState === "loading") {
  */
 async function loadBarangayBoundaries() {
   try {
-    const response = await fetch("/api/boundaries");
+    const response = await fetch("/api/public/boundaries");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = await response.json();

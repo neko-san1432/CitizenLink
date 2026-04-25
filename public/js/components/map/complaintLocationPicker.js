@@ -115,7 +115,7 @@ async function initializecomplaintLocationPicker(
 
     // Load and display Digos City boundaries
     try {
-      const boundaryResponse = await fetch("/api/boundaries");
+      const boundaryResponse = await fetch("/api/public/boundaries");
       if (boundaryResponse.ok) {
         const brgyData = await boundaryResponse.json();
         if (Array.isArray(brgyData)) {

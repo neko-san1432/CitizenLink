@@ -15,7 +15,7 @@ class LguDashboardController {
   async getDashboardStats(req, res) {
     try {
       const client = Database.getServiceClient();
-      
+
       // Role-based filtering removed at user request - LGU role is global view
       console.log(`[LGU_DASH] Global Dashboard View for User: ${req.user.id} (${req.user.role})`);
 
@@ -23,8 +23,8 @@ class LguDashboardController {
       const timeframe = req.query.timeframe || "weekly";
       const target = req.query.target || "all";
       const now = new Date();
-      let dateLimit = new Date();
-      
+      const dateLimit = new Date();
+
       if (timeframe === "daily") dateLimit.setDate(now.getDate() - 1);
       else if (timeframe === "weekly") dateLimit.setDate(now.getDate() - 7);
       else if (timeframe === "monthly") dateLimit.setMonth(now.getMonth() - 1);
@@ -42,7 +42,7 @@ class LguDashboardController {
         tasks.push(
           Promise.all([
             getBaseQuery().not("workflow_status", "in", '("completed","cancelled")'),
-            getBaseQuery().in("workflow_status", ["submitted", "new", "unassigned"]), // Truly pending/unassigned
+            getBaseQuery().in("workflow_status", ["submitted", "new", "unassigned"]),
             getBaseQuery().ilike("priority", "urgent").not("workflow_status", "in", '("completed","cancelled")'),
             getBaseQuery().ilike("priority", "high").not("workflow_status", "in", '("completed","cancelled")'),
             getBaseQuery().ilike("priority", "medium").not("workflow_status", "in", '("completed","cancelled")'),
@@ -53,8 +53,7 @@ class LguDashboardController {
             const medium = results[4].count || 0;
             const low = results[5].count || 0;
             const total = results[0].count || 0;
-            
-            // Calculate Avg Priority Score (0-100)
+
             let avgScore = 0;
             if (total > 0) {
               avgScore = Math.round(((urgent * 100) + (high * 75) + (medium * 50) + (low * 25)) / total);
@@ -66,6 +65,9 @@ class LguDashboardController {
               priority: { urgent, high, medium, low },
               avg_priority_score: avgScore
             };
+          }).catch(err => {
+            console.error("[LGU_DASH] Stats query error:", err?.message || "Unknown error");
+            responseData.stats = { total_active: 0, unassigned: 0, priority: { urgent: 0, high: 0, medium: 0, low: 0 }, avg_priority_score: 0 };
           })
         );
       }
@@ -79,6 +81,10 @@ class LguDashboardController {
             .order("submitted_at", { ascending: false })
             .limit(5)
             .then(({ data }) => responseData.recent_activity = data || [])
+            .catch(err => {
+              console.error("[LGU_DASH] Activity query error:", err?.message || "Unknown error");
+              responseData.recent_activity = [];
+            })
         );
       }
 
@@ -98,6 +104,11 @@ class LguDashboardController {
               }
               responseData.charts = responseData.charts || {};
               responseData.charts.trend = trendCounts;
+            })
+            .catch(err => {
+              console.error("[LGU_DASH] Trend query error:", err?.message || "Unknown error");
+              responseData.charts = responseData.charts || {};
+              responseData.charts.trend = {};
             })
         );
       }
@@ -124,7 +135,7 @@ class LguDashboardController {
                 categoryDistribution[catName] = (categoryDistribution[catName] || 0) + 1;
               });
             }
-            
+
             responseData.charts = responseData.charts || {};
             // Determine which specific data to return based on target
             if (target === "all" || target === "distribution" || target === "distribution_pie") {
@@ -169,7 +180,8 @@ class LguDashboardController {
         limit = 10,
         date_start,
         date_end,
-        assignment_filter // all, unassigned, assigned
+        assignment_filter, // all, unassigned, assigned
+        barangay
       } = req.query;
 
       // Import service on demand to avoid circular deps
@@ -184,6 +196,7 @@ class LguDashboardController {
         priority: priority === "all" ? null : priority,
         startDate: date_start,
         endDate: date_end,
+        barangay,
         limit: parseInt(limit),
         page: parseInt(page)
       };
@@ -261,23 +274,23 @@ class LguDashboardController {
   async getDepartmentOfficers(req, res) {
     try {
       const userService = require("../services/user/UserService");
-      
+
       const departmentCode =
         req.user.department ||
         req.user.metadata?.department ||
         req.user.raw_user_meta_data?.department ||
         req.user.raw_user_meta_data?.dpt;
 
-      const filters = { 
-        role: "lgu", 
+      const filters = {
+        role: "lgu",
         department: departmentCode,
-        status: "active" 
+        status: "active"
       };
-      
+
       // If no department specified and not super-admin, this might return nothing
       // We'll allow it; listUsers will return what's available
       const result = await userService.getUsers(filters, { limit: 100 });
-      
+
       return res.json({
         success: true,
         data: result.users || []
@@ -313,8 +326,8 @@ class LguDashboardController {
         return res.status(404).json({ success: false, error: "Complaint not found" });
       }
 
-      const primaryDept = (complaint.departments && complaint.departments.length > 0) 
-        ? complaint.departments[0] 
+      const primaryDept = (complaint.departments && complaint.departments.length > 0)
+        ? complaint.departments[0]
         : "GENERAL";
 
       // 2. Create the assignment
@@ -338,7 +351,7 @@ class LguDashboardController {
       // 3. Update complaint status to 'assigned'
       await client
         .from("complaints")
-        .update({ 
+        .update({
           workflow_status: "assigned",
           last_activity_at: new Date().toISOString()
         })
@@ -351,8 +364,8 @@ class LguDashboardController {
         user_id: assignedBy,
         details: JSON.stringify({
           officer_id: officerId,
-          priority: priority,
-          notes: notes
+          priority,
+          notes
         })
       });
 

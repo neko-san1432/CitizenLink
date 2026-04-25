@@ -17,11 +17,11 @@ function normalizeRole(role) {
   // 3-Role System Mapping
   if (roleLower === "super-admin") return "super-admin";
   if (roleLower === "citizen") return "citizen";
-  
+
   // Legacy or complex roles map to 'lgu'
   if (
-    roleLower === "lgu" || 
-    roleLower.startsWith("lgu-") || 
+    roleLower === "lgu" ||
+    roleLower.startsWith("lgu-") ||
     roleLower === "complaint-coordinator"
   ) {
     return "lgu";

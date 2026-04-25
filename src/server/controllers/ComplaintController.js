@@ -464,6 +464,7 @@ class ComplaintController {
         });
         return;
       } catch (e) {
+        console.warn("[COMPLAINT_CTRL] Barangay insights fallback error:", e?.message || "Unknown error");
       }
     }
 

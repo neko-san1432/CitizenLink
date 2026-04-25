@@ -170,6 +170,18 @@ async function loadDictionary() {
       taxonomy: taxonomy?.categories || {},
       metadata: computeMetadata({ keywords, taxonomy, rules }),
     };
+
+    // Expose data for the Simulation Engine to use real DB keywords
+    window.DRIMS_NLP_ENGINE_DATA = {
+      keywords,
+      rules,
+      lastUpdated: new Date().toISOString()
+    };
+
+    // Trigger Simulation Engine to rebuild its indices with real data
+    if (typeof window.buildDictionaryIndices === "function") {
+      window.buildDictionaryIndices();
+    }
     populateDictionaryCategoryFilter();
     updateDictionaryStats();
     renderDictionaryManager();

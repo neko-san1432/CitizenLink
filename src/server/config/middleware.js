@@ -65,7 +65,7 @@ const setupMiddleware = (app) => {
         if (allowedOrigins.includes(origin)) return callback(null, true);
 
         // Allow LAN and remote origins for testing the dev login in production
-        if (isDevLanOrigin(origin) || origin.includes('drims.dpdns.org')) return callback(null, true);
+        if (isDevLanOrigin(origin) || origin.includes("drims.dpdns.org")) return callback(null, true);
 
         return callback(new Error("Not allowed by CORS"));
       },
