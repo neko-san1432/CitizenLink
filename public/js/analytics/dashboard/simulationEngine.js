@@ -3400,7 +3400,7 @@ function analyzecomplaintIntelligence(point) {
       temporalStatus,
       temporalOverrideType,
       noIssue: noIssueInfo && noIssueInfo.isNoIssue ? noIssueInfo.matchedPattern : null,
-      riskBase: baseRisk,
+      riskBase: baseScore,
       riskScore,
       riskStatus,
       emergencyBoost: emergencyBoostInfo,

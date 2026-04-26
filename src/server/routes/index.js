@@ -8,7 +8,7 @@ const captchaRoutes = require("./captchaRoutes");
 const coordinatorRoutes = require("./coordinatorRoutes");
 const ocrRoutes = require("./ocrRoutes");
 const verificationRoutes = require("./verificationRoutes");
-const { _apiLimiter } = require("../middleware/rateLimiting");
+const { apiLimiter } = require("../middleware/rateLimiting");
 const superAdminRoutes = require("./superAdminRoutes");
 const lguRoutes = require("./lguRoutes");
 const notificationRoutes = require("./notificationRoutes");
@@ -51,8 +51,26 @@ router.use("/office-confirmation", officeConfirmationRoutes);
 // NLP Routes
 router.use("/nlp", require("./nlpRoutes"));
 router.use("/brain", brainDashboardRoutes);
+// Public config route (formerly in publicApiRoutes, moved here for correct path /api/config)
+router.get("/config", apiLimiter, (req, res) => {
+  const config = require("../../../config/app");
+  const devAccounts = require("../../../config/devAccounts");
+  
+  res.json({
+    legacyRolesEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
+    legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
+    testLoginEnabled: config.env === "development" || process.env.ENABLE_TEST_LOGIN === "true",
+    testEmails: {
+      citizen: devAccounts.citizen.email,
+      lgu: devAccounts.lgu.email,
+      superAdmin: devAccounts.superAdmin.email,
+      password: devAccounts.citizen.password // Defaulting to citizen password for the quick UI
+    }
+  });
+});
+
 // Public API routes (boundaries, geocoding)
-router.use("/api/public", publicApiRoutes);
+router.use("/public", publicApiRoutes);
 // User routes (roles, profile info)
 router.use("/user", require("./userRoutes"));
 

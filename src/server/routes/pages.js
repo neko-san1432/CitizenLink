@@ -372,6 +372,24 @@ router.get(
   }
 );
 
+// Super Admin System Settings page
+router.get(
+  "/super-admin/system-settings",
+  authenticateUser,
+  requireRole(["super-admin"]),
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        config.rootDir,
+        "views",
+        "pages",
+        "superAdmin",
+        "systemSettings.html"
+      )
+    );
+  }
+);
+
 // Coordinator review queue list page (simplified URLs)
 router.get(
   "/review-queue",

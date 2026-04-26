@@ -144,7 +144,7 @@ svg {
 }
 
 /* Apply to main content areas - exclude dashboards that have their own responsive padding */
-#app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard),
+#app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard):not(.analytics-mode),
 .main-content,
 .content {
   padding: 10px 1.5rem 0;
@@ -157,7 +157,7 @@ svg {
 @media (max-width: 600px) {
 
   .content-padding,
-  #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard),
+  #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard):not(.analytics-mode),
   .main-content,
   .content {
     padding: 10px 1rem 0;
@@ -167,7 +167,7 @@ svg {
 @media (min-width: 601px) and (max-width: 1024px) {
 
   .content-padding,
-  #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard),
+  #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard):not(.analytics-mode),
   .main-content,
   .content {
     padding: 10px 1.5rem 0;
@@ -178,7 +178,7 @@ svg {
 @media (min-width: 1025px) {
 
   .content-padding,
-  #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard),
+  #app:not(.citizen-dashboard):not(.coordinator-dashboard):not(.lgu-admin-dashboard):not(.superadmin-dashboard):not(.analytics-mode),
   .main-content,
   .content {
     padding: 10px 2rem 0;

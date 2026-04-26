@@ -184,6 +184,9 @@ async function loadDictionary() {
     }
     populateDictionaryCategoryFilter();
     updateDictionaryStats();
+    renderCategoriesOverview();
+    renderCategoryChart();
+    renderModifiersGrid();
     renderDictionaryManager();
   } catch (error) {
     if (container) {
@@ -216,6 +219,198 @@ function updateDictionaryStats() {
   $("dictLanguages").textContent = (meta.languages?.length ?? "-").toString();
   $("dictCategories").textContent = Object.keys(dictionaryData.hierarchy || {}).length.toString();
   $("dictLastUpdated").textContent = meta.last_updated || "-";
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NEW TACTICAL RENDERING FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+const CATEGORY_COLORS = [
+  "#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#06b6d4",
+  "#ec4899", "#f97316", "#14b8a6", "#6366f1", "#84cc16",
+  "#ef4444", "#a855f7", "#22d3ee",
+];
+
+let dictChartInstance = null;
+let dictShowAllCategories = false;
+
+function renderCategoriesOverview() {
+  const container = $("dict-categories-overview");
+  if (!container || !dictionaryData?.hierarchy) return;
+
+  const hierarchy = dictionaryData.hierarchy;
+  const sorted = Object.entries(hierarchy)
+    .map(([name, kws]) => ({ name, count: kws.length }))
+    .sort((a, b) => b.count - a.count);
+
+  const maxCount = sorted.length > 0 ? sorted[0].count : 1;
+  const visible = dictShowAllCategories ? sorted : sorted.slice(0, 8);
+  const remaining = sorted.length - 8;
+
+  let html = "";
+  visible.forEach((cat, i) => {
+    const color = CATEGORY_COLORS[i % CATEGORY_COLORS.length];
+    const pct = maxCount > 0 ? Math.max(5, (cat.count / maxCount) * 100) : 5;
+    html += `
+      <div class="dict-cat-item" onclick="document.getElementById('dict-category-filter').value='${escapeHtml(cat.name)}';document.getElementById('dict-category-filter').dispatchEvent(new Event('change'));">
+        <div class="dict-cat-dot" style="background:${color};"></div>
+        <div class="dict-cat-info">
+          <div class="dict-cat-name">${escapeHtml(cat.name)}</div>
+          <div class="dict-cat-bar-wrap">
+            <div class="dict-cat-bar" style="width:${pct}%;background:${color};"></div>
+          </div>
+        </div>
+        <span class="dict-cat-count">${cat.count} keywords</span>
+      </div>
+    `;
+  });
+
+  if (!dictShowAllCategories && remaining > 0) {
+    html += `<div class="dict-cat-expand" id="dictShowMoreCats">+ ${remaining} more categories <i class="fas fa-chevron-right"></i></div>`;
+  } else if (dictShowAllCategories && sorted.length > 8) {
+    html += `<div class="dict-cat-expand" id="dictShowLessCats">Show less <i class="fas fa-chevron-up"></i></div>`;
+  }
+
+  container.innerHTML = html;
+
+  $("dictShowMoreCats")?.addEventListener("click", () => {
+    dictShowAllCategories = true;
+    renderCategoriesOverview();
+  });
+  $("dictShowLessCats")?.addEventListener("click", () => {
+    dictShowAllCategories = false;
+    renderCategoriesOverview();
+  });
+}
+
+function renderCategoryChart() {
+  const canvas = $("dictCategoryChart");
+  if (!canvas || !dictionaryData?.hierarchy) return;
+
+  const chartView = $("dict-chart-view")?.value || "top";
+  const hierarchy = dictionaryData.hierarchy;
+  const sorted = Object.entries(hierarchy)
+    .map(([name, kws]) => ({ name, count: kws.length }))
+    .filter((c) => c.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const data = chartView === "top" ? sorted.slice(0, 6) : sorted;
+  const labels = data.map((d) => d.name);
+  const values = data.map((d) => d.count);
+  const colors = data.map((_, i) => CATEGORY_COLORS[i % CATEGORY_COLORS.length]);
+
+  if (dictChartInstance) {
+    dictChartInstance.destroy();
+    dictChartInstance = null;
+  }
+
+  const isDark = document.documentElement.classList.contains("dark") || document.body.classList.contains("dark");
+
+  dictChartInstance = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false,
+        maxBarThickness: 48,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.95)",
+          titleColor: isDark ? "#f8fafc" : "#0f172a",
+          bodyColor: isDark ? "#cbd5e1" : "#475569",
+          borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 10,
+          callbacks: {
+            label: (ctx) => `${ctx.parsed.y} keywords`,
+          },
+        },
+        datalabels: false,
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: isDark ? "#64748b" : "#94a3b8",
+            font: { size: 10, weight: 600 },
+            maxRotation: 0,
+          },
+          border: { display: false },
+        },
+        y: {
+          grid: { color: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" },
+          ticks: {
+            color: isDark ? "#64748b" : "#94a3b8",
+            font: { size: 10, weight: 600 },
+          },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
+function renderModifiersGrid() {
+  const container = $("dict-modifiers-grid");
+  if (!container || !dictionaryData?.modifiers) return;
+
+  const modifiers = dictionaryData.modifiers;
+  const sections = [
+    { key: "amplifiers", title: "Severity Amplifiers", icon: "fa-arrow-up", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+    { key: "diminishers", title: "Severity Diminishers", icon: "fa-arrow-down", color: "#10b981", bg: "rgba(16,185,129,0.12)" },
+    { key: "speculation", title: "Speculation Indicators", icon: "fa-question-circle", color: "#3b82f6", bg: "rgba(59,130,246,0.12)" },
+    { key: "negation", title: "Negation Patterns", icon: "fa-ban", color: "#64748b", bg: "rgba(100,116,139,0.12)" },
+    { key: "temporal_present", title: "Temporal Present", icon: "fa-bolt", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+    { key: "temporal_past", title: "Temporal Past", icon: "fa-clock", color: "#8b5cf6", bg: "rgba(139,92,246,0.12)" },
+    { key: "temporal_future", title: "Temporal Future", icon: "fa-forward", color: "#06b6d4", bg: "rgba(6,182,212,0.12)" },
+  ];
+
+  let html = "";
+  for (const s of sections) {
+    const items = Array.isArray(modifiers[s.key]) ? modifiers[s.key] : [];
+    html += `
+      <div class="dict-mod-item" data-modifier="${escapeHtml(s.key)}">
+        <div class="dict-mod-icon" style="background:${s.bg};color:${s.color};">
+          <i class="fas ${s.icon}"></i>
+        </div>
+        <div class="dict-mod-info">
+          <div class="dict-mod-title">${s.title}</div>
+        </div>
+        <span class="dict-mod-badge" style="background:${s.bg};color:${s.color};">${items.length}</span>
+        <i class="fas fa-chevron-right dict-mod-chevron"></i>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  // Click handler to scroll to and expand the corresponding modifier accordion
+  container.querySelectorAll(".dict-mod-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const key = el.dataset.modifier;
+      const accordion = document.querySelector(`.modifier-accordion[data-modifier="${key}"]`);
+      if (accordion) {
+        accordion.scrollIntoView({ behavior: "smooth", block: "center" });
+        const content = accordion.querySelector(".accordion-content");
+        const icon = accordion.querySelector(".accordion-icon");
+        if (content && content.style.display === "none") {
+          content.style.display = "block";
+          icon?.classList?.remove("fa-chevron-right");
+          icon?.classList?.add("fa-chevron-down");
+        }
+      }
+    });
+  });
 }
 
 function renderCategoryContent(parentName, keywords) {
@@ -280,44 +475,44 @@ function renderModifiersSection(modifiers) {
     const multiplierDisabled = section.hasMultiplier && !canEditModifiers();
     html += `
       <div class="dictionary-accordion modifier-accordion" data-modifier="${escapeHtml(section.key)}">
-        <div class="accordion-header" onclick="toggleDictAccordion(this)" style="background: ${section.color}; color: white;">
+        <div class="accordion-header" onclick="toggleDictAccordion(this)">
           <div style="display: flex; align-items: center; gap: 10px;">
             <i class="fas fa-chevron-right accordion-icon"></i>
-            <i class="fas ${section.icon}"></i>
+            <i class="fas ${section.icon}" style="color: ${section.color}"></i>
             <strong>${section.title}</strong>
-            <span class="badge" style="background: rgba(255,255,255,0.3); font-size: 0.8em;">${filtered.length}</span>
+            <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">${filtered.length}</span>
           </div>
         </div>
-        <div class="accordion-content" style="display: none; padding: 15px;">
-          <p style="color: var(--gray-600); font-size: 0.9em; margin-bottom: 10px;">${section.desc}</p>
+        <div class="accordion-content" style="display: none; padding: 1.25rem;">
+          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem; opacity: 0.8;">${section.desc}</p>
           <div class="keyword-chips">
             ${filtered.length > 0
     ? filtered
       .sort((a, b) => safeText(a.term).localeCompare(safeText(b.term)))
       .map((m) => {
-        const mult = m.multiplier === null || m.multiplier === undefined ? "" : ` <small style="color: ${section.color}; font-weight: bold;">×${escapeHtml(m.multiplier)}</small>`;
+        const mult = m.multiplier === null || m.multiplier === undefined ? "" : ` <small style="color: ${section.color}; font-weight: bold; margin-left: 4px;">×${escapeHtml(m.multiplier)}</small>`;
         return `<span class="keyword-chip" title="${escapeHtml(m.translation || "")}">
                         ${escapeHtml(m.term)}${mult}
                       </span>`;
       })
       .join("")
-    : '<span style="color: var(--gray-500); font-style: italic;">No items</span>'
+    : '<span style="color: var(--text-muted); font-style: italic; font-size: 0.8rem;">No items found</span>'
 }
           </div>
-          <div class="add-modifier-form" style="margin-top: 15px; display: flex; gap: 8px; align-items: center; padding-top: 10px; border-top: 1px solid var(--gray-200);">
-            <input type="text" class="new-modifier-term" placeholder="New item..." style="flex: 1; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--gray-300);" ${addDisabled ? "disabled" : ""}>
+          <div class="add-modifier-form" style="margin-top: 1.5rem; display: flex; gap: 8px; align-items: center; padding-top: 1.25rem; border-top: 1px solid var(--card-border);">
+            <input type="text" class="new-modifier-term" placeholder="Add new term..." ${addDisabled ? "disabled" : ""}>
             ${section.hasMultiplier
     ? `<input type="number" class="new-modifier-multiplier" placeholder="×" value="${section.key === "amplifiers" ? "1.3" : "0.7"}" step="0.1" min="0" max="5"
-                    style="width: 70px; padding: 8px; border-radius: 4px; border: 1px solid var(--gray-300); text-align: center;" ${multiplierDisabled ? "disabled" : ""}>`
+                    style="width: 70px; text-align: center;" ${multiplierDisabled ? "disabled" : ""}>`
     : ""
 }
-            <button class="btn btn-sm" style="background: ${section.color}; color: white;" onclick="addModifier(this, '${escapeHtml(section.rule_type)}')" ${addDisabled ? "disabled" : ""}>
+            <button class="btn btn-sm" style="background: ${section.color}; color: white; border: none; padding: 0.5rem 1rem;" onclick="addModifier(this, '${escapeHtml(section.rule_type)}')" ${addDisabled ? "disabled" : ""}>
               <i class="fas fa-plus"></i> Add
             </button>
           </div>
           ${section.hasMultiplier && !canEditModifiers()
-    ? `<div style="margin-top: 8px; color: var(--gray-600); font-size: 12px;">
-                  Multiplier is set by Super Admin during verification.
+    ? `<div style="margin-top: 8px; color: var(--text-muted); font-size: 11px; opacity: 0.6;">
+                  * Multiplier is restricted to Super Admin role.
                 </div>`
     : ""
 }
@@ -350,12 +545,12 @@ function renderDictionaryManager() {
       if (!parentData) continue;
       html += `
         <div class="dictionary-accordion parent-accordion" data-parent="${escapeHtml(parentName)}">
-          <div class="accordion-header parent-header" onclick="toggleDictAccordion(this)" style="background: var(--primary); color: white;">
+          <div class="accordion-header parent-header" onclick="toggleDictAccordion(this)">
             <div style="display: flex; align-items: center; gap: 10px;">
               <i class="fas fa-chevron-right accordion-icon"></i>
-              <i class="fas fa-folder"></i>
+              <i class="fas fa-folder" style="color: var(--accent-blue)"></i>
               <strong>${escapeHtml(parentName)}</strong>
-              <span class="badge" style="background: rgba(255,255,255,0.3); font-size: 0.8em;">${parentData.length || 0} keywords</span>
+              <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">${parentData.length || 0} keywords</span>
             </div>
           </div>
           <div class="accordion-content" style="display: none; padding: 0;">
@@ -597,6 +792,17 @@ function initDictionaryManager() {
 
   $("refreshDictionaryBtn")?.addEventListener("click", loadDictionary);
   $("exportDictionaryBtn")?.addEventListener("click", exportDictionary);
+
+  // Chart view toggle
+  $("dict-chart-view")?.addEventListener("change", () => {
+    if (dictionaryData) renderCategoryChart();
+  });
+
+  // View All button in categories overview
+  $("dictViewAllBtn")?.addEventListener("click", () => {
+    dictShowAllCategories = !dictShowAllCategories;
+    renderCategoriesOverview();
+  });
 
   // Check if we're on the standalone dictionary-manager page
   const isStandalonePage = window.location.pathname === "/dictionary-manager" ||

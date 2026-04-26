@@ -236,6 +236,23 @@
             document.getElementById('emergencyPanel').classList.add('hidden');
             document.getElementById('emergencyPanel').classList.remove('flex');
         });
+</script>
+
+    <script>
+        // Ensure floating menu button works
+        document.addEventListener('DOMContentLoaded', function() {
+            var menuBtn = document.getElementById('floating-menu-btn');
+            var sidebar = document.getElementById('sidebar');
+            if (menuBtn && sidebar) {
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('open');
+                    console.log('[HEATMAP] Sidebar toggled');
+                });
+                menuBtn.style.display = 'flex';
+                menuBtn.style.opacity = '1';
+            }
+        });
     </script>
 
     <script>

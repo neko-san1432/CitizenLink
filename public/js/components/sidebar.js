@@ -344,7 +344,7 @@ function getMenuItemsForRole(role) {
           {
             url: "/brainAnalytics-page?tab=temporal",
             label: "Temporal",
-            icon: "clock",
+            icon: "chart-line",
           },
           {
             url: "/brainAnalytics-page?tab=categories",
@@ -354,12 +354,12 @@ function getMenuItemsForRole(role) {
           {
             url: "/brainAnalytics-page?tab=edge-cases",
             label: "Smart Detection",
-            icon: "alert",
+            icon: "microchip",
           },
           {
             url: "/brainAnalytics-page?tab=data-table",
             label: "Dataset",
-            icon: "table",
+            icon: "database",
           },
         ],
       },
@@ -390,40 +390,9 @@ function getMenuItemsForRole(role) {
         label: "Server logs",
       },
       {
-        label: "Analytics",
-        icon: "analytics",
-        children: [
-          {
-            url: "/brainAnalytics-page?tab=system-training",
-            label: "Training",
-            icon: "brain",
-          },
-          {
-            url: "/brainAnalytics-page?tab=temporal",
-            label: "Temporal",
-            icon: "clock",
-          },
-          {
-            url: "/brainAnalytics-page?tab=categories",
-            label: "Categories",
-            icon: "tags",
-          },
-          {
-            url: "/brainAnalytics-page?tab=edge-cases",
-            label: "Smart Detection",
-            icon: "alert",
-          },
-          {
-            url: "/brainAnalytics-page?tab=data-table",
-            label: "Dataset",
-            icon: "table",
-          },
-        ],
-      },
-      {
-        url: "/dictionary-manager",
-        icon: "dictionary",
-        label: "Dictionary Manager",
+        url: "/super-admin/system-settings",
+        icon: "sliders",
+        label: "System Settings",
       },
       {
         label: "You",

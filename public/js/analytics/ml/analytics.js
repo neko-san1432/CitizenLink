@@ -443,13 +443,49 @@ function destroyChart(id) {
   }
 }
 
+const showEmptyState = (id, message, icon = 'fa-chart-pie') => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const parent = el.parentElement;
+  if (!parent) return;
+  if (el.tagName === 'CANVAS') el.style.display = 'none';
+  else el.classList.add('hidden');
+  let overlay = parent.querySelector('.tactical-empty-state');
+  if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'tactical-empty-state flex flex-col items-center justify-center h-full min-h-[140px] text-center p-4 opacity-40';
+      parent.appendChild(overlay);
+  }
+  overlay.innerHTML = `<i class="fas ${icon} text-3xl mb-2 text-gray-500"></i><p class="text-[9px] font-black uppercase tracking-widest text-gray-400">${message}</p>`;
+};
+
 function renderDonutChart(canvasId, data, colors, customOptions = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+
+  // Clear any existing empty state
+  const parent = canvas.parentElement;
+  if (parent) {
+      const overlay = parent.querySelector('.tactical-empty-state');
+      if (overlay) overlay.remove();
+  }
+  canvas.style.display = 'block';
+
   destroyChart(canvasId);
 
   const labels = Object.keys(data);
   const values = Object.values(data);
+  const total = values.reduce((a, b) => a + b, 0);
+
+  if (total === 0) {
+      const iconMap = {
+          'figurativeDistChart': 'fa-theater-masks',
+          'categoryDistChart': 'fa-chart-pie',
+          'edgeNLPMethodChart': 'fa-microscope'
+      };
+      showEmptyState(canvasId, 'No Data Available', iconMap[canvasId] || 'fa-chart-pie');
+      return;
+  }
 
   charts[canvasId] = new Chart(canvas, {
     type: "doughnut",
@@ -834,14 +870,28 @@ function renderTemporal(stats) {
     if (el) el.textContent = val;
   };
 
-
-  // 1. Calculate Summary Metrics & Trends
-  const today = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  // 1. Calculate Summary Metrics for Tactical HUD
+  const now = new Date();
+  const todayKey = now.toISOString().slice(0, 10);
   
-  const todayCount = stats.byDay.get(today) || 0;
-  const yesterdayCount = stats.byDay.get(yesterday) || 0;
+  // Last 30 Days Keys
+  const last30DaysKeys = Array.from({length: 30}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (29 - i));
+    return d.toISOString().slice(0, 10);
+  });
   
+  // Previous 30 Days Keys (for trend comparison)
+  const prev30DaysKeys = Array.from({length: 30}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (59 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  
+  // Today's Count
+  const todayCount = stats.byDay.get(todayKey) || 0;
+  const yesterdayKey = new Date(now - 86400000).toISOString().slice(0, 10);
+  const yesterdayCount = stats.byDay.get(yesterdayKey) || 0;
   const todayDiff = todayCount - yesterdayCount;
   const todayPct = yesterdayCount > 0 ? Math.round((todayDiff / yesterdayCount) * 100) : (todayCount > 0 ? 100 : 0);
   
@@ -851,18 +901,20 @@ function renderTemporal(stats) {
     const isUp = todayDiff > 0;
     const isDown = todayDiff < 0;
     const icon = isUp ? 'fa-caret-up' : isDown ? 'fa-caret-down' : 'fa-minus';
-    const colorClass = isUp ? 'text-blue-400' : isDown ? 'text-red-400' : 'text-gray-500';
-    todayTrendEl.innerHTML = `<i class="fas ${icon} ${colorClass}"></i> ${Math.abs(todayPct).toFixed(1)}% vs yesterday`;
-    todayTrendEl.className = `trend-indicator ${colorClass} mt-1`;
+    const colorClass = isUp ? 'text-emerald-400' : isDown ? 'text-red-400' : 'text-gray-500';
+    todayTrendEl.innerHTML = `<i class="fas ${icon}"></i> ${Math.abs(todayPct)}%`;
+    todayTrendEl.className = `text-[8px] ${colorClass} flex items-center gap-1 whitespace-nowrap`;
   }
 
-  // Week Trend (last 7 days vs previous 7 days)
-  const last7Days = Array.from({length: 7}, (_, i) => new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
-  const prev7Days = Array.from({length: 7}, (_, i) => new Date(Date.now() - (i + 7) * 86400000).toISOString().slice(0, 10));
-  
-  const weekCount = last7Days.reduce((sum, d) => sum + (stats.byDay.get(d) || 0), 0);
-  const prevWeekCount = prev7Days.reduce((sum, d) => sum + (stats.byDay.get(d) || 0), 0);
-  
+  // Week's Count
+  const last7DaysKeys = last30DaysKeys.slice(-7);
+  const prev7DaysKeys = Array.from({length: 7}, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (13 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const weekCount = last7DaysKeys.reduce((sum, d) => sum + (stats.byDay.get(d) || 0), 0);
+  const prevWeekCount = prev7DaysKeys.reduce((sum, d) => sum + (stats.byDay.get(d) || 0), 0);
   const weekDiff = weekCount - prevWeekCount;
   const weekPct = prevWeekCount > 0 ? Math.round((weekDiff / prevWeekCount) * 100) : (weekCount > 0 ? 100 : 0);
   
@@ -873,20 +925,20 @@ function renderTemporal(stats) {
     const isDown = weekDiff < 0;
     const icon = isUp ? 'fa-caret-up' : isDown ? 'fa-caret-down' : 'fa-minus';
     const colorClass = isUp ? 'text-emerald-400' : isDown ? 'text-red-400' : 'text-gray-500';
-    weekTrendEl.innerHTML = `<i class="fas ${icon} ${colorClass}"></i> ${Math.abs(weekPct).toFixed(1)}% vs last week`;
-    weekTrendEl.className = `trend-indicator ${colorClass} mt-1`;
+    weekTrendEl.innerHTML = `<i class="fas ${icon}"></i> ${Math.abs(weekPct)}%`;
+    weekTrendEl.className = `text-[8px] ${colorClass} flex items-center gap-1 whitespace-nowrap`;
   }
 
-  // Month Trend
-  const thisMonth = new Date().toISOString().slice(0, 7);
-  const lastMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().slice(0, 7);
+  // Month's Count
+  const monthKey = now.toISOString().slice(0, 7);
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
   
-  const monthCount = stats.byMonth.get(thisMonth) || 0;
-  const lastMonthCount = stats.byMonth.get(lastMonth) || 0;
-  
-  const monthDiff = monthCount - lastMonthCount;
-  const monthPct = lastMonthCount > 0 ? Math.round((monthDiff / lastMonthCount) * 100) : (monthCount > 0 ? 100 : 0);
-  
+  const monthCount = stats.byMonth.get(monthKey) || 0;
+  const prevMonthCount = stats.byMonth.get(prevMonthKey) || 0;
+  const monthDiff = monthCount - prevMonthCount;
+  const monthPct = prevMonthCount > 0 ? Math.round((monthDiff / prevMonthCount) * 100) : (monthCount > 0 ? 100 : 0);
+
   set("monthCount", monthCount.toLocaleString());
   const monthTrendEl = document.getElementById("monthTrend");
   if (monthTrendEl) {
@@ -894,65 +946,57 @@ function renderTemporal(stats) {
     const isDown = monthDiff < 0;
     const icon = isUp ? 'fa-caret-up' : isDown ? 'fa-caret-down' : 'fa-minus';
     const colorClass = isUp ? 'text-orange-400' : isDown ? 'text-red-400' : 'text-gray-500';
-    monthTrendEl.innerHTML = `<i class="fas ${icon} ${colorClass}"></i> ${Math.abs(monthPct).toFixed(1)}% vs last month`;
-    monthTrendEl.className = `trend-indicator ${colorClass} mt-1`;
+    monthTrendEl.innerHTML = `<i class="fas ${icon}"></i> ${Math.abs(monthPct)}%`;
+    monthTrendEl.className = `text-[8px] ${colorClass} flex items-center gap-1 whitespace-nowrap`;
   }
 
   // Peak Hour
   const hourEntries = [...stats.byHour.entries()].sort((a, b) => b[1] - a[1]);
-  const peak = hourEntries[0] || [0, 0];
+  const peak = hourEntries[0] || [12, 0];
   const peakHourStr = peak[0] === 0 ? "12 AM" : peak[0] < 12 ? `${peak[0]} AM` : peak[0] === 12 ? "12 PM" : `${peak[0] - 12} PM`;
-  set("peakHour", peakHourStr);
+  set("peakHourValue", peakHourStr);
 
   // 2. Render Sparklines
-  const last24h = Array.from({length: 24}, (_, i) => {
-    const d = new Date(Date.now() - (23 - i) * 3600000);
-    return stats.byHour.get(d.getHours()) || 0;
-  });
-  renderSparkline("todaySparkline", last24h, "#3b82f6");
-  
-  const last7dData = last7Days.reverse().map(d => stats.byDay.get(d) || 0);
-  renderSparkline("weekSparkline", last7dData, "#10b981");
-  
-  const monthData = Array.from({length: 30}, (_, i) => {
-    const d = new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10);
-    return stats.byDay.get(d) || 0;
-  });
-  renderSparkline("monthSparkline", monthData, "#f59e0b");
-  
-  const hourlyData = Array.from({length: 24}, (_, i) => stats.byHour.get(i) || 0);
-  renderSparkline("peakSparkline", hourlyData, "#a855f7");
+  const getHistory = (keys) => keys.map(k => stats.byDay.get(k) || 0);
+  renderSparkline("todaySparkline", getHistory(last30DaysKeys.slice(-7)), "#3b82f6");
+  renderSparkline("weekSparkline", getHistory(last30DaysKeys.slice(-14)), "#10b981");
+  renderSparkline("monthSparkline", getHistory(last30DaysKeys), "#f59e0b");
+  renderSparkline("peakHourSparkline", Array.from({length: 24}, (_, i) => stats.byHour.get(i) || 0), "#8b5cf6");
 
-  // 3. Main Temporal Charts
-  const last30Days = Array.from({length: 30}, (_, i) => new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10));
-  renderLineChart("timeTrendChart", last30Days.map(d => d.slice(5)), last30Days.map(d => stats.byDay.get(d) || 0), "#3b82f6");
-
-  // Priority Trend
-  const priorityData = {
-    tier1: last30Days.map(d => processedcomplaints.filter(c => c.tier === 1 && c.timestamp?.startsWith(d)).length),
-    tier2: last30Days.map(d => processedcomplaints.filter(c => c.tier === 2 && c.timestamp?.startsWith(d)).length),
-    tier3: last30Days.map(d => processedcomplaints.filter(c => c.tier === 3 && c.timestamp?.startsWith(d)).length),
-  };
-  
-  const pEl = document.getElementById("priorityTrendChart");
-  if (pEl) {
-    destroyChart("priorityTrendChart");
+  // 3. Render Main Volume Trend Chart
+  const mainChartCanvas = document.getElementById("temporalTrendChart");
+  if (mainChartCanvas) {
+    destroyChart("temporalTrendChart");
     const theme = getThemeColors();
-    charts["priorityTrendChart"] = new Chart(pEl, {
-      type: 'line',
+    const ctx = mainChartCanvas.getContext('2d');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+    charts["temporalTrendChart"] = new Chart(mainChartCanvas, {
+      type: "line",
       data: {
-        labels: last30Days.map(d => d.slice(5)),
-        datasets: [
-          { label: 'High', data: priorityData.tier1, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.45, fill: false, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6 },
-          { label: 'Medium', data: priorityData.tier2, borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.45, fill: false, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6 },
-          { label: 'Low', data: priorityData.tier3, borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.45, fill: false, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6 }
-        ]
+        labels: last30DaysKeys.map(d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+        datasets: [{
+          label: "Total Complaints",
+          data: last30DaysKeys.map(d => stats.byDay.get(d) || 0),
+          borderColor: "#8b5cf6",
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 3,
+          pointBackgroundColor: "#8b5cf6",
+          pointBorderWidth: 2,
+          pointHoverRadius: 6
+        }]
       },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
         interaction: { intersect: false, mode: 'index' },
-        plugins: { 
+        plugins: {
           legend: { display: false },
           tooltip: {
             backgroundColor: theme.tooltipBg,
@@ -960,42 +1004,100 @@ function renderTemporal(stats) {
             bodyColor: theme.ticks,
             borderColor: theme.tooltipBorder,
             borderWidth: 1,
-            padding: 12,
-            usePointStyle: true
+            padding: 12
           }
         },
         scales: {
-          y: { grid: { color: theme.grid }, ticks: { color: theme.ticks, font: { weight: '600' } } },
-          x: { grid: { display: false }, ticks: { color: theme.ticks, font: { weight: '600' } } }
+          y: { beginAtZero: true, grid: { color: theme.grid }, ticks: { color: theme.ticks, font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { color: theme.ticks, font: { size: 10 } } }
         }
       }
     });
   }
 
-  // Day of Week Pattern
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const dayCounts = days.map((_, i) => processedcomplaints.filter(c => new Date(c.timestamp).getDay() === i).length);
-  renderBarChart("dayOfWeekChart", days, dayCounts, "#10b981");
+  // 4. Render Priority Trend Chart
+  const priorityCanvas = document.getElementById("priorityTrendChart");
+  if (priorityCanvas) {
+    destroyChart("priorityTrendChart");
+    const theme = getThemeColors();
+    
+    // Group by day and tier
+    const tierData = {
+      high: last30DaysKeys.map(d => processedcomplaints.filter(c => c.timestamp?.startsWith(d) && c.tier === 1).length),
+      med: last30DaysKeys.map(d => processedcomplaints.filter(c => c.timestamp?.startsWith(d) && c.tier === 2).length),
+      low: last30DaysKeys.map(d => processedcomplaints.filter(c => c.timestamp?.startsWith(d) && c.tier === 3).length)
+    };
 
-  // Hourly Pattern
-  const hourlyLabels = ["12 AM", "3 AM", "6 AM", "9 AM", "12 PM", "3 PM", "6 PM", "9 PM"];
-  const hourlyFullData = Array.from({length: 24}, (_, i) => stats.byHour.get(i) || 0);
-  renderBarChart("hourlyChart", Array.from({length: 24}, (_, i) => i % 3 === 0 ? hourlyLabels[i/3] : ""), hourlyFullData, "#8b5cf6");
+    charts["priorityTrendChart"] = new Chart(priorityCanvas, {
+      type: "line",
+      data: {
+        labels: last30DaysKeys.map(d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+        datasets: [
+          { label: "High", data: tierData.high, borderColor: "#ef4444", borderWidth: 2, pointRadius: 0, tension: 0.4 },
+          { label: "Medium", data: tierData.med, borderColor: "#f59e0b", borderWidth: 2, pointRadius: 0, tension: 0.4 },
+          { label: "Low", data: tierData.low, borderColor: "#3b82f6", borderWidth: 2, pointRadius: 0, tension: 0.4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: theme.grid }, ticks: { color: theme.ticks, font: { size: 8 } } },
+          x: { display: false }
+        }
+      }
+    });
+  }
+
+  // 5. Supporting Charts
+  
+  // Day of Week Pattern
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayCounts = days.map((_, i) => processedcomplaints.filter(c => new Date(c.timestamp).getDay() === i).length);
+  const peakDayIdx = dayCounts.indexOf(Math.max(...dayCounts));
+  renderBarChart("dayOfWeekChart", days.map(d => d.slice(0, 3)), dayCounts, "#3b82f6");
+
+  // Hour of Day Pattern
+  const hours = Array.from({length: 24}, (_, i) => i);
+  const hourCounts = hours.map(h => stats.byHour.get(h) || 0);
+  renderBarChart("hourOfDayChart", hours.map(h => h === 0 ? "12A" : h < 12 ? `${h}A` : h === 12 ? "12P" : `${h-12}P`), hourCounts, "#8b5cf6");
 
   // Monthly Distribution
-  const last6Months = Array.from({length: 6}, (_, i) => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - (5 - i));
-    return d.toISOString().slice(0, 7);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const currentMonthIdx = new Date().getMonth();
+  const last6Months = Array.from({length: 6}, (_, i) => (currentMonthIdx - 5 + i + 12) % 12);
+  const monthCounts = last6Months.map(m => {
+    const year = new Date().getFullYear() - (m > currentMonthIdx ? 1 : 0);
+    const key = `${year}-${String(m + 1).padStart(2, '0')}`;
+    return stats.byMonth.get(key) || 0;
   });
-  const monthLabels = last6Months.map(m => {
-    const d = new Date(m);
-    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  });
-  renderBarChart("monthlyChart", monthLabels, last6Months.map(m => stats.byMonth.get(m) || 0), "#3b82f6");
+  renderBarChart("monthlyDistChart", last6Months.map(m => months[m]), monthCounts, "#f59e0b");
 
   const dataAsOfEl = document.getElementById("dataAsOfText");
-  if (dataAsOfEl) dataAsOfEl.textContent = new Date().toLocaleString();
+  if (dataAsOfEl) dataAsOfEl.textContent = `Last Updated: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+  // 6. Strategic Insights
+  const insightsContainer = document.getElementById("temporalInsightsContainer");
+  if (insightsContainer) {
+    const peakDayName = days[peakDayIdx];
+    const trendText = weekDiff > 0 ? `<span class="text-red-400 font-bold">increased by ${Math.abs(weekPct)}%</span>` : `<span class="text-emerald-400 font-bold">dropped by ${Math.abs(weekPct)}%</span>`;
+    
+    insightsContainer.innerHTML = `
+      <div class="insight-item-small flex items-start gap-3 p-2.5 rounded-lg bg-purple-500/5 border border-purple-500/10">
+          <i class="fas fa-chart-area text-purple-400 mt-0.5 text-xs"></i>
+          <p class="text-[11px] text-gray-300 leading-relaxed">Peak complaints occur at <span class="text-white font-bold">${peakHourStr}</span>.</p>
+      </div>
+      <div class="insight-item-small flex items-start gap-3 p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+          <i class="fas fa-calendar-check text-emerald-400 mt-0.5 text-xs"></i>
+          <p class="text-[11px] text-gray-300 leading-relaxed">Most reports happen on <span class="text-emerald-400 font-bold">${peakDayName}s</span>.</p>
+      </div>
+      <div class="insight-item-small flex items-start gap-3 p-2.5 rounded-lg bg-blue-500/5 border border-blue-500/10">
+          <i class="fas fa-arrow-trend-up text-blue-400 mt-0.5 text-xs"></i>
+          <p class="text-[11px] text-gray-300 leading-relaxed">Weekly activity has ${trendText}.</p>
+      </div>
+    `;
+  }
 }
 
 function renderCategories(stats) {
@@ -1022,7 +1124,184 @@ function renderCategories(stats) {
   set("totalComplaintsDonut", stats.total.toLocaleString());
   set("nlpMethodTotal", stats.total.toLocaleString());
 
-  // 2. Render Sparklines & Trends for Category Metrics
+  // 3. Define Visualization Helpers
+  const showEmptyState = (id, message, icon = 'fa-chart-pie') => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
+    if (el.tagName === 'CANVAS') el.style.display = 'none';
+    else el.classList.add('hidden');
+    let overlay = parent.querySelector('.tactical-empty-state');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'tactical-empty-state flex flex-col items-center justify-center h-full min-h-[200px] text-center p-6 opacity-30';
+        parent.appendChild(overlay);
+    }
+    overlay.innerHTML = `<i class="fas ${icon} text-3xl mb-3"></i><p class="text-[10px] font-black uppercase tracking-widest text-gray-400">${message}</p>`;
+  };
+
+  const renderSmartDetection = (complaints = []) => {
+    const ctxDist = document.getElementById('figurativeDistChart')?.getContext('2d');
+    const ctxTime = document.getElementById('figurativeTimeChart')?.getContext('2d');
+    if (!ctxDist || !ctxTime) return;
+
+    // PREVENT "Canvas in use" ERROR
+    if (typeof destroyChart === 'function') {
+        destroyChart('figurativeDistChart');
+        destroyChart('figurativeTimeChart');
+    }
+
+    // A. Figurative Breakdown Data
+    const figurativeItems = complaints.filter(c => c.intelligence?.metaphor_score > 0.5 || c.flags?.metaphor);
+    
+    // Reset states
+    document.querySelectorAll('.tactical-empty-state').forEach(el => el.remove());
+    document.querySelectorAll('canvas').forEach(el => el.style.display = 'block');
+    document.getElementById('mismatchList')?.classList.remove('hidden');
+    document.getElementById('recentEdgeCasesList')?.classList.remove('hidden');
+
+    if (figurativeItems.length === 0) {
+        showEmptyState('figurativeDistChart', 'No Figurative Language Detected', 'fa-theater-masks');
+        showEmptyState('figurativeTimeChart', 'System Stable: 0 Detections', 'fa-wave-square');
+        const legend = document.getElementById('figurativeLegend');
+        if (legend) legend.innerHTML = '<p class="text-[9px] text-gray-600 italic">No patterns identified</p>';
+    } else {
+        const breakdown = {
+            'Metaphor': figurativeItems.filter(c => {
+                const txt = (c.original_text || c.description || "").toLowerCase();
+                return txt.includes('parang') || txt.includes('daw') || txt.includes('tila');
+            }).length,
+            'Idioms': figurativeItems.filter(c => {
+                const txt = (c.original_text || c.description || "").toLowerCase();
+                return txt.includes('kamay') || txt.includes('mata') || txt.includes('puso');
+            }).length,
+            'Hyperbole': figurativeItems.filter(c => {
+                const txt = (c.original_text || c.description || "").toLowerCase();
+                return txt.includes('sobra') || txt.includes('grabeng') || txt.includes('ubod');
+            }).length,
+            'Sarcasm': figurativeItems.filter(c => c.intelligence?.sarcasm_score > 0.6).length
+        };
+
+        // Populate Legend
+        const legendEl = document.getElementById('figurativeLegend');
+        if (legendEl) {
+            legendEl.innerHTML = Object.entries(breakdown).map(([label, count]) => {
+                const pct = figurativeItems.length > 0 ? Math.round((count / figurativeItems.length) * 100) : 0;
+                return `
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full ${label === 'Metaphor' ? 'bg-purple-500' : label === 'Idioms' ? 'bg-blue-500' : label === 'Hyperbole' ? 'bg-orange-500' : 'bg-pink-500'}"></span>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase truncate">${label}</span>
+                        </div>
+                        <span class="text-[10px] text-white font-black">${count} (${pct}%)</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        charts['figurativeDistChart'] = new Chart(ctxDist, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(breakdown),
+                datasets: [{
+                    data: Object.values(breakdown),
+                    backgroundColor: ['#a855f7', '#3b82f6', '#f97316', '#ec4899'],
+                    borderWidth: 0,
+                    cutout: '80%'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        // B. Detections Over Time (Last 14 Days)
+        const last14Days = Array.from({length: 14}, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (13 - i));
+            return d.toISOString().slice(0, 10);
+        });
+
+        const dailyCounts = last14Days.map(date => 
+            complaints.filter(c => (c.timestamp || "").slice(0, 10) === date && (c.intelligence?.metaphor_score > 0.5 || c.intelligence?.is_speculation)).length
+        );
+
+        charts['figurativeTimeChart'] = new Chart(ctxTime, {
+            type: 'line',
+            data: {
+                labels: last14Days.map(d => d.slice(5)),
+                datasets: [{
+                    label: 'Detections',
+                    data: dailyCounts,
+                    borderColor: '#a855f7',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: 'rgba(168, 85, 247, 0.05)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 8 } } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 8 } } }
+                }
+            }
+        });
+    }
+
+    // C. Mismatches List
+    const mismatches = complaints.filter(c => c.intelligence?.category_mismatch || c.category_mismatch?.has_mismatch).slice(0, 5);
+    const mismatchList = document.getElementById('mismatchList');
+    if (mismatchList) {
+        if (mismatches.length === 0) {
+            showEmptyState('mismatchList', 'No Category Mismatches', 'fa-check-circle');
+        } else {
+            mismatchList.innerHTML = mismatches.map(m => `
+                <div class="p-2 rounded bg-white/5 border border-white/5">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[9px] text-gray-500 font-bold uppercase">${m.id.substring(0, 8)}</span>
+                        <span class="text-[8px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20 font-black">MISMATCH</span>
+                    </div>
+                    <p class="text-[10px] text-gray-300 line-clamp-1 mb-1">${m.original_text || m.description}</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] text-gray-500 uppercase">${m.category}</span>
+                        <i class="fas fa-arrow-right text-[8px] text-gray-600"></i>
+                        <span class="text-[9px] text-purple-400 font-bold uppercase">${m.intelligence?.suggested_category || 'Others'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    // D. Recent Edge Cases
+    const edgeCases = complaints.filter(c => c.intelligence?.confidence < 0.7).slice(0, 5);
+    const recentList = document.getElementById('recentEdgeCasesList');
+    if (recentList) {
+        if (edgeCases.length === 0) {
+            showEmptyState('recentEdgeCasesList', 'Clean Queue: 0 Edge Cases', 'fa-shield-check');
+        } else {
+            recentList.innerHTML = edgeCases.map(e => `
+                <div class="flex items-center gap-3 p-2 rounded hover:bg-white/5 transition-all">
+                    <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-fingerprint text-[10px] text-gray-500"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[10px] text-white font-bold truncate">${e.original_text || e.description}</p>
+                        <p class="text-[9px] text-gray-500 uppercase">${Math.round((e.intelligence?.confidence || 0) * 100)}% Confidence</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+  };
+
+  // 4. Render Smart Detection Charts (Disabled duplicate)
+  // renderSmartDetection(processedcomplaints || []);
+
+  // 4. Render Sparklines & Trends for Category Metrics
   const now = Date.now();
   const last30Days = Array.from({length: 30}, (_, i) => new Date(now - (29 - i) * 86400000).toISOString().slice(0, 10));
   const prev30Days = Array.from({length: 30}, (_, i) => new Date(now - (59 - i) * 86400000).toISOString().slice(0, 10));
@@ -1280,41 +1559,73 @@ function openModal(item) {
   let nlpSection = "";
   if (intel.confidence || flags.metaphor || flags.speculation || flags.mismatch) {
     const badges = [];
-    if (flags.emergency) badges.push('<span class="badge badge-danger">Emergency</span>');
-    if (flags.metaphor) badges.push('<span class="badge badge-info">Metaphor Detected</span>');
-    if (flags.speculation) badges.push('<span class="badge badge-warning">Speculation</span>');
-    if (flags.mismatch) badges.push('<span class="badge badge-warning">Category Mismatch</span>');
-    if (intel.ai_reclassified) badges.push('<span class="badge badge-success">AI Reclassified</span>');
-    if (intel.ai_downgraded) badges.push('<span class="badge badge-danger">AI Downgraded</span>');
-    if (intel.temporal_tag) badges.push(`<span class="badge badge-info">Temporal: ${intel.temporal_tag}</span>`);
+    if (flags.emergency) badges.push('<span class="px-1.5 py-0.5 bg-red-500/10 text-red-400 text-[9px] font-black uppercase tracking-widest rounded border border-red-500/20">Emergency</span>');
+    if (flags.metaphor) badges.push('<span class="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 text-[9px] font-black uppercase tracking-widest rounded border border-purple-500/20">Metaphor</span>');
+    if (flags.speculation) badges.push('<span class="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded border border-blue-500/20">Speculation</span>');
+    if (flags.mismatch) badges.push('<span class="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 text-[9px] font-black uppercase tracking-widest rounded border border-orange-500/20">Category Mismatch</span>');
+    if (intel.ai_reclassified) badges.push('<span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded border border-emerald-500/20">AI Reclassified</span>');
+    if (intel.ai_downgraded) badges.push('<span class="px-1.5 py-0.5 bg-red-500/10 text-red-400 text-[9px] font-black uppercase tracking-widest rounded border border-red-500/20">AI Downgraded</span>');
+    if (intel.temporal_tag) badges.push(`<span class="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded border border-blue-500/20">Temporal: ${intel.temporal_tag}</span>`);
 
     nlpSection = `
-      <div style="margin-top:12px;padding:12px;background:var(--gray-100);border-radius:8px;">
-        <div style="font-weight:700;margin-bottom:8px;"><i class="fas fa-brain" style="margin-right:6px;color:var(--primary);"></i>NLP Intelligence</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-size:13px;">
-          <div><strong>Confidence:</strong> ${intel.confidence ? `${Math.round(intel.confidence * 100)  }%` : "-"}</div>
-          <div><strong>Veracity:</strong> ${intel.veracity_score ? `${Math.round(intel.veracity_score)  }%` : "-"}</div>
-          ${intel.original_category ? `<div><strong>Original Category:</strong> ${intel.original_category}</div>` : ""}
-          ${intel.reclassified_reason ? `<div style="grid-column:1/-1;"><strong>Reason:</strong> ${intel.reclassified_reason}</div>` : ""}
+      <div class="mt-4 p-4 bg-white/5 rounded-xl border border-white/5">
+        <div class="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-3 flex items-center gap-2">
+            <i class="fas fa-brain"></i> NLP Intelligence
         </div>
-        ${badges.length > 0 ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">${badges.join("")}</div>` : ""}
+        <div class="grid grid-cols-2 gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+          <div><span class="text-gray-500 block mb-0.5">Confidence</span> <span class="text-white text-xs data-monospace">${intel.confidence ? Math.round(intel.confidence * 100) + '%' : "-"}</span></div>
+          <div><span class="text-gray-500 block mb-0.5">Veracity</span> <span class="text-white text-xs data-monospace">${intel.veracity_score ? Math.round(intel.veracity_score) + '%' : "-"}</span></div>
+          ${intel.original_category ? `<div><span class="text-gray-500 block mb-0.5">Original Category</span> <span class="text-white">${intel.original_category}</span></div>` : ""}
+          ${intel.reclassified_reason ? `<div class="col-span-2"><span class="text-gray-500 block mb-0.5">Reason</span> <span class="text-white normal-case">${intel.reclassified_reason}</span></div>` : ""}
+        </div>
+        ${badges.length > 0 ? `<div class="mt-4 flex gap-2 flex-wrap">${badges.join("")}</div>` : ""}
       </div>
     `;
   }
 
+  const score = Math.round(item.triage_score || 0);
+  let scoreColor = "text-emerald-400";
+  if (score >= 70) scoreColor = "text-red-400";
+  else if (score >= 40) scoreColor = "text-orange-400";
+  
+  const tier = item.priority || item.tier || 'Standard';
+
   body.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div><div style="font-weight:900;font-size:16px;">${safeText(item.subcategory || item.category)}</div><div style="color:var(--gray-600);">${safeText(item.id)}</div></div>
-        <div style="text-align:right;"><div style="font-weight:900;">Score: ${Math.round(item.triage_score || 0)}</div><div style="color:var(--gray-600);">Tier ${item.tier}</div></div>
+    <div class="flex flex-col gap-4 text-gray-200">
+      <div class="flex justify-between items-start gap-4 flex-wrap pb-4 border-b border-white/10">
+        <div>
+            <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Incident #${safeText(item.id).substring(0,8)}</div>
+            <div class="text-xl font-black text-white uppercase tracking-tight">${safeText(item.subcategory || item.category)}</div>
+        </div>
+        <div class="text-right">
+            <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Triage Score</div>
+            <div class="text-2xl font-black data-monospace leading-none ${scoreColor}">${score} <span class="text-[9px] text-gray-500 block mt-1 font-bold tracking-widest uppercase">${tier}</span></div>
+        </div>
       </div>
-      <div style="white-space:pre-wrap;padding:12px;background:var(--gray-50);border-radius:8px;border-left:4px solid var(--primary);">${safeText(item.description)}</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
-        <div><strong>Barangay:</strong> ${safeText(item.barangay)}</div>
-        <div><strong>Location:</strong> ${safeText(item.location_text)}</div>
-        <div><strong>Status:</strong> ${safeText(item.workflow_status || item.status)}</div>
-        <div><strong>Priority:</strong> ${safeText(item.priority)}</div>
+      
+      <div class="p-4 bg-white/5 rounded-xl border-l-2 border-blue-500 font-medium text-sm leading-relaxed">
+        ${safeText(item.description || item.original_text || item.location_text || 'No description provided.')}
       </div>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#0a0f18] rounded-xl border border-white/5">
+        <div>
+            <span class="text-[9px] font-black uppercase tracking-widest text-gray-500 block mb-1">Barangay</span>
+            <span class="text-xs font-bold text-gray-300">${safeText(item.barangay || 'N/A')}</span>
+        </div>
+        <div>
+            <span class="text-[9px] font-black uppercase tracking-widest text-gray-500 block mb-1">Location</span>
+            <span class="text-xs font-bold text-gray-300">${safeText(item.location_text || 'N/A')}</span>
+        </div>
+        <div>
+            <span class="text-[9px] font-black uppercase tracking-widest text-gray-500 block mb-1">Status</span>
+            <span class="text-xs font-bold text-gray-300">${safeText(item.workflow_status || item.status || 'Pending')}</span>
+        </div>
+        <div>
+            <span class="text-[9px] font-black uppercase tracking-widest text-gray-500 block mb-1">Date</span>
+            <span class="text-xs font-bold text-gray-300 data-monospace">${new Date(item.timestamp).toLocaleDateString()}</span>
+        </div>
+      </div>
+      
       ${nlpSection}
     </div>
   `;
@@ -1330,7 +1641,8 @@ function closeModal() {
  * Render edge cases detected by the NLP intelligence.
  * Smart Detection shows: Metaphors, Speculation, Category Mismatches, and Critical Alerts.
  */
-function renderEdgeCases() {
+function renderEdgeCases(stats = globalStats) {
+  if (!stats || !processedcomplaints) return;
   const metaphors = processedcomplaints.filter((c) =>
     c.flags?.metaphor || (c.intelligence?.metaphor_score && c.intelligence.metaphor_score > 0.5)
   );
@@ -1364,7 +1676,7 @@ function renderEdgeCases() {
   set("edgeCaseRate", `${edgeCaseRate}%`);
 
   // Calculate actual history (last 10 days of activity)
-  const sortedDays = Array.from(globalStats.byDay.keys()).sort().slice(-10);
+  const sortedDays = Array.from(stats.byDay.keys()).sort().slice(-10);
   if (sortedDays.length < 10) {
       // Pad with past days if needed
       const firstDay = new Date(sortedDays[0] || Date.now());
@@ -1431,11 +1743,33 @@ function renderEdgeCases() {
 
   // 2. Figurative Breakdown Donut
   const figurativeDist = {
-    "Hyperbole": metaphors.filter(c => c.intelligence?.figurative_type === 'hyperbole').length,
-    "Metaphor": metaphors.filter(c => c.intelligence?.figurative_type === 'metaphor').length,
-    "Idioms": metaphors.filter(c => c.intelligence?.figurative_type === 'idiom').length,
-    "Sarcasm": metaphors.filter(c => c.intelligence?.figurative_type === 'sarcasm').length
+    "Metaphor": 0,
+    "Idioms": 0,
+    "Hyperbole": 0,
+    "Sarcasm": 0,
+    "General": 0
   };
+
+  metaphors.forEach(c => {
+    const txt = (c.original_text || c.description || "").toLowerCase();
+    
+    if (c.intelligence?.figurative_type === 'hyperbole' || txt.includes('sobra') || txt.includes('grabeng') || txt.includes('ubod')) {
+      figurativeDist["Hyperbole"]++;
+    } else if (c.intelligence?.figurative_type === 'idiom' || txt.includes('kamay') || txt.includes('mata') || txt.includes('puso')) {
+      figurativeDist["Idioms"]++;
+    } else if (c.intelligence?.figurative_type === 'sarcasm' || c.intelligence?.sarcasm_score > 0.6) {
+      figurativeDist["Sarcasm"]++;
+    } else if (c.intelligence?.figurative_type === 'metaphor' || txt.includes('parang') || txt.includes('daw') || txt.includes('tila')) {
+      figurativeDist["Metaphor"]++;
+    } else {
+      figurativeDist["General"]++;
+    }
+  });
+
+  // Clean up empty categories for a better UI
+  for (const key in figurativeDist) {
+    if (figurativeDist[key] === 0) delete figurativeDist[key];
+  }
   
   set("totalFigurativeDonut", metaphors.length);
   renderDonutChart("figurativeDistChart", figurativeDist, ["#8b5cf6", "#3b82f6", "#f97316", "#10b981"]);
@@ -1516,13 +1850,32 @@ function renderEdgeCases() {
   }
 
   // 6. NLP Detection Methods (Edge context)
-  // Calculate actual NLP detection methods (Edge context)
   const edgeMethodDist = {
-    "Rule-Based": processedcomplaints.filter(c => c.intelligence?.method === 'RULE_BASED' || c.intelligence?.method === 'Fast Path').length,
-    "AI (TensorFlow)": processedcomplaints.filter(c => c.intelligence?.method === 'AI_TENSORFLOW' || c.intelligence?.method === 'Slow Path').length,
-    "Metaphor Filter": processedcomplaints.filter(c => c.intelligence?.method === 'METAPHOR_FILTER').length,
-    "Fallback": processedcomplaints.filter(c => c.intelligence?.method === 'FALLBACK' || !c.intelligence?.method).length
+    "AI (TensorFlow)": 0,
+    "Rule-Based": 0,
+    "Metaphor Filter": 0,
+    "Fallback": 0
   };
+
+  processedcomplaints.forEach(c => {
+    const intel = c.intelligence || {};
+    // If it has a detailed score, it went through the heavy AI
+    if (intel.method === 'AI_TENSORFLOW' || intel.method === 'Slow Path' || intel.confidence) {
+        edgeMethodDist["AI (TensorFlow)"]++;
+    } else if (intel.method === 'METAPHOR_FILTER' || c.flags?.metaphor) {
+        edgeMethodDist["Metaphor Filter"]++;
+    } else if (intel.method === 'RULE_BASED' || intel.method === 'Fast Path' || c.flags?.emergency) {
+        edgeMethodDist["Rule-Based"]++;
+    } else {
+        edgeMethodDist["Fallback"]++;
+    }
+  });
+
+  // Clean up empty categories for a tactical UI
+  for (const key in edgeMethodDist) {
+    if (edgeMethodDist[key] === 0) delete edgeMethodDist[key];
+  }
+
   set("edgeNLPMethodTotal", totalEdgeCasesCount);
   renderDonutChart("edgeNLPMethodChart", edgeMethodDist, ["#8b5cf6", "#3b82f6", "#f97316", "#10b981"], { borderRadius: 4, spacing: 2 });
   renderTacticalLegend("edgeNLPMethodLegend", edgeMethodDist, ["#8b5cf6", "#3b82f6", "#f97316", "#10b981"], true);
@@ -1831,8 +2184,24 @@ function setupListeners() {
   };
 
   document.getElementById("searchInput")?.addEventListener("input", debounce(renderTable, 200));
-  ["tierFilter", "categoryFilter", "filterType"].forEach((id) => {
-    document.getElementById(id)?.addEventListener("change", renderTable);
+
+  // View All Routing for Smart Detection
+  const routeToDataset = () => {
+    const datasetTab = document.querySelector('.nav-tab[data-tab="data-table"]');
+    if (datasetTab) datasetTab.click();
+  };
+  document.getElementById("btnViewFigurative")?.addEventListener("click", routeToDataset);
+  document.getElementById("btnViewMismatches")?.addEventListener("click", routeToDataset);
+  document.getElementById("btnViewRecentEdge")?.addEventListener("click", routeToDataset);
+  ["tierFilter", "categoryFilter", "filterType", "temporalTimeFilter", "temporalCategoryFilter", "temporalBarangayFilter"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", () => {
+        if (id.startsWith("temporal")) {
+            // Re-render temporal charts with updated filters if needed
+            if (globalStats) renderTemporal(globalStats);
+        } else {
+            renderTable();
+        }
+    });
   });
 
   document.getElementById("itemsPerPage")?.addEventListener("change", (e) => {
@@ -1895,8 +2264,8 @@ function setupListeners() {
       document.getElementById(tabId)?.classList.add("active");
 
       // Auto-render logic for specific tabs
-      if (tabId === "edge-cases") {
-        renderEdgeCases();
+      if (tabId === "edge-cases" && globalStats) {
+        renderEdgeCases(globalStats);
         renderEdgeCasesCards();
       } else if (tabId === "categories" && globalStats) {
         renderCategories(globalStats);
@@ -2187,17 +2556,19 @@ function renderAll(stats) {
 }
 
 function populateCategoryFilter() {
-  const select = document.getElementById("categoryFilter");
-  if (!select) return;
-  const existing = new Set([...select.querySelectorAll("option")].map((o) => o.value));
-  const cats = [...new Set(processedcomplaints.map((c) => safeText(c.subcategory || c.category)).filter(Boolean))].sort();
-  for (const cat of cats) {
-    if (existing.has(cat)) continue;
-    const opt = document.createElement("option");
-    opt.value = cat;
-    opt.textContent = cat;
-    select.appendChild(opt);
-  }
+  const selects = [document.getElementById("categoryFilter"), document.getElementById("temporalCategoryFilter")];
+  selects.forEach(select => {
+    if (!select) return;
+    const existing = new Set([...select.querySelectorAll("option")].map((o) => o.value));
+    const cats = [...new Set(processedcomplaints.map((c) => safeText(c.subcategory || c.category)).filter(Boolean))].sort();
+    for (const cat of cats) {
+      if (existing.has(cat)) continue;
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    }
+  });
 }
 
 async function init() {

@@ -72,8 +72,6 @@
 .dashboard-content .border-nav { border: 1px solid var(--nav-border) !important; }
 .dashboard-content .bg-white\/5 { background: var(--input-bg) !important; }
 .dashboard-content .bg-white\/10 { background: var(--card-border) !important; }
-.dashboard-content .border-white\/5 { border-color: var(--card-border) !important; }
-.dashboard-content .border-white\/10 { border-color: var(--card-border) !important; }
 
 /* Contrast Overrides for Tailwind Classes */
 .dashboard-content .text-white:not(.badge):not(.nav-tab.active) { color: var(--text-primary) !important; }
@@ -82,6 +80,35 @@
 .dashboard-content .text-gray-400 { color: var(--text-secondary) !important; }
 .dashboard-content .text-gray-500 { color: var(--text-muted) !important; font-weight: 600; }
 .dashboard-content .text-gray-600 { color: var(--text-muted) !important; }
+.dashboard-content .text-gray-900 { color: var(--text-primary) !important; }
+.dashboard-content .text-gray-800 { color: var(--text-primary) !important; }
+.dashboard-content .text-gray-700 { color: var(--text-secondary) !important; }
+
+/* Dark background elements - white text */
+/* Dark background elements - white text */
+.dashboard-content .glass-card:not(.tactical-kpi) h3,
+.dashboard-content .glass-card:not(.tactical-kpi) h4,
+.dashboard-content .glass-card:not(.tactical-kpi) p,
+.dashboard-content .glass-card:not(.tactical-kpi) .text-white,
+.dashboard-content .glass-card:not(.tactical-kpi) .text-gray-200,
+.dashboard-content .glass-card:not(.tactical-kpi) .text-gray-300,
+.dashboard-content .glass-card:not(.tactical-kpi) .text-gray-400 {
+  color: var(--text-primary) !important;
+}
+
+.dashboard-content .glass-card .text-gray-500,
+.dashboard-content .glass-card .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+/* Button/Input background areas */
+.dashboard-content input,
+.dashboard-content select,
+.dashboard-content textarea {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+}
 
 .tab-content {
   display: none !important;
@@ -101,8 +128,55 @@
 }
 
 .tactical-container {
-  max-width: 1600px;
-  margin: 0 auto;
+  width: 100%;
+}
+
+/* Ensure sparklines fill their containers */
+.summary-grid canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* Dropdown Option Contrast Fix */
+select option {
+    background-color: #0f172a !important; /* Slate 900 */
+    color: #ffffff !important;
+    padding: 10px;
+}
+
+select:focus {
+    border-color: rgba(168, 85, 247, 0.5) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+
+.analytics-main-row {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr !important;
+  gap: 1.5rem !important;
+  margin-bottom: 2.5rem !important;
+  align-items: stretch !important;
+}
+
+@media (max-width: 1024px) {
+  .analytics-main-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.analytics-supporting-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.5rem !important;
+  margin-bottom: 2.5rem !important;
+  align-items: stretch !important;
+}
+
+@media (max-width: 1024px) {
+  .analytics-supporting-row {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Glassmorphism Components */
@@ -110,7 +184,7 @@
   background: var(--card-bg) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--card-border) !important;
+  border: none !important;
   box-shadow: var(--shadow-main);
   border-radius: 12px;
   transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
@@ -203,7 +277,7 @@
   align-items: center;
   justify-content: center;
   background: var(--input-bg);
-  border: 1px solid var(--card-border);
+  border: none;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
 }
 

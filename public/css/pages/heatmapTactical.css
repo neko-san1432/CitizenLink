@@ -41,6 +41,21 @@
     display: none !important;
 }
 
+/* Ensure floating menu button is visible and clickable */
+.tactical-view #floating-menu-btn,
+.tactical-view .floating-menu-btn {
+    display: flex !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+    z-index: 2005 !important;
+    opacity: 1 !important;
+}
+
+/* Fix for glass-card inside tactical-hud - ensure pointer events work */
+.tactical-hud .glass-card {
+    pointer-events: auto !important;
+}
+
 /* Except when sidebar is specifically opened via controller */
 .tactical-view #sidebar.open {
     display: block !important;

@@ -437,9 +437,8 @@ html.dark .bg-blue-50 {
     border-color: var(--gray-700, #374151) !important;
 }
 
-/* Very strong override for JS injected empty states */
-html.dark body .text-gray-500, 
-html.dark body .bg-gray-50 {
+/* Refined override for specific JS injected empty states only */
+html.dark body .bg-gray-50.text-gray-500 {
     background-color: transparent !important;
     border: 1px dashed rgba(255, 255, 255, 0.15) !important;
     color: #e5e7eb !important;
@@ -683,4 +682,51 @@ html body .menu-toggle {
     display: none !important;
 }
 
+
+
+/* --- Tactical Dashboard Header Controls --- */
+.tactical-container .filter-select {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.tactical-container .filter-select:hover {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.tactical-container .btn-filter {
+    background: #2563eb !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39) !important;
+    transition: all 0.2s ease;
+}
+
+.tactical-container .btn-filter:hover {
+    background: #3b82f6 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.23) !important;
+}
+
+.tactical-header-container {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.tactical-header {
+    letter-spacing: -0.01em;
+}
+
+
+.tactical-subtitle {
+    display: block;
+}
 
