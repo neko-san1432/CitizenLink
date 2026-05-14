@@ -17,39 +17,116 @@ export function initProgressiveForm() {
 
   let currentStep = 0;
   const totalSteps = steps.length;
+  const STORAGE_KEY = "drims_complaint_draft";
+  let isRestoring = false;
 
-  // Initialize state
-  updateStepVisibility();
-  updateButtons();
-  updateProgress();
-
-  // Event Listeners
-  if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-      if (validateStep(currentStep)) {
-        if (currentStep < totalSteps - 1) {
-          currentStep++;
-          updateStepVisibility();
-          updateButtons();
-          updateProgress();
-          window.scrollTo({ top: 0, behavior: "smooth" });
+  // Persistence Logic
+  function saveDraft() {
+    if (isRestoring) return;
+    const fields = {};
+    const inputs = form.querySelectorAll("input:not([type='file']), select, textarea");
+    inputs.forEach(input => {
+      if (input.id) {
+        if (input.type === "checkbox" || input.type === "radio") {
+          fields[input.id] = input.checked;
+        } else {
+          fields[input.id] = input.value;
         }
       }
     });
+
+    const draft = {
+      currentStep,
+      fields,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   }
 
-  if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      if (currentStep > 0) {
-        currentStep--;
+  async function restoreDraft() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      isRestoring = true;
+      const draft = JSON.parse(saved);
+      // 24 hour expiry for drafts
+      if (Date.now() - draft.timestamp > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem(STORAGE_KEY);
+        isRestoring = false;
+        return;
+      }
+
+      // Restore simple fields first
+      for (const [id, value] of Object.entries(draft.fields)) {
+        const el = document.getElementById(id);
+        if (!el || !value) continue;
+
+        if (id === "complaintCategory" || id === "complaintSubcategory") continue; // Handle hierarchy separately
+
+        if (el.type === "checkbox" || el.type === "radio") {
+          el.checked = value;
+        } else {
+          el.value = value;
+        }
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      // Handle Category Hierarchy Persistence
+      const catSelect = document.getElementById("complaintCategory");
+      const subcatSelect = document.getElementById("complaintSubcategory");
+
+      if (catSelect && draft.fields.complaintCategory) {
+        // Wait for categories to be populated by the other controller
+        const waitForOptions = (select, targetValue) => {
+          return new Promise(resolve => {
+            let attempts = 0;
+            const check = () => {
+              attempts++;
+              const options = Array.from(select.options).map(o => o.value);
+              if (options.includes(targetValue)) {
+                select.value = targetValue;
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+                resolve(true);
+              } else if (attempts < 50) {
+                setTimeout(check, 100);
+              } else {
+                resolve(false);
+              }
+            };
+            check();
+          });
+        };
+
+        const catFound = await waitForOptions(catSelect, draft.fields.complaintCategory);
+        if (catFound && subcatSelect && draft.fields.complaintSubcategory) {
+          await waitForOptions(subcatSelect, draft.fields.complaintSubcategory);
+        }
+      }
+
+      // Restore Step
+      if (draft.currentStep > 0 && draft.currentStep < totalSteps) {
+        currentStep = draft.currentStep;
         updateStepVisibility();
         updateButtons();
         updateProgress();
-        window.scrollTo({ top: 0, behavior: "smooth" });
       }
-    });
+
+      showMessage("info", "Draft restored from your last session.");
+    } catch (e) {
+      console.warn("[PROGRESSIVE_FORM] Failed to restore draft:", e);
+    } finally {
+      isRestoring = false;
+    }
   }
 
+  // Clear draft on successful submission
+  window.addEventListener("complaint-submitted", () => {
+    localStorage.removeItem(STORAGE_KEY);
+  });
+
+  // Navigation functions
   function updateStepVisibility() {
     steps.forEach((step, index) => {
       if (index === currentStep) {
@@ -72,34 +149,26 @@ export function initProgressiveForm() {
   }
 
   function updateButtons() {
-    // Back button
     if (backBtn) {
       backBtn.style.display = currentStep === 0 ? "none" : "flex";
     }
 
-    // Next/Submit buttons logic
     const isLastStep = currentStep === totalSteps - 1;
-
     if (nextBtn) {
       nextBtn.style.display = isLastStep ? "none" : "flex";
     }
-
     if (submitBtn) {
       submitBtn.style.display = isLastStep ? "flex" : "none";
     }
 
-    // Ensure wrapper is always visible if it exists
     const submitWrapper = document.querySelector(".submit-wrapper");
     if (submitWrapper) {
-      submitWrapper.style.display = "block";
-      // Optional: ensure flex for centering if needed by CSS
       submitWrapper.style.display = "flex";
       submitWrapper.style.justifyContent = "center";
     }
   }
 
   function updateProgress() {
-    // Update Step Indicators
     stepIndicators.forEach((indicator, index) => {
       if (index <= currentStep) {
         indicator.classList.add("active");
@@ -108,7 +177,6 @@ export function initProgressiveForm() {
       }
     });
 
-    // Update Progress Bar
     if (progressFill) {
       const progress = (currentStep / (totalSteps - 1)) * 100;
       progressFill.style.width = `${progress}%`;
@@ -122,10 +190,7 @@ export function initProgressiveForm() {
     let firstError = null;
 
     requiredInputs.forEach(input => {
-      // Handle visible inputs only (some might be hidden libs)
       if (input.type === "hidden") {
-        // Check if it has a paired visible input or if it's truly required logic
-        // For now, simple check
         if (!input.value) isValid = false;
       } else if (!input.checkValidity()) {
         isValid = false;
@@ -134,23 +199,31 @@ export function initProgressiveForm() {
       }
     });
 
-    // Custom validations (based on step id, not brittle indexes)
+    // Custom validations (based on step id)
     if (step.id === "step-basic") {
       const cat = document.getElementById("complaintCategory");
       const subcat = document.getElementById("complaintSubcategory");
+
+      const categoryName = cat && cat.selectedIndex >= 0 ? cat.options[cat.selectedIndex].text.toLowerCase() : "";
+      const isOthers = categoryName.includes("other");
 
       if (cat && (!cat.value || !cat.value.trim())) {
         isValid = false;
         if (!firstError) firstError = cat;
       }
 
-      if (subcat && (!subcat.value || !subcat.value.trim())) {
+      // Subcategory is required unless category is "Others"
+      if (!isOthers && subcat && (!subcat.value || !subcat.value.trim())) {
         isValid = false;
         if (!firstError) firstError = subcat;
       }
 
       if (!isValid) {
-        showMessage("warning", "Please select a category and subcategory.");
+        if (cat && !cat.value) {
+          showMessage("warning", "Please select a category.");
+        } else if (!isOthers && subcat && !subcat.value) {
+          showMessage("warning", "Please select a subcategory.");
+        }
       }
     }
 
@@ -174,4 +247,43 @@ export function initProgressiveForm() {
 
     return isValid;
   }
+
+  // Navigation Listeners
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      if (validateStep(currentStep)) {
+        if (currentStep < totalSteps - 1) {
+          currentStep++;
+          updateStepVisibility();
+          updateButtons();
+          updateProgress();
+          saveDraft();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }
+    });
+  }
+
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      if (currentStep > 0) {
+        currentStep--;
+        updateStepVisibility();
+        updateButtons();
+        updateProgress();
+        saveDraft();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
+
+  // Initialize
+  updateStepVisibility();
+  updateButtons();
+  updateProgress();
+  restoreDraft();
+
+  // Saving listeners
+  form.addEventListener("input", () => saveDraft());
+  form.addEventListener("change", () => saveDraft());
 }

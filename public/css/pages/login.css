@@ -375,7 +375,7 @@ body::-webkit-scrollbar {
 }
 
 .input::placeholder {
-  color: rgba(248, 250, 252, 0.5);
+  color: rgba(248, 250, 252, 0.7);
 }
 
 .input:hover {
@@ -427,6 +427,11 @@ body::-webkit-scrollbar {
   color: var(--text-light);
   background: rgba(255, 255, 255, 0.05);
 }
+
+.password-toggle:focus {
+  outline: none !important;
+}
+
 
 /* Options */
 .form-options {

@@ -230,7 +230,7 @@
                     </div>
 
                     <!-- Gender -->
-                    <div class="form-group form-full">
+                    <div class="form-group form-half">
                       <label for="gender" class="form-label">Gender</label>
                       <div class="input-wrapper">
                         <select id="gender" name="gender" class="input has-icon">
@@ -273,7 +273,7 @@
 
                     <!-- Phone Field -->
                     <div class="form-group form-half">
-                      <label for="mobile" class="form-label">Phone Number</label>
+                      <label for="mobile" class="form-label form-label-required">Phone Number</label>
                       <div class="phone-input-wrapper">
                         <div class="phone-prefix">+63</div>
                         <input class="input phone-input" type="tel" id="mobile" name="mobile" placeholder="9123456789"
@@ -361,7 +361,7 @@
                           <div class="dz-text">
                             <strong>Click to upload</strong> or drag and drop
                             <div class="dz-hint">
-                              Accepted: JPG, PNG, PDF (front side is enough)
+                              Accepted: JPG, PNG (front side is enough)
                             </div>
                           </div>
                           <input id="id-file-input" name="id-file" type="file" accept="image/*,application/pdf"
@@ -433,7 +433,7 @@
                       <div class="form-group">
                         <label for="secondary-file-input" class="form-label">Upload Document</label>
                         <div class="id-mode id-mode-upload" style="min-height: 120px">
-                          <label for="secondary-file-input" class="id-dropzone" style="background: var(--gray-50)">
+                          <label for="secondary-file-input" class="id-dropzone">
                             <div class="dz-text">
                               <strong>Click to upload document</strong>
                               <div class="dz-hint">
@@ -444,7 +444,7 @@
                           </label>
                         </div>
                         <div id="secondary-file-preview"
-                          class="hidden mt-2 text-sm text-gray-600 flex items-center justify-between p-2 bg-gray-100 rounded">
+                          class="hidden mt-2 text-sm flex items-center justify-between p-3 rounded-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-light);">
                           <span id="secondary-filename"></span>
                           <button type="button" id="secondary-remove-btn" class="text-red-500 hover:text-red-700">
                             &times;
@@ -473,9 +473,9 @@
                         </button>
                         <div class="id-verify-status" id="id-verify-status" aria-live="polite"></div>
                       </div>
-                      <details class="id-verify-review" id="id-review" disabled>
+                      <details class="id-verify-review" id="id-review" hidden>
                         <summary class="review-summary-disabled">
-                          Finished
+                          Verification Results
                         </summary>
                         <div class="review-grid" id="id-review-grid"></div>
                       </details>
@@ -492,6 +492,10 @@
                       Please review your information and complete the security
                       check.
                     </p>
+
+                    <div id="signup-review-summary" class="review-summary-container form-full mb-4">
+                      <!-- Populated by JS -->
+                    </div>
 
                     <div id="register-captcha" class="captcha-container form-full"></div>
 
@@ -516,11 +520,20 @@
                   <button type="button" id="signup-prev-btn" class="btn btn-secondary" hidden>
                     Back
                   </button>
-                  <button type="button" id="signup-next-btn" class="btn btn-primary ml-auto">
-                    Next
+                  <button type="button" id="signup-next-btn" class="btn btn-primary ml-auto btn-premium">
+                    <span>Next</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                   </button>
-                  <button type="submit" id="signup-submit-btn" class="btn btn-primary ml-auto" hidden>
+                  <button type="submit" id="signup-submit-btn" class="btn btn-primary ml-auto btn-premium" hidden>
                     <span>Create Account</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="8.5" cy="7" r="4"></circle>
+                      <polyline points="17 11 19 13 23 9"></polyline>
+                    </svg>
                   </button>
                 </div>
               </div>

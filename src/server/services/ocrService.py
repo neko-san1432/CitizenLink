@@ -2,68 +2,48 @@
 import sys
 import json
 import logging
-from paddleocr import PaddleOCR
+import os
 
-# Configure logging to stderr so it doesn't pollute stdout (which is used for JSON)
-# Only show ERROR logs to silence warnings and info messages
-logging.basicConfig(level=logging.ERROR, stream=sys.stderr)
+# Set environment variables for CPU stability
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+# Silence logs
+logging.getLogger("easyocr").setLevel(logging.ERROR)
+
+try:
+    import easyocr
+    import numpy as np
+except ImportError:
+    print(json.dumps({"error": "OCR dependencies (easyocr/numpy) not found. Please install them."}))
+    sys.exit(1)
 
 def process_image(image_path):
     try:
-        # Initialize PaddleOCR
-        # use_angle_cls=True enables angle classification
-        # lang='en' for English (or 'ch' for Chinese/English mix which is default and robust)
-        ocr = PaddleOCR(use_angle_cls=True, lang='en')
+        # Initialize EasyOCR (English only for speed and stability)
+        # verbose=False silences progress bars which can crash console logs
+        reader = easyocr.Reader(['en'], gpu=False, verbose=False)
         
-        logging.info(f"Processing image: {image_path}")
-        result = ocr.predict(image_path)
+        # Run OCR
+        results = reader.readtext(image_path)
         
-        # Result is a list of lists (one for each page)
-        # We assume single page
-        if not result or result[0] is None:
+        if not results:
             print(json.dumps({"text": "", "lines": [], "average_confidence": 0}))
             return
 
-        # Check result structure
-        data = result[0]
         lines = []
         total_conf = 0
         count = 0
         
-        if isinstance(data, dict) and 'rec_texts' in data:
-            # New format (PP-OCRv5 / PaddleX)
-            texts = data.get('rec_texts', [])
-            scores = data.get('rec_scores', [])
-            boxes = data.get('dt_polys', [])
-            
-            for i in range(len(texts)):
-                text = texts[i]
-                score = scores[i]
-                # Convert numpy array to list if needed
-                box = boxes[i].tolist() if hasattr(boxes[i], 'tolist') else boxes[i]
-                
-                lines.append({
-                    "text": text,
-                    "confidence": score,
-                    "box": box
-                })
-                total_conf += score
-                count += 1
-                
-        elif isinstance(data, list):
-            # Old format (List of [box, [text, score]])
-            for line in data:
-                box = line[0]
-                text = line[1][0]
-                score = line[1][1]
-                
-                lines.append({
-                    "text": text,
-                    "confidence": score,
-                    "box": box
-                })
-                total_conf += score
-                count += 1
+        for (bbox, text, prob) in results:
+            # bbox is a list of [x,y] coordinates
+            # Convert numpy arrays/types to standard python types for JSON
+            lines.append({
+                "text": text,
+                "confidence": float(prob),
+                "box": [[float(coord) for coord in point] for point in bbox]
+            })
+            total_conf += float(prob)
+            count += 1
         
         full_text = "\n".join([l["text"] for l in lines])
         avg_conf = (total_conf / count) if count > 0 else 0
@@ -78,14 +58,13 @@ def process_image(image_path):
         print(json.dumps(output))
         
     except Exception as e:
-        logging.error(f"Error processing image: {str(e)}")
         # Output error JSON
         print(json.dumps({"error": str(e)}))
         sys.exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        logging.error("Usage: python ocrService.py <image_path>")
+        print(json.dumps({"error": "Usage: python ocrService.py <image_path>"}))
         sys.exit(1)
         
     image_path = sys.argv[1]

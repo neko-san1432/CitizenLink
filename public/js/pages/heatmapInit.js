@@ -321,23 +321,13 @@ async function loadcomplaintData() {
 
     // Setup date picker constraints based on loaded complaint data
     setupDatePickerConstraints();
-    // Default to showing only Today's complaints
+    // Default to showing All Time complaints (no date filter)
     const dateStart = document.getElementById("date-range-start");
     const dateEnd = document.getElementById("date-range-end");
     if (dateStart && dateEnd) {
-      const today = new Date();
-      // Handle timezone offset to ensure we get the correct local date string (YYYY-MM-DD)
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0");
-      const day = String(today.getDate()).padStart(2, "0");
-      const todayStr = `${year}-${month}-${day}`;
-
-      dateStart.value = todayStr;
-      dateEnd.value = todayStr;
-
-      // Update constraints for the selected dates
-      updateDatePickerConstraints(todayStr, todayStr);
-      console.log(`[HEATMAP] Defaulting filter to Today: ${todayStr}`);
+      dateStart.value = "";
+      dateEnd.value = "";
+      console.log("[HEATMAP] Defaulting filter to All Time");
     }
 
     // REMOVED: Redundant initial heatmap creation
@@ -1044,8 +1034,10 @@ async function loadCategories() {
     );
 
     const group = document.getElementById("category-filter-group");
-    if (!group) {
-      console.warn("[HEATMAP] category-filter-group not found, skipping categories");
+    const presetSelect = document.getElementById("category-filter-preset");
+    
+    if (!group && !presetSelect) {
+      console.warn("[HEATMAP] No category filter elements found (neither group nor preset), skipping categories");
       return;
     }
     const loading = document.getElementById("category-loading");
@@ -1123,8 +1115,9 @@ async function loadCategories() {
             "width: 6px; height: 6px; background-color: #3B82F6; border-radius: 50%; margin-left: auto;";
           label.appendChild(badge);
         }
-
-        group.appendChild(label);
+        if (group) {
+          group.appendChild(label);
+        }
       });
 
       // console.log(

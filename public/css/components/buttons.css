@@ -13,7 +13,7 @@
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-600);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   user-select: none;
   transition: all var(--transition-sm);

@@ -385,14 +385,9 @@ function getAdaptiveEpsilon(categoryOrPoint) {
 }
 
 function getAdaptiveMinPts(categoryOrPoint) {
-  let category;
-  if (typeof categoryOrPoint === "object") {
-    category = getNormalizedCategory(categoryOrPoint);
-  } else {
-    category = categoryOrPoint;
-  }
-  const minPts = ADAPTIVE_MINPTS[category];
-  return minPts !== undefined ? minPts : 4;
+  // As per the thesis methodology, enforcing a fixed threshold of minPts = 2
+  // rather than using the variable ADAPTIVE_MINPTS dictionary.
+  return 2;
 }
 
 function checkSemanticRelation(categoryA, categoryB) {

@@ -60,11 +60,10 @@ router.get("/config", apiLimiter, (req, res) => {
     legacyRolesEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
     legacyRoleManagementEnabled: process.env.ENABLE_LEGACY_ROLES === "true",
     testLoginEnabled: config.env === "development" || process.env.ENABLE_TEST_LOGIN === "true",
-    testEmails: {
-      citizen: devAccounts.citizen.email,
-      lgu: devAccounts.lgu.email,
-      superAdmin: devAccounts.superAdmin.email,
-      password: devAccounts.citizen.password // Defaulting to citizen password for the quick UI
+    testAccounts: {
+      citizen: devAccounts.citizen,
+      lgu: devAccounts.lgu,
+      superAdmin: devAccounts.superAdmin
     }
   });
 });

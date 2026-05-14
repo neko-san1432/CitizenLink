@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="/css/components/sidebar.css" />
   <link rel="stylesheet" href="/css/base/app.css" />
   <link rel="stylesheet" href="/css/components/header.css" />
-  <link rel="stylesheet" href="/css/pages/dashboardCommon.css" />
   <link rel="stylesheet" href="/css/pages/dashboardRedesign.css" />
   <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
   <link rel="stylesheet" href="/css/components/skeleton.css" />
@@ -37,7 +36,8 @@
         <!-- Main Content Grid -->
         <div class="dashboard-content gap-4 p-4 relative" style="flex: 1;">
           <!-- Global Skeleton Loader -->
-          <div id="dashboard-loading" class="dashboard-loading dash-new-container" style="display: flex; flex-direction: column; width: 100%;">
+          <div id="dashboard-loading" class="dashboard-loading dash-new-container"
+            style="display: flex; flex-direction: column; width: 100%;">
             <!-- Welcome Skeleton -->
             <div class="dash-welcome">
               <div class="skeleton skeleton-welcome-title"></div>
@@ -53,7 +53,7 @@
 
             <!-- Mid Section Skeleton -->
             <div class="dash-mid-section">
-              <div class="dash-box" style="padding: 1.25rem;">
+              <div class="dash-box">
                 <div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
                   <div class="skeleton skeleton-box-title"></div>
                   <div class="skeleton skeleton-box-meta"></div>
@@ -66,7 +66,7 @@
                 <div class="skeleton skeleton-box-content" style="height: 150px;"></div>
               </div>
 
-              <div class="dash-box" style="padding: 1.25rem;">
+              <div class="dash-box">
                 <div style="display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
                   <div class="skeleton skeleton-box-title" style="width: 200px;"></div>
                   <div class="skeleton skeleton-box-meta" style="width: 28px;"></div>
@@ -82,8 +82,9 @@
           </div>
 
           <!-- Dashboard Real Content -->
-          <div id="dashboard-main-content" class="dash-new-container" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
-            
+          <div id="dashboard-main-content" class="dash-new-container"
+            style="display: none; opacity: 0; transition: opacity 0.3s ease;">
+
             <div class="dash-welcome">
               <h2>
                 <span class="dash-wave">👋</span> Welcome back!
@@ -103,7 +104,9 @@
                   </div>
                 </div>
                 <div class="dash-card-arrow">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </a>
 
@@ -117,7 +120,9 @@
                   </div>
                 </div>
                 <div class="dash-card-arrow">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </a>
 
@@ -131,7 +136,9 @@
                   </div>
                 </div>
                 <div class="dash-card-arrow">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </a>
             </div>
@@ -142,18 +149,24 @@
                 <div class="dash-box-header">
                   <h3>My Reports: Status Updates</h3>
                   <div class="dash-box-metrics">
-                    <span><svg class="metrics-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg> Total Reports</span>
+                    <span><svg class="metrics-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                      </svg> Total Reports</span>
                     <span><span class="dot bg-blue"></span> Pending</span>
                     <span><span class="dot bg-green"></span> Total <strong id="desktop-metric-total">0</strong></span>
                   </div>
                 </div>
-                
+
                 <div id="recent-activity-list" class="dash-empty-state">
                   <!-- Loading/Empty State defaults to the image's empty state design -->
                   <h4>You haven't filed any reports yet.</h4>
                   <p>Start by filing your first complaint.</p>
                   <a href="/filecomplaint" class="dash-btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     File Your First Complaint
                   </a>
                 </div>
@@ -173,7 +186,10 @@
                 <div class="dash-box-header-title">
                   <h3>Report An Issue</h3>
                   <a href="/filecomplaint" class="dash-link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
                   </a>
                 </div>
                 <div class="dash-categories">
@@ -187,7 +203,9 @@
                     <span class="cat-icon">💧</span> Water & Sewer
                   </a>
                   <div class="dash-divider">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                   <a href="/filecomplaint" class="dash-category-more">
                     <span class="cat-icon-gray">•••</span> More
@@ -198,26 +216,6 @@
           </div>
         </div> <!-- End dashboard-main-content -->
       </div>
-      
-      <!-- Mobile Bottom Navigation -->
-      <nav class="dash-bottom-nav">
-        <a href="/citizen/dashboard" class="nav-item active">
-          <svg viewBox="0 0 24 24" class="nav-icon" fill="currentColor">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-          </svg>
-        </a>
-        <a href="/filecomplaint" class="nav-item">
-          <svg viewBox="0 0 24 24" class="nav-icon" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-          </svg>
-        </a>
-        <a href="/help" class="nav-item">
-          <svg viewBox="0 0 24 24" class="nav-icon" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-2.5c0-.55.22-1.05.59-1.46l1.21-1.25C13.15 9.47 13.5 9 13.5 8.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5H8.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5c0 1.05-.43 2-1.43 2.75z"/>
-          </svg>
-        </a>
-      </nav>
-      
     </div> <!-- End app -->
   </div>
   <div id="toast-container" class="toast-container"></div>
@@ -226,7 +224,6 @@
   <script type="module" src="../../js/components/header.js"></script>
   <script type="module" src="../../js/components/sidebar.js"></script>
   <script type="module" src="../../js/auth/authChecker.js"></script>
-  <script type="module" src="../../js/auth/roleToggle.js"></script>
   <script type="module" src="../../js/components/clock.js"></script>
   <script type="module" src="/js/pages/citizenDashboard.js"></script>
 </body>

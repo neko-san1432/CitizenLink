@@ -1,4 +1,8 @@
 /* Fonts & Variables matching Login/Landing */
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
@@ -381,9 +385,7 @@ body {
 }
 
 .password-toggle:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 2px;
-  border-radius: 0.25rem;
+  outline: none !important;
 }
 
 .password-toggle .eye-icon {
@@ -4072,3 +4074,520 @@ body {
     padding-left: 3rem !important;
   }
 }
+
+/* =========================================
+   REDESIGNED SIGNUP METHOD GRID
+   ========================================= */
+.signup-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.signup-method-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(15, 23, 42, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: 0.75rem 0.5rem !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  text-decoration: none !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.signup-method-card:hover {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-color: var(--primary-500) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--primary-500) inset !important;
+}
+
+.signup-method-card .method-icon-wrap {
+  margin-bottom: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.signup-method-card:hover .method-icon-wrap {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.signup-method-card .method-icon-wrap svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--text-light) !important;
+}
+
+.signup-method-card h3,
+.signup-method-card .method-body h3,
+button.signup-method-card h3 {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  margin: 0 0 0.15rem 0 !important;
+  color: #ffffff !important;
+  font-family: var(--font-heading) !important;
+}
+
+.signup-method-card p,
+.signup-method-card .method-body p,
+button.signup-method-card p {
+  font-size: 0.75rem !important;
+  color: var(--text-dim) !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.signup-method-card .method-chevron,
+button.signup-method-card .method-chevron {
+  margin-top: 0.5rem !important;
+  font-size: 1rem !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  font-weight: 300 !important;
+  transition: transform 0.3s ease, color 0.3s ease !important;
+}
+
+.signup-method-card:hover .method-chevron {
+  color: var(--primary-400) !important;
+  transform: translateX(4px) !important;
+}
+
+@media (max-width: 640px) {
+  .signup-method-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   GLOBAL FORM FIELD & BUTTON CONTRAST FIXES
+   ========================================= */
+.auth-form .input,
+.auth-form .select,
+.auth-form .textarea,
+.signup-form .input,
+.signup-form .select,
+.signup-form .textarea,
+.input,
+.select,
+.textarea,
+.form-control {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+.auth-form .input:focus,
+.signup-form .input:focus,
+.input:focus,
+.select:focus,
+.textarea:focus,
+.form-control:focus {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+
+.auth-form .input::placeholder,
+.signup-form .input::placeholder,
+.input::placeholder,
+.select::placeholder,
+.textarea::placeholder,
+.form-control::placeholder {
+  color: rgba(248, 250, 252, 0.5) !important;
+}
+
+.auth-form select option,
+.signup-form select option,
+.select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+/* Fix secondary buttons like Back */
+.signup-form .btn-secondary,
+.auth-form .btn-secondary {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+  transition: all 0.2s ease !important;
+}
+
+.signup-form .btn-secondary:hover,
+.auth-form .btn-secondary:hover {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Fix 'Back to methods' button */
+.signup-method-back {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(248, 250, 252, 0.7) !important; /* text-dim equivalent */
+  padding: 0 !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: color 0.2s ease !important;
+}
+
+.signup-method-back:hover {
+  color: var(--primary-400, #60a5fa) !important;
+  text-decoration: underline !important;
+}
+
+/* Fix visibility overrides causing multiple buttons to show simultaneously */
+.signup-form [hidden],
+.auth-form [hidden],
+[hidden] {
+  display: none !important;
+}
+
+/* =========================================
+   COMPACT STEP GRID (Side-by-Side Fields)
+   ========================================= */
+@media (min-width: 480px) {
+  .signup-step:not([hidden]) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1rem !important;
+    align-content: start;
+    width: 100% !important;
+  }
+  
+  .signup-step .form-group {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    grid-column: span 1 !important;
+  }
+
+  .signup-step .form-full {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Specific elements that should always be full width */
+  .signup-step p,
+  .captcha-container,
+  .terms-checkbox,
+  .alert,
+  .id-verify-body,
+  .alert-warning,
+  .step-title {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+}
+
+/* =========================================
+   PREMIUM BUTTON STYLING
+   ========================================= */
+.btn-premium {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 0.6rem 1.5rem !important;
+  border-radius: 8px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3) !important;
+  cursor: pointer !important;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px) !important;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+}
+
+.btn-premium:active {
+  transform: translateY(0) !important;
+}
+
+.btn-premium svg {
+  transition: transform 0.3s ease !important;
+}
+
+.btn-premium:hover svg {
+  transform: translateX(3px) !important;
+}
+
+/* Subtle shine effect */
+.btn-premium::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -50% !important;
+  left: -50% !important;
+  width: 200% !important;
+  height: 200% !important;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
+  transform: rotate(45deg) !important;
+  transition: all 0.5s !important;
+  pointer-events: none !important;
+}
+
+.btn-premium:hover::after {
+  left: 100% !important;
+  top: 100% !important;
+}
+
+/* Fix Phone Input White Background */
+.phone-input-wrapper {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.phone-prefix {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  padding: 0.75rem 1rem !important;
+  font-weight: 600 !important;
+}
+
+.phone-input {
+  background: transparent !important;
+  border: none !important;
+  color: #f8fafc !important;
+  padding: 0.75rem 1rem !important;
+  width: 100% !important;
+}
+
+.phone-input::placeholder {
+  color: rgba(248, 250, 252, 0.4) !important;
+}
+
+/* =========================================
+   IDENTITY VERIFICATION STEP FIXES
+   ========================================= */
+.id-dropzone {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.id-dropzone:hover {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-color: #3b82f6 !important;
+}
+
+.dz-icon svg {
+  color: #3b82f6 !important;
+}
+
+.dz-text strong {
+  color: #f8fafc !important;
+}
+
+.dz-hint {
+  color: #94a3b8 !important;
+}
+
+.id-verify-footer {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-top: 1.5rem !important;
+  grid-column: 1 / -1 !important;
+}
+
+.id-verify-consent {
+  margin-bottom: 1rem !important;
+}
+
+.id-verify-actions-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+
+/* Fix "Verify ID" button to not look dry */
+#id-scan-btn {
+  width: fit-content !important;
+  padding: 0.6rem 2rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+}
+
+#id-scan-btn:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3) !important;
+}
+
+/* Fix that white box below Verify ID */
+#id-verify-status {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-radius: 8px !important;
+  color: #f8fafc !important;
+  padding: 0 !important;
+}
+
+#id-verify-status:not(:empty) {
+  padding: 0.75rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  margin-top: 0.5rem !important;
+}
+
+.id-verify-review {
+  background: rgba(15, 23, 42, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  margin-top: 1rem !important;
+  overflow: hidden !important;
+}
+
+.id-verify-review summary {
+  padding: 0.75rem 1rem !important;
+  color: #f8fafc !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  list-style: none !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.id-verify-review[open] summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Secondary doc alert fix */
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+  padding: 1rem !important;
+  border-radius: 12px !important;
+  grid-column: 1 / -1 !important;
+}
+
+.alert-warning h4 {
+  color: #fbbf24 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Apply premium style to ALL main next buttons */
+.signup-form .btn-primary,
+.auth-form .btn-primary {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 0.6rem 1.5rem !important;
+  border-radius: 8px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3) !important;
+  cursor: pointer !important;
+}
+
+.signup-form .btn-primary:hover,
+.auth-form .btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+}
+
+.signup-form .btn-primary:disabled,
+.auth-form .btn-primary:disabled {
+  background: #1e293b !important;
+  color: #475569 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+
+
+
+/* =========================================
+   REVIEW SUMMARY STYLING
+   ========================================= */
+.review-summary-container {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+
+.review-item {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-bottom: 0.5rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.review-item:last-child {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+.review-label {
+  font-size: 0.75rem !important;
+  color: var(--text-dim) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.review-value {
+  font-size: 0.9rem !important;
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+}
+
+.review-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  padding: 0.25rem 0.6rem !important;
+  border-radius: 99px !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+
+
+

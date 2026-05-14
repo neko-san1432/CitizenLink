@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const config = require("../../config/app");
+const config = require("../../../config/app");
 
 /**
  * Generate a signed verification token for ID validation

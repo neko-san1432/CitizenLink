@@ -251,6 +251,10 @@ export async function handlecomplaintSubmit(formElement, selectedFiles = [], fil
     if (!result.success) {
       throw new Error(result.error || "Submission failed");
     }
+
+    // Dispatch event to notify that complaint was successfully submitted (used to clear drafts)
+    window.dispatchEvent(new CustomEvent("complaint-submitted", { detail: { result: result.data } }));
+
     showMessage("success", result.message || "complaint submitted successfully");
     return result.data;
   } catch (error) {

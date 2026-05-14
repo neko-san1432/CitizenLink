@@ -201,17 +201,8 @@ async function isWithinDigosBoundary(latitude, longitude) {
   // Load boundary
   const boundary = await loadDigosBoundary();
   if (!boundary) {
-    // Use bounding box fallback if boundary not available
-    const minLat = 6.65;
-    const maxLat = 7.0;
-    const minLng = 125.2;
-    const maxLng = 125.5;
-    return (
-      latitude >= minLat &&
-      latitude <= maxLat &&
-      longitude >= minLng &&
-      longitude <= maxLng
-    );
+    console.error("[BOUNDARY_VALIDATOR] Critical: Boundary data unavailable. Failing closed.");
+    return false;
   }
 
   const point = [longitude, latitude]; // GeoJSON uses [lng, lat] order
@@ -226,29 +217,10 @@ async function isWithinDigosBoundary(latitude, longitude) {
     isValid = _checkGeoJsonBoundary(boundary, point);
   } else {
     console.warn("[BOUNDARY_VALIDATOR] Invalid boundary format");
-    isValid = true; // Fail open if boundary format invalid
+    isValid = false; // Fail closed if boundary format invalid
   }
 
-  // Double-Safety: If polygon check failed, check permissive bounding box
-  // This handles edge cases where visual boundary might differ slightly from validation data
-  if (!isValid) {
-    const minLat = 6.65;
-    const maxLat = 7.0;
-    const minLng = 125.2;
-    const maxLng = 125.5;
 
-    if (
-      latitude >= minLat &&
-      latitude <= maxLat &&
-      longitude >= minLng &&
-      longitude <= maxLng
-    ) {
-      console.log(
-        "[BOUNDARY_VALIDATOR] Polygon check failed but within permissive bounds. allowing."
-      );
-      return true;
-    }
-  }
 
   return isValid;
 }
@@ -270,15 +242,6 @@ function _checkBarangayBoundaries(boundary, point, latitude, longitude) {
         }
       }
     }
-  }
-  // If not in any barangay, check bounding box as fallback
-  if (boundary.bounds) {
-    return (
-      latitude >= boundary.bounds.minLat &&
-      latitude <= boundary.bounds.maxLat &&
-      longitude >= boundary.bounds.minLng &&
-      longitude <= boundary.bounds.maxLng
-    );
   }
   return false;
 }
@@ -306,7 +269,7 @@ function _checkGeoJsonBoundary(boundary, point) {
     "[BOUNDARY_VALIDATOR] Unsupported geometry type:",
     boundary.geometry.type
   );
-  return true; // Fail open if geometry type not supported
+  return false; // Fail closed if geometry type not supported
 }
 
 /**

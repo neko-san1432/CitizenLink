@@ -1,142 +1,116 @@
 /* --- New Citizen Dashboard Layout --- */
 .dash-new-container {
-    padding: 20px;
+    padding: var(--space-5);
     max-width: 1200px;
     margin: 0 auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    color: var(--text-color, #1f2937);
+    color: var(--text-color);
 }
 
 .dash-welcome {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
 }
 .dash-welcome h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 0 0 4px 0;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-1) 0;
 }
 .dash-welcome p {
-    color: var(--text-muted, #4b5563);
-    font-size: 1.125rem;
+    color: var(--text-muted);
+    opacity: 0.9;
+    font-size: var(--font-size-lg);
     margin: 0;
 }
 
 .dash-quick-actions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
 }
 
 .dash-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem;
-    border-radius: 1rem;
+    padding: var(--space-5);
+    border-radius: var(--radius-xl);
     text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    box-shadow: var(--shadow-sm);
 }
 .dash-card:hover, .action-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-lg);
     text-decoration: none !important;
 }
 
 .dash-card-blue {
-    background-color: var(--primary-600, #2563eb);
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    color: var(--text-on-primary);
 }
 .dash-card-blue .dash-card-icon {
     background-color: rgba(255, 255, 255, 0.2);
 }
 .dash-card-blue p {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.95);
 }
 .dash-card-blue svg {
     color: rgba(255, 255, 255, 0.6);
 }
 
 .dash-card-dark {
-    background-color: var(--dash-dark-bg, #1f2937);
-    border: 1px solid var(--dash-dark-border, #374151);
-    color: #ffffff;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--gray-200);
+    color: var(--text-color);
 }
 .dash-card-dark .dash-card-icon {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--gray-100);
 }
 .dash-card-dark p {
-    color: #d1d5db;
+    color: var(--text-muted);
 }
 .dash-card-dark svg {
-    color: #cbd5e1;
+    color: var(--gray-400);
 }
 
 .dash-card-dark .dash-card-text h3 {
-    color: #ffffff;
+    color: var(--text-color);
 }
 
-.dash-card-dark:hover .dash-card-text p,
-.dash-card-dark:hover .dash-card-arrow svg {
-    color: #f8fafc;
-}
-
-/* Light-mode specific styling so theme switch is visually distinct */
-html:not(.dark) .dash-card-dark {
-    background: #1e293b;
-    border-color: #334155;
-    color: #ffffff;
-}
-
-html:not(.dark) .dash-card-dark .dash-card-icon {
-    background: rgba(148, 163, 184, 0.2);
-}
-
-html:not(.dark) .dash-card-dark .dash-card-text h3 {
-    color: #ffffff;
-}
-
-html:not(.dark) .dash-card-dark .dash-card-text p,
-html:not(.dark) .dash-card-dark .dash-card-arrow svg {
-    color: #e2e8f0;
-}
-
-/* Dark-mode keeps deeper contrast but different from light */
 html.dark .dash-card-dark {
-    background: #1f2937;
-    border-color: #374151;
+    background-color: var(--bg-surface);
+    border-color: var(--gray-700);
 }
 
 .dash-card-content {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 .dash-card-icon {
-    font-size: 1.5rem;
-    padding: 0.5rem;
-    border-radius: 0.75rem;
+    font-size: var(--font-size-2xl);
+    padding: var(--space-2);
+    border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
     width: 48px;
     height: 48px;
-    transition: transform 0.2s ease;
+    transition: transform var(--transition-normal);
 }
 .dash-card:hover .dash-card-icon {
     transform: scale(1.1);
 }
 .dash-card-text h3 {
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
     margin: 0 0 2px 0;
 }
 .dash-card-text p {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
     margin: 0;
 }
 .dash-card-arrow svg {
@@ -149,15 +123,15 @@ html.dark .dash-card-dark {
 .dash-mid-section {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-6);
 }
 
 .dash-box {
-    background: var(--bg-surface, #ffffff);
-    border: 1px solid var(--border-color, #e5e7eb);
-    border-radius: 1rem;
-    padding: 1.25rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    background: var(--bg-surface);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
 }
 
 .dash-box-header {
@@ -165,28 +139,28 @@ html.dark .dash-card-dark {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
 }
 
 .dash-box-header h3, .dash-box-title, .dash-box-header-title h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
     margin: 0;
-    color: var(--text-color, #1f2937);
+    color: var(--text-color, var(--gray-900));
 }
 
 .dash-box-metrics {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    font-size: 0.875rem;
-    color: var(--text-muted, #6b7280);
+    gap: var(--space-4);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
 }
 .dash-box-metrics span {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 .metrics-icon {
     width: 16px;
@@ -195,10 +169,10 @@ html.dark .dash-card-dark {
 .dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
 }
-.dot.bg-blue { background-color: var(--primary-400, #60a5fa); }
-.dot.bg-green { background-color: var(--success-400, #34d399); }
+.dot.bg-blue { background-color: var(--primary-400); }
+.dot.bg-green { background-color: var(--success-400); }
 
 .dash-empty-state {
     display: flex;
@@ -207,41 +181,41 @@ html.dark .dash-card-dark {
     justify-content: center;
     min-height: 160px;
     background: rgba(249, 250, 251, 0.5);
-    border: 1px dashed var(--border-color, #e5e7eb);
-    border-radius: 0.75rem;
-    padding: 2rem;
+    border: 1px dashed var(--gray-300);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
     text-align: center;
 }
 html.dark .dash-empty-state {
     background: rgba(31, 41, 55, 0.5);
-    border-color: #374151;
+    border-color: var(--gray-700);
 }
 
 .dash-empty-state h4 {
-    font-size: 1.125rem;
-    font-weight: 600;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
     margin: 0 0 4px 0;
-    color: var(--text-color, #374151);
+    color: var(--text-color);
 }
 .dash-empty-state p {
-    color: var(--text-muted, #6b7280);
-    margin: 0 0 1rem 0;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4) 0;
 }
 
 .dash-btn-primary {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    background: var(--primary-500, #3b82f6);
+    gap: var(--space-2);
+    background: var(--primary-500);
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
     text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.2s;
+    font-weight: var(--font-weight-medium);
+    transition: background-color var(--transition-fast);
 }
 .dash-btn-primary:hover {
-    background: var(--primary-600, #2563eb);
+    background: var(--primary-600);
 }
 .dash-btn-primary svg {
     width: 16px;
@@ -252,14 +226,14 @@ html.dark .dash-empty-state {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
 }
 .dash-link-icon {
-    color: var(--text-muted, #9ca3af);
-    transition: color 0.2s;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
 }
 .dash-link-icon:hover {
-    color: var(--text-color, #4b5563);
+    color: var(--text-color);
 }
 .dash-link-icon svg {
     width: 24px;
@@ -269,7 +243,7 @@ html.dark .dash-empty-state {
 .dash-categories {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .dash-category-btn {
@@ -278,33 +252,33 @@ html.dark .dash-empty-state {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    border: 1px solid var(--border-color, #e5e7eb);
-    background: var(--bg-surface, #ffffff);
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
-    color: var(--text-color, #1f2937);
-    font-weight: 600;
+    gap: var(--space-2);
+    border: 1px solid var(--gray-200);
+    background: var(--bg-surface);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    color: var(--text-color);
+    font-weight: var(--font-weight-semibold);
     text-decoration: none;
-    transition: background-color 0.2s;
+    transition: background-color var(--transition-fast);
 }
 .dash-category-btn:hover {
-    background: rgba(243, 244, 246, 0.5);
+    background: var(--bg-surface-hover);
 }
 
 .dash-category-more {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    border: 1px solid var(--border-color, #e5e7eb);
-    background: rgba(249, 250, 251, 1);
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
-    color: var(--text-color, #1f2937);
-    font-weight: 600;
+    gap: var(--space-2);
+    border: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
+    color: var(--text-color);
+    font-weight: var(--font-weight-semibold);
     text-decoration: none;
-    transition: background-color 0.2s;
+    transition: background-color var(--transition-fast);
 }
 html.dark .dash-category-more {
     background: rgba(31, 41, 55, 1);
@@ -532,23 +506,15 @@ html body .menu-toggle {
 }
 
 /* ============================ */
-/* Merged LGU-specific overrides */
+/* Merged LGU-specific overrides (Scoped) */
 /* Source: public/css/pages/lguOverride.css (merged 2026-04-19) */
-/* These rules are LGU-specific visual overrides consolidated here to avoid per-page CSS file. */
 
-:root {
-    --lgubg-1: #071026;
-    --lgubg-2: #0b1220;
-    --lgucard-shadow: 0 10px 30px rgba(2,6,23,0.6);
-}
-
-/* Page background */
-.app-container {
+.lgu-dashboard .app-container {
     background: linear-gradient(180deg, var(--lgubg-1) 0%, var(--lgubg-2) 100%) !important;
 }
 
 /* Status bar */
-.dashboard-status-bar {
+.lgu-dashboard .dashboard-status-bar {
     background: rgba(255,255,255,0.02) !important;
     border-radius: 10px !important;
     padding: 12px !important;
@@ -557,7 +523,7 @@ html body .menu-toggle {
 }
 
 /* Stat cards (top row) */
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card {
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card {
     min-height: 92px;
     padding: 18px !important;
     border-radius: 14px !important;
@@ -566,24 +532,24 @@ html body .menu-toggle {
     align-items: center !important;
     gap: 14px !important;
 }
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card .dash-card-text h3 {
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card .dash-card-text h3 {
     font-size: 28px !important;
     line-height: 1 !important;
     margin: 0 !important;
 }
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card .dash-card-text p { color: rgba(255,255,255,0.9) !important; font-weight:600 !important }
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card .dash-card-text p { color: rgba(255,255,255,0.9) !important; font-weight:600 !important }
 
 /* Ensure the number and label stack vertically inside stat cards */
-.dash-card-text { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
+.lgu-dashboard .dash-card-text { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
 
 /* Per-stat gradients */
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(1) { background: linear-gradient(180deg,#60a5fa,#2563eb) !important }
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(2) { background: linear-gradient(180deg,#ef4444,#dc2626) !important }
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(3) { background: linear-gradient(180deg,#f59e0b,#f97316) !important }
-.dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(4) { background: linear-gradient(180deg,#a78bfa,#7c3aed) !important }
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(1) { background: linear-gradient(180deg,#60a5fa,#2563eb) !important }
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(2) { background: linear-gradient(180deg,#ef4444,#dc2626) !important }
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(3) { background: linear-gradient(180deg,#f59e0b,#f97316) !important }
+.lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card:nth-child(4) { background: linear-gradient(180deg,#a78bfa,#7c3aed) !important }
 
 /* Icon container inside stat cards */
-.dashboard-row .dash-card > span {
+.lgu-dashboard .dashboard-row .dash-card > span {
     width: 56px !important;
     height: 56px !important;
     border-radius: 12px !important;
@@ -595,35 +561,35 @@ html body .menu-toggle {
 }
 
 /* Alerts card */
-.high-priority-card {
+.lgu-dashboard .high-priority-card {
     border-radius: 14px !important;
     border: 2px solid rgba(220,38,38,0.6) !important;
     background: linear-gradient(180deg,#0f172a,#0b1220) !important;
     box-shadow: 0 8px 30px rgba(2,6,23,0.6) !important;
     padding: 18px !important;
 }
-.high-priority-card h3 { color: #ef4444 !important; }
-.high-priority-card .alert-card { background: rgba(255,255,255,0.02) !important; color: rgba(255,255,255,0.92) !important; padding: 12px !important; border-radius: 10px !important; box-shadow:none !important }
+.lgu-dashboard .high-priority-card h3 { color: #ef4444 !important; }
+.lgu-dashboard .high-priority-card .alert-card { background: rgba(255,255,255,0.02) !important; color: rgba(255,255,255,0.92) !important; padding: 12px !important; border-radius: 10px !important; box-shadow:none !important }
 
-/* Chart containers: make the doughnut larger and widgets visually consistent */
-.dash-card canvas { background: transparent !important; }
-.category-chart-wrap { height: 340px !important; }
-.complaints-chart-wrap { height: 140px !important; }
-.nlp-chart-wrap { height: 140px !important; }
+/* Chart containers */
+.lgu-dashboard .dash-card canvas { background: transparent !important; }
+.lgu-dashboard .category-chart-wrap { height: 340px !important; }
+.lgu-dashboard .complaints-chart-wrap { height: 140px !important; }
+.lgu-dashboard .nlp-chart-wrap { height: 140px !important; }
 
-/* Quick action buttons inside the quick-actions card */
-.quick-actions .dash-card.dash-card-blue { display: inline-flex !important; align-items:center !important; justify-content:center !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.45) !important }
+/* Quick action buttons */
+.lgu-dashboard .quick-actions .dash-card.dash-card-blue { display: inline-flex !important; align-items:center !important; justify-content:center !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.45) !important }
 
-/* Chart legend neutralization (safety) */
-.chart-legend > span { background: transparent !important; box-shadow: none !important; padding: 0 !important; display:flex !important; align-items:center !important; gap:8px !important }
-.chart-legend > span > span { width: 12px !important; height: 12px !important; border-radius:50% !important; display:inline-block !important }
+/* Chart legend neutralization */
+.lgu-dashboard .chart-legend > span { background: transparent !important; box-shadow: none !important; padding: 0 !important; display:flex !important; align-items:center !important; gap:8px !important }
+.lgu-dashboard .chart-legend > span > span { width: 12px !important; height: 12px !important; border-radius:50% !important; display:inline-block !important }
 
 /* Misc tweaks */
-.dash-box { border-radius: 14px !important }
-.dash-box h3 { color: rgba(255,255,255,0.95) !important }
+.lgu-dashboard .dash-box { border-radius: 14px !important }
+.lgu-dashboard .dash-box h3 { color: rgba(255,255,255,0.95) !important }
 
 @media (max-width: 900px) {
-    .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card { grid-column: span 1 !important }
+    .lgu-dashboard .dashboard-grid > .dashboard-row:nth-of-type(1) .dash-card { grid-column: span 1 !important }
 }
 
 /* Fix label orientation and header spacing for LGU dashboard */

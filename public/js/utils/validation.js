@@ -278,7 +278,11 @@ export const setupRealtimeValidation = (form) => {
     if (!input) return;
     const value = (input.value || "").trim();
     const rule = rules[selector] || {};
-    if (rule.required && !value) {
+    
+    // Check if element is currently required (dynamic)
+    const isRequired = input.hasAttribute("required") || rule.required;
+
+    if (isRequired && !value) {
       return setError(input, "This field is required");
     }
     if (rule.minLength && value.length < rule.minLength) {
@@ -314,6 +318,12 @@ export const extractcomplaintFormData = (formElement) => {
     const el = formElement.querySelector(selector);
     return el ? el.value.trim() : "";
   };
+
+  const getSelectText = (selector) => {
+    const el = formElement.querySelector(selector);
+    return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text.toLowerCase() : "";
+  };
+
   const parseNum = (selector) => {
     const v = getVal(selector);
     if (v === "") return null;
@@ -326,12 +336,15 @@ export const extractcomplaintFormData = (formElement) => {
       '#departmentCheckboxes input[type="checkbox"]:checked'
     )
   ).map((cb) => cb.value);
+
+  const categoryName = getSelectText("#complaintCategory");
+  const isOthers = categoryName.includes("other");
+
   return {
     title: getVal("#complaintTitle"),
-    // type field removed - not in current schema
-    // subtype field removed - not in current schema
     category: getVal("#complaintCategory"),
     subcategory: getVal("#complaintSubcategory"),
+    isOthers, // Flag for validation
     description: getVal("#description"),
     location_text: getVal("#location"),
     latitude: parseNum("#latitude"),
@@ -384,6 +397,8 @@ export const validatecomplaintForm = (data) => {
   const locationText = sanitizeString(data.location_text || "");
   const category = sanitizeString(data.category || "");
   const subcategory = sanitizeString(data.subcategory || "");
+  const isOthers = data.isOthers || false;
+
   if (!title || title.trim().length === 0) errors.push("Title is required");
   if (title && title.length < 3)
     errors.push("Title must be at least 3 characters");
@@ -392,11 +407,15 @@ export const validatecomplaintForm = (data) => {
   if (description && description.length < 10)
     errors.push("Description must be at least 10 characters");
   if (!locationText) errors.push("Location is required");
+
   // Validate hierarchical form fields
   if (!category) errors.push("Category is required");
-  if (!subcategory) errors.push("Subcategory is required");
-  if (!category) errors.push("Category is required");
-  if (!subcategory) errors.push("Subcategory is required");
+
+  // Subcategory is required unless category is "Others"
+  if (!isOthers && !subcategory) {
+    errors.push("Subcategory is required");
+  }
+
   // Urgency and departments are handled automatically now
   // If one coordinate is provided, both should be valid numbers
   const hasLat = data.latitude !== null && data.latitude !== void 0;
@@ -411,8 +430,6 @@ export const validatecomplaintForm = (data) => {
     ) {
       errors.push("Coordinates must be numeric");
     }
-    // Note: Boundary check is async, so it should be done separately before form submission
-    // This validation function is synchronous, so boundary check happens in the form handler
   }
   return { valid: errors.length === 0, errors };
 };

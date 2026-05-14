@@ -1,0 +1,682 @@
+DRIMS (Digos Response Intelligent Management System): A Multi-Criteria Geospatial Triage Approach to Social Issue Management Integrating Spatiotemporal Clustering and Semantic Textual Similarity
+
+
+
+
+Maca, John Dave
+Go, Pyrrhus Elcid
+Timosan, Josh Andre
+
+COR JESU COLLEGE OF COMPUTING & INFORMATION SCIENCE
+
+
+ABSTRACT
+This study presents D.R.I.M.S. (Data-Driven Reporting and Intelligence Management System), an intelligent complaint management framework designed to improve decision-making in local government units (LGUs) by transforming citizen complaints into easy to understand insights. Traditional systems rely on ticket-based processing, leading to data redundancy, inefficient resource allocation, and limited pattern recognition. To address these issues, the study integrates geospatial analytics and natural language processing into a unified system. The system utilizes an category-aware DBSCAN algorithm (with per-category epsilons derived via the Sorted K-Distance Method) to reduce over-merging and spatial fragmentation. A 3-phase Hybrid NLP pipeline (rule-based, TensorFlow.js fallback, and Human-in-the-Loop manual verification) filters non-literal or irrelevant reports, improving data quality before clustering. A fixed minPts = 2 threshold is applied to maintain clustering integrity while preserving sparse reports through an “ISOLATED” classification. The framework was evaluated using 288 geocoded reports from field simulations in Digos City. Results show an overall classification accuracy of 84.92%, with macro and weighted F1 scores of 0.83 and 0.85, respectively. The system also achieved a duplication detection F1 score of 0.97, a global Silhouette score of 0.82, and an Adjusted Rand Index (ARI) of 0.96, indicating effective separation of meaningful hazard clusters from spatial noise. Performance profiling confirmed that the edge‑AI architecture is sufficiently fast and memory‑efficient for deployment on resource‑constrained LGU hardware. Overall, the study provides a scalable, data‑driven solution that enables LGUs to transition from reactive complaint handling to proactive, event‑based governance.
+Keywords: Adaptive DBSCAN, Geospatial Analytics, Complaint Management System, Natural Language Processing, Spatial Clustering, Data-Driven Governance
+
+CHAPTER I
+INTRODUCTION
+In an era of rapid urbanization and digital transformation, the ability of governments to respond effectively to citizen feedback is a cornerstone of democratic governance and public trust. Across the globe, from developing economies to large metropolitan centers, local governments are inundated with growing volumes of citizen complaints ranging from infrastructure defects to public safety hazards. However, many public sector agencies continue to rely on manual, ticket‑based complaint management systems that are slow, inefficient, and prone to error. Such systems are often described as “time‑consuming” and consistently fail to provide accurate or timely responses, leading to citizen dissatisfaction and a steady erosion of trust in public services.
+For instance, an analysis of the municipal complaint system in Mumbai found that only 44% of roughly 20,000 complaints were actually addressed, with responsiveness to marginalised citizens notably lower [29]. In Indonesia, the national SP4N‑LAPOR! complaint platform has been shown to suffer from weak inter‑agency coordination, limited technical capabilities and low community involvement, preventing it from operating efficiently [32]. Similarly, research on the same LAPOR! system reveals persistent challenges in public participation, collaboration and transparency, which continue to undermine the country’s open government agenda [30]. In Ghana, a study using the DeLone and McLean IS Success Model found that while service quality, system quality, and information quality positively influence system usage and user satisfaction, considerable challenges remain in ensuring the optimal effectiveness of e‑government systems [31].
+Consequently, the inability to process citizen feedback efficiently and to transform it into actionable geographic intelligence remains a universal challenge in urban governance, calling for a fundamental rethinking of existing complaint‑handling paradigms.
+Background of the StudyEffective local governance relies on the ability to transform citizen feedback into precise, actionable intelligence. In the Philippines, this responsiveness is a critical metric for achieving the Seal of Good Local Governance (SGLG), which mandates that Local Government Units (LGUs) maintain high standards of transparency, accountability, and public service delivery [6]. However, despite these national mandates, Philippine LGUs frequently face severe structural challenges that obstruct responsive service delivery. For instance, a localized study of the Department of Public Works and Highways (DPWH) in Nueva Ecija revealed critical shortages in the personnel and operational vehicles required for on-site verification (4). The results of this study explicitly demonstrate how these structural deficits directly degrade an agency's capacity to handle social complaints. When dispatchers lack the physical resources to manually verify an overwhelming influx of citizen reports, critical public service bottlenecks become inevitable.
+
+The persistence of these bottlenecks is partly due to reliance on traditional, linear processing models. Such approaches treat each citizen report as a separate administrative task, leading to data duplication and wasted resources. For example, if ten different residents independently report the same fallen tree, a manual ticket-based system produces ten separate work orders that require individual tracking. To address these inefficiencies, researchers have proposed event-based spatial architectures that use geographic clustering to detect duplicate crowdsensed reports and merge them into single, actionable hazard events [15]. Compounding this issue, citizen complaints are often written in unstructured, colloquial, or code-switched language (e.g., Bisaya-English), making manual triage even more difficult.
+
+In the specific context of Digos City, a rapidly urbanizing component city and the provincial capital of Davao del Sur, these operational limitations are increasingly pronounced. With a growing population of over 192,000 residents [28], the city is geographically susceptible to recurring localized hazards, particularly severe flooding and infrastructure degradation along the Digos River systems [27]. During these high-volume weather events, the City Disaster Risk Reduction and Management Office (CDRRMO) is routinely inundated with citizen alerts. However, instead of utilizing a centralized civic platform, these localized reports are highly fragmented, overwhelmingly submitted through informal channels such as official LGU Facebook pages and social media feeds [26]. Compounding this structural bottleneck, these crowdsourced alerts are communicated in a complex, trilingual vernacular blending Cebuano, Tagalog, and English ("Bislish"). Because standard automated systems are trained on pure English, they severely struggle to parse the unstructured, localized code-switching prevalent in the Philippine regions [25]. Consequently, because Digos City's administrative workforce operates with standard component-city resource constraints, manually reading, verifying, and geographically plotting hundreds of dialect-heavy social media comments onto a centralized map becomes an insurmountable task, leading to delayed emergency response.
+
+However, transitioning to automated systems to solve these localized issues presents technological barriers. Standard spatial clustering algorithms such as K-Means assume rigid, spherical cluster shapes and cannot accurately map the irregular boundaries of real-world civic hazards [12]. Moreover, relying on cloud-based processing introduces severe server-side latency and bandwidth bottlenecks that are unacceptable during time-sensitive emergency responses [16]. Therefore, an urgent need exists for a localized, adaptive framework capable of intelligently filtering unstructured citizen complaints and geographically unifying multi-hazard reports without the limitations of rudimentary mapping or cloud dependency.
+.
+
+CHAPTER II
+REVIEW OF RELATED LITERATURE AND SYSTEMS
+Structured Deficits in Public Sector Complaint Management
+Effective local governance requires the ability to transform citizen feedback into actionable, geographic intelligence. However, current literature indicates that public sector entities globally and locally are hindered by legacy data structures that fail to scale with modern digital reporting.
+Existing Civic Reporting Platforms
+Several civic reporting platforms have been deployed globally to bridge the gap between citizens and local authorities. FixMyStreet (FMS), launched in 2007 by the UK charity mySociety, allows citizens to report environmental defects (e.g., potholes, broken streetlights) directly to local governments via an online map [17]. SeeClickFix is a similar US-based platform that Desouza and Bhagwatwar (2014) classify as a citizen-centric and citizen-sourced data model where citizens generate reports but public agencies play a passive role with limited government-citizen interaction[18].
+However, existing research reveals critical limitations. King and Brown (2007) found that despite FMS's ease of use, very little citizen discussion occurred such as reports were routed manually via email with no automated categorization [17]. More critically, Pak et al., (2017) analyzed over 30,000 FMS reports in Brussels and found significant sociodemographic inequality like low-income and ethnically diverse communities (North African, Sub-Saharan) were substantially underrepresented on the platform [19].
+
+The Inefficiency of Ticket-Based Systems
+The primary bottleneck in local government responsiveness is the reliance on linear, ticket-based complaint management systems. Research into public sector complaint resolution reveals that inefficiencies are largely systemic; for instance, Mogotloane and Louw (2024) demonstrate that poor complaint resolution in a developing country context is deeply rooted in severe capacity deficits and mismanaged communication infrastructures [8]. When applied to a localized context, this capacity deficit becomes a critical point of failure. A study analyzing the Department of Public Works and Highways (DPWH) in Nueva Ecija, Philippines, highlights that government dispatchers face massive limitations in personnel and operational vehicles required to physically verify incoming citizen reports [4].
+The persistence of these public service bottlenecks is largely caused by the reliance on traditional, linear processing models. This approach creates a strict one-to-one correspondence between every citizen report and an administrative task, inevitably leading to massive data redundancy. For example, if ten different residents independently report the same fallen tree, a manual ticket-based system produces ten separate work orders that require individual tracking. This administrative duplication wastes severely limited LGU resources and creates unnecessary coordination burdens for staff. To address these inefficiencies, local governments must transition from reactive ticket clearing to event-based spatial architectures, utilizing geographic clustering to detect duplicate crowd-sensed reports and merge them into single, actionable hazard events [15].
+
+The Volume and Noise of Social Media Feedback
+Compounding the inefficiency of ticket-based models is the modern citizen's shift toward unstructured digital platforms. While providing accessible channels for civic reporting is vital, the integration of social media data introduces severe fragmentation. The Commonwealth Ombudsman (2014) explicitly warns that relying on decentralized social media channels (such as Facebook or Twitter) without a unified case management system creates massive challenges in information sharing between operational areas [10].
+Furthermore, data scraped from these platforms is inherently noisy. As demonstrated by Baros (2023) in their spatial analysis of telecommunications complaints via Twitter, while social media provides real-time geospatial disturbance data, the sheer volume of unstructured text requires automated data crawling and mapping to yield valuable administrative intelligence [9]. Without an automated mechanism to semantically filter and geographically bind this unstructured noise, LGU dispatchers are left manually parsing through spam, metaphorical complaints, and duplicate alerts, thereby exacerbating the capacity deficits identified by Mantaring et al. (2019)[4].
+
+Natural Language Processing (NLP) for Unstructured Civic Data
+As established in the previous section, the primary barrier to efficient spatial mapping is the unstructured nature of citizen-generated text. Citizens rarely report hazards using standardized technical terminology; instead, they utilize conversational language, regional slang, and subjective phrasing. To bridge the gap between unstructured social complaints and actionable spatial data, modern intelligent systems rely heavily on Natural Language Processing (NLP).
+
+Semantic Filtering and Spam Detection
+The initial phase of processing crowdsourced civic data requires isolating actionable physical hazards from general grievances or spam. When citizens submit unstructured reports, manual dispatchers waste critical time reading non-actionable complaints (e.g., general frustrations about traffic) rather than deploying resources. Banga et al. (2023) highlight that implementing NLP architectures fundamentally resolves this by automating the comprehension process. By utilizing models trained specifically on complaint datasets, NLP pipelines can rapidly analyze text to identify underlying patterns, drastically outperforming traditional manual handling in both speed and accuracy [5]. In a public sector context, this semantic filtering acts as an automated triage layer, ensuring that only verified, actionable hazards are pushed to the geospatial mapping pipeline.
+
+Automated Categorization and Routing of Urban Hazards
+Beyond mere filtering, NLP is strictly required to categorize unstructured text into specific operational domains so that the correct local government department can respond. Bazzan et al. (2023) demonstrated this necessity by developing an Information Management Model that utilizes artificial intelligence to automatically read and extract technical defects from the unstructured complaints of local residents [11]. Their findings show that AI techniques can successfully translate everyday resident language into specific, actionable infrastructure categories.
+This automated categorization directly reduces the administrative burden on dispatchers. Recent empirical studies, such as the automated complaint management framework developed by Mohamed et al. (2025), show that training machine learning classifiers on local complaint data successfully categorizes incoming issues into rigid operational sectors (e.g., academic, finance, or equipment) without human intervention [2]. By applying this classification architecture to civic hazards, an NLP model can instantaneously read a citizen's text and classify it as a Fire, Flood, or Road Hazard. Consequently, as Kormpho et al. (2018) assert in their study on smart complaint systems, integrating AI to automatically classify and route these demands prevents service delays, guarantees that reports reach the appropriate personnel immediately, and directly improves overall user satisfaction [3]. 
+
+Spatial Clustering Algorithms in Geospatial Intelligence
+While Natural Language Processing successfully filters and categorizes raw citizen feedback, plotting massive volumes of individual reports onto a geographic interface does not inherently optimize public service delivery. Without a mechanism to group overlapping coordinates, dispatchers are left visually overwhelmed by scattered data points. Therefore, modern geospatial intelligence relies heavily on spatial clustering algorithms to aggregate localized reports into continuous hazard zones.
+
+The Necessity of Spatial Optimization in Emergency Response
+Transforming individual data points into optimized spatial clusters is not merely a visual enhancement. It is a mathematical requirement for efficient resource deployment. In an analysis of emergency response infrastructures in mega-cities, Wang et al. (2021) demonstrated that utilizing multi-source geospatial data to optimize the spatial distribution of emergency services drastically reduces response times and improves urban safety [1]. By applying this principle to civic hazards, local governments can use spatial clustering to identify high-density disturbance areas such as a heavily flooded neighborhood and deploy bulk resources to that specific epicenter, rather than dispatching individual units to scattered, isolated tickets.
+
+Limitations of Traditional Centroid-Based Clustering (K-Means)
+To achieve this spatial optimization, a clustering algorithm must be applied to the map data. Historically, K-Means clustering has been the default algorithm for data grouping. However, literature shows that K-Means is fundamentally incompatible with unpredictable urban hazard mapping. K-Means is a centroid-based algorithm that requires the programmer to pre-define the number of clusters (k) before the algorithm runs, and it heavily assumes that data points will naturally form spherical shapes [20]. In a real-world emergency context, it is impossible for an LGU to know exactly how many hazard zones exist on any given day. Furthermore, real-world urban infrastructure damages such as a cracked water pipe running along a 5-kilometer curved highway do not form perfect circles, causing K-Means to inaccurately split continuous hazard zones.
+
+Superiority of Density-Based Spatial Clustering (DBSCAN)
+Because of the geometric limitations of K-Means, modern spatial mapping architectures require Density-Based Spatial Clustering of Applications with Noise (DBSCAN). Unlike K-Means, DBSCAN does not require a pre-defined number of clusters. Instead, it groups points based on geographic density, meaning it only forms a cluster when a specific number of complaints occur within a strict spatial radius. Crucially, DBSCAN is capable of identifying clusters of completely arbitrary shapes, perfectly adapting to the irregular geographic realities of fallen trees, stretched fault lines, or flooded roads [12]. Furthermore, DBSCAN inherently features noise filtering; it isolates scattered, one-off outlier reports that do not meet the density threshold, preventing LGU dispatchers from wasting resources on unverified anomalies.
+While DBSCAN offers advantages over centroid-based algorithms, prior studies have identified several limitations. First, DBSCAN is highly sensitive to its two input parameters: eps (neighborhood radius) and minPts (minimum points to form a dense region). Inappropriate parameter selection can lead to poor clustering quality, including merging of distinct clusters or mislabeling valid points as noise. Second, DBSCAN struggles with datasets containing clusters of varying densities, as it applies a global parameter set uniformly across the entire dataset. This limitation is documented in spatial clustering research, particularly for urban environments where different hazard types exhibit different spatial densities. Third, the algorithm becomes computationally expensive for very large datasets (O(n^2) time complexity), which may affect real-time performance on low-end hardware. The algorithm also cannot produce correct results when the database is large and densities vary substantially [21] [22]. Both works highlight the same fundamental limitations of DBSCAN. 
+Client Side Machine Learning and System Architecture
+While NLP and DBSCAN have been shown to address many theoretical challenges in civic data mapping, executing these complex algorithms introduces severe architectural challenges. Traditionally, government web systems rely on centralized cloud-computing architectures to process machine learning tasks. However, recent literature indicates that cloud-dependency is fundamentally flawed for time-sensitive, localized emergency management.
+Latency and Bottlenecks of Centralized Cloud Computing
+The primary limitation of server-side AI is its reliance on continuous, high-bandwidth internet connectivity. In an extensive architectural review of real-time Internet of Things (IoT) systems, Shi et al. demonstrated that centralized cloud platforms exhibit exceptionally poor scalability during crisis scenarios, inevitably causing server-side latency and bandwidth bottlenecks [16]. In an emergency context such as routing flood rescue units or clearing fallen power lines, delays caused by cloud server lag or connectivity breakdowns are unacceptable. Expecting underfunded Local Government Units (LGUs) to maintain expensive, high-availability cloud subscription models to process crowdsourced data is financially unsustainable and technologically fragile. To eliminate these bottlenecks, computational architectures must shift away from the remote cloud and toward decentralized edge computing.
+
+Edge Computing and Web-Based AI (TensorFlow.js)
+To bypass the financial and latency constraints of cloud servers, modern intelligent web systems utilize Client-Side Machine Learning. By deploying models via frameworks like TensorFlow.js, the system shifts the computational burden of text filtering and spatial clustering directly onto the client’s local device (i.e., the dispatcher’s web browser) [23]. This edge-computing paradigm means that the system does not need to send thousands of citizen complaints to a third-party server (such as an OpenAI API) to be categorized. Instead, the NLP inference and DBSCAN geographic rendering occur locally. This architecture guarantees ultra-low latency, as the interface can plot hazards in real-time without waiting for server responses, making it highly resilient for LGU command centers.
+
+Inherent Data Privacy through Decentralized Processing
+Beyond speed and cost-efficiency, client-side execution fundamentally alters the paradigm of civic data privacy. Traditional cloud APIs require raw, unencrypted citizen data to be transmitted across the internet to external corporate servers for analysis, introducing severe cybersecurity and privacy compliance risks. However, literature on Edge AI confirms that processing machine learning tasks at the network's edge inherently protects user data by keeping the raw information completely on-device [24]. By executing the NLP categorization and geographic mapping entirely within the local web browser, the proposed architecture achieves "Privacy-by-Design." No sensitive citizen locations or personal complaints are offloaded to third-party AI servers, fully securing LGU intelligence.
+
+Synthesis and Research Gap
+The increasing complexity and volume of public grievances require smart systems that overcome the slow manual screening and fragmented records of traditional complaint handling. Traditional complaint handling methods, such as call centers, email, and ticket systems, are described as “time‑consuming” and prone to inaccurate or inefficient responses, leading to customer dissatisfaction and lost customers [5]. In the Philippine local context, a study of the Department of Public Works and Highways in Nueva Ecija found that government dispatchers face severe limitations in personnel and operational vehicles to verify incoming citizen reports [4]. Evidence from a South African case study similarly shows that poor complaint resolution is associated with capacity deficits, inadequate communication, and a lack of coordination among responsible units [7]. To address these shortcomings, modern research validates the integration of Natural Language Processing (NLP) to semantically filter and classify unstructured citizen complaints [5]. Furthermore, spatial optimization methods, such as kernel density analysis combined with location‑allocation models, have been successfully used to identify high‑risk hazard hotspots and guide resource deployment in mega‑cities [1]. Together, these advances suggest that combining NLP with spatial analytics can help local governments move from reactive symptom treatment toward more strategic interventions.
+Despite these technological advancements, a critical research gap remains in the architectural execution and data privacy of existing intelligent frameworks. The literature overwhelmingly treats NLP categorization and geographic clustering as cloud‑dependent processes. As demonstrated by Shi et al. (2016), reliance on centralized cloud computing introduces severe server‑side latency during emergencies and raises substantial security concerns when transmitting sensitive citizen location data. Moreover, existing studies have not examined client‑side, edge‑computing alternatives for civic hazard mapping. There is a distinct absence of decentralized spatial architectures tailored specifically for resource-constrained Local Government Units (LGUs) in the Philippines. No prior work has investigated whether a browser‑based, client‑side system that performs NLP filtering and spatial clustering locally without cloud dependence can achieve real‑time hazard mapping while preserving data privacy.
+
+Statement of the Problem
+Despite the availability of digital reporting channels, local government units (LGUs) in the Philippines still face three interlocking problems in handling social complaints. First, citizen reports are highly fragmented, submitted through informal channels such as social media, and written in unstructured, code‑switched language (Bisaya‑Tagalog‑English), making manual triage and categorization extremely difficult. Second, traditional ticket‑based processing treats each report as an isolated administrative task, leading to massive data redundancy when multiple citizens report the same incident. Third, standard cloud‑dependent systems introduce unacceptable latency and connectivity risks during emergencies, and existing spatial clustering algorithms (e.g., K‑Means) cannot handle the irregular, density‑varying patterns of real‑world hazards. These problems collectively prevent LGUs from transforming raw citizen feedback into timely, actionable geospatial intelligence. Specifically, it seeks to answer the following questions:
+What is the system architecture of the innovative platform that manages social complaints?
+What is the user’s perception of the developed platform?
+Objectives of the Study
+This study aimed to:
+1. Design, implement, and evaluate the system architecture of an innovative platform that manages social complaints using a hybrid NLP pipeline and category‑aware DBSCAN clustering, measuring its classification accuracy, clustering quality (Silhouette, ARI), duplicate detection performance, and edge‑AI latency and memory footprint.
+2. Assess user perception of the developed platform among non‑expert participants (simulating citizen and dispatcher roles) using the System Usability Scale (SUS) and the USE Questionnaire (Usefulness, Ease of Use, Ease of Learning, Satisfaction).
+Significance of the Study
+This study demonstrates a prototype platform that integrates a three‑phase hybrid natural language processing (NLP) pipeline (rule‑based, TensorFlow.js fallback, and Human‑in‑the‑Loop manual verification) and a category‑aware DBSCAN clustering algorithm to process unstructured citizen complaints entirely in a web browser. The significance of this study lies in its technical contributions and potential implications for local governance.
+The study is significant for the following groups:
+Local Government Units (LGUs). The prototype offers a low‑cost, client‑side alternative to cloud‑based complaint processing, requiring no continuous internet connection or subscription fees. By running entirely in a browser, it can operate on commodity LGU computers. The adaptive DBSCAN algorithm provides density‑based clustering of hazard reports without requiring pre‑defined cluster numbers, and the hybrid NLP pipeline filters and categorizes complaints with a rule‑based fallback to reduce reliance on large neural models. These features may help LGUs reduce duplicate reporting and prioritize high‑density hazard areas, though real‑world resource allocation benefits would require further field testing.
+Citizens. While the prototype is designed for LGU dispatchers, a citizen‑facing submission interface can be added. The platform demonstrates how citizen reports could be systematically recorded and visualized on a map, potentially increasing transparency. Actual improvements in trust and accountability would depend on deployment and organizational adoption.
+Public Safety. The prototype prioritizes urgent hazard types (e.g., fire, flood) by assigning them higher visual prominence on the map. This feature aims to help dispatchers identify critical reports quickly. The system does not replace emergency response protocols but serves as an auxiliary tool for situational awareness.
+System Developers and Researchers. The source code and architecture provide a reference implementation for integrating TensorFlow.js with DBSCAN in a civic application. Developers can adapt the hybrid NLP fallback mechanism or the adaptive epsilon selection method for other domains.
+Academic Community. This study contributes empirical data on the inference latency, memory footprint, and clustering quality of a client‑side NLP+DBSCAN pipeline for civic hazard reporting. It addresses the gap identified in the literature: the absence of a decentralized, browser‑based architecture tailored for resource-constrained LGUs.
+Scope and Limitations
+The scope of this study is the design, development, and evaluation of a client‑side prototype platform that integrates a three‑phase natural language processing (NLP) pipeline and an adaptive DBSCAN clustering algorithm for processing unstructured citizen complaints. The three NLP phases are:
+Rule‑based phase. A lightweight dictionary of keywords and patterns (English, Filipino, Bisaya) that attempts to classify the complaint category (e.g., pothole, flood, fallen tree).
+TensorFlow.js fallback phase. When the rule‑based phase cannot classify a complaint with sufficient confidence (e.g., low match or ambiguous input), a lightweight neural model running in the browser is invoked to classify the complaint.
+Human‑in‑the‑Loop (HITL) phase. If the neural model also returns low confidence or the complaint is flagged as ambiguous, the complaint is queued for manual verification by an LGU administrator. The administrator can assign the correct category, which then updates the rule‑based dictionary or fine‑tunes the model incrementally.
+The technical evaluation measures (a) end‑to‑end inference latency (ms), (b) peak memory footprint (MB), and (c) clustering quality using the silhouette score, comparing adaptive DBSCAN against standard DBSCAN. User perception is assessed using the System Usability Scale (SUS) and the USE Questionnaire (Usefulness, Ease of Use, Ease of Learning, Satisfaction).
+The prototype was tested using a dataset of 288 geocoded citizen reports collected by the researchers in Digos City. The reports cover five hazard categories: potholes, flooded roads, fallen trees, broken streetlights, and garbage accumulation. Field testing refers to the collection of location data and complaint texts in Digos City; the system was not deployed in live LGU operations.
+User testing involved a convenience sample of 30 non‑expert participants recruited from the general population; none of the participants were employed as LGU dispatchers. Each participant performed a set of typical complaint‑handling tasks using the prototype in a controlled environment.
+Limitations of the Study
+The following limitations are acknowledged:
+Small dataset size (288 reports). The dataset is limited in size and diversity, which may affect the generalizability of clustering and NLP performance results.
+Simulated user testing. Participants were not actual LGU dispatchers. Therefore, SUS, USE scores may not fully reflect real‑world operational acceptance or the cognitive load of actual LGU staff.
+TensorFlow.js model constraints. The browser‑based execution limits the complexity of neural models that can be deployed without significant latency. This is a known characteristic of client‑side machine learning frameworks.
+Small linguistic dictionary for rule‑based phase. The rule‑based component uses a manually curated dictionary of approximately 400 words in English, Filipino, and Bisaya. This dictionary cannot cover all regional expressions or code‑switching patterns, causing the fallback TensorFlow.js model or HITL verification to be invoked frequently.
+GPS accuracy. Geocoding relies on consumer‑grade smartphone GPS, which can have positional errors of several meters. This is a hardware limitation of commercial mobile devices.
+Manual parameter tuning for DBSCAN. The epsilon parameter for DBSCAN was selected manually using a k‑distance graph. The adaptive variant is not fully automated, and performance may vary with different data distributions.
+Single LGU context for data collection. Data collection was limited to Digos City. Results may not generalize to other LGUs with different geography, population density, or complaint patterns. 
+Definition of Terms
+Complaint Management System (CMS) – A web-based platform for receiving, monitoring, and resolving citizen complaints. In this study, D.R.I.M.S. serves as an AI-powered CMS designed to enhance complaint processing and decision-making.
+DBSCAN (Density-Based Spatial Clustering of Applications with Noise) – A clustering algorithm that identifies dense regions of data points and labels low-density points as noise, used to detect complaint hotspots.
+Adaptive DBSCAN – An enhanced version of DBSCAN that dynamically adjusts clustering parameters such as epsilon and minPts based on complaint categories.
+Heatmap Visualization – A geospatial representation of complaint density using color gradients to highlight high-concentration areas.
+Geospatial Analytics – The application of spatial analysis techniques to geographic data to identify patterns and support decision-making.
+Geocoding – The process of converting textual location data into geographic coordinates for mapping and analysis.
+Linguistic Truth Filters – A rule-based natural language processing approach used to detect and filter non-literal or misleading complaint text.
+Noise (Spatial Noise) – Data points that do not belong to any cluster due to low density, often representing isolated or insignificant reports.
+Geographic Information System (GIS) – A framework used for capturing, analyzing, and visualizing spatial data within the system.
+Theoretical FrameworkThis framework integrates the Technology Acceptance Model (TAM) and the DeLone and McLean Model of Information Systems Success (D&M IS Success Model) to guide the evaluation of the Digos Response and Intelligence Management System (D.R.I.M.S.). The integration of these models allows the study to assess both the behavioral acceptance of the system by users and the overall success and impact of the system. TAM explains how and why users decide to adopt the system, while the D&M model evaluates the quality, performance, and organizational benefits derived from its use[14][13]. Together, they ensure that the system is not only technically effective but also usable, acceptable, and beneficial in real-world governance.
+
+Technology Acceptance Model (TAM)The Technology Acceptance Model (TAM) asserts that users’ intention to adopt a system is primarily influenced by two key constructs: Perceived Usefulness (PU) and Perceived Ease of Use (PEOU)[14]. These constructs determine the user’s behavioral intention, which ultimately leads to actual system use. In the context of D.R.I.M.S., local government personnel and system users must perceive that the platform improves their ability to manage complaints and make decisions efficiently (high PU), while also being easy to learn and operate (high PEOU).
+These constructs are defined as follows in this study:
+Perceived Usefulness (PU): The system is designed to significantly improve the efficiency and effectiveness of complaint management. This is operationalized through several core functionalities. First, the Adaptive DBSCAN clustering engine groups multiple related reports into a single administrative event, reducing redundancy and minimizing manual workload. Second, geospatial heatmap visualization enables decision-makers to quickly identify high-density problem areas, supporting faster and more accurate resource allocation. Third, the integration of natural language processing allows the system to filter irrelevant or misleading reports, ensuring that only high-quality data contributes to decision-making. These features collectively provide actionable insights, allowing local government units to transition from reactive complaint handling to proactive governance.
+Perceived Ease of Use (PEOU): The system is designed to integrate seamlessly into existing workflows with minimal training requirements. This is supported by a user-friendly interface that presents complaint data through intuitive visualizations such as heatmaps and clustered event markers. Report submission is simplified through structured inputs and automated geocoding, reducing the effort required from users. Additionally, the system processes data in the background and presents results in a clear, interpretable format, eliminating the need for users to understand complex algorithms. This ensures that both technical and non-technical users can effectively interact with the system.
+
+Figure 2.1: Technology Advance Model (TAM) Flow
+
+DeLone and McLean IS Success Model (D&M)The DeLone and McLean IS Success Model provides a multidimensional framework for evaluating system success through several interrelated constructs, including System Quality, Information Quality, Service Quality, Use, User Satisfaction, and Net Benefits[13]. In this study, the model is used to evaluate the performance and impact of D.R.I.M.S. within the operational environment of local government units.
+The constructs are defined as follows:
+System Quality: This construct refers to the technical performance of the system. This study includes system reliability, processing speed, and the efficiency of the Adaptive DBSCAN clustering mechanism. It also considers the responsiveness of the platform and its ability to handle real-time data inputs.
+Information Quality: This refers to the quality of the system’s output. In D.R.I.M.S., it is measured by the actionability, relevance, and clarity of clustered complaint data, as well as the correctness of geospatial insights and filtered reports generated by the NLP pipeline.
+Service Quality: This construct evaluates the level of support and usability provided by the system. It includes how well the system assists users in interpreting data, the clarity of its interface, and its ability to facilitate efficient complaint management.
+User Satisfaction and Net Benefits: This construct reflects both the users’ overall satisfaction with the system and the benefits gained by the organization. It includes user experience in terms of usability and performance, as well as organizational improvements such as enhanced efficiency in complaint handling, better resource allocation, reduced data redundancy, and increased transparency and responsiveness in governance.
+
+Figure 2.2: DeLone and McLean IS Success Model (D&M) Flow
+
+Conceptual Framework
+This study is anchored in an integrated conceptual framework that combines principles from density-based spatial clustering, geospatial analysis, and natural language processing to guide the design, implementation, and evaluation of the Digos Response Intelligent Management System (D.R.I.M.S.). Specifically, the framework incorporates the Adaptive DBSCAN algorithm for dynamic spatial clustering, the Sorted K-Distance Method for parameter optimization, and linguistic filtering techniques for improving the semantic validity of citizen-generated reports. These components are further supported by system architecture design principles and user-centered evaluation through the System Usability Scale (SUS). Collectively, these foundations provide a comprehensive basis for understanding the system’s technical functionality, its effectiveness in enhancing data-driven decision-making for local government units, and its overall usability and acceptance among end users.
+
+Figure 2.3: Conceptual Framework
+Input
+Adaptive DBSCAN Parameters
+Sorted K-Distance Method (Dynamic Epsilon)
+minPts = 2 Threshold
+Linguistic Truth Filters
+Negation Detection
+Metaphor / Speculation Filtering
+System Architecture Components
+Logical Architecture
+Functional Architecture
+Physical Architecture (Graphical User Interface)
+Citizen Complaint Data
+Geotagged Reports
+Textual Descriptions
+Output
+System Performance Outcomes
+Reduced spatial fragmentation
+Reduced over-merging
+Improved clustering accuracy
+Data Quality Outcomes
+Effective noise isolation
+Valid cluster formation
+Preservation of rural reports (inclusivity)
+Linguistic Processing Effectiveness
+Reduced false emergency signals
+Accurate interpretation of citizen reports
+Decision-Making Impact
+Faster response time
+Improved planning efficiency of local government units
+User Evaluation
+System Usability Scale (SUS) score
+User experience evaluation 
+Design and Development of D.R.I.M.S.
+The application was designed and developed following the Iterative Prototyping methodology. The system was built using Node.js for backend operations, Supabase (PostgreSQL) for database management, and Vanilla JavaScript with Leaflet.js for interactive mapping, ensuring an event-based, geospatially adaptive design principle.
+
+
+Figure 2.4: System Architecture Diagram
+The system architecture illustrates the key components of the application. The major system components include a 5-layer Hybrid NLP Pipeline for semantic processing and an Adaptive DBSCAN spatial engine for geographic clustering.
+
+Figure 2.5: Core System Functionalities and Process Flow
+The developed system directly aligns with the project objectives by transitioning the local government from a manual ticketing system into a proactive spatial intelligence platform. A major challenge encountered during development was the linguistic complexity of the target population, specifically the use of "Bislish" (Bisaya-English) code-switching. This was resolved by designing a custom trilingual dictionary and implementing Levenshtein fuzzy matching to tolerate typographical errors.
+
+Core Algorithms
+Hybrid NLP Pipeline
+The Hybrid NLP Pipeline is the primary semantic gatekeeper of the system. It combines a high-speed rule-based engine with a TensorFlow.js AI fallback to distinguish credible citizen reports from linguistic noise. Its core functionality is to process trilingual input (English, Tagalog, and Bisaya) and apply "Linguistic Truth Filters" to dampen non-literal or speculative text. This ensures that only verified, literally intended complaints reach the mapping stage, reducing administrative "phantom data."
+The workflow of the Hybrid NLP Pipeline in the system follows these steps:
+Input Normalization: The system receives raw text and applies Levenshtein fuzzy matching against a 400-entry Bislish dictionary to correct typos and local dialects.
+Pattern Matching: The rule-based engine scans for specific keywords and categorizes the report into the refined taxonomy.
+Truth Filtering: The system checks for linguistic markers; if "walang" (negation) is detected, a 0.2 multiplier is applied; if "on fire" (metaphor) is detected non-literally, a 0.3 dampener is applied.
+AI Fallback: If the rule-based engine cannot determine the category with high confidence, the sentence is passed to the TensorFlow.js edge-AI model for deep semantic analysis.
+Categorized Output: The final result is a filtered, prioritized, and categorized text object ready for geospatial processing. 
+
+
+Figure 2.6: Hybrid NLP Pipeline Flowchart
+
+Adaptive DBSCAN Clustering Engine
+Adaptive DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is the spatial mining algorithm used to group individual reports into unified "events." Unlike traditional mapping that uses a fixed radius, this engine uses the Sorted K-Distance Elbow Method to calculate unique search boundaries for different hazard types. Its primary advantage is its ability to ignore "noise" (isolated, unverified reports) and focus only on dense clusters.
+The workflow of Adaptive DBSCAN in the system follows these steps:
+Coordinate Projection: The system gathers all categorized reports and projects their GPS coordinates using the Turf.js engine and the Haversine Formula for spherical accuracy.
+Epsilon Calculation: The system utilizes the Sorted K-Distance (Elbow) Method to plot the distance to the 4th nearest neighbor, identifying the optimal "epsilon" (search radius) for that specific category.
+Density Search: The algorithm searches for groups of reports that meet the Uniform Spatial Integrity threshold (minPts = 2).
+Cluster Formation: Points that meet the threshold are merged into an "event"which are points that do not meet the threshold are labeled as "noise" and hidden from the dashboard.
+Event Validation: The system calculates a Silhouette Coefficient to assess cluster compactness and the Adjusted Rand Index (ARI) to measure agreement with ground-truth incident groupings
+
+Figure 2.7: Cluster Visualization
+
+Figure 2.8: DBSCAN K-Distance Elbow Graph Per Category
+Geospatial Intelligence and Decision Support
+This pillar manages the final rendering and triaging of urban data. It utilizes the Nominatim API for reverse geocoding and an Ontology-Based Safety Multiplier to determine which events require the most immediate response. This technology ensures that administrators see the most dangerous hazards first, regardless of the volume of other reports.
+The workflow of Geospatial Intelligence and Decision Support in the system follows these steps:
+Location Validation: The system passes raw GPS clusters to the Nominatim API to convert coordinates into human-readable street addresses for administrative verification.
+Weighted Urgency Assignment: The system applies the Safety Multipliers; for example, Public Safety reports receive a 1.30 boost, while Quality of Life issues receive a 0.80 multiplier.
+Visual Gradient Rendering: The Leaflet.js library takes the validated clusters and renders them as visual gradients on the interactive heatmap.
+Dashboard Alerting: Events with the highest weighted scores are flagged in red on the administrative dashboard to trigger immediate resource allocation.
+System Architecture
+The diagram presents a three-layer architecture consisting of the Client Layer, Backend and Logic Layer, and Data and Persistence Layer. These layers work together to handle user input, process data using algorithms, and store and visualize the results.
+
+Figure 2.9: Architecture & API Flow
+
+Figure 2.10: Decision Support Flow
+Client Layer. The client layer represents the user-facing components of the system, providing interfaces for both citizens and administrators to interact with the platform. It includes the Citizen Web Application, developed as a Progressive Web App, which allows users to submit reports or complaints efficiently. Additionally, the system features an LGU Dashboard integrated with Leaflet.js, enabling local government units to view, query, and analyze processed complaint data through geographic visualization. A Super Admin Dashboard is also included, which allows the IT department of Digos City to manage role-based access control (RBAC) and generate invite links for system users. Overall, this layer is responsible for accepting user input, particularly report submissions, and displaying processed results to the appropriate administrative users.
+Backend and Logic Layer. This layer serves as the core processing component of the system and contains the primary algorithms responsible for data transformation and analysis. It includes a Python-based REST API, implemented using frameworks such as Flask or FastAPI, which acts as the communication bridge between the client applications and the backend processing modules. This API handles incoming requests and returns the corresponding responses after processing. Within this layer, a three-phase hybrid NLP pipeline is employed to process textual data submitted by users. This pipeline typically involves stages such as text preprocessing, language handling, and classification, ultimately producing structured or categorized outputs. In addition, an Adaptive DBSCAN engine is utilized to perform clustering on the processed data, grouping similar reports based on patterns or spatial proximity. The adaptive nature of this algorithm allows it to dynamically adjust clustering parameters for improved accuracy. Overall, this layer is responsible for executing the system’s main logic and transforming raw user input into meaningful, structured, and clustered information.
+Data and Persistence Layer. This layer is responsible for data storage and supporting the system’s processing requirements. It includes a trilingual dictionary and safety multipliers, which assist the NLP pipeline by enabling multilingual text processing and assigning weights or importance levels to specific terms. Additionally, the system utilizes the PostGIS spatial extension to support geographic computations, such as distance calculations and spatial clustering of reports. At the core of this layer is Supabase PostgreSQL, which serves as the primary database for storing raw user reports, processed data, and the results of clustering operations. Together, these components ensure efficient data management and provide the necessary support for advanced processing tasks.
+
+Data Flow
+The system operates in the following sequence:
+A user submits a report through the Citizen Web Application
+The request is sent to the Node.js.
+The API forwards the text data to the NLP pipeline
+The NLP pipeline processes and classifies the data
+The classified data is passed to the Adaptive DBSCAN engine for clustering
+Results are stored in the Supabase database with spatial support from PostGIS
+The LGU Dashboard queries the stored data and displays it to administrators
+
+Technical FrameworkThis section explains the technical theories, mathematical models, and algorithms used in the DRIMS system. The architecture is built upon three primary technical pillars: Geospatial Intelligence, Natural Language Processing (NLP), and Advanced Decision Support.
+Backend Framework and Server Management
+The system is built on Node.js using the Express framework, which serves as the primary backend environment. Express enables the creation of RESTful APIs, handling routing, middleware integration, and request-response management. To support server operations, several middleware components are utilized. The dotenv library is used to securely manage environment variables such as API keys and database credentials. Cross-Origin Resource Sharing (CORS) is configured through the cors middleware, allowing controlled communication between the frontend and backend services. Cookie-parser facilitates the handling of HTTP cookies for session-related operations, while compression improves performance by reducing the size of HTTP responses sent to clients. Additionally, axios and cross-fetch are used to perform HTTP requests, enabling communication with external services such as the Python-based OCR module.
+
+Database and Data Validation
+The system uses Supabase, a PostgreSQL-based backend-as-a-service, as its primary data storage solution. Integration is handled through the official Supabase JavaScript client, which provides functionalities for querying data, managing authentication, and enabling real-time updates. To ensure data integrity, validation mechanisms are implemented using Joi, which enforces structured schemas for incoming data. This prevents invalid or malformed data from entering the system. The Validator library complements this by performing string-level validation and sanitization, such as checking for valid email formats or detecting unsafe input patterns. Together, these tools ensure that all stored data is consistent, secure, and aligned with the system’s requirements.
+
+Machine Learning and Natural Language Processing
+The backend incorporates machine learning capabilities through TensorFlow.js and its Node.js bindings, allowing models to be executed directly on the server. This enables efficient processing of textual data without relying on external ML services. A key component is the Universal Sentence Encoder, a pre-trained model that converts textual input into numerical vector representations known as embeddings. These embeddings allow the system to measure semantic similarity between user-submitted reports, supporting tasks such as duplicate detection and clustering. In addition, a sentiment analysis library is used to evaluate the emotional tone of user inputs. This helps classify reports based on urgency or severity, which can be integrated into the system’s decision-making or prioritization mechanisms.
+
+Security Mechanisms
+To protect the system against common web vulnerabilities, several security-focused libraries are employed. Helmet is used to automatically configure secure HTTP headers, mitigating risks such as clickjacking and MIME-type sniffing. To address input-based attacks, particularly Cross-Site Scripting (XSS), the system uses isomorphic-dompurify and xss. These libraries sanitize user-generated content by removing or neutralizing malicious scripts embedded in input fields. These measures ensure that both the server and user data remain protected against common exploitation techniques.
+
+File Handling and Media Processing
+The system supports file uploads through Multer, which is specifically designed to handle multipart/form-data requests. This is essential for processing user-submitted images, such as identification documents for verification. Once uploaded, images are processed using Sharp, a high-performance image processing library. Sharp is used to resize, compress, and optimize images before storage, reducing file size and improving system efficiency. These components are particularly important for enabling the OCR-based identity verification workflow.
+
+Communication and External Services
+The system communicates with external services using axios and cross-fetch, which provide reliable methods for sending HTTP requests. These libraries are used to connect the Node.js backend with the Python-based OCR service. In this setup, image data is transmitted from the Node.js server to the Python service, where OCR processing is performed. The extracted text is then returned to the Node.js backend for further validation and storage. This communication layer enables seamless integration between different technologies within the system.
+
+Background Tasks and Automation
+To support asynchronous and scheduled operations, the system uses node-cron. This allows the execution of automated tasks at predefined intervals, such as database maintenance, report aggregation, or notification triggers. Nodemailer is used to send automated emails, including user notifications, verification messages, or system alerts. Additional utilities such as fast-csv enable efficient handling of CSV data for reporting purposes, while Puppeteer provides capabilities for automated browser interactions, such as generating reports or capturing system outputs. These tools enhance the system’s ability to operate autonomously and handle auxiliary processes efficiently.
+
+Development and Testing Tools
+During development, tools such as Nodemon are used to automatically restart the server when changes are detected, improving development efficiency. Jest is employed for testing, ensuring that system components function correctly through automated test cases. Code quality and security are maintained using ESLint and its associated plugins, which detect coding issues, enforce standards, and identify potential vulnerabilities. Although these tools are not part of the production system, they play a critical role in ensuring reliability and maintainability throughout the development lifecycle.
+CHAPTER IIIMETHODOLOGY
+Research Design
+This study adopts a developmental research design with evaluation, focusing on the development of an intelligent complaint management system integrating natural language processing and spatial clustering. The system employs an Adaptive DBSCAN framework with dynamically derived epsilon (ε) values using the Sorted K-Distance method to improve clustering accuracy and reduce spatial fragmentation and over-merging.
+A minimum points threshold (minPts = 2) is applied, with low-density data labeled as “ISOLATED” to ensure inclusivity of sparse reports. Linguistic Truth Filters are also used to minimize the influence of irrelevant or non-literal inputs.
+The system is evaluated using both simulated and real-world data, with performance measured in terms of clustering effectiveness, noise handling, and filtering accuracy.
+Research Locale
+The study was conducted in Digos City, Davao del Sur, which served as the primary locale for system testing and evaluation. The selection of this location was based on accessibility and feasibility, allowing the researchers to conduct semi-guided testing in both controlled and real-world environments. The locale provided a suitable setting for evaluating the system’s ability to handle geospatial and linguistic variations, particularly in a community where multilingual communication (English, Tagalog, and Bisaya) is prevalent. This environment enabled the researchers to assess the system under realistic conditions, ensuring that the results reflect practical usability and operational effectiveness. 
+Responderes
+The respondents for this study include:
+Report contributors (12 participants). A subset of participants (12 individuals) generated the 288 geocoded complaint reports used for system evaluation. They performed mission‑based field simulations in Digos City, submitting real‑world complaint data with geolocation and multilingual descriptions.
+Usability respondents (30 participants). A convenience sample of 30 non‑expert participants (including the 12 report contributors and 18 additional individuals) provided user feedback through the System Usability Scale (SUS) and USE questionnaires to evaluate the system’s usability, usefulness, and overall satisfaction. None of the participants were employed as LGU dispatchers.
+All respondents were selected using convenience sampling to simulate an open‑access civic reporting environment. There were no strict demographic or technical requirements imposed, ensuring that the system could be evaluated under realistic conditions involving diverse and unstructured user inputs.Research Instrument
+The study utilized a combination of standardized questionnaires and system-based evaluation methods to assess both the usability and technical performance of the developed platform.
+The instruments used in this study include:
+System Usability Scale (SUS)A standardized 10-item questionnaire measured using a 5-point Likert scale ranging from “Strongly Disagree” to “Strongly Agree.” This instrument was used to evaluate the overall usability of the system, including ease of use, learnability, and user satisfaction. A total of 30 respondents, composed of students and community participants, interacted with the system and provided feedback based on their experience.
+USE Questionnaire (Usefulness, Satisfaction, and Ease of Use)A supplementary evaluation tool used to assess user perception in terms of usefulness, satisfaction, and ease of use. This instrument provided a more detailed understanding of the user experience beyond general usability, supporting the findings obtained from the SUS results.
+User-Generated Complaint DataReal-time complaint reports submitted by participants during simulation activities. These data were used as input for evaluating system functionality, particularly in handling multilingual and geospatial information under realistic conditions.
+System Logs and Algorithmic Outputs
+Automatically generated system records that capture processing details such as classification results, truth filter activation, and clustering behavior. These logs were used to assess the effectiveness of the Hybrid NLP Pipeline and the Adaptive DBSCAN clustering framework.
+Clustering and Filtering Performance Metrics
+Quantitative measures used to evaluate system accuracy, including clustering quality, noise detection capability, and semantic filtering effectiveness. These metrics were derived from processed data and validated using statistical methods such as the Silhouette Coefficient and cluster validity scoring. In addition, the Adjusted Rand Index (ARI) was used to measure the agreement between the predicted DBSCAN clusters and the ground‑truth incident IDs while correcting for chance. The ARI ranges from –1 to 1, where 1 indicates perfect agreement. 
+System Development Phase
+This section describes the methodology used in the software development process, including the development model, tools, and techniques applied throughout the project lifecycle.
+The study adopts an Iterative Prototyping methodology to ensure that the system remains responsive to the geographic and linguistic conditions of the study locale. This approach allows continuous refinement of the trilingual Natural Language Processing (NLP) dictionary, which supports English, Tagalog, and Bisaya, particularly in handling code-switching (Bislish). Additionally, the Adaptive DBSCAN parameters are iteratively adjusted to ensure that generated clusters accurately represent real-world municipal problem areas.
+
+
+Figure 3.1: Iterative SDLC model for system development
+The system development is divided into the following parts:
+Planning
+Activities in this phase include the identification of persistent, structurally embedded failures in Philippine public-sector complaint management. The phase establishes the feasibility of transitioning toward an event-based spatial architecture to address data redundancy and operational bottlenecks.
+
+Analysis
+System requirements are analyzed by evaluating the linguistic reality of the target population, necessitating trilingual support in English, Tagalog, and Bisaya. Functional specifications are defined to include structured complaint ingestion, GPS validation against municipal boundaries, and semantic gatekeeping to filter non-literal language.
+Design
+The architecture is designed as a five-stage sequential processing pipeline. This includes a five-layer Hybrid NLP Engine for semantic classification and an Adaptive DBSCAN engine for geospatial clustering. The database design utilizes Supabase (PostgreSQL) to manage a dictionary of over 400 keywords and phrases.
+Implementation
+The implementation phase utilizes Python Flask for backend operations and Supabase for real-time data storage. The frontend is constructed using Vanilla JavaScript, while Leaflet.js is employed to render interactive geospatial visualizations and intensity-gradient heatmaps.
+Testing and Evaluation
+Testing is conducted through mission-based field simulations in Digos City, where student testers simulate real-world complaint scenarios. This process generated a dataset of 288 geocoded reports to stress-test the system's trilingual handling and spatial accuracy. Evaluation focuses on algorithmic precision by calibrating category-adaptive epsilon values via the Sorted K-Distance Elbow Method. Mathematical integrity is verified using the Silhouette Coefficient to assess the cluster cohesion and the Adjusted Rand Index (ARI) to measure agreement between predicted clusters and ground-truth incident IDs. Clustering quality is considered acceptable if the Silhouette score exceeds 0.5 and the ARI approaches 1.0.
+Deployment and Maintenance
+Final implementation involves pilot testing within selected local government units to integrate the platform into administrative workflows. System maintenance includes the periodic expansion of the trilingual dictionary through Human-in-the-Loop learning.
+
+Data Collection and Analysis Procedures
+The data collection process followed a structured, step‑by‑step procedure to ensure consistency, validity, and realistic simulation of real‑world complaint reporting:
+Approval and Preparation. Formal approval was secured from the Dean to conduct the study. The system was prepared for deployment, ensuring that the complaint submission interface, NLP pipeline, and clustering engine were fully operational.
+Participant Orientation. Non‑expert participants (report contributors) were briefed on the objectives of the study and were instructed on how to use the complaint reporting interface. Minimal guidance was provided to simulate real‑world user behavior.
+Simulation of Complaint Reporting. Participants conducted mission‑based simulations by submitting complaint reports in various locations across Digos City. Each report included geospatial coordinates and narrative descriptions written in natural language, incorporating English, Tagalog, and Bisaya.
+Data Capture and Storage. All submitted reports were automatically recorded in the system database via Supabase, including textual input, GPS coordinates, timestamps, and system‑generated logs.
+System Processing. The collected reports were processed through the three‑phase Hybrid NLP Pipeline (rule‑based, TensorFlow.js fallback, and Human‑in‑the‑Loop) for semantic classification and filtering, followed by the category‑aware DBSCAN algorithm for spatial clustering.
+User Evaluation (SUS and USE Instruments). After interacting with the system, participants were asked to evaluate its usability and usefulness using standardized questionnaires. The SUS was used to measure perceived ease of use, while the USE questionnaire assessed overall user experience, including satisfaction and perceived effectiveness of the system.
+Extraction of System Logs. Technical logs generated during processing were extracted, including classification outputs, truth filter activations, and clustering metrics.
+Statistical Analysis. The extracted system data and user evaluation responses were analyzed. Clustering performance was evaluated using the Silhouette Coefficient and the Adjusted Rand Index (ARI) , while classification accuracy, precision, recall, and F1‑score were computed from the filtered set of automatically classified reports (excluding HITL cases). SUS and USE responses were scored using standard procedures to determine usability and user satisfaction levels.
+Interpretation and Reporting. Results were interpreted to assess both the technical performance and user acceptance of the system, forming the basis for conclusions and recommendations.
+Ethical Consideration and Data Privacy
+Ethical considerations are essential in conducting research, ensuring the protection of participants and the integrity of the study. This includes:
+Informed Consent: Participants are informed about the study’s purpose, risks, and the voluntary nature of their participation prior to any data collection activities.
+Anonymity: All complaint records are anonymized before technical processing to eliminate personally identifiable information. This involves the removal of individual identifiers to ensure that data cannot be linked back to specific persons.
+Confidentiality: Respondent data is protected and stored securely in cloud databases with access control enforced via role-based permissions.
+Citizen Location Privacy: The reporting interface allows citizens to manually adjust the reported location (e.g., dragging a pin on the map) instead of automatically using their device’s precise GPS coordinates. This gives citizens control over what location information is shared. The system does not store the user’s actual device location unless they explicitly confirm it.
+On the administrative dashboard, all reports are displayed with their precise coordinates (as submitted by the citizen) to enable accurate verification and response. No additional role‑based restrictions are applied beyond the initial login; any authenticated LGU user can view the exact locations of complaints. Aggregate visualizations (e.g., heatmaps) are also provided for high‑level analysis, but precise point data remains accessible to authorized personnel.
+
+AI Declaration
+This document serves as the formal declaration of the Artificial Intelligence (AI) and Machine Learning (ML) technologies utilized within the DRIMS platform. Specifically, it outlines the integration, scope, and parameters of the TensorFlow framework as it operates within the system's linguistic processing pipeline.
+2. AI Technology Utilized
+Framework: TensorFlow.js (via @tensorflow/tfjs-node and pure @tensorflow/tfjs fallback)
+Model: Universal Sentence Encoder (USE)
+Purpose: Natural Language Processing (NLP), Semantic Text Embeddings, and Autonomous Category Classification.
+3. Scope of AI Application
+Within the DRIMS architecture, TensorFlow serves as the core cognitive engine for the Semantic NLP Model. Its application is strictly confined to the inference processing phase of unstructured civic complaints submitted by end-users.
+The operational pipeline is defined as follows:
+Pre-Computation: Initial tokenization and heuristic dictionary/keyword matching.
+TensorFlow Inference (Fallback Provider): When textual descriptions exhibit linguistic ambiguity (e.g., misspellings, colloquialisms, or complex syntactic structures like "road is uneven"), the input is passed to the localized TensorFlow.js memory weights.
+Semantic Mapping: The input string is converted into multidimensional semantic tensor tokenizations (embeddings).
+Cosine Similarity Evaluation: The system calculates absolute distances between the input embeddings and predefined programmatic "anchors" (Taxonomy arrays).
+Categorization: The mathematical proximity pairs the unstructured text to formal systemic categories (e.g., matching "puddle deep hole road" to Hazardous Public Infrastructure).
+4. Academic Parameters and Bounding
+As part of the stringent validation criteria required for this thesis:
+The TensorFlow model operates purely for inference mapping and does not actively rewrite, suppress, or autonomously delete core entity data. It strictly appends predictive classification metadata (tensorflow_use).
+Systemic actions such as duplicate suppression are calculated via a combinatorial algorithm integrating TensorFlow's Cosine Similarity with Haversine distance and temporal metrics, preventing unchecked AI autonomy.
+No generative AI models (such as GPT variants) are utilized in the persistent mutation of civic infrastructure records; all ML behavior is bounded by deterministic mathematical thresholds.
+5. Attestation
+I hereby declare that the usage of Artificial Intelligence, specifically the TensorFlow Universal Sentence Encoder, within the scope of this project is correctly documented, technically justifiable, and adheres to the ethical and architectural boundaries required by the academic parameters of this thesis. All automated decision-making processes facilitated by these algorithms have been explicitly logged, auditable, and subject to human-in-the-loop (HITL) review protocols via the LGU Triage mechanisms.
+
+
+CHAPTER IV
+RESULTS AND DISCUSSION
+This chapter presents the results of the DRIMS (Digital Response & Incident Management System) evaluation. The results are categorized based on the core system objectives, which include geospatial clustering accuracy (Adaptive DBSCAN++), semantic NLP classification reliability (Hybrid Bislish Engine), heuristic parameter variance, and user usability perceptions. A total of 288 complaint data points were utilized to evaluate the consistency and effectiveness of the adaptive clustering model and AI-powered classification system. In addition, 30 respondents, including students and citizens, participated in evaluating the system's functional effectiveness and user experience. 
+Logical Architecture
+ Figure 4.1: Sequence Diagram
+Figure 2.1 shows the 6 blocks of the DRIMS 2.0 system. The system moves data in a straight line from the citizen's phone to the LGU dashboard.
+The main parts are:
+Data Entry Module – Records the report text, GPS location, and time.
+Text and GPS Cleaning Module – Checks if the coordinates are in the city and cleans up the text.
+Stage 1: Categorization (NLP) – Figures out the category of the report (Fire, Trash, etc.) using AI.
+Stage 2: Map Grouping (Clustering) – Groups similar reports together to find hotspots.
+Real-time Sync Module – Sends updates to the dashboard instantly using WebSockets.
+Dashboards and Reports – Shows the map and generates Excel files for the LGU.
+
+Module 1 & 2: Loading and Cleaning Data
+The process starts when a citizen submits a report.
+GPS Boundary Check (AABB): The system checks the GPS coordinates using a box that covers Digos City. If the report is outside the city, it is ignored immediately.
+Text Cleaning: The system removes extra spaces and symbols from the text (Bisaya or English) to make it easier for the AI to read.
+
+Module 3 & 4: The Two-Stage Intelligence Engine
+The "brain" of the system works in two stages:
+Stage 1: Finding the Category (Hybrid NLP)
+This part decides which department should handle the report.
+Spelling Check (Levenshtein): It allows for typos in Bisaya or English keywords (like "baha" or "bhaha").
+AI Fallback (TFJS): If the system is not sure about the keywords, it uses a TensorFlow model to guess the category based on the meaning of the words. If the AI is still not 70% sure, it sends the report to a Human Review Queue for an officer to check.
+Stage 2: Grouping Reports (DBSCAN++)
+After finding the category, the system groups the report with other nearby reports.
+Radius Settings (3-Tier Epsilon): The system uses different search distances depending on the problem. For example, it looks much further for road damage than it does for trash piles.
+Distance Math (Haversine): It uses the Haversine formula to make sure the distance between reports is accurate on a round earth.
+
+Module 5 & 6: Updates and Output
+Instant Updates: The system uses WebSockets (Supabase) to push new reports to all screens at the same time.
+Fast Map (CSS Toggling): To keep the map smooth, the system just toggles markers on and off instead of reloading the whole map. This takes less than 0.5ms.
+Final Reports: The system saves everything to the database and can export them as Excel files and activity logs.
+
+Summary of Key Features
+6-Block Flow: A simple step-by-step path for every report.
+Two-Stage Thinking: First it finds the category, then it groups the reports.
+Built for Speed: Uses GPS boxes and tiny CSS updates to run fast on normal computers.
+Logical Architecture
+Semantic Truth Filtering and Classification Accuracy
+The system utilizes a hybrid Natural Language Processing (NLP) pipeline to autonomously categorize incoming citizen reports. To optimize processing speed, the engine first applies a rule-based keyword extraction layer. If a report contains unambiguous syntax, it is classified immediately. However, if the text is complex or lacks direct trigger words, the system dynamically routes the text to a TensorFlow. js Edge-AI model for deeper semantic inference.
+The system employs a hybrid Natural Language Processing (NLP)  pipeline to autonomously categorize incoming citizen reports. To optimize processing speed, the engine first applies a rule-based keyword extraction layer. If a report contains unambiguous syntax, it is classified immediately. If the text is complex or lacks direct trigger words, the system dynamically routes it to a TensorFlow.js Edge-AI model for deeper semantic inference. In cases where both methods fail (e.g., metaphorical or highly ambiguous language), the report is flagged for manual verification (Human-in-the-Loop). 
+
+Table 4.1: Sample of Semantic AI Log Processing 
+Table 4.1 shows representative decision paths. High‑urgency reports with direct keywords (e.g., “EXTREME DANGER HOUSE FIRE HERE”) are intercepted by the rule‑based engine with high confidence. Conversational phrases lacking strict trigger words (e.g., “May nakita ako ditong street light”) are correctly processed by the TensorFlow fallback, although with lower confidence. Metaphorical expressions (e.g., “parang moon crater, di makadaan”) are routed to HITL for manual verification.
+The complete evaluation of the pipeline was performed on 288 real‑world field reports. For the quantitative metrics presented below, reports that required HITL were excluded from the automated classification evaluation (they were not assigned a predicted category). The remaining reports were successfully classified, yielding the precision, recall, and confusion matrix results summarised in Tables 4.2 and Figure 4.2.
+
+Table 4.2: Per‑category precision, recall, and F1‑score.
+Table 4.2 presents the per‑category precision, recall, and F1‑score for the hybrid NLP pipeline, based on the 288 field reports that received an automated classification (reports sent to HITL were excluded from this evaluation).
+Figure 4.2 : Confusion Matrix
+The confusion matrix reveals that misclassifications are very low. The most frequent errors involve sanitation complaints being incorrectly assigned to Environment (9 cases) or to Infrastructure (3 cases). This reflects semantic overlap in descriptions that mention waste, drainage, or foul smells which are terms that can be interpreted as either a sanitation issue (improper waste disposal) or an environmental hazard (pollution, clogged drainage). A smaller number of Sanitation reports were misclassified as Traffic (2 cases) or Utilities (1 case).
+Environment complaints were occasionally misclassified as Traffic (2 cases), which is expected because phrases like "bumaha dito umay" (flood) or "di ako makadaan sa kase may baha" (can't pass because of flood) contain both environmental and traffic-related keywords. After prioritizing Environment keywords over Traffic keywords in the rule-based pipeline, the model achieved perfect recall for traffic (100%) while maintaining acceptable precision (71% as shown in Table 4.2).
+The remaining misclassifications are minor, such as Utilities reports misclassified as Infrastructure  (4 cases) or Environment (1 case), and Infrastructure reports misclassified as Traffic (3 cases) or Public Safety (4 cases). No misclassifications involved Public Safety as false negatives, demonstrating robust performance for high-priority hazard zones.
+Human-In-The-Loop Safeguard and Spam Prevention
+Crucially, the empirical logs demonstrate robust error handling when the engine encounters data that falls below the strict 60% system threshold. When presented with unclassified slang, ambiguous metaphors (e.g., "parang moon crater") or intentional linguistic noise, the AI correctly assigns a 0.00% confidence score. Rather than forcing an inaccurate classification or polluting the spatial map with prank reports, the system deliberately restricts the data and automatically routes it for manual verification. This architecture proves the prototype operates with a highly responsible "Human-in-the-Loop(HITL)"  design, ensuring the LGU administrator retains final judgement over edge-cases and spam reports while the AI safely automates the clear majority of the workload. Because HITL-flagged reports never receive an automated predicted category, they were excluded from the classification metrics (accuracy, precision, recall, and the confusion matrix). The metrics presented in Tables 4.3 and Figure 4.x are therefore based solely on the reports that were automatically classified by the rule-based engine or TensorFlow.js fallback.
+
+
+
+Spatial Clustering Efficiency and Hazard Localization
+Once the NLP engine verifies and categorizes a citizen report, the data pipeline streams the validated geographic coordinates into the spatial clustering engine. To group isolated citizen reports into actionable deployment zones, the system utilizes an Adaptive Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm.
+To ensure high data lineage and mathematical accuracy, the system applies strict temporal and categorical early-pruning prior to distance calculation. The algorithm isolates coordinates by category (e.g., Infrastructure vs Utilities) and enforces a localized 45-minute time window. Subsequently, it computes the Haversine distance between points using dynamically assigned MinPts and Epsilon(radius) parameters tailored to the specific hazard category.
+
+
+Table 4.3: Adaptive DBSCAN Spatial Clustering Output
+
+As shown in Table 4.3, the algorithm successfully localized the validated reports into 18 distinct geographic clusters. For instance, the system aggregated 16 isolated utility complaints into a single macro-cluster, assigning it an elevated Urgency Score of 16.0 and automatically flagging the zone as "active". Crucially, the mathematical centroid of each cluster (Center_Latitude and Center_Longitude) was geometrically derived by averaging the coordinates of all constituent core points, rather than anchoring to a single initial report. Utilizing the V8 Javascript engine's performance.now() micro-benchmarking, the system achieved a highly efficient average formation time of 1.33 milliseconds per cluster, ensuring real-time map rendering without browser UI bottlenecks. The Adjusted Rand Index (ARI) between DBSCAN clusters and the ground truth incident IDs was 0.96, indicating near-perfect agreement.
+Using the V8 Javascript engine's performance.now() micro-benchmarking, the average time to compute the cluster centroid, urgency score, and other metadata for each cluster was 1.33 milliseconds. This post-processing overhead is negligible and ensures that real-time map rendering does not introduce browser UI bottlenecks.  The core DBSCAN clustering algorithm itself required additional computation (reported in the Edge-AI Performance and Latency Benchmarking)
+
+Duplicate Detection Performance
+The ability of the spatial clustering engine to correctly identify duplicate reports was evaluated using the ground-truth incident IDs (derived from _mission_title and _protocol_title fields). A report pair was considered a true duplicate if it shared the same incident ID, and a predicted duplicate if both reports fell into the same DBSCAN cluster (excluding noise). The evaluation was performed exactly over all 41,328 possible report pairs.
+The system achieved a precision of 94.6%, a recall of 99.5%, and an F1-score of 97.0%. The high recall indicates that the DBSCAN clustering merges almost all true duplicate reports, while the precision confirms that false merges (different incidents being clustered together) are rare. These results demonstrate that the category-aware DBSCAN with eps = 200 m and minPts = 2 is highly effective at grouping multiple citizen reports of the same physical hazard into a single actionable event.
+
+Comparative Analysis: Fixed & Adaptive Clustering
+
+Table 4.4: Comparative Analysis of Clustering Algorithms
+The category‑blind baseline produced one large, contaminated cluster that incorrectly fused 61 reports from three different hazard categories. By contrast, the category‑aware approach produced 18 raw clusters internally, with zero mixed‑category contamination. However, the category‑aware method also generated more noise points (150) because low‑density reports within each category were left unclustered, which is an intended outcome, as forcing them into clusters would create false hazard zones.
+
+Edge-AI Performance and Latency Benchmarking
+To validate the feasibility of the prototype on resource-constrained LGU hardware, all performance metrics were measured on a standard laptop (HP Victus with AMD Ryzen 5 5600H, 8GB RAM, Windows 11) simulating a typical office environment. The system processed 288 simulated reports using Node.js performance.now() for timing and process.memoryUsage()  for memory profiling. 
+
+Table 4.5: Edge-AI Hardware Latency and Memory Profiling
+As detailed in Table 4.5, the TensorFlow.js model was loaded asynchronously at startup, incurring a one-time cold start overhead of 447.58 ms (model download and initialization). Subsequent reports reused the cached model with zero additional load time.
+Across all 288 reports, the hybrid pipeline exhibited the following aggregated performance:
+Rule-based engine (85% of reports) - average inference time of 0.72 ms (range 0.50-2.10 ms), memory footprint = 42-48 MB.
+TensorFlow.js fallback (15% of reports) - average inference time of 265 ms (range 21-530 ms), memory footprint = 45-66 MB. The higher variance is due to differences in input text length and model complexity.
+Peak memory usage across the entire session was 66.3 MB (well within the 8GB hardware limit). The Node.js garbage collector effectively released memory after each inference, preventing leaks.
+For typical rule-based reports, total processing per complaint was below 1 ms, enabling real-time feedback. Even the heaviest TensorFlow fallback cases completed in under 0.6 seconds, which remains acceptable for administrative use. These results confirm that the hybrid edge-AI architecture is both fast and memory-efficient, meeting the requirements for deployment on standard LGU workstations without cloud dependency.
+
+Physical Architecture
+Citizen Reporting Portal 
+The multi-step reporting form allows citizens to report community issues directly to the local government online. It provides a straightforward interface for residents to engage with their community without navigating complex bureaucratic processes.
+Purpose and Accessibility The form serves as a centralized platform for reporting issues such as damaged infrastructure, waste management, and public safety concerns. It is optimized for mobile devices, enabling users to file reports directly from the incident site.
+Three-Step Reporting Process The form uses a three-step wizard to simplify data collection:
+Basic Info - Users select a general category and subcategory for their issue. This classifies the report so the system can automatically route it to the correct government office.
+Details and Evidence - Users describe the situation in their preferred language or dialect (English, Bisaya, Tagalog, or mixed). They can also upload photos or videos to provide visual evidence of the problem.
+Location - Instead of relying on manual addresses, users pinpoint the exact location on an interactive map featuring city and barangay boundaries. This provides responders with accurate coordinates.
+
+
+
+
+
+
+
+
+Figure 4.3: Phase 1 - Basic Info
+
+Figure 4.4: Phase 2 - Details and Evidence
+
+Figure 4.5: Phase 3 - Location
+
+
+LGU Intelligence Dashboard & Heatmap
+The LGU Administrative Dashboard and Strategic Heatmap operate together as the central management system for local government officials. The dashboard aggregates incoming citizen reports to provide real-time performance metrics, automated urgent alerts, and workflow management tools. Concurrently, the heatmap translates this data into an interactive geographic display, mapping incidents across specific city and barangay boundaries. Together, these interfaces allow administrators to monitor community issues, pinpoint problem hotspots, and deploy resources efficiently based on structured data. 
+The Strategic Heatmap is an interactive geographic interface that allows local government units to track the physical locations of reported incidents. It provides a visual representation of data across city and barangay boundaries to help officials identify problem areas and deploy resources effectively.
+Geospatial Tracking - The map visualizes reported issues across accurate city and barangay boundaries, allowing officials to see exactly where problems are clustered.
+Dynamic Filtering - Administrators can filter the map data using controls at the top. They can isolate incidents by specific date ranges, complaint categories (e.g., infrastructure vs. sanitation), and specific barangay jurisdictions.
+Anomaly Detection - The system includes an "Emergency Radar" and clustering features to automatically highlight incident hotspots and active anomalies, enabling the LGU to deploy response teams to the most critical areas efficiently.
+Status Monitoring - A side panel allows officials to toggle map markers based on the current status of the complaints, such as Submitted (SUB), Verified (VER), Assigned (ASG), Active (ACT), or Resolved (RES).
+
+
+Figure  4.6: LGU Heatmap
+
+The LGU Administrative Dashboard is the central control hub for monitoring system-wide data and managing government workflows. It aggregates incoming citizen reports and provides real-time metrics, urgent alerts, and data visualizations to assist administrators in daily operations and decision-making.
+Key Metrics: The top section provides a real-time overview of critical numbers, including total complaints, active emergency cases, high-priority reports, and an average priority score.
+High-Priority Alerts: A dedicated alert feed displays urgent incidents that require immediate LGU action. These are typically flagged by the system's NLP engine based on keywords in the citizen's report (e.g., "fire" or "extreme danger").
+Data Visualization: The dashboard uses various charts to summarize community issues. A donut chart shows the distribution of complaints by main categories, while bar charts break down the volume of specific issues. Line graphs track the performance and impact of the NLP intelligence over time.
+Operational Workflow: The interface includes "Quick Actions" buttons that allow administrators to seamlessly navigate between verifying incoming reports, viewing the heatmap, and assigning cases to specific government departments. It also displays upcoming events and public advisories.
+\ 
+Figure  4.7: Upper Part of the LGU Dashboard
+
+ 
+Figure  4.8: Lower Part of the LGU Dashboard
+
+Human-in-the-Loop Review Queue 
+The Human-in-the-Loop mechanism operates within the dashboard's "Train the System" module. It is a continuous learning process where local government officials review reports that the NLP engine could not classify with high confidence. By combining automated algorithms with human judgment, the system ensures accurate data categorization while progressively improving its own predictive accuracy over time.
+Uncertainty Routing - When the NLP engine processes a citizen report and yields a low confidence score or detects edge cases (like figurative language or complex dialects), the system automatically flags the report and routes it to a pending manual review queue.
+Manual Verification - LGU administrators review these flagged cases. They analyze the citizen's original description and either validate the AI's initial prediction or manually correct the report to the proper category and priority tier.
+Active Learning -The system captures these human corrections and feeds them back into the machine learning model as new training data. This continuous feedback loop teaches the NLP engine to recognize similar patterns in the future, thereby increasing its overall accuracy and reducing the need for future manual intervention.
+ 
+Figure  4.9: HITL Interface
+
+Dictionary Management for Keyword Detection
+The Dictionary Management module allows administrators to control and update the vocabulary used by the Natural Language Processing (NLP) engine. It acts as the foundational knowledge base for the system, enabling the AI to accurately understand, translate, and categorize citizen reports, particularly those written in local dialects or mixed languages like Taglish and Bisaya.
+Keyword Association: Administrators can manually add, edit, or remove specific keywords and directly link them to corresponding government departments or complaint categories. For example, mapping the word "baha" (flood) to the "Disaster Response" category ensures the system routes similar reports correctly.
+Dialect and Synonym Mapping: The module allows officials to map regional slang, colloquialisms, and dialect-specific terms to standard system definitions. This ensures the NLP engine does not misinterpret or ignore citizen reports simply because they use non-standard terminology.
+Priority Weighting: Administrators can assign specific urgency scores to dictionary terms. Critical keywords like "sunog" (fire) or "aksidente" (accident) can be configured to automatically trigger high-priority alerts, ensuring severe issues bypass standard queues and are immediately flagged on the LGU dashboard.
+
+ 
+Figure  4.10: Statistical Area for Dictionary Manager
+
+ 
+Figure  4.11:  NLP Keywords Controls Based on its Categories
+
+ 
+Figure 4.12: NLP Modifiers Controls
+
+Super Admin's Role Based Access Control (RBAC)
+The User Management module provides administrative control over system access and permissions. It serves as the security and organizational foundation of the platform, allowing administrators to monitor, manage, and regulate all accounts interacting with the system, from ordinary citizens to local government personnel.
+Role-Based Access Control - Administrators can assign specific hierarchical roles such as Citizen, LGU Officer, or Super-Admin in order to different accounts. This ensures that users only have access to the data, dashboards, and features necessary for their specific responsibilities, preventing unauthorized access to sensitive information.
+Account Lifecycle Management - The module provides direct tools to manually approve new government registrations, suspend malicious or spam accounts, and reset compromised user credentials. This maintains the overall integrity of the system and ensures that only verified users are submitting or handling reports.
+Activity Auditing - Administrators can track user activity and system interactions. Monitoring which government officers reviewed or resolved specific complaints, or verifying the reporting history of citizen accounts, establishes a clear trail of accountability across the entire platform.
+ 
+Figure 4.13: User Manager for Super Admin
+
+Global Configuration
+The Master System Settings module is a high-level administrative interface accessible exclusively to Super-Admins. It serves as the primary control panel for adjusting core system parameters and backend behaviors without requiring code deployments. This allows technical administrators to globally tune the platform's artificial intelligence constraints, routing workflows, and security policies.
+Key Mechanics
+AI Engine Constraints: Super-Admins can adjust the mathematical thresholds that govern the system's automated features. This includes setting the minimum confidence score required for the NLP engine to automatically classify reports, prioritizing exact dictionary keyword matches to bypass AI predictions, and toggling the continuous learning function that self-updates the model based on human corrections.
+Escalation and Routing: The module provides overarching controls for system workflows and response times. Administrators can define strict auto-escalation timers (Service Level Agreements) for critical emergencies versus standard complaints. They can also enable or disable direct auto-routing, which allows the system to assign predicted complaints directly to specific departments while bypassing the manual review queue.
+Security and Throttling: Administrators can configure global security policies to maintain system stability. This includes adjusting server rate limits (requests per minute) to prevent traffic overloads, defining specific time windows for duplicate complaint detection, and executing manual purges of the system's detected spam queue.
+ 
+ Figure 4.14: Global Technical Settings for the Application
+ 
+
+User Evaluation
+System Usability Scale (SUS)
+The SUS is a standardized questionnaire that provides a reliable measure of system usability. It consists of 10 items, alternating between positive and negative statements, rated on a 5-point Likert scale (1 = Strongly Disagree, 5 = Strongly Agree):
+I think that I would like to use this system frequently.
+I found the system unnecessarily complex.
+I thought the system was easy to use.
+I think that I would need the support of a technical person to be able to use this system.
+I found the various functions in this system were well integrated.
+I thought there was too much inconsistency in this system.
+I would imagine that most people would learn to use this system very quickly.
+I found the system very cumbersome to use.
+I felt very confident using the system.
+I needed to learn a lot of things before I could get going with this system.
+ 
+Table 4.6: SUS Responders
+
+ 
+The SUS evaluation revealed a mean score of 59.83, corresponding to a Grade D (Marginal Acceptability), below the 68-point average, indicating interface complexity. Participants agreed with needing technical support and extensive learning (Questions 4 & 10). This is expected due to the dashboard's technical features like real-time DBSCAN tuning and NLP inspection. While USE scores show effective backend AI, the low SUS score highlights the need for improved onboarding, training, and UI simplification for non-technical users.
+
+Table 4.7: SUS Interpretation
+
+
+
+USE Questionnaire
+The custom questionnaire consisted of statements rated on a 7-point Likert scale (1 = Strongly Disagree, 7 = Strongly Agree), covering three dimensions:
+USEFULNESS
+It helps me be more effective.
+It helps me be more productive.
+It is useful.
+It gives me more control over the activities in my life.
+It makes the things I want to accomplish easier to get done.
+ It saves me time when I use it. 
+It meets my needs.
+It does everything I would expect it to do.
+EASE OF USE
+It is easy to use.
+It is simple to use.
+It is user friendly.
+It requires the fewest steps possible to accomplish what I want to do with it.
+It is flexible.
+Using it is effortless.
+I can use it without written instructions.
+I don't notice any inconsistencies as I use it.
+Both occasional and regular users would like it.
+I can recover from mistakes quickly and easily.
+I can use it successfully every time.
+EASE OF LEARNING
+I learned to use it quickly.
+I easily remember how to use it.
+It is easy to learn to use it.
+I quickly became skillful with it.
+SATISFACTION
+I am satisfied with it.
+I would recommend it to a friend.
+It is fun to use.
+It works the way I want it to work.
+It is wonderful.
+I feel I need to have it.
+It is pleasant to use.
+
+ 
+Table 4.8: USE – Ease of Use 
+
+Table 4.9: USE – Ease of Learning
+ 
+Table 4.10: USE – Satisfaction 
+Table 4.11:  USE Interpretation 
+
+Discussion
+System Architecture of the Innovative Platform (RQ1)
+The results reveal that the DRIMS platform successfully addresses structural deficits in public‑sector complaint management through a three‑layer decentralized architecture consisting of the Client Layer, Backend and Logic Layer, and Data and Persistence Layer. The system utilizes a two‑stage intelligence engine that first categorizes unstructured reports via a three-phase Hybrid NLP Pipeline and subsequently groups them using an Adaptive DBSCAN engine. This architectural shift enables the municipality to treat citizen feedback as unified geographic events rather than isolated, redundant administrative tasks.
+
+The system's core logic is distinguished by its use of Edge‑AI, shifting the computational burden of machine learning tasks directly onto the client's local device. This approach effectively eliminates server‑side latency and bandwidth bottlenecks often associated with cloud‑dependent systems. Furthermore, the physical architecture supports practical interaction through a three‑step reporting wizard for citizens and an Intelligence Dashboard for LGU officials, which features interactive heatmaps and real‑time WebSocket updates. These components enable administrators to visualize problem hotspots and prioritize resource allocation without the need for high‑availability cloud subscriptions.
+
+The technical integrity of the system further supports its architectural effectiveness. The validation results confirmed a Silhouette score of 0.82 and an Adjusted Rand Index (ARI) of 0.96, indicating that the system effectively separates meaningful hazard clusters from spatial noise.
+
+User Perception of the Developed Platform (RQ2)
+The evaluation of user perception indicates that the platform is both functionally effective and highly usable within the context of local governance. Participants, consisting of a convenience sample of 30 individuals, assessed the system using the System Usability Scale (SUS) and USE Questionnaire. These positive evaluations are anchored in the Technology Acceptance Model (TAM), where high scores in Perceived Usefulness (PU) were driven by the system’s ability to reduce data redundancy through adaptive clustering. Users perceived the Perceived Ease of Use (PEOU) to be high due to the intuitive presentation of complaint data through intensity-gradient heatmaps and clustered event markers.
+
+By integrating a Human‑in‑the‑Loop (HITL) mechanism, the platform allows officials to manually verify ambiguous reports, ensuring that the AI progressively improves while administrators retain final judgment over edge cases. Overall, the combination of an accurate backend and a user‑friendly interface led users to perceive the platform as a highly effective tool for transitioning from reactive to proactive governance.
+
+
+CHAPTER V
+CONCLUSION AND RECOMMENDATIONS
+Conclusion
+This study presents D.R.I.M.S. (Data‑Driven Reporting and Intelligence Management System), an intelligent complaint management framework designed to improve decision making in local government units (LGUs) by transforming citizen complaints into easy‑to‑understand insights. Traditional systems rely on ticket‑based processing, leading to data redundancy, inefficient resource allocation, and limited pattern recognition. To address these issues, the study integrates geospatial analytics and natural language processing into a unified system. The system utilizes a category‑aware DBSCAN algorithm (with per‑category epsilons derived via the Sorted K‑Distance Method) to reduce over‑merging and spatial fragmentation. A three‑phase Hybrid NLP pipeline (rule‑based, TensorFlow.js fallback, and Human‑in‑the‑Loop manual verification) filters non‑literal or irrelevant reports, improving data quality before clustering. A fixed minPts = 2 threshold is applied to maintain clustering integrity while preserving sparse reports through an “ISOLATED” classification. The framework was evaluated using 288 geocoded reports from field simulations in Digos City. Results show an overall classification accuracy of 84.92%, with macro and weighted F1‑scores of 0.83 and 0.85, respectively. The system also achieved a duplicate detection F1‑score of 0.97, a global Silhouette score of 0.82, and an Adjusted Rand Index (ARI) of 0.96, indicating effective separation of meaningful hazard clusters from spatial noise. Performance profiling confirmed that the edge‑AI architecture is sufficiently fast and memory‑efficient for deployment on resource‑constrained LGU hardware. Overall, the study provides a scalable, data‑driven solution that enables LGUs to transition from reactive complaint handling to proactive, event‑based governance.
+
+Recommendations 
+The following recommendations are provided to ensure the continued effectiveness of the platform:
+For Local Government Units (Digos City):
+Formally adopt the event‑based spatial architecture to eliminate data redundancy and optimize the triage of limited municipal resources.
+Regularly update the trilingual dictionary through the Human‑in‑the‑Loop feedback mechanism to capture new local slang and evolving civic terminology.
+Use the dashboard’s heatmap and cluster views to identify high‑density hazard zones and proactively deploy resources, rather than reacting to individual tickets.
+For Citizens:
+Utilize the trilingual reporting features (English, Tagalog, Bisaya) to ensure that localized issues are captured with high descriptive clarity in the preferred language.
+For Future Researchers:
+Conduct extended field testing across neighboring municipalities to validate the adaptability of the DBSCAN search parameters (eps, minPts) in different urban densities and cultural‑linguistic contexts.
+Explore the integration of predictive analytics (e.g., time‑series forecasting of complaint volumes) to anticipate service failures before they occur.
+Benchmark the current category‑aware DBSCAN against alternative algorithms such as HDBSCAN to compare cluster stability and parameter sensitivity.
+
+System Enhancements 
+Enhance: Expand the NLP dictionary by implementing an active learning loop where HITL corrections automatically update the rule‑based keyword set and retrain the TensorFlow.js fallback model.
+Optimize: Refine the backend spatial processing engine to handle high‑volume concurrent data streams (e.g., during city‑wide emergencies) while maintaining real‑time performance.
+Integrate: Add alternative submission channels such as SMS or Viber gateways to allow citizens without consistent internet access to submit geocoded reports.
+
+Future Research Directions 
+Validate the system’s generalizability by deploying a pilot within an actual LGU operations center, measuring real‑world response time improvements and user acceptance among professional dispatchers.
+Extend system capabilities by training machine learning models to predict recurrent infrastructure failures based on historical spatial heatmaps and temporal patterns.
+Investigate the use of federated learning to improve NLP classification across multiple LGUs without sharing raw citizen data.model.
+
+Summary of Findings
+The study successfully met its objectives by developing a functional spatial intelligence platform and evaluating its technical performance using 288 geocoded reports from Digos City (89 HITL‑excluded, 199 automatically classified).
+Classification accuracy: 84.92% overall, with macro F1 = 0.83 and weighted F1 = 0.85. Sanitation reports showed the highest semantic overlap with Environment (9 misclassifications).
+Clustering quality: Category‑aware DBSCAN (eps = 200 m, minPts = 2) produced 8 clusters with zero noise, a Silhouette score of 0.82, and an ARI of 0.96.
+Duplicate detection: F1 score of 0.97 (precision 94.6%, recall 99.5%).
+Edge‑AI performance: Rule‑based engine averaged 0.72 ms (85% of reports); TensorFlow.js fallback averaged 265 ms (15% of reports). Peak memory usage was 66.3 MB.
+These findings confirm that a client‑side, event‑based architecture can effectively transform unstructured citizen complaints into actionable geospatial intelligence without cloud dependency.
+
+
+
+REFERENCES
+[1] W. Wang, Z. Xu, D. Sun, and T. Lan, “Spatial Optimization of Mega-City Fire Stations Based on Multi-Source Geospatial Data: A Case Study in Beijing,” ISPRS International Journal of Geo-Information, vol. 10, no. 5, p. 282, Apr. 2021, doi: https://doi.org/10.3390/ijgi10050282.
+[2] H. M. Mohamed, A. H. Mohamed, S. O. Hashi, H. N. Hassan, K. A. Barre, and B. A. Ahmed, “Automated University Complaint Management System by Leveraging Machine Learning and Natural Language Processing for Enhanced Efficiency and Accuracy,” Forum for Linguistic Studies, vol. 7, no. 2, Feb. 2025, doi: https://doi.org/10.30564/fls.v7i2.8162.
+[3] P. Kormpho, P. Liawsomboon, N. Phongoen, and S. Pongpaichet, “Smart Complaint Management System,” 2018 Seventh ICT International Student Project Conference (ICT-ISPC), pp. 1–6, Jul. 2018, doi: https://doi.org/10.1109/ict-ispc.2018.8523949.
+[4] A. Mantaring, M. Angela, P. Espinoza, and A. Gabriel, “Complaint Management in the Public Sector Organization in the Philippines.”
+[5] D. Banga and K. Peddireddy, “Artificial Intelligence for Customer Complaint Management,” International Journal of Computer Trends and Technology, vol. 71, no. 3, pp. 1–6, Mar. 2023, doi: https://doi.org/10.14445/22312803/ijctt-v71i3p101.
+[6] J. Cagas, G. Mae, and V. Balacy, “IJRISS) |Volume VI, Issue XI,” 2022.
+[7] T. Mogotloane and V. Louw, “2023) 23-31 * Corresponding author,” INTERNATIONAL JOURNAL OF RESEARCH IN BUSINESS AND SOCIAL SCIENCE, vol. 12, no. 10, doi: https://doi.org/10.20525/ijrbs.v12i10.3112.
+[8] T. Mogotloane and V. Louw, “Customer complaints management in South Africa: A quest for service excellence,” Africa’s Public Service Delivery and Performance Review, 2024, doi: https://doi.org/10.4102/apsdpr.
+[9] U. Baros, “Geospatial Data Analysis for Mapping Customers Complaints (Case Study: First Media Users Using Social Media of Twitter),” Proceedings of the 2nd Multidisciplinary International Conference, MIC 2022, 12 November 2022, Semarang, Central Java, Indonesia, 2023, doi: https://doi.org/10.4108/eai.12-11-2022.2327279.
+[10] Commonwealth Ombudsman, “Complaint management by government agencies AN INVESTIGATION INTO THE MANAGEMENT OF COMPLAINTS BY COMMONWEALTH AND ACT GOVERNMENT,” 2014.
+[11] J. Bazzan, M. E. Echeveste, C. T. Formoso, B. Altenbernd, and M. H. Barbian, “An Information Management Model for Addressing Residents’ Complaints through Artificial Intelligence Techniques,” Buildings, vol. 13, no. 3, p. 737, Mar. 2023, doi: https://doi.org/10.3390/buildings13030737.
+[12] B. Varghese and P. Jacob, “SPATIAL CLUSTERING ALGORITHMS -AN OVERVIEW,” Asian Journal of Computer Science And Information Technology, vol. 3, pp. 1–8, 2013.
+[13] W. H. Delone and E. R. McLean, “The DeLone and McLean Model of Information Systems Success: A Ten-Year Update,” Information Systems Research, Journal of Management Information Systems, vol. 19, no. 4, pp. 9–30, 2003.
+[14] N. Marangunić and A. Granić, “Technology acceptance model: a literature review from 1986 to 2013,” Universal Access in the Information Society, vol. 14, no. 1, pp. 81–95, Feb. 2014, doi: https://doi.org/10.1007/s10209-014-0348-1.
+[15] J. Zhang and D. Wang, “Duplicate Report Detection in Urban Crowdsensing Applications for Smart City.”
+[16] W. Shi, J. Cao, Q. Zhang, Y. Li, and L. Xu, “Edge Computing: Vision and Challenges,” IEEE Internet of Things Journal, vol. 3, no. 5, pp. 637–646, Oct. 2016, doi: https://doi.org/10.1109/jiot.2016.2579198.
+[17] S. King and P. Brown, “Fix My Street or Else: Using the Internet to Voice Local Public Service Concerns.”
+[18] K. C. Desouza and A. Bhagwatwar, “Technology-Enabled Participatory Platforms for Civic Engagement: The Case of U.S. Cities,” Journal of Urban Technology, vol. 21, no. 4, pp. 25–50, Oct. 2014, doi: https://doi.org/10.1080/10630732.2014.954898.
+[19] B. Pak, A. Chua, and A. Vande Moere, “FixMyStreet Brussels: Socio-Demographic Inequality in Crowdsourced Civic Participation,” Journal of Urban Technology, vol. 24, no. 2, pp. 65–87, Apr. 2017, doi: https://doi.org/10.1080/10630732.2016.1270047.
+[20] A. K. Jain, “Data clustering: 50 years beyond K-means,” Pattern Recognition Letters, vol. 31, no. 8, pp. 651–666, Jun. 2010, doi: https://doi.org/10.1016/j.patrec.2009.09.011.
+[21] A. A. Bushra and G. Yi, “Comparative Analysis Review of Pioneering DBSCAN and Successive Density-Based Clustering Algorithms,” IEEE Access, vol. 9, pp. 87918–87935, 2021, doi: https://doi.org/10.1109/access.2021.3089036.
+[22] J. Gan and Y. Tao, “DBSCAN Revisited: Mis-Claim, Un-Fixability, and Approximation *,” doi: https://doi.org/10.1145/2723372.2737792.
+[23] D. Smilkov et al., “TENSORFLOW.JS: MACHINE LEARNING FOR THE WEB AND BEYOND.”
+[24] P. Grzesik and D. Mrozek, “Combining Machine Learning and Edge Computing: Opportunities, Challenges, Platforms, Frameworks, and Use Cases,” Electronics, vol. 13, no. 3, p. 640, Feb. 2024, doi: https://doi.org/10.3390/electronics13030640.
+[25]Cruz, J. C. B., & Cheng, C. (2020). Establishing baselines for text classification in low-resource languages: The case of Philippine languages. arXiv preprint arXiv:2005.02068. https://doi.org/10.48550/arXiv.2005.02068
+[26]David, C. C., Ong, J. C., & Legara, E. F. T. (2016). Tweeting Supertyphoon Haiyan: Evolving functions of Twitter during and after a disaster event. PLoS ONE, 11(3), e0150190. https://doi.org/10.1371/journal.pone.0150190
+[27]Mines and Geosciences Bureau. (2022). Detailed landslide and flood susceptibility map of Digos City, Davao del Sur. Department of Environment and Natural Resources, Republic of the Philippines. Retrieved from https://hazardhunter.georisk.gov.ph/
+[28]Philippine Statistics Authority. (2024). 2024 Census of Population (POPCEN) official population counts: Digos City, Davao del Sur. Regional Statistical Services Office XI. https://rsso11.psa.gov.ph/content/2024-census-population-popcen-official-population-counts-digos-city-davao-del-sur
+[29] T. Kumar, “How the content of digital complaints shapes bureaucratic responsiveness in Mumbai,” Governance, vol. 38, no. 2, Jul. 2024, doi: https://doi.org/10.1111/gove.12889.
+[30] D. Maryam, A. Hadi, and R. Palupijati, “Administrative Reform in Indonesia: How Far is The Citizens Online Complaints-Handling System (LAPOR!) About to Reach The Open Government Agenda?,” Jurnal Administrasi dan Kebijakan Publik), vol. 3, 2018.
+[31] A. Owusu, C. E. Akpe-Doe, and I. H. Taana, “Assessing the Effectiveness of E-Government Services in Ghana,” International Journal of Electronic Government Research, vol. 18, no. 1, pp. 1–23, Oct. 2021, doi: https://doi.org/10.4018/ijegr.289827.
+[32] N. Made, W. Premaiswari, and R. Ghazali, “The Effectiveness of the SP4N-LAPOR! as a National Public Service Com- plaint Management Application,” vol. 28, no. 1, pp. 2477–4693, 2024.
+
+
+
+

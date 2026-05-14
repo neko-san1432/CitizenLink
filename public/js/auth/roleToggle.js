@@ -81,13 +81,19 @@ function createRoleButton(currentRole = "lgu", baseRole = null) {
   }`;
 
   // Use spans for responsive hiding
+    const icon = isInCitizenMode ? 
+      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>` : 
+      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>`;
+
   button.innerHTML = `
-    <span class="role-icon">👤</span>
+    <span class="role-icon">${icon}</span>
     <span class="role-text">${buttonLabel}</span>
   `;
 
   // Add click handler
   button.addEventListener("click", async () => {
+    button.disabled = true;
+    button.innerHTML = `<span class="role-icon animate-spin">⏳</span><span class="role-text">Switching...</span>`;
     await switchRole(targetRole);
   });
 
@@ -130,32 +136,36 @@ async function switchRole(targetRole) {
  * Add button to header
  */
 function addButtonToHeader(currentRole = "lgu", baseRole = null) {
-  // Find header right section
+  // 1. Try to find the consolidated container in the header template
+  const container = document.getElementById("role-switcher-container");
+  if (container) {
+    container.style.display = "block";
+    container.innerHTML = ""; // Clear existing
+    const button = createRoleButton(currentRole, baseRole);
+    container.appendChild(button);
+    return true;
+  }
+
+  // 2. Fallback to finding header right section (legacy support)
   let headerRight = document.querySelector(".header-right");
   if (!headerRight) {
-    // Try alternative selectors
-    const header =
-      document.querySelector(".header") || document.querySelector("header");
+    const header = document.querySelector(".header") || document.querySelector("header");
     if (header) {
       const rightSection = document.createElement("div");
       rightSection.className = "header-right";
-      rightSection.style.cssText =
-        "display: flex; align-items: center; gap: 10px;";
+      rightSection.style.cssText = "display: flex; align-items: center; gap: 10px;";
       header.appendChild(rightSection);
       headerRight = rightSection;
     } else {
       return false;
     }
   }
-  // Create and add button with current role and base role
+  
   const button = createRoleButton(currentRole, baseRole);
-
-  // Insert before theme toggle if it exists, otherwise prepend
-  const themeToggle = headerRight.querySelector("#theme-toggle");
+  const themeToggle = headerRight.querySelector("#theme-toggle") || headerRight.querySelector(".theme-btn");
   if (themeToggle) {
     headerRight.insertBefore(button, themeToggle);
   } else {
-    // Insert at the beginning if theme toggle not found
     headerRight.insertBefore(button, headerRight.firstChild);
   }
 
@@ -375,12 +385,7 @@ export async function getActualRole() {
     return null;
   }
 }
-// Auto-initialize if DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeRoleToggle);
-} else {
-  initializeRoleToggle();
-}
+// Auto-initialization removed - now handled by header.js for consolidation
 // Default export
 
 export default {

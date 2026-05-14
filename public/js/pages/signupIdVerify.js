@@ -510,8 +510,26 @@ import { getCsrfToken } from "../utils/csrf.js";
     try {
       const fd = new FormData();
       fd.append("file", blob, file?.name || "capture.jpg");
+
+      const headers = {};
+      try {
+        const csrf = await getCsrfToken();
+        if (csrf) headers["X-CSRF-Token"] = csrf;
+
+        // Try to include session token if available (for 401 resolution)
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session?.access_token) {
+            headers["Authorization"] = `Bearer ${sessionData.session.access_token}`;
+          }
+        } catch (_s) { /* anonymous flow */ }
+      } catch (err) {
+        console.debug("CSRF/Auth header setup failed:", err);
+      }
+
       const res = await fetch("/api/identity/ocr", {
         method: "POST",
+        headers,
         body: fd,
       });
 
@@ -612,18 +630,32 @@ import { getCsrfToken } from "../utils/csrf.js";
             });
           }
 
-          // ** MIGRANT DETECTION LOGIC **
+          // ** MIGRANT DETECTION LOGIC (Enhanced) **
           const address = (extractedIdData.address || "").toUpperCase();
-          const isDigos = address.includes("DIGOS");
+          const rawText = (data.rawText || data.text || "").toUpperCase();
+          
+          console.log("[ID_VERIFY] Parsed Address:", address);
+          console.log("[ID_VERIFY] Raw OCR Text:", rawText);
+
+          // Check for "DIGOS" in the parsed address OR the raw text as fallback
+          const isDigos = address.includes("DIGOS") || rawText.includes("DIGOS");
 
           if (isDigos) {
             // Standard Flow: Digos ID -> Verify Address Match
-            status("ID Verified successfully.", "success");
+            status("ID Verified: Digos Resident detected.", "success");
+            
+            // If address field was empty but rawText had it, fill it in for the form
+            if (!address && rawText.includes("DIGOS")) {
+               const lines = rawText.split("\n");
+               const digosLine = lines.find(l => l.includes("DIGOS"));
+               if (digosLine) extractedIdData.address = digosLine.trim();
+            }
+            
             compareWithFormData(extractedIdData);
           } else {
             // Migrant Flow: Non-Digos ID -> Require Secondary Proof
             console.log(
-              "[ID_VERIFY] Non-Digos Address detected. Triggering Secondary Verification."
+              `[ID_VERIFY] Non-Digos Address detected. Address: "${address}"`
             );
             status("ID Valid. Non-Digos Address detected.", "warning");
 

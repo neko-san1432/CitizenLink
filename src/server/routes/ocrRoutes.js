@@ -25,22 +25,37 @@ const upload = multer({
   }
 });
 
-// Primary ID OCR — SEC-01 FIX: require authentication
+// Primary ID OCR — Accessible to guests for signup verification
 router.post(
   "/ocr",
-  authenticateUser,
   authLimiter,
   upload.single("file"),
   oCRController.processId
 );
 
-// Secondary Residency Verification (Bill/Cert/Cedula) — SEC-01 FIX: require authentication
+// Secondary Residency Verification — Accessible to guests for signup verification
 router.post(
   "/ocr/verify-residency",
-  authenticateUser,
   authLimiter,
   upload.single("file"),
   oCRController.processResidencyDoc
 );
+
+// Diagnostic GET handlers to help debug "Route not found" errors
+router.get("/ocr", (req, res) => {
+  res.json({ 
+    success: false, 
+    message: "This endpoint requires a POST request with an ID image file.",
+    diagnostics: { method: req.method, path: req.originalUrl, timestamp: new Date() }
+  });
+});
+
+router.get("/ocr/verify-residency", (req, res) => {
+  res.json({ 
+    success: false, 
+    message: "This endpoint requires a POST request with a residency document file.",
+    diagnostics: { method: req.method, path: req.originalUrl, timestamp: new Date() }
+  });
+});
 
 module.exports = router;

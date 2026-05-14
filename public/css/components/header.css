@@ -1197,25 +1197,25 @@ html.dark .profile-btn:hover {
 }
 
 .role-toggle-btn.btn-staff-mode {
-  background: #007bff;
-  /* Primary Blue */
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-700)) !important;
+  border: 1px solid var(--primary-400) !important;
 }
 
 .role-toggle-btn.btn-staff-mode:hover {
-  background: #0056b3;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-800)) !important;
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .role-toggle-btn.btn-citizen-mode {
-  background: #28a745;
-  /* Success Green */
+  background: linear-gradient(135deg, var(--success-500), var(--success-700)) !important;
+  border: 1px solid var(--success-400) !important;
 }
 
 .role-toggle-btn.btn-citizen-mode:hover {
-  background: #218838;
+  background: linear-gradient(135deg, var(--success-600), var(--success-800)) !important;
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
 .role-icon {

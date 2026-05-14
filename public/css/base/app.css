@@ -1212,3 +1212,86 @@ svg {
 .opacity-100 {
   opacity: 1;
 }
+
+/* --- Mobile Bottom Navigation (Citizen) --- */
+.dash-bottom-nav {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 1024px) {
+  /* Show bottom nav on mobile/tablet */
+  .dash-bottom-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #1f2937; /* dark default */
+    border-top: 1px solid #374151;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 64px;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  html.dark .dash-bottom-nav {
+    background: #0f172a; /* matching dark header/background */
+    border-top: 1px solid #1e293b;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    text-decoration: none;
+    width: 100%;
+    height: 100%;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .nav-item:hover, .nav-item:active {
+    color: #cbd5e1;
+  }
+
+  .nav-item.active {
+    color: #3b82f6; /* blue accent */
+  }
+
+  .nav-item.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    background: #3b82f6;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+    margin-top: 0;
+    transition: transform 0.2s ease;
+  }
+
+  .nav-item.active .nav-icon {
+    transform: translateY(-2px);
+  }
+
+  /* Create space for the bottom nav in the main wrapper */
+  .app-container, .main-content-wrapper, .dashboard-main-wrapper {
+    padding-bottom: 70px !important;
+  }
+
+  /* Hide sidebar explicitly on mobile since we have bottom nav */
+  #sidebar {
+    display: none !important;
+  }
+}

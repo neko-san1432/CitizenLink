@@ -222,28 +222,7 @@ async function setSidebarRole() {
     <div class="toggle-switch" id="toggle-switch"></div>
   </div>
   
-  ${(() => {
-    const userMeta = JSON.parse(localStorage.getItem("cl_user_meta") || "{}");
-    const realRole = normalizeRole(userMeta.role || "");
-    const isOverridden = Boolean(localStorage.getItem("cl_role_override")) || document.cookie.match(/(^|;)\s*app_mode=citizen_mode/);
 
-    // Only show for LGU and Admin (base role must be switchable)
-    const baseRoleIsSwitchable = realRole === "lgu" || realRole === "super-admin" || realRole.startsWith("lgu-") || realRole === "complaint-coordinator";
-
-    if (!baseRoleIsSwitchable && !isOverridden) return "";
-
-    const label = isOverridden ? "Exit Citizen" : "Enter Citizen";
-
-    return `
-      <div class="role-switcher" id="sidebar-role-switcher" title="Toggle Citizen Perspective">
-        <div class="role-switcher-label">
-          <span class="menu-icon">${getIcon("roleChanger", { size: 20 })}</span>
-          <span>${label}</span>
-        </div>
-        <div class="toggle-switch ${isOverridden ? "active" : ""}" id="role-toggle-switch"></div>
-      </div>
-    `;
-  })()}
 
   <div class="sidebar-footer">
     <a href="/logout" class="logout-link" data-icon="signout" aria-label="Sign out">
@@ -259,7 +238,6 @@ async function setSidebarRole() {
       // Re-initialize event listeners after HTML update
       initializeSidebarClose();
       initializeSidebarThemeToggle();
-      initializeRoleSwitcher();
       initializeLogout();
       // Update active menu items with aria-current
       setActiveMenuItem();

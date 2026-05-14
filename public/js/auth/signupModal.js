@@ -1,15 +1,11 @@
 import showMessage from "../components/toast.js";
 
 document.addEventListener("click", (e) => {
-  console.log("Click detected on:", e.target.tagName, e.target.className, e.target.getAttribute("data-open-terms"), e.target.getAttribute("data-open-privacy"));
   // Check for terms link first
   if (e.target.matches("[data-open-terms]") || e.target.closest("[data-open-terms]")) {
-    console.log("Opening terms modal");
     e.preventDefault();
     const termsModal = document.getElementById("termsModal");
-    console.log("Terms modal found:", Boolean(termsModal));
     if (termsModal) {
-      console.log("Before setting styles - display:", termsModal.style.display);
       termsModal.style.display = "block";
       termsModal.style.visibility = "visible";
       termsModal.style.opacity = "1";
@@ -57,7 +53,6 @@ window.onclick = function(event) {
     event.target.style.display = "none";
   }
 };
-console.log("Signup modal event listeners attached");
 // Phone number validation - only allow numbers
 document.addEventListener("input", (e) => {
   if (e.target.id === "mobile") {

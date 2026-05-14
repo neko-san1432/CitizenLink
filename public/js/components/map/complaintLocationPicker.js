@@ -258,9 +258,14 @@ function setupLocationPicker(map) {
     }
     return entry.value;
   }
-  // Create initial marker at map center (using divIcon for CSP compliance)
-  const initialCenter = map.getCenter();
-  marker = L.marker([initialCenter.lat, initialCenter.lng], {
+  // Create initial marker at existing coordinates or map center (using divIcon for CSP compliance)
+  const savedLat = parseFloat(latInput.value);
+  const savedLng = parseFloat(lngInput.value);
+  const hasSavedCoords = !isNaN(savedLat) && !isNaN(savedLng);
+
+  const initialPos = hasSavedCoords ? { lat: savedLat, lng: savedLng } : map.getCenter();
+
+  marker = L.marker([initialPos.lat, initialPos.lng], {
     draggable: true,
     zIndexOffset: 1000, // Ensure marker is always on top
     icon: L.divIcon({
@@ -270,6 +275,10 @@ function setupLocationPicker(map) {
       iconAnchor: [18, 36],
     }),
   }).addTo(map);
+
+  if (hasSavedCoords) {
+    map.setView([savedLat, savedLng], 16);
+  }
 
   // Boundary validation function
   async function validateCoordinates(lat, lng) {
@@ -463,7 +472,7 @@ function setupLocationPicker(map) {
 
       try {
         const response = await fetch(
-          `/api/reverse-geocode?lat=${lat}&lng=${lng}`,
+          `/api/public/reverse-geocode?lat=${lat}&lng=${lng}`,
           { signal: geocodeAbortController.signal }
         );
 
@@ -523,8 +532,8 @@ function setupLocationPicker(map) {
   }
   // Set initial coordinates with validation (don't show warning on initial load)
   // Validate initial coordinates and update submit button state
-  updateCoordinates(initialCenter.lat, initialCenter.lng, false).then(() => {
-    updateLocationText(initialCenter.lat, initialCenter.lng);
+  updateCoordinates(initialPos.lat, initialPos.lng, false).then(() => {
+    updateLocationText(initialPos.lat, initialPos.lng);
   });
   // Marker drag events with boundary validation
   // Only update coordinates on dragend to ensure exact final position is captured

@@ -91,15 +91,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/config");
       const config = await response.json();
 
-      if (config.testLoginEnabled && config.testEmails) {
-        injectTestUI(config.testEmails);
+      if (config.testLoginEnabled && config.testAccounts) {
+        injectTestUI(config.testAccounts);
       }
     } catch (error) {
       console.warn("[TEST LOGIN] Failed to load config:", error);
     }
   }
 
-  function injectTestUI(testEmails) {
+  function injectTestUI(testAccounts) {
     const sidebar = document.querySelector(".auth-sidebar");
     if (!sidebar) return;
 
@@ -112,19 +112,16 @@ document.addEventListener("DOMContentLoaded", () => {
     testSection.innerHTML = `
       <h3 class="oauth-title" style="color: var(--primary-color)">Quick Login (Test Mode)</h3>
       <div class="oauth-buttons" style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <button type="button" class="btn btn-secondary test-btn" data-email="${testEmails.citizen}" data-role="Citizen">
+        <button type="button" class="btn btn-secondary test-btn" data-email="${testAccounts.citizen.email}" data-password="${testAccounts.citizen.password}" data-role="Citizen">
           <span>Login as Citizen</span>
         </button>
-        <button type="button" class="btn btn-secondary test-btn" data-email="${testEmails.lgu}" data-role="LGU">
+        <button type="button" class="btn btn-secondary test-btn" data-email="${testAccounts.lgu.email}" data-password="${testAccounts.lgu.password}" data-role="LGU">
           <span>Login as LGU</span>
         </button>
-        <button type="button" class="btn btn-secondary test-btn" data-email="${testEmails.superAdmin}" data-role="Super Admin">
+        <button type="button" class="btn btn-secondary test-btn" data-email="${testAccounts.superAdmin.email}" data-password="${testAccounts.superAdmin.password}" data-role="Super Admin">
           <span>Login as Super Admin</span>
         </button>
       </div>
-      <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 1rem; text-align: center;">
-        Password: <code>${testEmails.password}</code>
-      </p>
     `;
 
     sidebar.appendChild(testSection);
@@ -138,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (emailInput && passInput && loginForm) {
           emailInput.value = btn.dataset.email;
-          passInput.value = testEmails.password;
+          passInput.value = btn.dataset.password;
 
           // Trigger input events for any validation logic
           emailInput.dispatchEvent(new Event("input", { bubbles: true }));
@@ -156,5 +153,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  initTestLogin();
+  // initTestLogin();
 });

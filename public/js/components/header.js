@@ -1,6 +1,8 @@
 import { brandConfig } from "../config/index.js";
 import { initializeNotificationButton } from "./notification.js";
 import themeManager from "../utils/theme.js";
+import { initializeBottomNav } from "./bottomNav.js";
+import { initializeRoleToggle } from "../auth/roleToggle.js";
 
 // Header component for easy modification
 
@@ -37,15 +39,8 @@ export function createHeader() {
           </button>
         </div>
 
-        <div class="role-switcher-container" id="role-switcher-container" style="margin-right: 8px; display: none;">
-          <button id="header-role-btn" class="header-action" title="Switch Role Perspective (Demo Mode)" style="background: var(--primary-light); color: var(--primary); border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; border: 1px solid var(--primary-border); height: 32px; cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
-            </svg>
-            Sim Mode
-          </button>
-        </div>
+        <!-- Consolidated into roleToggle.js -->
+        <div class="role-switcher-container" id="role-switcher-container" style="display: none;"></div>
 
         <div class="notification-container">
           <button id="notification-btn" class="header-action notification-btn" title="Notifications">
@@ -294,10 +289,7 @@ function initializeMenuToggle() {
     // Set initial aria-expanded state
     menuToggle.setAttribute("aria-expanded", "false");
   } else {
-    console.warn("⚠️ Menu toggle or sidebar not found:", {
-      menuToggle: Boolean(menuToggle),
-      sidebar: Boolean(sidebar),
-    });
+    // Silent on non-map pages where toggle is intentionally absent
   }
 }
 // Initialize theme toggle
@@ -539,7 +531,9 @@ document.addEventListener("DOMContentLoaded", () => {
       initializeHeaderScroll();
       initializeDropdowns();
       initializeGlobalClickHandler();
-      initializeHeaderRoleSwitcher();
+      // initializeHeaderRoleSwitcher(); // Removed in favor of consolidated roleToggle.js
+      initializeRoleToggle();
+      initializeBottomNav();
 
       // Setup global handler for data-href (CSP compliance for quick actions)
       document.querySelectorAll("[data-href]").forEach(el => {

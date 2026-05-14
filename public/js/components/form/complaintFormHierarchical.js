@@ -427,7 +427,25 @@ function setupHierarchicalSelection(elements) {
   // Category selection handler
   categorySelect.addEventListener("change", async (e) => {
     const categoryId = e.target.value;
-    await loadSubcategories(categoryId, subcategorySelect);
+    const categoryText = e.target.options[e.target.selectedIndex].text.toLowerCase();
+    const isOthers = categoryText.includes("other");
+
+    const subcatGroup = subcategorySelect.closest(".form-group");
+
+    if (isOthers) {
+      // Clear and hide subcategory
+      subcategorySelect.innerHTML = '<option value="">No subcategory needed</option>';
+      subcategorySelect.value = "";
+      subcategorySelect.disabled = true;
+      subcategorySelect.required = false;
+      if (subcatGroup) subcatGroup.style.display = "none";
+    } else {
+      // Restore subcategory
+      subcategorySelect.disabled = false;
+      subcategorySelect.required = true;
+      if (subcatGroup) subcatGroup.style.display = "block";
+      await loadSubcategories(categoryId, subcategorySelect);
+    }
   });
   // Subcategory selection handler
   subcategorySelect.addEventListener("change", async (e) => {
