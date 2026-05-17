@@ -10,12 +10,13 @@
     rel="stylesheet" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <title>File complaint</title>
-  <link rel="stylesheet" href="../../css/base/style.css" />
-  <link rel="stylesheet" href="../../css/components/toast.css" />
-  <link rel="stylesheet" href="../../css/components/sidebar.css" />
-  <link rel="stylesheet" href="../../css/base/app.css" />
-  <link rel="stylesheet" href="../../css/components/header.css" />
-  <link rel="stylesheet" href="../../css/complaintForm.css" />
+  <link rel="stylesheet" href="/css/base/style.css" />
+  <link rel="stylesheet" href="/css/components/toast.css" />
+  <link rel="stylesheet" href="/css/components/sidebar.css" />
+  <link rel="stylesheet" href="/css/base/app.css" />
+  <link rel="stylesheet" href="/css/components/header.css" />
+  <link rel="stylesheet" href="/css/complaintForm.css" />
+  <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
@@ -32,7 +33,7 @@
 
     <!-- Main Content -->
     <div id="app" class="collapsible main-content-wrapper">
-      <div class="complaint-wizard-container">
+      <div class="dashboard-main-wrapper complaint-wizard-container">
         <!-- Page Header -->
         <div class="page-header">
           <h1 class="page-title">File a complaint</h1>
@@ -60,115 +61,124 @@
         </div>
 
         <form id="complaintForm" class="complaint-form wizard-mode">
-          <!-- STEP 1: Basic Information -->
-          <div id="step-basic" class="form-step active">
-            <div class="form-section card-glass">
-              <div class="section-header">
-                <div class="section-icon">📝</div>
-                <h3>Basic Information</h3>
-              </div>
-
-              <div class="form-grid">
-                <input type="hidden" id="complaintTitle" name="complaintTitle" />
-
-                <div class="form-group required-field">
-                  <label for="complaintCategory">Category <span class="required">*</span></label>
-                  <div class="select-wrapper">
-                    <select id="complaintCategory" name="complaintCategory" class="premium-select" required>
-                      <option value="">Select Category</option>
-                    </select>
+          <div class="form-layout-wrapper">
+            <!-- Left Column: The Form -->
+            <div class="form-column-main">
+              <!-- STEP 1: Basic Information -->
+              <div id="step-basic" class="form-step active">
+                <div class="form-section card-glass">
+                  <div class="section-header">
+                    <div class="section-icon">📝</div>
+                    <h3>Basic Information</h3>
                   </div>
-                </div>
 
-                <div class="form-group required-field">
-                  <label for="complaintSubcategory">Subcategory <span class="required">*</span></label>
-                  <div class="select-wrapper">
-                    <select id="complaintSubcategory" name="complaintSubcategory" class="premium-select" required>
-                      <option value="">Select Subcategory</option>
-                    </select>
-                  </div>
-                </div>
+                  <div class="form-grid">
+                    <input type="hidden" id="complaintTitle" name="complaintTitle" />
 
-              </div>
-            </div>
-          </div>
-
-          <!-- STEP 2: Details -->
-          <div id="step-details" class="form-step">
-            <div class="form-section card-glass">
-              <div class="section-header">
-                <div class="section-icon">📎</div>
-                <h3>Details & Evidence</h3>
-              </div>
-
-              <div class="form-group required-field">
-                <div class="description-header-row">
-                  <label for="description">Description <span class="required">*</span></label>
-                  <span class="input-hint description-hint">(For Taglish/Bisayish, select the main language
-                    used)</span>
-
-                </div>
-                <textarea id="description" name="description" class="premium-textarea"
-                  placeholder="Please describe the issue in detail..." rows="6" required></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Evidence (Optional)</label>
-                <div class="file-upload-container premium-dropzone">
-                  <div class="file-drop-zone" id="fileDropZone">
-                    <div class="drop-zone-content">
-                      <div class="upload-icon-animated">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="17 8 12 3 7 8"></polyline>
-                          <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
+                    <div class="form-group required-field">
+                      <label for="complaintCategory">Category <span class="required">*</span></label>
+                      <div class="select-wrapper">
+                        <select id="complaintCategory" name="complaintCategory" class="premium-select" required>
+                          <option value="">Select Category</option>
+                        </select>
                       </div>
-                      <p class="upload-text">
-                        <strong>Click to upload</strong> or drag and drop
-                      </p>
-                      <p class="file-types">
-                        Images, Audio, Video (Max 5 files)
-                      </p>
-                      <input type="file" id="evidenceFiles" name="evidenceFiles" multiple
-                        accept="image/*,audio/*,video/*" style="display: none" />
+                    </div>
+
+                    <div class="form-group required-field">
+                      <label for="complaintSubcategory">Subcategory <span class="required">*</span></label>
+                      <div class="select-wrapper">
+                        <select id="complaintSubcategory" name="complaintSubcategory" class="premium-select" required>
+                          <option value="">Select Subcategory</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                  <div class="file-preview" id="filePreview"></div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- STEP 3: Location -->
-          <div id="step-location" class="form-step">
-            <div class="form-section card-glass sticky-section">
-              <div class="section-header">
-                <div class="section-icon">📍</div>
-                <h3>Location</h3>
-              </div>
-
-              <div class="location-wrapper">
-                <div class="map-wrapper">
-                  <div id="complaint-map" class="premium-map"></div>
-                  <input type="hidden" id="latitude" name="latitude" />
-                  <input type="hidden" id="longitude" name="longitude" />
-                </div>
-
-                <button type="button" id="btn-auto-locate" class="btn btn-secondary w-full auto-locate-btn">
-                  📍 Auto locate
-                </button>
-
-                <div class="form-group location-input-group required-field">
-                  <label for="location">Pinned Address <span class="required">*</span></label>
-                  <div class="input-with-icon">
-                    <span class="input-icon">🗺️</span>
-                    <input type="text" id="location" name="location" class="premium-input"
-                      placeholder="Pin location on map" readonly required />
+              <!-- STEP 2: Details -->
+              <div id="step-details" class="form-step">
+                <div class="form-section card-glass">
+                  <div class="section-header">
+                    <div class="section-icon">📎</div>
+                    <h3>Details & Evidence</h3>
                   </div>
-                  <small class="form-hint">Move the map pin to update address.</small>
+
+                  <div class="step-details-grid">
+                    <div class="form-group required-field">
+                      <div class="description-header-row">
+                        <label for="description">Description <span class="required">*</span></label>
+                        <span class="input-hint description-hint">(Select main language)</span>
+                      </div>
+                      <textarea id="description" name="description" class="premium-textarea"
+                        placeholder="Please describe the issue in detail..." rows="5" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Evidence (Optional)</label>
+                      <div class="file-upload-container premium-dropzone compact-dropzone">
+                        <div class="file-drop-zone" id="fileDropZone">
+                          <div class="drop-zone-content">
+                            <div class="upload-icon-animated">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                              </svg>
+                            </div>
+                            <p class="upload-text"><strong>Click</strong> or drag drop</p>
+                            <input type="file" id="evidenceFiles" name="evidenceFiles" multiple
+                              accept="image/*,audio/*,video/*" style="display: none" />
+                          </div>
+                        </div>
+                        <div class="file-preview-list-container" id="filePreview"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <!-- STEP 3: Location -->
+              <div id="step-location" class="form-step">
+                <div class="form-section card-glass">
+                  <div class="section-header">
+                    <div class="section-icon">📍</div>
+                    <h3>Location</h3>
+                  </div>
+
+                  <div class="location-wrapper">
+                    <div class="map-wrapper">
+                      <div id="complaint-map" class="premium-map"></div>
+                      <input type="hidden" id="latitude" name="latitude" />
+                      <input type="hidden" id="longitude" name="longitude" />
+                    </div>
+
+                    <div class="location-input-group">
+                      <button type="button" id="btn-auto-locate" class="btn btn-outline full-width auto-locate-btn">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                          stroke-width="2" style="margin-right: 8px;">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        Use Current Location
+                      </button>
+
+                      <div class="form-group required-field">
+                        <label for="location">Pinned Address <span class="required">*</span></label>
+                        <input type="text" id="location" name="location" class="premium-input"
+                          placeholder="Pin location on map..." readonly required />
+                      </div>
+
+                      <div class="form-group">
+                        <label for="location-description">Specific Landmarks (Optional)</label>
+                        <input type="text" id="location-description" name="locationDescription" class="premium-input"
+                          placeholder="e.g., Near the basketball court" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
                 <!-- Duplicate Warning Container gets appended here by JS -->
               </div>
             </div>
@@ -188,6 +198,10 @@
   <!-- Wizard Actions (Moved outside app-container to ensure correct fixed positioning) -->
   <div class="form-actions-sticky wizard-navigation">
     <button type="button" id="btn-back" class="btn-back">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="margin-right: 8px;">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
       Back
     </button>
 

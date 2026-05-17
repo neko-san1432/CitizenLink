@@ -50,7 +50,7 @@ function _getTaxonomyLookup() {
  * @param {Array} departmentR - Array of department codes
  * @returns {string|null} Primary department code or null
  */
-function getPrimarydepartment(departmentR) {
+function getPrimaryDepartment(departmentR) {
   if (!Array.isArray(departmentR) || departmentR.length === 0) {
     return null;
   }
@@ -61,7 +61,7 @@ function getPrimarydepartment(departmentR) {
  * @param {Array} departmentR - Array of department codes
  * @returns {Array} Array of secondary department codes
  */
-function getSecondarydepartments(departmentR) {
+function getSecondaryDepartments(departmentR) {
   if (!Array.isArray(departmentR) || departmentR.length <= 1) {
     return [];
   }
@@ -134,12 +134,12 @@ function getWorkflowFromStatus(status) {
  * @param {Object} complaint - Raw complaint data
  * @returns {Object} Normalized complaint data
  */
-function normalizecomplaintData(complaint) {
+function normalizeComplaintData(complaint) {
   if (!complaint) return null;
   const normalized = { ...complaint };
   // Derive primary and secondary departments from departments
-  normalized.primary_department = getPrimarydepartment(complaint.departments);
-  // normalized.secondary_departments = getSecondarydepartments(complaint.departments); // Removed - derived from departments
+  normalized.primary_department = getPrimaryDepartment(complaint.departments);
+  // normalized.secondary_departments = getSecondaryDepartments(complaint.departments); // Removed - derived from departments
   // Derive status from workflow_status for frontend compatibility
   normalized.status = getStatusFromWorkflow(complaint.workflow_status);
   // Include confirmation status for proper workflow display
@@ -199,28 +199,41 @@ function getAssignmentProgress(complaint) {
  * @param {Object} complaintData - complaint data from form
  * @returns {Object} Data ready for database insertion
  */
-function preparecomplaintForInsert(complaintData) {
+function prepareComplaintForInsert(complaintData, userId) {
   const prepared = { ...complaintData };
+  
+  if (userId) {
+    prepared.submitted_by = userId;
+  }
   // Ensure workflow_status is set based on status if provided
   if (complaintData.status && !complaintData.workflow_status) {
     prepared.workflow_status = getWorkflowFromStatus(complaintData.status);
   }
-  // Ensure department_r is populated from primary_department and secondary_departments
-  if (complaintData.primary_department && (!complaintData.department_r || complaintData.department_r.length === 0)) {
-    prepared.department_r = [complaintData.primary_department];
-    // if (complaintData.secondary_departments && Array.isArray(complaintData.secondary_departments)) {
-    //   prepared.department_r.push(...complaintData.secondary_departments);
-    // }
+  // Ensure departments is populated from primary_department
+  if (complaintData.primary_department && (!complaintData.departments || complaintData.departments.length === 0)) {
+    prepared.departments = [complaintData.primary_department];
   }
   // Remove redundant fields that will be derived
+  // Map category and subcategory to their database column names (category_id, subcategory_id)
+  if (complaintData.category) prepared.category_id = complaintData.category;
+  if (complaintData.subcategory) prepared.subcategory_id = complaintData.subcategory;
+  
+  // Remove virtual and renamed fields
   delete prepared.primary_department;
   delete prepared.secondary_departments;
-  delete prepared.status;
+  delete prepared.category;
+  delete prepared.subcategory;
+  delete prepared.title; // Validation only, not in DB
+  delete prepared.isOthers; // Frontend flag
+  delete prepared.preferred_departments; // Logical field, not in DB
   delete prepared.type; // Remove type field - not in current schema
   delete prepared.subtype; // Remove subtype field - not in current schema
   delete prepared.evidence; // Remove evidence field - handled separately
-  // Keep category and subcategory fields - they are now part of the schema
-  // Note: category and subcategory should be UUIDs referencing categories and subcategories tables
+  delete prepared.assignment_progress; // Remove virtual field
+  delete prepared.confirmation_status; // Remove virtual field
+  delete prepared.department_r; // Remove legacy/incorrect field name if present
+  delete prepared.status; // Remove frontend-only status field (use workflow_status)
+  
   return prepared;
 }
 /**
@@ -228,7 +241,7 @@ function preparecomplaintForInsert(complaintData) {
  * @param {Array} complaints - Array of complaint objects
  * @returns {Object} Statistics object
  */
-function getcomplaintStatistics(complaints) {
+function getComplaintStatistics(complaints) {
   const stats = {
     total: complaints.length,
     byStatus: {},
@@ -238,7 +251,7 @@ function getcomplaintStatistics(complaints) {
     bydepartment: {}
   };
   complaints.forEach(complaint => {
-    const normalized = normalizecomplaintData(complaint);
+    const normalized = normalizeComplaintData(complaint);
     // Count by status - validate input to prevent injection
     const { status } = normalized;
     if (status && typeof status === "string" && status.length < 100) {
@@ -278,7 +291,7 @@ function getcomplaintStatistics(complaints) {
  * @param {Object} complaint - complaint data to validate
  * @returns {Object} Validation result with errors array
  */
-function validatecomplaintConsistency(complaint) {
+function validateComplaintConsistency(complaint) {
   const errors = [];
   // Check if status and workflow_status are consistent
   if (complaint.status && complaint.workflow_status) {
@@ -359,14 +372,14 @@ function getTimelineStepKey(workflowStatus) {
 }
 
 module.exports = {
-  getPrimarydepartment,
-  getSecondarydepartments,
+  getPrimaryDepartment,
+  getSecondaryDepartments,
   getStatusFromWorkflow,
   getWorkflowFromStatus,
-  normalizecomplaintData,
-  preparecomplaintForInsert,
-  getcomplaintStatistics,
-  validatecomplaintConsistency,
+  normalizeComplaintData,
+  prepareComplaintForInsert,
+  getComplaintStatistics,
+  validateComplaintConsistency,
   getAssignmentProgress,
   getTimelineStepKey,
 };

@@ -20,139 +20,632 @@
     <link rel="stylesheet" href="/css/pages/profile.css" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <style>
-        .settings-container {
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            gap: 2rem;
-            padding: 1rem;
+        /* Premium Dark Glassmorphism Design System */
+        :root {
+            --bg-glass: rgba(17, 24, 39, 0.7);
+            --bg-glass-hover: rgba(30, 41, 59, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glass-hover: rgba(255, 255, 255, 0.18);
+            --text-main: #f9fafb;
+            --text-sub: #9ca3af;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --avatar-gradient: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
-        .settings-nav {
+        /* Override base app background if needed, ensuring gorgeous dark theme */
+        body {
+            background-color: #0b0f19; /* Deep dark navy/slate background */
+            color: var(--text-main);
+            font-family: 'Source Sans 3', sans-serif;
+            overflow: hidden !important;
+        }
+
+        #app {
+            overflow: hidden !important;
             display: flex;
             flex-direction: column;
+            height: 100%;
+        }
+
+        .settings-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.25rem 2rem;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            box-sizing: border-box;
+            overflow: hidden;
+            max-height: calc(100vh - 56px);
+        }
+
+        /* Profile Header Card */
+        .profile-header-section {
+            background: var(--bg-glass) !important;
+            backdrop-filter: blur(16px) !important;
+            border: 1px solid var(--border-glass) !important;
+            border-radius: 16px !important;
+            padding: 1rem 1.75rem !important;
+            box-shadow: var(--shadow-glass) !important;
+            margin-bottom: 0 !important;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* Subtle top glow border */
+        .profile-header-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6, #6366f1);
+            opacity: 0.8;
+        }
+
+        .profile-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .profile-identity-group {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .profile-avatar-large {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--avatar-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .profile-real-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 0.15rem 0;
+            letter-spacing: -0.025em;
+        }
+
+        .profile-main-info p {
+            color: var(--text-sub);
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        .btn-view-profile {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
             gap: 0.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-view-profile:hover {
+            border-color: #8b5cf6;
+            color: white;
+            background: rgba(139, 92, 246, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.25);
+        }
+
+        /* Main Settings Layout */
+        .settings-container {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* Navigation Sidebar */
+        .settings-nav {
+            background: var(--bg-glass) !important;
+            backdrop-filter: blur(16px) !important;
+            border: 1px solid var(--border-glass) !important;
+            border-radius: 16px !important;
+            padding: 1rem !important;
+            box-shadow: var(--shadow-glass) !important;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex-shrink: 0;
         }
 
         .settings-nav-item {
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            transition: all 0.2s ease;
             cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-            color: #4b5563;
+            border: 1px solid transparent;
         }
 
-        .settings-nav-item:hover {
-            background: rgba(0, 0, 0, 0.05);
+        .settings-nav-item:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.08);
         }
 
         .settings-nav-item.active {
-            background: #4f46e5;
+            background: var(--accent-gradient);
             color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            stroke-width: 2.2;
+        }
+
+        /* Content Sections */
         .settings-content {
-            padding-bottom: 2rem;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .settings-section {
             display: none;
             animation: fadeIn 0.3s ease;
+            height: 100%;
+            width: 100%;
         }
 
         .settings-section.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .form-box {
-            max-width: 600px;
+        .settings-card {
+            background: var(--bg-glass) !important;
+            backdrop-filter: blur(16px) !important;
+            border: 1px solid var(--border-glass) !important;
+            border-radius: 16px !important;
+            padding: 1.5rem 1.75rem !important;
+            box-shadow: var(--shadow-glass) !important;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
-        .form-group {
-            margin-bottom: 1.5rem;
+        /* Custom sleek scrollbar for settings card */
+        .settings-card::-webkit-scrollbar {
+            width: 6px;
+        }
+        .settings-card::-webkit-scrollbar-track {
+            background: rgba(11, 15, 25, 0.4);
+            border-radius: 8px;
+        }
+        .settings-card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .settings-card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #374151;
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 0.2rem 0;
+            letter-spacing: -0.015em;
+            flex-shrink: 0;
         }
 
+        .section-subtitle {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            margin: 0 0 1.25rem 0;
+            flex-shrink: 0;
+        }
+
+        /* Inline Edit Rows */
         .inline-edit-row {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 0.85rem 1.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 4px 12px rgba(0, 0, 0, 0.1);
+            gap: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .inline-edit-row:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .row-left-content {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-grow: 1;
+        }
+
+        .row-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid transparent;
+        }
+
+        .row-icon-box svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .row-icon-box.purple {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+            color: #c084fc;
+        }
+
+        .row-icon-box.blue {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+        }
+
+        .row-icon-box.teal {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #34d399;
         }
 
         .info-display-group {
             display: flex;
             flex-direction: column;
+            gap: 0.2rem;
         }
 
         .info-label {
-            font-size: 0.8rem;
-            color: #6b7280;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-sub);
             text-transform: uppercase;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.06em;
         }
 
         .info-value {
-            font-weight: 500;
-            color: #111827;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
         }
 
+        .btn-edit-pill {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 0.45rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .btn-edit-pill[style*="display: none"] {
+            display: none !important;
+        }
+
+        .btn-edit-pill:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Edit Form Inputs inside rows */
+        .edit-form-wrapper {
+            width: 100%;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .edit-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .custom-input {
+            background: rgba(11, 15, 25, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 10px !important;
+            padding: 0.5rem 0.75rem !important;
+            color: white !important;
+            font-size: 0.85rem !important;
+            width: 100% !important;
+            transition: all 0.2s !important;
+            box-sizing: border-box;
+        }
+
+        .custom-input:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+            outline: none !important;
+        }
+
+        .custom-input::placeholder {
+            color: #6b7280 !important;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.65rem;
+        }
+
+        .btn-save-custom {
+            background: var(--accent-gradient);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-save-custom:hover {
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-cancel-custom {
+            background: rgba(255, 255, 255, 0.08);
+            color: #d1d5db;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel-custom:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Bottom Security Callout Box */
+        .security-callout-box {
+            background: linear-gradient(90deg, rgba(30, 27, 75, 0.6) 0%, rgba(17, 24, 39, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 14px;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .callout-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #818cf8;
+            flex-shrink: 0;
+        }
+
+        .callout-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .callout-text {
+            font-size: 0.85rem;
+            color: #e0e7ff;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Form Groups for Security & Address */
+        .custom-form-group {
+            margin-bottom: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .custom-form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .address-display-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .address-display-card p {
+            margin: 0 0 0.4rem 0;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .address-display-card p.sub-line {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+        }
+
+        .badge-barangay {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #818cf8;
+            padding: 0.2rem 0.65rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.4rem;
+        }
+
+        /* Modal Overhaul */
+        .modal-content {
+            background: rgba(17, 24, 39, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+            color: white !important;
+            padding: 2rem !important;
+        }
+
+        .modal-header h2 {
+            color: white !important;
+            font-size: 1.35rem !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+        }
+
+        #close-email-modal {
+            color: #9ca3af !important;
+            transition: color 0.2s !important;
+        }
+
+        #close-email-modal:hover {
+            color: white !important;
+        }
+
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
+            .settings-wrapper {
+                padding: 0.75rem;
+                gap: 0.75rem;
+                max-height: none; /* Allow natural flow on mobile */
+                overflow-y: auto;
+            }
+
             .settings-container {
                 grid-template-columns: 1fr;
+                gap: 0.75rem;
+                overflow: visible;
             }
 
             .settings-nav {
                 flex-direction: row;
                 overflow-x: auto;
-                padding-bottom: 0.5rem;
+                padding: 0.5rem 0.75rem !important;
             }
 
             .settings-nav-item {
                 white-space: nowrap;
+                padding: 0.5rem 0.85rem;
             }
-        }
 
-        /* Dark Theme Support */
-        html.dark .inline-edit-row {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        html.dark .info-label {
-            color: #9ca3af;
-        }
-        html.dark .info-value,
-        html.dark .form-group label {
-            color: #f3f4f6;
-        }
-        html.dark .settings-nav-item {
-            color: #9ca3af;
-        }
-        html.dark .settings-nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #f3f4f6;
+            .profile-header-section {
+                padding: 1rem 1.25rem !important;
+            }
+
+            .profile-identity-group {
+                gap: 1rem;
+            }
+
+            .profile-avatar-large {
+                width: 48px;
+                height: 48px;
+                font-size: 1.5rem;
+            }
+
+            .profile-real-name {
+                font-size: 1.2rem;
+            }
+
+            .inline-edit-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.85rem;
+                padding: 0.85rem;
+            }
+
+            .btn-edit-pill {
+                align-self: flex-end;
+            }
         }
     </style>
 </head>
@@ -163,21 +656,24 @@
         <div id="sidebar" class="collapsible"></div>
         <div id="dashboard-clock" class="dashboard-clock" aria-live="polite"></div>
         <div id="app" class="collapsible">
-            <div class="profile-page">
-                <div class="profile-header-section glass-panel" style="margin-bottom: 2rem;">
+            <div class="settings-wrapper">
+                <!-- Profile Header Section -->
+                <div class="profile-header-section glass-panel">
                     <div class="profile-header-content">
                         <div class="profile-identity-group">
                             <div class="profile-avatar-large">
-                                <div id="profile-initial">User</div>
+                                <div id="profile-initial">U</div>
                             </div>
                             <div class="profile-main-info">
                                 <h1 class="profile-real-name">Account settings</h1>
-                                <p class="text-sm text-gray-500">Manage your profile and security</p>
+                                <p>Manage your profile and security preferences</p>
                             </div>
                         </div>
                         <div class="profile-header-actions">
-                            <a href="/profile" class="btn-secondary">
-                                👤 View profile
+                            <a href="/profile" class="btn-view-profile">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                View profile
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </a>
                         </div>
                     </div>
@@ -185,98 +681,132 @@
 
                 <div class="settings-container">
                     <!-- Sidebar Nav -->
-                    <div class="glass-panel settings-nav">
-                        <div class="settings-nav-item active" data-tab="general">General</div>
-                        <div class="settings-nav-item" data-tab="security">Security</div>
-                        <div class="settings-nav-item" data-tab="address">Address</div>
+                    <div class="settings-nav">
+                        <div class="settings-nav-item active" data-tab="general">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            General
+                        </div>
+                        <div class="settings-nav-item" data-tab="security">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            Security
+                        </div>
+                        <div class="settings-nav-item" data-tab="address">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            Address
+                        </div>
                     </div>
 
                     <!-- Content Area -->
                     <div class="settings-content">
                         <!-- General settings -->
                         <section id="general" class="settings-section active">
-                            <div class="glass-panel p-6">
-                                <h2 class="text-xl font-bold mb-6">General Information</h2>
+                            <div class="settings-card">
+                                <h2 class="section-title">General Information</h2>
+                                <p class="section-subtitle">View and update your basic account details.</p>
 
-                                <div class="form-box">
+                                <div class="form-box" style="max-width: 100%;">
                                     <!-- Name Section -->
                                     <div class="inline-edit-row">
-                                        <div class="info-display-group" id="name-view">
-                                            <span class="info-label">Full Name</span>
-                                            <span class="info-value" id="profile-name-display">Loading...</span>
-                                        </div>
-                                        <button class="btn-text" id="edit-name-btn">Change</button>
-
-                                        <div id="name-edit" style="display: none; width: 100%;">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                                                <input id="edit-first-name-input" class="input" type="text"
-                                                    placeholder="First Name" />
-                                                <input id="edit-middle-name-input" class="input" type="text"
-                                                    placeholder="Middle Name" />
-                                                <input id="edit-last-name-input" class="input" type="text"
-                                                    placeholder="Last Name" />
+                                        <div class="row-left-content">
+                                            <div class="row-icon-box purple">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                             </div>
-                                            <div class="flex gap-2">
-                                                <button class="btn-primary btn-sm" id="save-name-btn">Save</button>
-                                                <button class="btn-secondary btn-sm"
-                                                    id="cancel-name-btn">Cancel</button>
+                                            <div class="info-display-group" id="name-view">
+                                                <span class="info-label">Full Name</span>
+                                                <span class="info-value" id="profile-name-display">Loading...</span>
+                                            </div>
+                                            <div id="name-edit" class="edit-form-wrapper" style="display: none;">
+                                                <div class="edit-input-grid">
+                                                    <input id="edit-first-name-input" class="custom-input" type="text" placeholder="First Name" />
+                                                    <input id="edit-middle-name-input" class="custom-input" type="text" placeholder="Middle Name" />
+                                                    <input id="edit-last-name-input" class="custom-input" type="text" placeholder="Last Name" />
+                                                </div>
+                                                <div class="form-actions">
+                                                    <button class="btn-save-custom" id="save-name-btn">Save</button>
+                                                    <button class="btn-cancel-custom" id="cancel-name-btn">Cancel</button>
+                                                </div>
                                             </div>
                                         </div>
+                                        <button class="btn-edit-pill" id="edit-name-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                            <span>Edit</span>
+                                        </button>
                                     </div>
 
                                     <!-- Email Section -->
                                     <div class="inline-edit-row">
-                                        <div class="info-display-group">
-                                            <span class="info-label">Email Address</span>
-                                            <span class="info-value" id="profile-email-display">Loading...</span>
+                                        <div class="row-left-content">
+                                            <div class="row-icon-box blue">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                            </div>
+                                            <div class="info-display-group">
+                                                <span class="info-label">Email Address</span>
+                                                <span class="info-value" id="profile-email-display">Loading...</span>
+                                            </div>
                                         </div>
-                                        <button class="btn-text" id="edit-email-btn">Change</button>
+                                        <button class="btn-edit-pill" id="edit-email-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                            <span>Edit</span>
+                                        </button>
                                     </div>
 
                                     <!-- Mobile Section -->
                                     <div class="inline-edit-row">
-                                        <div class="info-display-group" id="mobile-view">
-                                            <span class="info-label">Mobile Number</span>
-                                            <span class="info-value" id="profile-mobile-display">Loading...</span>
-                                        </div>
-                                        <button class="btn-text" id="edit-mobile-btn">Change</button>
-
-                                        <div id="mobile-edit" style="display: none; width: 100%;">
-                                            <input id="edit-mobile-input" class="input mb-2" type="tel"
-                                                placeholder="Mobile Number" />
-                                            <div class="flex gap-2">
-                                                <button class="btn-primary btn-sm" id="save-mobile-btn">Save</button>
-                                                <button class="btn-secondary btn-sm"
-                                                    id="cancel-mobile-btn">Cancel</button>
+                                        <div class="row-left-content">
+                                            <div class="row-icon-box teal">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                                            </div>
+                                            <div class="info-display-group" id="mobile-view">
+                                                <span class="info-label">Mobile Number</span>
+                                                <span class="info-value" id="profile-mobile-display">Loading...</span>
+                                            </div>
+                                            <div id="mobile-edit" class="edit-form-wrapper" style="display: none;">
+                                                <div class="edit-input-grid" style="grid-template-columns: 1fr;">
+                                                    <input id="edit-mobile-input" class="custom-input" type="tel" placeholder="Mobile Number" />
+                                                </div>
+                                                <div class="form-actions">
+                                                    <button class="btn-save-custom" id="save-mobile-btn">Save</button>
+                                                    <button class="btn-cancel-custom" id="cancel-mobile-btn">Cancel</button>
+                                                </div>
                                             </div>
                                         </div>
+                                        <button class="btn-edit-pill" id="edit-mobile-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                            <span>Edit</span>
+                                        </button>
                                     </div>
+                                </div>
+
+                                <!-- Security Callout Box -->
+                                <div class="security-callout-box">
+                                    <div class="callout-icon">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                                    </div>
+                                    <p class="callout-text">Keep your information up to date to ensure account security and seamless access.</p>
                                 </div>
                             </div>
                         </section>
 
                         <!-- Security settings -->
                         <section id="security" class="settings-section">
-                            <div class="glass-panel p-6">
-                                <h2 class="text-xl font-bold mb-6">Password & Security</h2>
-                                <div class="form-box">
+                            <div class="settings-card">
+                                <h2 class="section-title">Password & Security</h2>
+                                <p class="section-subtitle">Manage your password and secure your account.</p>
+                                <div class="form-box" style="max-width: 500px;">
                                     <form id="change-password-form">
-                                        <div class="form-group">
+                                        <div class="custom-form-group">
                                             <label>Current Password</label>
-                                            <input id="current-password" class="input" type="password"
-                                                autocomplete="current-password" required />
+                                            <input id="current-password" class="custom-input" type="password" autocomplete="current-password" required />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="custom-form-group">
                                             <label>New Password</label>
-                                            <input id="new-password" class="input" type="password"
-                                                autocomplete="new-password" required />
+                                            <input id="new-password" class="custom-input" type="password" autocomplete="new-password" required />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="custom-form-group">
                                             <label>Confirm New Password</label>
-                                            <input id="confirm-new-password" class="input" type="password"
-                                                autocomplete="new-password" required />
+                                            <input id="confirm-new-password" class="custom-input" type="password" autocomplete="new-password" required />
                                         </div>
-                                        <button class="btn-primary btn-sm" type="submit">Update Password</button>
+                                        <button class="btn-save-custom mt-2" type="submit">Update Password</button>
                                     </form>
                                 </div>
                             </div>
@@ -284,50 +814,48 @@
 
                         <!-- Address settings -->
                         <section id="address" class="settings-section">
-                            <div class="glass-panel p-6">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h2 class="text-xl font-bold">Address Details</h2>
-                                    <button id="edit-address-btn" class="btn-text">Edit Address</button>
+                            <div class="settings-card">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h2 class="section-title">Address Details</h2>
+                                    <button id="edit-address-btn" class="btn-edit-pill">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                        <span>Edit Address</span>
+                                    </button>
                                 </div>
+                                <p class="section-subtitle">Manage your registered residential address.</p>
 
                                 <div id="address-view">
-                                    <div class="address-box p-4 bg-white/30 rounded-lg">
+                                    <div class="address-display-card">
                                         <p id="address-line-1-display" class="font-medium">—</p>
-                                        <p id="address-line-2-display" class="text-sm text-gray-600"
-                                            style="display: none;">—</p>
-                                        <p class="text-sm">Digos City, Davao del Sur <span
-                                                id="address-postal-display"></span></p>
-                                        <p id="address-barangay-display" class="badge-barangay mt-2">—</p>
+                                        <p id="address-line-2-display" class="sub-line" style="display: none;">—</p>
+                                        <p class="sub-line mt-1">Digos City, Davao del Sur <span id="address-postal-display"></span></p>
+                                        <span id="address-barangay-display" class="badge-barangay">—</span>
                                     </div>
                                 </div>
 
                                 <div id="address-edit" style="display: none;">
-                                    <div class="form-box">
-                                        <div class="form-group">
+                                    <div class="form-box" style="max-width: 100%;">
+                                        <div class="custom-form-group">
                                             <label>Address Line 1</label>
-                                            <input id="edit-address-line-1" class="input" type="text"
-                                                placeholder="Street/Purok" />
+                                            <input id="edit-address-line-1" class="custom-input" type="text" placeholder="Street/Purok" />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="custom-form-group">
                                             <label>Address Line 2 (Optional)</label>
-                                            <input id="edit-address-line-2" class="input" type="text"
-                                                placeholder="Apartment/Suite" />
+                                            <input id="edit-address-line-2" class="custom-input" type="text" placeholder="Apartment/Suite" />
                                         </div>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="form-group">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                            <div class="custom-form-group mb-0">
                                                 <label>Barangay</label>
-                                                <input id="edit-address-barangay" class="input" type="text"
-                                                    placeholder="Barangay" />
+                                                <input id="edit-address-barangay" class="custom-input" type="text" placeholder="Barangay" />
                                             </div>
-                                            <div class="form-group">
+                                            <div class="custom-form-group mb-0">
                                                 <label>Postal Code</label>
-                                                <input id="edit-address-postal" class="input" type="text"
-                                                    placeholder="Postal Code" />
+                                                <input id="edit-address-postal" class="custom-input" type="text" placeholder="Postal Code" />
                                             </div>
                                         </div>
-                                        <div class="flex gap-2 mt-4">
-                                            <button class="btn-primary" id="save-address-btn">Save Changes</button>
-                                            <button class="btn-secondary" id="cancel-address-btn">Cancel</button>
+                                        <div class="form-actions mt-4">
+                                            <button class="btn-save-custom" id="save-address-btn">Save Changes</button>
+                                            <button class="btn-cancel-custom" id="cancel-address-btn">Cancel</button>
                                         </div>
                                     </div>
                                 </div>
@@ -343,29 +871,29 @@
     <!-- Email Change Modal -->
     <div id="email-change-modal" class="modal-overlay" style="display: none; visibility: hidden">
         <div class="modal-content" style="max-width: 500px">
-            <div class="modal-header flex justify-between items-center mb-4">
+            <div class="modal-header flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold">Change Email Address</h2>
-                <button id="close-email-modal" class="text-2xl">&times;</button>
+                <button id="close-email-modal" class="text-2xl cursor-pointer">&times;</button>
             </div>
             <form id="email-change-form">
-                <div class="mb-4">
-                    <p class="text-sm text-gray-500">Current email:</p>
-                    <p id="current-email-display" class="font-medium">—</p>
+                <div class="mb-6">
+                    <p class="text-sm text-gray-400 mb-1">Current email:</p>
+                    <p id="current-email-display" class="font-medium text-lg text-white">—</p>
                 </div>
-                <div class="form-group">
+                <div class="custom-form-group">
                     <label>New Email Address</label>
-                    <input id="new-email-input" class="input" type="email" required />
+                    <input id="new-email-input" class="custom-input" type="email" required />
                 </div>
-                <div class="form-group">
+                <div class="custom-form-group mb-6">
                     <label>Verify Identity with Password</label>
-                    <input id="current-password-email" class="input" type="password" required />
+                    <input id="current-password-email" class="custom-input" type="password" required />
                 </div>
-                <div class="mb-4 p-3 bg-amber-50 border-l-4 border-amber-500 rounded text-sm text-amber-800">
+                <div class="mb-6 p-4 bg-indigo-950/50 border-l-4 border-indigo-500 rounded-lg text-sm text-indigo-200">
                     <strong>Note:</strong> A verification link will be sent to your new email to confirm this change.
                 </div>
-                <div class="flex gap-2">
-                    <button type="submit" class="btn-primary flex-1">Request Change</button>
-                    <button type="button" id="cancel-email-modal" class="btn-secondary flex-1">Cancel</button>
+                <div class="form-actions flex gap-3">
+                    <button type="submit" class="btn-save-custom flex-1">Request Change</button>
+                    <button type="button" id="cancel-email-modal" class="btn-cancel-custom flex-1">Cancel</button>
                 </div>
             </form>
         </div>

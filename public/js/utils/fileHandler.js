@@ -196,13 +196,17 @@ export class FileHandler {
   renderPreviews() {
     if (!this.previewContainer) return;
     this.previewContainer.innerHTML = "";
+    this.previewContainer.className = "file-preview-list-container";
+    
     // Hide/show drag zone based on files
     this.updateDragZoneVisibility();
+    
     // Render file previews
     this.selectedFiles.forEach((file, index) => {
       const previewItem = this.createPreviewItem(file, index);
       this.previewContainer.appendChild(previewItem);
     });
+    
     // Add plus button if not at max files
     if (this.selectedFiles.length < this.maxFiles) {
       const addButton = this.createAddButton();
@@ -229,141 +233,77 @@ export class FileHandler {
    */
   createPreviewItem(file, index) {
     const previewItem = document.createElement("div");
-    previewItem.className = "file-preview-item";
+    previewItem.className = "file-preview-list-item";
     const uploadStatus = this.getUploadStatus(file);
     const uploadProgress = this.getUploadProgress(file);
 
-    // Determine border color based on status
-    let borderColor = "#dee2e6"; // default
+    if (uploadStatus === "uploading") previewItem.classList.add("status-uploading");
+    if (uploadStatus === "completed") previewItem.classList.add("status-completed");
+    if (uploadStatus === "error") previewItem.classList.add("status-error");
+
+    // File Info (Left)
+    const fileInfo = document.createElement("div");
+    fileInfo.className = "file-info";
+    
+    const fileName = document.createElement("div");
+    fileName.className = "file-name";
+    fileName.textContent = file.name;
+    
+    const fileSize = document.createElement("div");
+    fileSize.className = "file-size";
+    fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+    
+    fileInfo.appendChild(fileName);
+    fileInfo.appendChild(fileSize);
+
+    // Upload Progress (Optional overlay or bar)
     if (uploadStatus === "uploading") {
-      borderColor = "#007bff";
-    } else if (uploadStatus === "completed") {
-      borderColor = "#28a745";
-    } else if (uploadStatus === "error") {
-      borderColor = "#dc3545";
+      const progressBar = document.createElement("div");
+      progressBar.className = "file-progress-bar";
+      progressBar.innerHTML = `<div class="progress-fill" style="width: ${uploadProgress}%"></div>`;
+      fileInfo.appendChild(progressBar);
     }
 
-    previewItem.style.cssText = `
-      display: inline-block;
-      position: relative;
-      margin: 8px;
-      width: 120px;
-      height: 120px;
-      border: 2px solid ${borderColor};
-      border-radius: 8px;
-      overflow: hidden;
-      background-color: #f8f9fa;
-    `;
-
-    // Create preview based on file type
+    // Thumbnail (Right)
+    const thumbnail = document.createElement("div");
+    thumbnail.className = "file-thumbnail";
+    
     if (file.type.startsWith("image/")) {
       const img = document.createElement("img");
-      // Get existing object URL or create new one
       let objectURL = this.objectURLs.get(file);
       if (!objectURL) {
         objectURL = URL.createObjectURL(file);
         this.objectURLs.set(file, objectURL);
       }
       img.src = objectURL;
-      img.style.cssText = `
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: ${uploadStatus === "uploading" ? "0.6" : "1"};
-      `;
-      previewItem.appendChild(img);
+      thumbnail.appendChild(img);
     } else {
-      // For non-image files, show file icon
-      const fileIcon = document.createElement("div");
-      fileIcon.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        color: #6c757d;
-        opacity: ${uploadStatus === "uploading" ? "0.6" : "1"};
-      `;
       const icon = document.createElement("div");
-      icon.style.cssText = "font-size: 32px; margin-bottom: 4px;";
-      if (file.type.startsWith("video/")) {
-        icon.textContent = "🎥";
-      } else if (file.type.startsWith("audio/")) {
-        icon.textContent = "🎵";
-      } else {
-        icon.textContent = "📄";
-      }
-      const fileName = document.createElement("div");
-      fileName.textContent = file.name.length > 12 ? `${file.name.substring(0, 12)  }...` : file.name;
-      fileName.style.cssText = "font-size: 10px; text-align: center; word-break: break-all;";
-      fileIcon.appendChild(icon);
-      fileIcon.appendChild(fileName);
-      previewItem.appendChild(fileIcon);
+      icon.className = "file-type-icon";
+      if (file.type.startsWith("video/")) icon.textContent = "🎥";
+      else if (file.type.startsWith("audio/")) icon.textContent = "🎵";
+      else icon.textContent = "📄";
+      thumbnail.appendChild(icon);
     }
 
-    // Add upload progress overlay
-    if (uploadStatus === "uploading" || uploadStatus === "completed" || uploadStatus === "error") {
-      const overlay = document.createElement("div");
-      overlay.style.cssText = `
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 4px;
-        font-size: 10px;
-        text-align: center;
-      `;
-
-      if (uploadStatus === "uploading") {
-        overlay.innerHTML = `
-          <div style="margin-bottom: 2px;">Uploading...</div>
-          <div style="background: rgba(255,255,255,0.3); height: 4px; border-radius: 2px; overflow: hidden;">
-            <div style="background: #007bff; height: 100%; width: ${uploadProgress}%; transition: width 0.3s ease;"></div>
-          </div>
-          <div style="margin-top: 2px;">${uploadProgress}%</div>
-        `;
-      } else if (uploadStatus === "completed") {
-        overlay.innerHTML = "✓ Uploaded";
-        overlay.style.background = "rgba(40, 167, 69, 0.9)";
-      } else if (uploadStatus === "error") {
-        overlay.innerHTML = "✗ Failed";
-        overlay.style.background = "rgba(220, 53, 69, 0.9)";
-      }
-
-      previewItem.appendChild(overlay);
-    }
-
-    // Add remove button (disabled during upload)
+    // Remove Button
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.className = "remove-file-btn";
-    removeBtn.textContent = "×";
-    removeBtn.disabled = uploadStatus === "uploading";
-    removeBtn.style.cssText = `
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: ${uploadStatus === "uploading" ? "#6c757d" : "#dc3545"};
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: ${uploadStatus === "uploading" ? "not-allowed" : "pointer"};
-      font-size: 16px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      opacity: ${uploadStatus === "uploading" ? "0.6" : "1"};
+    removeBtn.className = "remove-file-btn-list";
+    removeBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"></path>
+      </svg>
     `;
+    removeBtn.disabled = uploadStatus === "uploading";
     if (uploadStatus !== "uploading") {
       removeBtn.addEventListener("click", () => this.removeFile(index));
     }
+
+    previewItem.appendChild(fileInfo);
+    previewItem.appendChild(thumbnail);
     previewItem.appendChild(removeBtn);
+    
     return previewItem;
   }
   /**
@@ -372,41 +312,17 @@ export class FileHandler {
    */
   createAddButton() {
     const addButton = document.createElement("div");
-    addButton.className = "add-file-button";
-    addButton.style.cssText = `
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 8px;
-      width: 120px;
-      height: 120px;
-      border: 2px dashed #6c757d;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #f8f9fa;
-      color: #6c757d;
-      transition: all 0.2s ease;
-    `;
+    addButton.className = "add-file-list-button";
     addButton.innerHTML = `
-      <div style="font-size: 32px; margin-bottom: 8px;">+</div>
-      <div style="font-size: 12px; text-align: center;">Add More<br/>(${this.selectedFiles.length}/${this.maxFiles})</div>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>Add More Files (${this.selectedFiles.length}/${this.maxFiles})</span>
     `;
     addButton.addEventListener("click", () => {
       const fileInput = document.getElementById("evidenceFiles");
-      if (fileInput) {
-        fileInput.click();
-      }
-    });
-    addButton.addEventListener("mouseenter", () => {
-      addButton.style.borderColor = "#007bff";
-      addButton.style.color = "#007bff";
-      addButton.style.backgroundColor = "#e3f2fd";
-    });
-    addButton.addEventListener("mouseleave", () => {
-      addButton.style.borderColor = "#6c757d";
-      addButton.style.color = "#6c757d";
-      addButton.style.backgroundColor = "#f8f9fa";
+      if (fileInput) fileInput.click();
     });
     return addButton;
   }

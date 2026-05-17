@@ -227,8 +227,8 @@ html.dark .complaint-item {
 #app .dashboard-main-wrapper {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-6);
-  /* Added top and bottom padding alongside lateral space-6 */
+  padding: var(--space-3) var(--space-6) var(--space-6);
+  /* Reduced top padding to fix header gap */
 }
 
 /* Compact specific sections */

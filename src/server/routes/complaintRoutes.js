@@ -82,7 +82,7 @@ router.get(
 router.get(
   "/locations",
   authenticateUser,
-  requireRole(["lgu", "super-admin"]),
+  requireRole(["citizen", "lgu", "super-admin"]),
   wrap(complaintController.getcomplaintLocations)
 );
 

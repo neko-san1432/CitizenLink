@@ -114,11 +114,24 @@ function renderActivityList(activities) {
 
   if (activities.length === 0) {
     container.innerHTML = `
-      <div class="flex flex-col items-center justify-center h-48 text-gray-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="empty-state-icon mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <p>No activity yet</p>
+      <div class="flex flex-col items-center justify-center my-auto py-16 text-center">
+        <div class="w-32 h-32 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mb-6 relative shadow-2xl">
+          <svg class="w-16 h-16 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            <line x1="9" y1="12" x2="15" y2="12"></line>
+            <line x1="9" y1="16" x2="15" y2="16"></line>
+          </svg>
+          <svg class="w-12 h-12 text-indigo-400 absolute -bottom-2 -right-2 drop-shadow-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">No reports yet</h3>
+        <p class="text-xs text-gray-400 mb-6">This user hasn't submitted any reports.</p>
+        <button onclick="window.location.href='/filecomplaint'" class="border border-blue-500/50 hover:bg-blue-500/10 text-blue-400 font-semibold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          New Report
+        </button>
       </div>
     `;
     return;
@@ -140,32 +153,32 @@ function renderActivityList(activities) {
     const id = item.complaint_id || item.id;
 
     // Determine icon and color based on status
-    let iconBg = "bg-blue-100 text-blue-600";
+    let iconBg = "bg-blue-500/20 text-blue-400 border border-blue-500/30";
     let iconPath = "d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'"; // File text
 
     if (status.toLowerCase().includes("resolved")) {
-      iconBg = "bg-green-100 text-green-600";
+      iconBg = "bg-green-500/20 text-green-400 border border-green-500/30";
       iconPath = "d='M5 13l4 4L19 7'"; // Check
     } else if (status.toLowerCase().includes("progress")) {
-      iconBg = "bg-orange-100 text-orange-600";
+      iconBg = "bg-orange-500/20 text-orange-400 border border-orange-500/30";
       iconPath = "d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'"; // Clock
     }
 
     const card = document.createElement("div");
-    card.className = "activity-item cursor-pointer";
+    card.className = "activity-item glass-card flex items-center gap-4 p-4 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all cursor-pointer mb-3 bg-slate-800/40 hover:bg-slate-800/80";
     card.onclick = () => window.location.href = `/complaint-details/${id}`;
 
     card.innerHTML = `
-      <div class="activity-icon ${iconBg}">
+      <div class="activity-icon w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${iconBg}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" ${iconPath} />
         </svg>
       </div>
       <div class="flex-1 min-w-0">
-        <h4 class="text-sm font-bold text-gray-800 truncate">${title}</h4>
-        <p class="text-xs text-gray-500">ID: ${id.substring(0, 8)} • ${date}</p>
+        <h4 class="text-sm font-bold text-white truncate">${title}</h4>
+        <p class="text-xs text-gray-400">ID: ${id.substring(0, 8)} • ${date}</p>
       </div>
-      <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600 capitalize">
+      <span class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-700 text-gray-300 capitalize border border-slate-600">
         ${status}
       </span>
     `;

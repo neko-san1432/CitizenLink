@@ -37,50 +37,38 @@ async function initializecomplaintLocationPicker(
         }, 500); // Check every 500ms
       });
     }
-    // Default map options - restricted to Digos City boundaries
+    // Default map options
     const defaultOptions = {
-      center: [6.7497, 125.357], // Digos City, Philippines (more accurate center)
+      center: [6.7497, 125.357], // Digos City, Philippines
       zoom: 13,
       zoomControl: true,
       preferCanvas: true,
       scrollWheelZoom: true,
-      doubleClickZoom: true,
-      boxZoom: true,
-      keyboard: true,
-      dragging: true,
-      worldCopyJump: false,
-      minZoom: 10, // Restrict minimum zoom to keep focus on Digos City
+      minZoom: 11,
       maxZoom: 18,
-      // Restrict map bounds to Digos City area
-      maxBounds: [
-        [6.65, 125.2], // Southwest corner
-        [7.0, 125.5], // Northeast corner
-      ],
-      maxBoundsViscosity: 1.0, // Prevent panning outside bounds
+      worldCopyJump: false
     };
+
     // Merge with provided options
     const mapOptions = { ...defaultOptions, ...options };
+
     // Create map
     const map = L.map(containerId, {
       zoomControl: mapOptions.zoomControl,
       preferCanvas: mapOptions.preferCanvas,
       scrollWheelZoom: mapOptions.scrollWheelZoom,
-      doubleClickZoom: mapOptions.doubleClickZoom,
-      boxZoom: mapOptions.boxZoom,
-      keyboard: mapOptions.keyboard,
-      dragging: mapOptions.dragging,
-      worldCopyJump: mapOptions.worldCopyJump,
       minZoom: mapOptions.minZoom,
       maxZoom: mapOptions.maxZoom,
-      maxBounds: mapOptions.maxBounds,
-      maxBoundsViscosity: mapOptions.maxBoundsViscosity || 1.0,
+      dragging: true
     });
 
     // Ensure map container handles inputs
     mapContainer.style.zIndex = "1";
     mapContainer.style.pointerEvents = "auto";
+
     // Set initial view
     map.setView(mapOptions.center, mapOptions.zoom);
+
     // Add OpenStreetMap tile layer
     const osmLayer = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -88,8 +76,8 @@ async function initializecomplaintLocationPicker(
         attribution: "© OpenStreetMap contributors",
         maxZoom: 18,
       }
-    );
-    osmLayer.addTo(map);
+    ).addTo(map);
+
     // Add satellite layer option
     const satelliteLayer = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -98,57 +86,120 @@ async function initializecomplaintLocationPicker(
         maxZoom: 18,
       }
     );
-    // Add layer control
+
     const baseLayers = {
       "Street Map": osmLayer,
-      Satellite: satelliteLayer,
+      "Satellite": satelliteLayer,
     };
-    const _layerControl = L.control
-      .layers(
-        baseLayers,
-        {},
-        {
-          position: "topright",
-        }
-      )
-      .addTo(map);
 
-    // Load and display Digos City boundaries
+    L.control.layers(baseLayers, {}, { position: "topright" }).addTo(map);
+
+    // Add Exit Fullscreen button (hidden by default via CSS)
+    const exitBtn = document.createElement("button");
+    exitBtn.className = "exit-fullscreen-btn";
+    exitBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 6L6 18M6 6l12 12"></path>
+      </svg>
+      Exit Fullscreen
+    `;
+    mapContainer.appendChild(exitBtn);
+
+    const toggleFullscreen = () => {
+      const isFullscreen = mapContainer.classList.toggle("fullscreen");
+      document.body.style.overflow = isFullscreen ? "hidden" : "";
+      setTimeout(() => map.invalidateSize(), 300);
+    };
+
+    exitBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleFullscreen();
+    };
+
+    // Add Custom Fullscreen Control (More prominent)
+    const FullscreenControl = L.Control.extend({
+      options: { position: "topleft" },
+      onAdd: function() {
+        const btn = L.DomUtil.create("button", "map-fullscreen-btn");
+        btn.title = "Fullscreen Mode";
+        btn.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+          </svg>
+        `;
+        L.DomEvent.disableClickPropagation(btn);
+        btn.onclick = toggleFullscreen;
+        return btn;
+      }
+    });
+    map.addControl(new FullscreenControl());
+
+    // Load and display Digos City boundaries & Mask
     try {
-      const boundaryResponse = await fetch("/api/public/boundaries");
-      if (boundaryResponse.ok) {
-        const brgyData = await boundaryResponse.json();
-        if (Array.isArray(brgyData)) {
-          // Store boundaries globally for validation
-          window.complaintFormBoundaries = brgyData;
+      // 1. Load full city boundary for the mask
+      const cityResponse = await fetch("/api/public/digos-boundary");
+      if (cityResponse.ok) {
+        const cityGeoJSON = await cityResponse.json();
+        
+        // Add city outline (thick)
+        L.geoJSON(cityGeoJSON, {
+          style: {
+            color: "#2563eb",
+            weight: 4,
+            opacity: 0.9,
+            fillOpacity: 0,
+            dashArray: "5, 10"
+          },
+          interactive: false
+        }).addTo(map);
 
-          // Add each barangay boundary to the map
-          brgyData.forEach((barangay) => {
-            if (barangay.geojson) {
-              const geojsonLayer = L.geoJSON(barangay.geojson, {
-                style: {
-                  color: "#3388ff",
-                  weight: 2,
-                  opacity: 0.8,
-                  fillOpacity: 0.1,
-                  fillColor: "#3388ff",
-                },
-              });
-              geojsonLayer.addTo(map);
-            }
-          });
-
-          // Fit map to boundaries
-          if (brgyData.length > 0) {
-            const allFeatures = brgyData
-              .filter((b) => b.geojson)
-              .map((b) => b.geojson);
-            const bounds = L.geoJSON(allFeatures).getBounds();
-            if (bounds.isValid()) {
-              map.fitBounds(bounds, { padding: [20, 20] });
-            }
-          }
+        // Add "Mask" layer (Dim areas outside Digos)
+        // This creates a global inverted polygon
+        const worldCoords = [
+          [-90, -180], [-90, 180], [90, 180], [90, -180], [-90, -180]
+        ];
+        
+        // Extract coordinates from cityGeoJSON
+        let cityCoords = [];
+        if (cityGeoJSON.geometry.type === "Polygon") {
+          cityCoords = cityGeoJSON.geometry.coordinates;
+        } else if (cityGeoJSON.geometry.type === "MultiPolygon") {
+          // Flatten into multiple rings if needed, but for mask we just want holes
+          cityCoords = cityGeoJSON.geometry.coordinates.map(p => p[0]);
         }
+
+        // Create the mask with holes for Digos
+        L.polygon([worldCoords, ...cityCoords], {
+          fillColor: "#000",
+          fillOpacity: 0.35,
+          color: "none",
+          interactive: false
+        }).addTo(map);
+
+        // Fit map to city
+        const cityBounds = L.geoJSON(cityGeoJSON).getBounds();
+        map.fitBounds(cityBounds, { padding: [20, 20] });
+      }
+
+      // 2. Load barangay boundaries for inner details
+      const brgyResponse = await fetch("/api/public/boundaries");
+      if (brgyResponse.ok) {
+        const brgyData = await brgyResponse.json();
+        window.complaintFormBoundaries = brgyData;
+
+        brgyData.forEach((barangay) => {
+          if (barangay.geojson) {
+            L.geoJSON(barangay.geojson, {
+              style: {
+                color: "#3b82f6",
+                weight: 1,
+                opacity: 0.4,
+                fillOpacity: 0.05,
+              },
+              interactive: false
+            }).addTo(map);
+          }
+        });
       }
     } catch (error) {
       console.warn("[COMPLAINT_MAP] Failed to load boundaries:", error);
@@ -233,6 +284,7 @@ function setupLocationPicker(map) {
     return;
   }
   let marker = null;
+  let lastValidLatLng = null;
 
   // Reverse geocode: throttle + cache to avoid Nominatim 429s
   const geocodeCache = new Map();
@@ -264,6 +316,8 @@ function setupLocationPicker(map) {
   const hasSavedCoords = !isNaN(savedLat) && !isNaN(savedLng);
 
   const initialPos = hasSavedCoords ? { lat: savedLat, lng: savedLng } : map.getCenter();
+
+  lastValidLatLng = { lat: initialPos.lat, lng: initialPos.lng };
 
   marker = L.marker([initialPos.lat, initialPos.lng], {
     draggable: true,
@@ -370,6 +424,10 @@ function setupLocationPicker(map) {
     // Validate coordinates against boundary
     const isValid = await validateCoordinates(lat, lng);
     coordinatesValid = isValid;
+
+    if (isValid) {
+      lastValidLatLng = { lat, lng };
+    }
 
     // Update submit button state based on coordinate validity
     updateSubmitButtonState();
@@ -547,11 +605,25 @@ function setupLocationPicker(map) {
     const finalLat = latlng.lat;
     const finalLng = latlng.lng;
 
+    const isValid = await validateCoordinates(finalLat, finalLng);
+    if (!isValid) {
+      showBoundaryWarning();
+      // Snap back to last valid
+      setTimeout(() => {
+        marker.setLatLng([lastValidLatLng.lat, lastValidLatLng.lng]);
+        updateCoordinates(lastValidLatLng.lat, lastValidLatLng.lng, false);
+        updateLocationText(lastValidLatLng.lat, lastValidLatLng.lng);
+      }, 1000);
+      return;
+    }
+
     // Ensure marker position matches input values exactly
     await updateCoordinates(finalLat, finalLng, true); // Show warning on drag end
     updateLocationText(finalLat, finalLng);
 
     // Double-check: ensure marker position matches saved coordinates
+    const latInput = document.getElementById("latitude");
+    const lngInput = document.getElementById("longitude");
     const savedLat = parseFloat(latInput.value);
     const savedLng = parseFloat(lngInput.value);
     const markerLat = marker.getLatLng().lat;
@@ -569,6 +641,13 @@ function setupLocationPicker(map) {
   map.on("click", async (e) => {
     // if (isUserInteracting) return; // Removed to prevent stuck state preventing clicks
     const { lat, lng } = e.latlng;
+    
+    const isValid = await validateCoordinates(lat, lng);
+    if (!isValid) {
+      showBoundaryWarning();
+      return;
+    }
+
     // Set marker position first, then get exact position from marker
     marker.setLatLng([lat, lng]);
     // Get exact position from marker to ensure consistency

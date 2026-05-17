@@ -66,7 +66,7 @@ html.dark {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
-  z-index: 9999 !important;
+  z-index: 12000 !important; /* Above header */
   /* Ensure sidebar is above everything */
   overflow: hidden !important;
   display: flex !important;

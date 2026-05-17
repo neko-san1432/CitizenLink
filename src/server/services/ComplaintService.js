@@ -81,9 +81,15 @@ class ComplaintService {
 
     const normalizedData = normalizeComplaintData(complaintData);
     const insertData = prepareComplaintForInsert(normalizedData, userId);
-    const validatedData = validateComplaintConsistency(insertData);
+    const validationResult = validateComplaintConsistency(insertData);
 
-    const createdcomplaint = await this.complaintRepo.create(validatedData);
+    if (!validationResult.isValid) {
+      console.warn("[COMPLAINT] Data consistency warnings:", validationResult.errors);
+      // We still proceed as these are often just taxonomy warnings, 
+      // but we ensure we pass insertData, not the validation result object.
+    }
+
+    const createdcomplaint = await this.complaintRepo.create(insertData);
 
     if (files && files.length > 0) {
       try {

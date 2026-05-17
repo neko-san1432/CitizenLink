@@ -8,9 +8,6 @@ import { normalizeRole } from "../utils/roleUtils.js";
  */
 
 export function initializeBottomNav() {
-  // Only initialize if we're on a mobile/tablet view
-  if (window.innerWidth > 1024) return;
-
   const userMeta = JSON.parse(localStorage.getItem("cl_user_meta") || "{}");
   const role = normalizeRole(userMeta.role || "citizen");
 
@@ -39,7 +36,9 @@ function renderBottomNav() {
   const navItems = [
     { url: "/dashboard", icon: "dashboard", label: "Dashboard" },
     { url: "/filecomplaint", icon: "filecomplaint", label: "File Complaint" },
-    { url: "/digos-map", icon: "map", label: "Map" }
+    { url: "/digos-map", icon: "map", label: "Map" },
+    { url: "/profile", icon: "myprofile", label: "Profile" },
+    { url: "/settings", icon: "settings", label: "Settings" }
   ];
 
   const currentPath = window.location.pathname;
@@ -82,3 +81,4 @@ if (document.readyState === "loading") {
 } else {
   initializeBottomNav();
 }
+window.addEventListener("resize", initializeBottomNav);

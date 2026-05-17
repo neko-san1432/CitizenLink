@@ -1,6 +1,6 @@
 /* --- New Citizen Dashboard Layout --- */
 .dash-new-container {
-    padding: var(--space-5);
+    padding: var(--space-2) var(--space-5) var(--space-5);
     max-width: 1200px;
     margin: 0 auto;
     color: var(--text-color);

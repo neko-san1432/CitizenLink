@@ -28,7 +28,9 @@ class ErrorHandler {
       success: false,
       error: config.isProduction
         ? this.getGenericErrorMessage(err)
-        : sanitizedMessage,
+        : config.isDevelopment
+          ? err.message
+          : sanitizedMessage,
       timestamp: new Date().toISOString(),
       code: this.getErrorCode(err),
     };

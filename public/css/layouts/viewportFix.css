@@ -49,34 +49,28 @@ body {
   /* Offset content for mini-sidebar globally on desktop */
   body:not(.heatmap-layout) #app:not(.heatmap-page) {
     margin-left: 72px; /* width of mini sidebar */
-    padding-top: 56px; /* height of header */
   }
 
-  /* Premium Header Fix: Header goes across the top, but content is shifted to clear sidebar */
+  /* Standard Header Logic: Header across top, content shifted to align with main area */
   body:not(.heatmap-layout) .header-container:not(.tactical-mode) {
     left: 0 !important;
     width: 100% !important;
-    background: transparent !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    padding-left: 0 !important;
+    background: #0f172a !important; /* Force dark background in dark mode context */
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  /* When header stays outside #app (like in digosMap), shift it to match #app's 72px offset */
+  body:not(.heatmap-layout) .app-container > .header-container:not(.tactical-mode) {
+    margin-left: 72px;
+    width: calc(100% - 72px) !important;
   }
 
   body:not(.heatmap-layout) .header-content {
-    margin-left: 72px !important;
-    background: var(--header-bg, rgba(255, 255, 255, 0.85)) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border-bottom: 1px solid var(--gray-200) !important;
-    box-shadow: var(--shadow-sm) !important;
+    margin-left: 0 !important;
     height: 56px !important;
-  }
-
-  /* Scrolled state for the content bar */
-  body:not(.heatmap-layout) .header-container.scrolled .header-content {
-    background: var(--header-bg, rgba(255, 255, 255, 0.98)) !important;
-    box-shadow: var(--shadow-md) !important;
+    width: 100% !important;
   }
 }
 
@@ -86,8 +80,15 @@ html.dark body:not(.heatmap-layout) .header-content {
 }
 
 /* Ensure dashboard content is unconstrained */
-#app.citizen-dashboard {
-  margin-top: 0;
+#app.citizen-dashboard,
+#app.coordinator-dashboard,
+#app.lgu-admin-dashboard,
+#app.superadmin-dashboard,
+#app.main-content-wrapper,
+body.page-digos-map #app,
+#app {
+  margin-top: 0 !important;
+  padding: 0 !important;
   height: 100%;
 }
 
@@ -213,6 +214,11 @@ html.dark body:not(.heatmap-layout) .header-content {
     padding: 0 var(--space-2);
   }
 
+  .main-content-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: var(--space-4);
@@ -229,6 +235,13 @@ html.dark body:not(.heatmap-layout) .header-content {
   }
 
   /* Ensure proper header spacing on mobile (already handled globally) */
+}
+
+@media (max-width: 1024px) {
+  /* Prevent content from being covered by the fixed header on mobile and tablet */
+  body:not(.heatmap-layout) #app:not(.heatmap-page) {
+    /* Padding handled dynamically or via other rules */
+  }
 }
 
 @media (max-width: 480px) {

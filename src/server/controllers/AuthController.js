@@ -398,7 +398,24 @@ class AuthController {
    */
   async getprofile(req, res) {
     try {
-      const userId = req.user.id;
+      // SEC-21 FIX: Return req.user which contains the current session's role 
+      // (including any citizen_mode overrides) instead of the static DB profile.
+      if (req.user) {
+        return res.json({
+          success: true,
+          data: req.user,
+        });
+      }
+
+      // Fallback if req.user is somehow missing (should not happen with authenticateUser)
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: "Unauthorized",
+        });
+      }
+
       const user = await userService.getUserById(userId);
       if (!user) {
         return res.status(404).json({

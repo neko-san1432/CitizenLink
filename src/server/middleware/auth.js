@@ -77,7 +77,7 @@ const authenticateUser = async (req, res, next) => {
         if (tokenParts.length === 3) {
           // Validate base64 encoding before decoding
           const payloadBase64 = tokenParts[1].replace(/-/g, "+").replace(/_/g, "/");
-          const paddedPayload = payloadBase64.padRight(payloadBase64.length + ((4 - payloadBase64.length % 4) % 4), "=");
+          const paddedPayload = payloadBase64.padEnd(payloadBase64.length + ((4 - payloadBase64.length % 4) % 4), "=");
 
           let payload;
           try {
