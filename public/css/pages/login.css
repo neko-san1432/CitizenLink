@@ -738,7 +738,7 @@ body::-webkit-scrollbar {
 .form-label {
   margin-bottom: 0.25rem !important;
   font-size: 0.8rem !important;
-  color: var(--text-color);
+  color: var(--text-light) !important;
 }
 
 .input {

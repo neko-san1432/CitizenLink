@@ -392,7 +392,7 @@ function createNotificationItemHtml(notification, index) {
   const linkAttr = notification.link ? `data-link="${notification.link}"` : "";
   const isNew = index < 3 && !notification.is_read;
   const newIndicator = isNew ? '<div class="new-indicator">NEW</div>' : "";
-  const readClass = notification.is_read ? "read" : "";
+  const readClass = notification.is_read ? "read" : "unread";
   const newClass = isNew ? "new-notification" : "";
   const cursorStyle = notification.link ? "pointer" : "default";
 

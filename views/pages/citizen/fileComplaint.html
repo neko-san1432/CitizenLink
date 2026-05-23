@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/css/components/header.css" />
   <link rel="stylesheet" href="/css/complaintForm.css" />
   <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
+  <link rel="stylesheet" href="/css/components/skeleton.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
@@ -34,6 +35,55 @@
     <!-- Main Content -->
     <div id="app" class="collapsible main-content-wrapper">
       <div class="dashboard-main-wrapper complaint-wizard-container">
+        <!-- Global Skeleton Loader (matches Wizard structure) -->
+        <div id="dashboard-loading" class="dashboard-loading complaint-skeleton-container"
+          style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+          <!-- Page Header Skeleton -->
+          <div class="page-header" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem;">
+            <div class="skeleton skeleton-title" style="width: 280px; height: 36px; margin-bottom: 0.75rem; border-radius: 8px;"></div>
+            <div class="skeleton skeleton-subtitle" style="width: 380px; height: 20px; border-radius: 6px;"></div>
+          </div>
+
+          <!-- Wizard Stepper Skeleton -->
+          <div class="wizard-stepper" style="max-width: 800px; width: 100%; margin: 0 auto 3rem; display: flex; justify-content: space-between; position: relative;">
+            <div class="skeleton" style="position: absolute; top: 22px; left: 0; width: 100%; height: 4px; border-radius: 2px;"></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1;">
+              <div class="skeleton" style="width: 48px; height: 48px; border-radius: 50%;"></div>
+              <div class="skeleton" style="width: 64px; height: 16px; border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1;">
+              <div class="skeleton" style="width: 48px; height: 48px; border-radius: 50%;"></div>
+              <div class="skeleton" style="width: 64px; height: 16px; border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1;">
+              <div class="skeleton" style="width: 48px; height: 48px; border-radius: 50%;"></div>
+              <div class="skeleton" style="width: 64px; height: 16px; border-radius: 4px;"></div>
+            </div>
+          </div>
+
+          <!-- Form Card Skeleton -->
+          <div class="form-layout-wrapper" style="width: 100%; max-width: 850px; margin: 0 auto;">
+            <div class="form-section card-glass" style="width: 100%; padding: 2rem; border-radius: 16px; box-sizing: border-box;">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;">
+                <div class="skeleton" style="width: 32px; height: 32px; border-radius: 8px;"></div>
+                <div class="skeleton" style="width: 200px; height: 28px; border-radius: 6px;"></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div class="skeleton" style="width: 120px; height: 18px; border-radius: 4px;"></div>
+                  <div class="skeleton" style="width: 100%; height: 50px; border-radius: 12px;"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div class="skeleton" style="width: 140px; height: 18px; border-radius: 4px;"></div>
+                  <div class="skeleton" style="width: 100%; height: 50px; border-radius: 12px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real Wizard Content -->
+        <div id="complaint-main-content" style="display: none; opacity: 0; transition: opacity 0.3s ease; width: 100%;">
         <!-- Page Header -->
         <div class="page-header">
           <h1 class="page-title">File a complaint</h1>
@@ -189,6 +239,7 @@
       <!-- Wizard Actions -->
 
       </form>
+      </div>
     </div>
   </div>
   </div>
@@ -250,7 +301,26 @@
     document.addEventListener("DOMContentLoaded", () => {
       // Need a slight delay to ensure other dynamic elements (map) are ready
       // though map init happens separately.
-      setTimeout(initProgressiveForm, 100);
+      setTimeout(() => {
+        initProgressiveForm();
+        const loader = document.getElementById("dashboard-loading");
+        const mainContent = document.getElementById("complaint-main-content");
+        if (loader) {
+          loader.style.opacity = "0";
+          loader.style.transition = "opacity 0.3s ease";
+          setTimeout(() => {
+            loader.style.display = "none";
+            if (mainContent) {
+              mainContent.style.display = "flex";
+              mainContent.style.flexDirection = "column";
+              mainContent.style.alignItems = "center";
+              // Trigger reflow
+              mainContent.offsetHeight;
+              mainContent.style.opacity = "1";
+            }
+          }, 300);
+        }
+      }, 150);
     });
   </script>
 </body>

@@ -800,40 +800,7 @@ html.dark .form-group label {
   color: #e5e7eb;
 }
 
-/* Wizard Stepper Dark Mode */
-html.dark .wizard-stepper {
-  background: transparent;
-}
-
-html.dark .step-indicator {
-  background: transparent;
-}
-
-html.dark .step-number {
-  background: #1e293b;
-  border-color: #334155;
-  color: #9ca3af;
-}
-
-html.dark .step-indicator.active .step-number {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #ffffff;
-}
-
-html.dark .step-indicator.active .step-label {
-  color: #f1f5f9;
-}
-
-html.dark .step-indicator.completed .step-number {
-  background: #10b981;
-  border-color: #10b981;
-  color: #ffffff;
-}
-
-html.dark .wizard-stepper::before {
-  background: #334155;
-}
+/* Wizard Stepper Dark Mode - Consolidated in Stepper Overrides below */
 
 html.dark .premium-input,
 html.dark .premium-select,
@@ -1220,17 +1187,17 @@ html.dark .dept-name {
 .wizard-stepper::before {
   content: "";
   position: absolute;
-  top: 15px;
+  top: 17px;
   left: 0;
   width: 100%;
   height: 2px;
-  background: #e5e7eb;
+  background: #cbd5e1;
   z-index: 0;
 }
 
 .progress-fill {
   position: absolute;
-  top: 15px;
+  top: 17px;
   left: 0;
   height: 2px;
   background: #3b82f6;
@@ -1245,45 +1212,53 @@ html.dark .dept-name {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
   background: #f3f4f6;
   /* Match bg */
   padding: 0 10px;
 }
 
 .step-number {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: white;
-  border: 2px solid #e5e7eb;
-  color: #6b7280;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 14px;
+  position: relative;
+  z-index: 2;
   transition: all 0.3s ease;
 }
 
 .step-label {
-  font-size: 0.75rem;
+  font-size: 10px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-top: 8px;
   transition: color 0.3s ease;
 }
 
 .step-indicator.active .step-number {
   border-color: #3b82f6;
   background: #3b82f6;
-  color: white;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.step-indicator.completed .step-number {
+  border-color: #10b981;
+  background: #10b981;
+  color: #ffffff;
 }
 
 .step-indicator.active .step-label {
-  color: #1f2937;
+  color: #0f172a;
 }
 
 /* Wizard Steps */
@@ -1351,34 +1326,7 @@ html.dark .dept-name {
   /* Flex to center content */
 }
 
-/* Dark Mode Support */
-html.dark .step-indicator {
-  background: #111827;
-}
-
-html.dark .wizard-stepper::before {
-  background: #374151;
-}
-
-html.dark .step-number {
-  background: #1f2937;
-  border-color: #4b5563;
-  color: #9ca3af;
-}
-
-html.dark .step-indicator.active .step-number {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: white;
-}
-
-html.dark .step-label {
-  color: #6b7280;
-}
-
-html.dark .step-indicator.active .step-label {
-  color: #f3f4f6;
-}
+/* Dark Mode Support - Stepper Consolidated in Stepper Overrides below */
 
 html.dark .btn-back {
   background: rgba(255, 255, 255, 0.05);
@@ -1413,33 +1361,55 @@ html.dark .page-subtitle {
     color: #cbd5e1 !important; /* Lighter slightly grayish white */
 }
 
-/* Stepper Overrides */
+/* Stepper Overrides - Single Source of Truth for Dark Mode */
 html.dark .wizard-stepper::before {
     background: #334155 !important; /* Darker track line */
-    height: 1px !important; /* Thinner line */
-    top: 18px !important;
-    left: 10% !important;
-    width: 80% !important; /* Don't go all the way to edge */
+    height: 2px !important;
+    top: 17px !important; /* Perfectly centered vertically with 36px step-number */
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 0 !important;
+}
+
+html.dark .progress-fill {
+    background: #3b82f6 !important;
+    height: 2px !important;
+    top: 17px !important;
+    left: 0 !important;
+    z-index: 0 !important;
+    transition: width 0.3s ease !important;
 }
 
 html.dark .step-number {
     width: 36px !important;
     height: 36px !important;
-    background: #0f172a !important;
+    background: #1e293b !important; /* Slate-800 matches form section cards */
     border: 1px solid #475569 !important;
     color: #94a3b8 !important;
     font-size: 14px !important;
     border-radius: 50% !important;
     font-weight: 600 !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
+
 html.dark .step-indicator {
-    background: #0f172a !important; /* Hide line behind circle */
+    background: #0f172a !important; /* Matches dark mode page background (#0f172a) perfectly to seamlessly mask the track line behind the circle and label */
+    padding: 0 10px !important;
+    z-index: 1 !important;
 }
+
 html.dark .step-indicator.active .step-number {
     background: #3b82f6 !important;
     border-color: #3b82f6 !important;
     color: #ffffff !important;
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+}
+
+html.dark .step-indicator.completed .step-number {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
 }
 
 html.dark .step-label {
@@ -1450,6 +1420,7 @@ html.dark .step-label {
     margin-top: 8px !important;
     font-weight: 600 !important;
 }
+
 html.dark .step-indicator.active .step-label {
     color: #ffffff !important; /* White for active */
 }

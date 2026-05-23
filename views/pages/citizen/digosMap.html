@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/components/header.css" />
     <link rel="stylesheet" href="/css/complaintForm.css" />
     <link rel="stylesheet" href="/css/layouts/viewportFix.css" />
+    <link rel="stylesheet" href="/css/components/skeleton.css" />
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -100,7 +101,28 @@
         <div class="header-container"></div>
 
         <div class="dashboard-main-wrapper main-content-wrapper" style="display: flex; flex-direction: column; flex: 1;">
-          <div class="complaint-wizard-container">
+          <!-- Global Skeleton Loader (matches Map structure) -->
+          <div id="dashboard-loading" class="dashboard-loading complaint-wizard-container"
+            style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+            <!-- Page Header Skeleton -->
+            <div class="page-header" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem;">
+              <div class="skeleton skeleton-title" style="width: 320px; height: 36px; margin-bottom: 0.75rem; border-radius: 8px;"></div>
+              <div class="skeleton skeleton-subtitle" style="width: 420px; height: 20px; border-radius: 6px;"></div>
+            </div>
+
+            <!-- Map Card Skeleton -->
+            <div class="form-section card-glass" style="width: 100%; max-width: 1200px; padding: 2rem; border-radius: 16px; box-sizing: border-box;">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+                <div class="skeleton" style="width: 32px; height: 32px; border-radius: 8px;"></div>
+                <div class="skeleton" style="width: 180px; height: 28px; border-radius: 6px;"></div>
+              </div>
+              <div class="skeleton" style="width: 100%; height: 40vh; max-height: 460px; min-height: 240px; border-radius: 12px;"></div>
+              <div class="skeleton" style="width: 100%; height: 48px; margin-top: 1.5rem; border-radius: 8px;"></div>
+            </div>
+          </div>
+
+          <!-- Real Map Content -->
+          <div id="map-main-content" class="complaint-wizard-container" style="display: none; opacity: 0; transition: opacity 0.3s ease; width: 100%;">
           <!-- Page Header -->
           <div class="page-header">
             <h1 class="page-title">Digos City Barangay Map</h1>
@@ -156,5 +178,25 @@
     <script type="module" src="/js/components/header.js"></script>
     <script type="module" src="/js/components/sidebar.js"></script>
     <script src="/js/pages/digosMap.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+          const loader = document.getElementById("dashboard-loading");
+          const mainContent = document.getElementById("map-main-content");
+          if (loader) {
+            loader.style.opacity = "0";
+            loader.style.transition = "opacity 0.3s ease";
+            setTimeout(() => {
+              loader.style.display = "none";
+              if (mainContent) {
+                mainContent.style.display = "block";
+                mainContent.offsetHeight;
+                mainContent.style.opacity = "1";
+              }
+            }, 300);
+          }
+        }, 150);
+      });
+    </script>
   </body>
 </html>

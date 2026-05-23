@@ -934,42 +934,7 @@ html.dark .brand-text:hover {
   color: #ffffff;
 }
 
-.dark .header-dropdown {
-  background: var(--gray-800);
-  border-color: var(--gray-700);
-}
-
-.dark .dropdown-header,
-.dark .dropdown-footer {
-  border-color: var(--gray-700);
-}
-
-.dark .dropdown-title {
-  color: var(--gray-100);
-}
-
-.dark .dropdown-close {
-  color: var(--gray-400);
-}
-
-.dark .dropdown-close:hover {
-  background: var(--gray-500);
-  color: var(--gray-200);
-}
-
-.dark .notification-item,
-.dark .profile-item {
-  border-color: var(--gray-700);
-}
-
-.dark .notification-item:hover,
-.dark .profile-item:hover {
-  background: var(--gray-700);
-}
-
-/* Notification time and unread states are handled in consolidated blocks below */
-
-/* Enhanced Dark Mode Styles */
+/* Enhanced Dark Mode Styles for Header Container and Buttons */
 html.dark .header-container {
   background: rgba(15, 23, 42, 0.95);
   border-bottom-color: #1e293b;
@@ -995,107 +960,7 @@ html.dark .header-action:hover {
   color: #ffffff;
 }
 
-html.dark .header-dropdown {
-  background: rgba(15, 23, 42, 0.98);
-  border-color: #1e293b;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.4), 0px 16px 48px rgba(0, 0, 0, 0.3),
-    0px 0px 0px 1px rgba(255, 255, 255, 0.05);
-}
-
-html.dark .dropdown-header {
-  background: linear-gradient(to bottom, var(--gray-800), var(--gray-900));
-  border-color: #334155;
-}
-
-html.dark .dropdown-item {
-  color: #e2e8f0; /* Use explicit light color for contrast */
-}
-
-html.dark .dropdown-item svg {
-  color: #94a3b8;
-}
-
-html.dark .dropdown-item:hover {
-  background: linear-gradient(135deg, #1e40af, #1e3a8a);
-  color: #ffffff;
-}
-
-html.dark .dropdown-item:hover svg {
-  color: #60a5fa;
-}
-
-html.dark .dropdown-item.logout-btn {
-  color: #f87171; /* Brighter red explicitly for dark mode */
-  border-top-color: #334155;
-}
-
-html.dark .dropdown-item.logout-btn:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
-  color: #fca5a5;
-}
-
-
-html.dark .notification-panel {
-  background: rgba(30, 41, 59, 0.98);
-  border-color: #334155;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.5), 0px 16px 48px rgba(0, 0, 0, 0.4),
-    0px 0px 0px 1px rgba(255, 255, 255, 0.05);
-}
-
-html.dark .notification-item {
-  border-bottom-color: #334155;
-}
-
-html.dark .notification-item:hover {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-}
-
-/* Consistently styled unread notifications */
-.dark .notification-item.unread,
-html.dark .notification-item.unread {
-  background: linear-gradient(135deg,
-      rgba(37, 99, 235, 0.15),
-      rgba(29, 78, 216, 0.15)) !important;
-  border-left: 3px solid var(--primary-500) !important;
-}
-
-html.dark .notification-icon {
-  background: linear-gradient(135deg, #374151, #1f2937);
-  color: var(--gray-400);
-}
-
-html.dark .notification-item:hover .notification-icon {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-}
-
-/* Notification text contrast fix */
-html.dark .notification-item.unread .notification-title,
-html.dark .notification-item.unread .notification-message {
-    color: #ffffff !important;
-}
-
-.notification-item.unread .notification-title {
-  color: #1e3a8a !important;
-}
-
-.notification-item.unread .notification-message {
-  color: #334155 !important;
-}
-
-html.dark .notification-title {
-    color: #f8fafc !important;
-}
-
-html.dark .notification-message {
-    color: #cbd5e1 !important;
-}
-
-html.dark .notification-time {
-    color: var(--gray-500);
-  }
-
-  /* Dark mode for notification button */
+/* Dark mode for notification and profile buttons */
 .dark .notification-btn,
 html.dark .notification-btn,
 .dark .profile-btn,
@@ -1114,36 +979,6 @@ html.dark .profile-btn:hover {
   border-color: var(--gray-600);
   color: #ffffff;
   box-shadow: none;
-}
-
-.dark .notification-panel {
-  background: rgba(17, 24, 39, 0.95);
-  border-color: rgba(75, 85, 99, 0.3);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-.dark .notification-item {
-  border-bottom-color: #374151;
-}
-
-.dark .notification-item:hover {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-}
-
-/* Notification time and unread states are handled above */
-
-.dark .notification-icon {
-  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-  color: #d1d5db;
-}
-
-.dark .notification-item:hover .notification-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-}
-
-.dark .no-notifications {
-  color: #9ca3af;
 }
 
 /* Reduced motion DISABLED per user request
